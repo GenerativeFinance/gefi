@@ -178,14 +178,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Models routes
+  // AI Model Categories routes
+  app.get('/api/ai-model-categories', async (req, res) => {
+    try {
+      const categories = await storage.getAiModelCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching AI model categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  app.get('/api/ai-model-categories/:id/subcategories', async (req, res) => {
+    try {
+      const categoryId = parseInt(req.params.id);
+      const subcategories = await storage.getAiModelSubcategoriesByCategory(categoryId);
+      res.json(subcategories);
+    } catch (error) {
+      console.error("Error fetching subcategories:", error);
+      res.status(500).json({ message: "Failed to fetch subcategories" });
+    }
+  });
+
+  app.get('/api/ai-model-subcategories', async (req, res) => {
+    try {
+      const subcategories = await storage.getAiModelSubcategories();
+      res.json(subcategories);
+    } catch (error) {
+      console.error("Error fetching subcategories:", error);
+      res.status(500).json({ message: "Failed to fetch subcategories" });
+    }
+  });
+
+  // Enhanced AI Models routes with categorization
   app.get('/api/ai-models', async (req, res) => {
     try {
-      const models = await storage.getAllAiModels();
-      res.json(models);
+      const { 
+        category, 
+        subcategory, 
+        priceMin, 
+        priceMax, 
+        riskLevel, 
+        aiTechnique, 
+        targetUserType, 
+        financialInstrument,
+        search 
+      } = req.query;
+
+      if (search || category || subcategory || priceMin || priceMax || riskLevel || aiTechnique || targetUserType || financialInstrument) {
+        // Use search/filter functionality
+        const filters: any = {};
+        if (category) filters.category = parseInt(category as string);
+        if (subcategory) filters.subcategory = parseInt(subcategory as string);
+        if (priceMin) filters.priceMin = parseFloat(priceMin as string);
+        if (priceMax) filters.priceMax = parseFloat(priceMax as string);
+        if (riskLevel) filters.riskLevel = riskLevel as string;
+        if (aiTechnique) filters.aiTechnique = aiTechnique as string;
+        if (targetUserType) filters.targetUserType = targetUserType as string;
+        if (financialInstrument) filters.financialInstrument = financialInstrument as string;
+
+        const models = await storage.searchAiModels(filters);
+        res.json(models);
+      } else {
+        // Get all models
+        const models = await storage.getAllAiModels();
+        res.json(models);
+      }
     } catch (error) {
       console.error("Error fetching AI models:", error);
       res.status(500).json({ message: "Failed to fetch AI models" });
+    }
+  });
+
+  app.get('/api/ai-models/category/:categoryId', async (req, res) => {
+    try {
+      const categoryId = parseInt(req.params.categoryId);
+      const models = await storage.getAiModelsByCategory(categoryId);
+      res.json(models);
+    } catch (error) {
+      console.error("Error fetching models by category:", error);
+      res.status(500).json({ message: "Failed to fetch models" });
+    }
+  });
+
+  app.get('/api/ai-models/subcategory/:subcategoryId', async (req, res) => {
+    try {
+      const subcategoryId = parseInt(req.params.subcategoryId);
+      const models = await storage.getAiModelsBySubcategory(subcategoryId);
+      res.json(models);
+    } catch (error) {
+      console.error("Error fetching models by subcategory:", error);
+      res.status(500).json({ message: "Failed to fetch models" });
+    }
+  });
+
+  // Database seeding route (for development/setup)
+  app.post('/api/seed-ai-models', async (req, res) => {
+    try {
+      // Import dynamically to avoid circular dependencies
+      const { AiModelSeeder } = await import('./aiModelSeeder');
+      
+      await AiModelSeeder.seedCategories();
+      await AiModelSeeder.seedSampleModels();
+      
+      res.json({ message: "AI model categories and sample data seeded successfully" });
+    } catch (error) {
+      console.error("Error seeding AI models:", error);
+      res.status(500).json({ message: "Failed to seed AI models", error: error.message });
     }
   });
 

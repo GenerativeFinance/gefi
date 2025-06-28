@@ -44,9 +44,15 @@ import {
   type InsertRiskLimit,
   type ComplianceDocument,
   type InsertComplianceDocument,
+  type AiModelCategory,
+  type InsertAiModelCategory,
+  type AiModelSubcategory,
+  type InsertAiModelSubcategory,
+  aiModelCategories,
+  aiModelSubcategories,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
