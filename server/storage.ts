@@ -8,6 +8,12 @@ import {
   marketInsights,
   riskAlerts,
   reports,
+  complianceFrameworks,
+  complianceChecks,
+  auditTrail,
+  regulatoryReports,
+  riskLimits,
+  complianceDocuments,
   type User,
   type UpsertUser,
   type Portfolio,
@@ -26,6 +32,18 @@ import {
   type InsertRiskAlert,
   type Report,
   type InsertReport,
+  type ComplianceFramework,
+  type InsertComplianceFramework,
+  type ComplianceCheck,
+  type InsertComplianceCheck,
+  type AuditTrail,
+  type InsertAuditTrail,
+  type RegulatoryReport,
+  type InsertRegulatoryReport,
+  type RiskLimit,
+  type InsertRiskLimit,
+  type ComplianceDocument,
+  type InsertComplianceDocument,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -61,6 +79,21 @@ export interface IStorage {
   // Reports operations
   getUserReports(userId: string): Promise<Report[]>;
   createReport(report: InsertReport): Promise<Report>;
+  
+  // Compliance operations
+  getComplianceFrameworks(): Promise<ComplianceFramework[]>;
+  createComplianceFramework(framework: InsertComplianceFramework): Promise<ComplianceFramework>;
+  getUserComplianceChecks(userId: string): Promise<ComplianceCheck[]>;
+  createComplianceCheck(check: InsertComplianceCheck): Promise<ComplianceCheck>;
+  getUserAuditTrail(userId: string, limit?: number): Promise<AuditTrail[]>;
+  createAuditEntry(entry: InsertAuditTrail): Promise<AuditTrail>;
+  getUserRegulatoryReports(userId: string): Promise<RegulatoryReport[]>;
+  createRegulatoryReport(report: InsertRegulatoryReport): Promise<RegulatoryReport>;
+  getUserRiskLimits(userId: string): Promise<RiskLimit[]>;
+  createRiskLimit(limit: InsertRiskLimit): Promise<RiskLimit>;
+  updateRiskLimit(limitId: number, updates: Partial<InsertRiskLimit>): Promise<RiskLimit>;
+  getUserComplianceDocuments(userId: string): Promise<ComplianceDocument[]>;
+  createComplianceDocument(document: InsertComplianceDocument): Promise<ComplianceDocument>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -225,6 +258,93 @@ export class DatabaseStorage implements IStorage {
       .values(report)
       .returning();
     return newReport;
+  }
+
+  // Compliance operations implementation
+  async getComplianceFrameworks(): Promise<ComplianceFramework[]> {
+    return await db.select().from(complianceFrameworks).where(eq(complianceFrameworks.isActive, true));
+  }
+
+  async createComplianceFramework(framework: InsertComplianceFramework): Promise<ComplianceFramework> {
+    const [newFramework] = await db
+      .insert(complianceFrameworks)
+      .values(framework)
+      .returning();
+    return newFramework;
+  }
+
+  async getUserComplianceChecks(userId: string): Promise<ComplianceCheck[]> {
+    return await db.select().from(complianceChecks).where(eq(complianceChecks.userId, userId));
+  }
+
+  async createComplianceCheck(check: InsertComplianceCheck): Promise<ComplianceCheck> {
+    const [newCheck] = await db
+      .insert(complianceChecks)
+      .values(check)
+      .returning();
+    return newCheck;
+  }
+
+  async getUserAuditTrail(userId: string, limit: number = 100): Promise<AuditTrail[]> {
+    return await db
+      .select()
+      .from(auditTrail)
+      .where(eq(auditTrail.userId, userId))
+      .orderBy(desc(auditTrail.timestamp))
+      .limit(limit);
+  }
+
+  async createAuditEntry(entry: InsertAuditTrail): Promise<AuditTrail> {
+    const [newEntry] = await db
+      .insert(auditTrail)
+      .values(entry)
+      .returning();
+    return newEntry;
+  }
+
+  async getUserRegulatoryReports(userId: string): Promise<RegulatoryReport[]> {
+    return await db.select().from(regulatoryReports).where(eq(regulatoryReports.userId, userId));
+  }
+
+  async createRegulatoryReport(report: InsertRegulatoryReport): Promise<RegulatoryReport> {
+    const [newReport] = await db
+      .insert(regulatoryReports)
+      .values(report)
+      .returning();
+    return newReport;
+  }
+
+  async getUserRiskLimits(userId: string): Promise<RiskLimit[]> {
+    return await db.select().from(riskLimits).where(eq(riskLimits.userId, userId));
+  }
+
+  async createRiskLimit(limit: InsertRiskLimit): Promise<RiskLimit> {
+    const [newLimit] = await db
+      .insert(riskLimits)
+      .values(limit)
+      .returning();
+    return newLimit;
+  }
+
+  async updateRiskLimit(limitId: number, updates: Partial<InsertRiskLimit>): Promise<RiskLimit> {
+    const [updatedLimit] = await db
+      .update(riskLimits)
+      .set(updates)
+      .where(eq(riskLimits.id, limitId))
+      .returning();
+    return updatedLimit;
+  }
+
+  async getUserComplianceDocuments(userId: string): Promise<ComplianceDocument[]> {
+    return await db.select().from(complianceDocuments).where(eq(complianceDocuments.userId, userId));
+  }
+
+  async createComplianceDocument(document: InsertComplianceDocument): Promise<ComplianceDocument> {
+    const [newDocument] = await db
+      .insert(complianceDocuments)
+      .values(document)
+      .returning();
+    return newDocument;
   }
 }
 

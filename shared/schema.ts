@@ -125,6 +125,88 @@ export const reports = pgTable("reports", {
   metadata: jsonb("metadata"),
 });
 
+// Compliance and Regulatory Reporting Tables
+export const complianceFrameworks = pgTable("compliance_frameworks", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(), // 'GDPR', 'SOX', 'MiFID II', 'BASEL III'
+  version: varchar("version").notNull(),
+  description: text("description"),
+  requirements: text("requirements").array(), // JSON array of requirement descriptions
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const complianceChecks = pgTable("compliance_checks", {
+  id: serial("id").primaryKey(),
+  frameworkId: integer("framework_id").references(() => complianceFrameworks.id),
+  userId: varchar("user_id").notNull(),
+  portfolioId: integer("portfolio_id").references(() => portfolios.id),
+  checkType: varchar("check_type").notNull(), // 'risk_limit', 'diversification', 'liquidity', 'concentration'
+  status: varchar("status").notNull(), // 'compliant', 'warning', 'violation'
+  details: text("details"),
+  threshold: decimal("threshold", { precision: 10, scale: 4 }),
+  currentValue: decimal("current_value", { precision: 10, scale: 4 }),
+  lastChecked: timestamp("last_checked").defaultNow(),
+  nextCheckDue: timestamp("next_check_due"),
+});
+
+export const auditTrail = pgTable("audit_trail", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  entityType: varchar("entity_type").notNull(), // 'portfolio', 'trade', 'user', 'compliance'
+  entityId: varchar("entity_id").notNull(),
+  action: varchar("action").notNull(), // 'create', 'update', 'delete', 'trade', 'compliance_check'
+  oldValues: text("old_values"), // JSON
+  newValues: text("new_values"), // JSON
+  timestamp: timestamp("timestamp").defaultNow(),
+  ipAddress: varchar("ip_address"),
+  userAgent: varchar("user_agent"),
+  riskScore: integer("risk_score"), // 1-100
+});
+
+export const regulatoryReports = pgTable("regulatory_reports", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  reportType: varchar("report_type").notNull(), // 'daily_risk', 'monthly_summary', 'quarterly_filing'
+  frameworkId: integer("framework_id").references(() => complianceFrameworks.id),
+  reportData: text("report_data"), // JSON formatted report
+  filePath: varchar("file_path"), // for PDF/Excel exports
+  status: varchar("status").notNull().default("pending"), // 'pending', 'generated', 'submitted', 'approved'
+  generatedAt: timestamp("generated_at").defaultNow(),
+  submittedAt: timestamp("submitted_at"),
+  approvedBy: varchar("approved_by"),
+  approvedAt: timestamp("approved_at"),
+});
+
+export const riskLimits = pgTable("risk_limits", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  portfolioId: integer("portfolio_id").references(() => portfolios.id),
+  limitType: varchar("limit_type").notNull(), // 'var', 'concentration', 'sector', 'geography', 'leverage'
+  limitValue: decimal("limit_value", { precision: 10, scale: 4 }),
+  currentValue: decimal("current_value", { precision: 10, scale: 4 }),
+  utilizationPercentage: decimal("utilization_percentage", { precision: 5, scale: 2 }),
+  isBreached: boolean("is_breached").default(false),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  alertThreshold: decimal("alert_threshold", { precision: 5, scale: 2 }).default("80.00"), // Alert at 80% utilization
+});
+
+export const complianceDocuments = pgTable("compliance_documents", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  documentType: varchar("document_type").notNull(), // 'policy', 'procedure', 'certification', 'audit_report'
+  title: varchar("title").notNull(),
+  description: text("description"),
+  filePath: varchar("file_path"),
+  version: varchar("version"),
+  expiryDate: timestamp("expiry_date"),
+  status: varchar("status").notNull().default("active"), // 'active', 'expired', 'pending_review'
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  lastReviewed: timestamp("last_reviewed"),
+  reviewedBy: varchar("reviewed_by"),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type Portfolio = typeof portfolios.$inferSelect;
@@ -143,6 +225,18 @@ export type RiskAlert = typeof riskAlerts.$inferSelect;
 export type InsertRiskAlert = typeof riskAlerts.$inferInsert;
 export type Report = typeof reports.$inferSelect;
 export type InsertReport = typeof reports.$inferInsert;
+export type ComplianceFramework = typeof complianceFrameworks.$inferSelect;
+export type InsertComplianceFramework = typeof complianceFrameworks.$inferInsert;
+export type ComplianceCheck = typeof complianceChecks.$inferSelect;
+export type InsertComplianceCheck = typeof complianceChecks.$inferInsert;
+export type AuditTrail = typeof auditTrail.$inferSelect;
+export type InsertAuditTrail = typeof auditTrail.$inferInsert;
+export type RegulatoryReport = typeof regulatoryReports.$inferSelect;
+export type InsertRegulatoryReport = typeof regulatoryReports.$inferInsert;
+export type RiskLimit = typeof riskLimits.$inferSelect;
+export type InsertRiskLimit = typeof riskLimits.$inferInsert;
+export type ComplianceDocument = typeof complianceDocuments.$inferSelect;
+export type InsertComplianceDocument = typeof complianceDocuments.$inferInsert;
 
 export const insertPortfolioSchema = createInsertSchema(portfolios).omit({
   id: true,
