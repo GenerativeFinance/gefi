@@ -1,12 +1,49 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, TrendingUp, Shield, Brain, ChevronRight, Calendar } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { FileText, TrendingUp, Shield, Brain, ChevronRight, Calendar, Plus } from "lucide-react";
+import { useState } from "react";
+import { Link } from "wouter";
 
 interface InvestorReportsProps {
   reports: any[];
 }
 
 export default function InvestorReports({ reports }: InvestorReportsProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Generate new report mutation
+  const generateReportMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/reports/generate");
+    },
+    onSuccess: () => {
+      toast({
+        title: "Report Generated",
+        description: "A new investor report has been generated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
+      setIsGenerating(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Failed to generate report. Please try again.",
+        variant: "destructive",
+      });
+      setIsGenerating(false);
+    },
+  });
+
+  const handleGenerateReport = () => {
+    setIsGenerating(true);
+    generateReportMutation.mutate();
+  };
+  
   // Default reports if no data
   const defaultReports = [
     {
