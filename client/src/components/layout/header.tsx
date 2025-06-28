@@ -184,14 +184,17 @@ export default function Header() {
                   
                   {/* Marketplace Link */}
                   <Link href="/marketplace">
-                    <a className={`flex items-center space-x-1 transition-colors ${
-                      location === '/marketplace' 
-                        ? 'text-primary font-medium' 
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}>
-                      <Briefcase className="h-4 w-4" />
-                      <span>Marketplace</span>
-                    </a>
+                    <Button 
+                      variant="ghost" 
+                      className={`transition-colors ${
+                        location === '/marketplace'
+                          ? 'text-primary font-medium' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Briefcase className="h-4 w-4 mr-1" />
+                      Marketplace
+                    </Button>
                   </Link>
                 </>
               ) : (
