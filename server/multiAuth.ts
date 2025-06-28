@@ -4,7 +4,7 @@ import type { Express, RequestHandler } from "express";
 import connectPg from "connect-pg-simple";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
-import { Strategy as FacebookStrategy } from "passport-facebook";
+
 import { Strategy as LinkedInStrategy } from "passport-linkedin-oauth2";
 import { storage } from "./storage";
 
@@ -48,12 +48,15 @@ export async function setupMultiAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Get the base URL from REPLIT_DOMAINS
+  const baseUrl = process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` : 'http://localhost:5000';
+
   // Google OAuth Strategy
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     passport.use(new GoogleStrategy({
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/api/auth/google/callback"
+      callbackURL: `${baseUrl}/api/auth/google/callback`
     }, async (accessToken, refreshToken, profile, done) => {
       try {
         const user = await upsertUser(profile, 'google');
@@ -69,7 +72,7 @@ export async function setupMultiAuth(app: Express) {
     passport.use(new GitHubStrategy({
       clientID: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL: "/api/auth/github/callback"
+      callbackURL: `${baseUrl}/api/auth/github/callback`
     }, async (accessToken, refreshToken, profile, done) => {
       try {
         const user = await upsertUser(profile, 'github');
@@ -80,29 +83,14 @@ export async function setupMultiAuth(app: Express) {
     }));
   }
 
-  // Facebook OAuth Strategy
-  if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
-    passport.use(new FacebookStrategy({
-      clientID: process.env.FACEBOOK_APP_ID,
-      clientSecret: process.env.FACEBOOK_APP_SECRET,
-      callbackURL: "/api/auth/facebook/callback",
-      profileFields: ['id', 'displayName', 'photos', 'email', 'name']
-    }, async (accessToken, refreshToken, profile, done) => {
-      try {
-        const user = await upsertUser(profile, 'facebook');
-        return done(null, { ...user, provider: 'facebook' });
-      } catch (error) {
-        return done(error, null);
-      }
-    }));
-  }
+
 
   // LinkedIn OAuth Strategy
   if (process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET) {
     passport.use(new LinkedInStrategy({
       clientID: process.env.LINKEDIN_CLIENT_ID,
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
-      callbackURL: "/api/auth/linkedin/callback",
+      callbackURL: `${baseUrl}/api/auth/linkedin/callback`,
       scope: ['r_emailaddress', 'r_liteprofile']
     }, async (accessToken, refreshToken, profile, done) => {
       try {
@@ -146,16 +134,7 @@ export async function setupMultiAuth(app: Express) {
     })
   );
 
-  // Facebook
-  app.get('/api/auth/facebook',
-    passport.authenticate('facebook', { scope: ['email'] })
-  );
-  app.get('/api/auth/facebook/callback',
-    passport.authenticate('facebook', {
-      successRedirect: '/',
-      failureRedirect: '/login-failed'
-    })
-  );
+
 
   // LinkedIn
   app.get('/api/auth/linkedin',

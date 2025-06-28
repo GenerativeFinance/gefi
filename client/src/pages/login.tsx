@@ -4,7 +4,6 @@ import { Separator } from "@/components/ui/separator";
 import { 
   Github, 
   Chrome, 
-  Facebook, 
   Linkedin,
   TrendingUp,
   Brain,
@@ -99,14 +98,7 @@ export default function Login() {
                 <span>Continue with LinkedIn</span>
               </Button>
 
-              <Button
-                onClick={() => handleOAuthLogin('facebook')}
-                variant="outline"
-                className="w-full h-12 flex items-center justify-center space-x-3 hover:bg-secondary/50 transition-colors"
-              >
-                <Facebook className="h-5 w-5 text-blue-600" />
-                <span>Continue with Facebook</span>
-              </Button>
+
             </div>
 
             <Separator />
