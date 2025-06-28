@@ -28,8 +28,7 @@ export function LanguageSwitcher() {
         >
           <Globe className="h-4 w-4" />
           <span className="hidden md:inline-flex items-center gap-1">
-            <span className="text-lg">{currentLanguageConfig.flag}</span>
-            <span className="text-sm font-medium">{currentLanguageConfig.name}</span>
+            <span className="text-sm font-medium">Language</span>
             <ChevronDown className="h-3 w-3" />
           </span>
         </Button>

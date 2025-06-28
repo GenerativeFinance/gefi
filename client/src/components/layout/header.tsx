@@ -261,9 +261,67 @@ export default function Header() {
                 </div>
               </DialogContent>
             </Dialog>
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <Bell className="h-5 w-5" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="hidden sm:flex relative">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <div className="p-4 border-b">
+                  <h3 className="font-semibold">Notifications</h3>
+                  <p className="text-sm text-muted-foreground">Stay updated with your portfolio and models</p>
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  <div className="p-4 border-b">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Portfolio Alert</p>
+                        <p className="text-xs text-muted-foreground">Your portfolio value increased by 2.4% today</p>
+                        <p className="text-xs text-muted-foreground mt-1">2 minutes ago</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 border-b">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Model Performance</p>
+                        <p className="text-xs text-muted-foreground">Quantum Risk Predictor achieved 94% accuracy</p>
+                        <p className="text-xs text-muted-foreground mt-1">1 hour ago</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 border-b">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Risk Alert</p>
+                        <p className="text-xs text-muted-foreground">High volatility detected in tech sector positions</p>
+                        <p className="text-xs text-muted-foreground mt-1">3 hours ago</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">New Model Available</p>
+                        <p className="text-xs text-muted-foreground">Advanced Sentiment Analyzer v2.0 is now live</p>
+                        <p className="text-xs text-muted-foreground mt-1">1 day ago</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 border-t">
+                  <Button variant="outline" className="w-full text-sm">
+                    View All Notifications
+                  </Button>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <AccessibilityToggle />
             <LanguageSwitcher />
             
