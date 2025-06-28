@@ -108,9 +108,11 @@ export default function InvestorReports({ reports }: InvestorReportsProps) {
           <FileText className="h-5 w-5 text-primary" />
           <span>Investor Reports</span>
         </CardTitle>
-        <Button variant="ghost" size="sm">
-          View All <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
+        <Link href="/reports/all">
+          <Button variant="ghost" size="sm">
+            View All <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </Link>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -146,8 +148,14 @@ export default function InvestorReports({ reports }: InvestorReportsProps) {
         </div>
 
         <div className="mt-6 pt-4 border-t border-border">
-          <Button variant="outline" className="w-full">
-            Generate New Report
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={handleGenerateReport}
+            disabled={isGenerating || generateReportMutation.isPending}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {isGenerating || generateReportMutation.isPending ? "Generating..." : "Generate New Report"}
           </Button>
         </div>
       </CardContent>

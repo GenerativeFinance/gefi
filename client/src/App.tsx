@@ -14,6 +14,7 @@ import Login from "@/pages/login";
 import LoginFailed from "@/pages/login-failed";
 import Portfolio from "@/pages/portfolio";
 import Reports from "@/pages/reports";
+import ReportsAll from "@/pages/reports-all";
 import RiskManagement from "@/pages/risk-management";
 import Marketplace from "@/pages/marketplace";
 import Pricing from "@/pages/pricing";
