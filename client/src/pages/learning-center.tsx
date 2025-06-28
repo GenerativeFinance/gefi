@@ -15,9 +15,17 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useI18n } from "@/hooks/useI18n";
+import { useBadgeSystem } from "@/hooks/useBadgeSystem";
+import { useEffect } from "react";
 
 export default function LearningCenter() {
   const { t } = useI18n();
+  const { trackAction } = useBadgeSystem();
+
+  // Track learning center visit for badge system
+  useEffect(() => {
+    trackAction('learning_center_visit');
+  }, [trackAction]);
 
   const featuredArticles = [
     {
