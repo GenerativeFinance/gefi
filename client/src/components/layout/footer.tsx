@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { useI18n } from "@/hooks/useI18n";
 import { 
   Shield, 
   Lock, 
@@ -11,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export default function Footer() {
+  const { t } = useI18n();
   return (
     <footer className="bg-background border-t border-border">
       {/* Trust Indicators Bar */}

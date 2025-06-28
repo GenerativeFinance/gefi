@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useI18n } from "@/hooks/useI18n";
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
 import Footer from "@/components/layout/footer";
@@ -58,6 +59,7 @@ const iconMap: Record<string, any> = {
 };
 
 export default function Marketplace() {
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
@@ -130,17 +132,17 @@ export default function Marketplace() {
         {/* Hero Section */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-4">
-            AI Financial Models Marketplace
+            {t('marketplace.title')}
           </h1>
           <p className="text-xl text-muted-foreground mb-6">
-            Discover, evaluate, and deploy sophisticated AI models for financial analytics
+            {t('marketplace.subtitle')}
           </p>
           
           {/* Search Bar */}
           <div className="relative max-w-2xl mx-auto">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
             <Input
-              placeholder="Search AI models, creators, or techniques..."
+              placeholder={t('marketplace.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 py-3 text-lg"
@@ -150,9 +152,9 @@ export default function Marketplace() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="browse">Browse Models</TabsTrigger>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="featured">Featured</TabsTrigger>
+            <TabsTrigger value="browse">{t('marketplace.allModels')}</TabsTrigger>
+            <TabsTrigger value="categories">{t('marketplace.categories')}</TabsTrigger>
+            <TabsTrigger value="featured">{t('marketplace.featured')}</TabsTrigger>
           </TabsList>
 
           {/* Categories Overview Tab */}
