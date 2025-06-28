@@ -177,7 +177,7 @@ export default function Marketplace() {
           </p>
           
           {/* Search Bar */}
-          <div className="relative max-w-2xl mx-auto">
+          <div className="relative max-w-2xl mx-auto" data-tour="search">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
             <Input
               placeholder={t('marketplace.searchPlaceholder')}

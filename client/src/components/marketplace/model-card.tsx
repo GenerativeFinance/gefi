@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { analyticsService } from "@/lib/analytics";
+import { RecommendationEngine } from "@/lib/recommendationEngine";
 import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 import {
@@ -76,6 +77,8 @@ export default function ModelCard({ model, featured = false }: ModelCardProps) {
 
   // Track model view when component mounts
   useEffect(() => {
+    const startTime = Date.now();
+    
     if (isAuthenticated && model.id) {
       analyticsService.startModelView(
         model.id, 
@@ -85,11 +88,23 @@ export default function ModelCard({ model, featured = false }: ModelCardProps) {
 
       // Track view end when component unmounts or when user leaves
       return () => {
+        const timeSpent = Date.now() - startTime;
+        
         analyticsService.endModelView(
           model.id,
           model.name,
           model.category || 'Uncategorized',
           parseFloat(model.price || "0")
+        );
+
+        // Also track with recommendation engine
+        RecommendationEngine.trackModelView(
+          model.id,
+          model.name,
+          model.category || 'Uncategorized',
+          model.tags || [],
+          parseFloat(model.price || "0"),
+          timeSpent
         );
       };
     }

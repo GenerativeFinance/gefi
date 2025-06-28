@@ -26,10 +26,29 @@ import { useEffect, useState } from "react";
 
 export default function Home() {
   const { user } = useAuth();
+  const [recommendations, setRecommendations] = useState<RecommendedModel[]>([]);
+
+  // Fetch AI models for recommendations
+  const { data: models = [] } = useQuery({
+    queryKey: ["/api/ai-models"],
+    retry: false,
+  });
+
+  // Generate recommendations when models are loaded
+  useEffect(() => {
+    if (models.length > 0) {
+      const userRecommendations = RecommendationEngine.generateRecommendations(models, 5);
+      setRecommendations(userRecommendations);
+    }
+  }, [models]);
+
+  // Get user viewing statistics
+  const userStats = RecommendationEngine.getUserStats();
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <GuidedTour />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
@@ -103,6 +122,95 @@ export default function Home() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Recommended for You Section */}
+        {recommendations.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-semibold flex items-center space-x-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <span>Recommended for You</span>
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Based on your viewing history and preferences
+                </p>
+              </div>
+              <Link href="/marketplace">
+                <Button variant="outline" size="sm">
+                  View All Models <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+              {recommendations.map((model) => (
+                <Card key={model.id} className="glass card-hover group transition-all duration-300 hover:scale-105">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {model.category}
+                      </Badge>
+                      <div className="flex items-center space-x-1">
+                        <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                        <span className="text-xs font-medium">{model.rating.toFixed(1)}</span>
+                      </div>
+                    </div>
+                    
+                    <h3 className="font-medium text-sm mb-1 line-clamp-1">{model.name}</h3>
+                    <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                      {model.reason}
+                    </p>
+                    
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-semibold text-primary">
+                        ${model.price.toFixed(0)}/mo
+                      </span>
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 bg-primary rounded-full opacity-75"></div>
+                        <span className="text-xs text-muted-foreground">
+                          {Math.round(model.similarity * 100)}% match
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <Link href="/marketplace">
+                      <Button size="sm" className="w-full group-hover:bg-primary/90">
+                        View Details
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* User Stats */}
+            {userStats.totalViews > 0 && (
+              <div className="mt-6 p-4 bg-secondary/30 rounded-lg">
+                <div className="flex items-center space-x-4 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">
+                      You've viewed {userStats.totalViews} models
+                    </span>
+                  </div>
+                  {userStats.categories.length > 0 && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-muted-foreground">Top interests:</span>
+                      <div className="flex space-x-1">
+                        {userStats.categories.slice(0, 2).map((cat, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {cat.category}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
