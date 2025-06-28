@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
+import AnalyticsDashboard from "@/pages/analytics-dashboard";
 import Portfolio from "@/pages/portfolio";
 import Reports from "@/pages/reports";
 import RiskManagement from "@/pages/risk-management";
@@ -22,7 +23,8 @@ function Router() {
         <Route path="/" component={Landing} />
       ) : (
         <>
-          <Route path="/" component={Home} />
+          <Route path="/" component={AnalyticsDashboard} />
+          <Route path="/home" component={Home} />
           <Route path="/portfolio" component={Portfolio} />
           <Route path="/reports" component={Reports} />
           <Route path="/risk-management" component={RiskManagement} />
