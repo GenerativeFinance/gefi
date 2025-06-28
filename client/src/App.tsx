@@ -26,6 +26,11 @@ import DeveloperDashboard from "@/pages/developer-dashboard";
 import BacktestingEnvironment from "@/pages/backtesting";
 import Bounties from "@/pages/bounties";
 import Learning from "@/pages/learning";
+import TermsOfService from "@/pages/terms-of-service";
+import DataProcessingAgreement from "@/pages/data-processing-agreement";
+import SecurityCompliance from "@/pages/security-compliance";
+import BugBountyProgram from "@/pages/bug-bounty-program";
+import EnterpriseSales from "@/pages/enterprise-sales";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();

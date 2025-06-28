@@ -116,28 +116,28 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors flex items-center gap-1">
+                  <Link href="/terms-of-service" className="hover:text-primary transition-colors flex items-center gap-1">
                     <Shield className="h-3 w-3" />
                     Terms of Service
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors flex items-center gap-1">
+                  <Link href="/data-processing-agreement" className="hover:text-primary transition-colors flex items-center gap-1">
                     <Database className="h-3 w-3" />
                     Data Processing Agreement
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors flex items-center gap-1">
+                  <Link href="/security-compliance" className="hover:text-primary transition-colors flex items-center gap-1">
                     <Award className="h-3 w-3" />
                     Security Compliance
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors flex items-center gap-1">
+                  <Link href="/bug-bounty-program" className="hover:text-primary transition-colors flex items-center gap-1">
                     <ExternalLink className="h-3 w-3" />
                     Bug Bounty Program
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -167,9 +167,9 @@ export default function Footer() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors">
+                  <Link href="/enterprise-sales" className="hover:text-primary transition-colors">
                     Enterprise Sales
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
