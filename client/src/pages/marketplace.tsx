@@ -6,31 +6,102 @@ import ModelCard from "@/components/marketplace/model-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Filter, Star, TrendingUp, Shield, PieChart, Brain, Building, LineChart, FileCheck, MessageCircle, Users } from "lucide-react";
+
+interface AiModelCategory {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+interface AiModel {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  categoryId: number;
+  subcategoryId: number;
+  price: string;
+  rating: string;
+  totalRatings: number;
+  creator: string;
+  tags: string[];
+  aiTechnique: string;
+  targetUserType: string;
+  financialInstrument: string;
+  riskLevel: string;
+  isFeatured: boolean;
+  features: any;
+  performance: any;
+}
+
+const iconMap: Record<string, any> = {
+  Shield,
+  TrendingUp,
+  PieChart,
+  Brain,
+  Building,
+  LineChart,
+  FileCheck,
+  MessageCircle,
+  Users,
+  Search,
+  Filter,
+  Star
+};
 
 export default function Marketplace() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
+  const [priceRange, setPriceRange] = useState<string>("all");
+  const [riskLevel, setRiskLevel] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState("browse");
 
-  const { data: models, isLoading } = useQuery({
-    queryKey: ["/api/ai-models"],
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery<AiModelCategory[]>({
+    queryKey: ["/api/ai-model-categories"],
     retry: false,
   });
 
-  const categories = [
-    { id: "all", label: "All Models" },
-    { id: "risk", label: "Risk Management" },
-    { id: "portfolio", label: "Portfolio Optimization" },
-    { id: "prediction", label: "Market Prediction" },
-    { id: "sentiment", label: "Sentiment Analysis" },
-  ];
+  const { data: subcategories = [] } = useQuery({
+    queryKey: ["/api/ai-model-subcategories"],
+    retry: false,
+  });
 
-  const filteredModels = models?.filter((model: any) => {
-    const matchesSearch = model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         model.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || model.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+  const { data: models = [], isLoading: modelsLoading } = useQuery<AiModel[]>({
+    queryKey: ["/api/ai-models", { 
+      category: selectedCategory !== "all" ? selectedCategory : undefined,
+      subcategory: selectedSubcategory !== "all" ? selectedSubcategory : undefined,
+      riskLevel: riskLevel !== "all" ? riskLevel : undefined
+    }],
+    retry: false,
+  });
+
+  const filteredModels = models?.filter((model: AiModel) => {
+    const matchesSearch = searchQuery === "" || 
+      model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      model.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      model.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesPrice = priceRange === "all" || 
+      (priceRange === "free" && parseFloat(model.price) === 0) ||
+      (priceRange === "0-100" && parseFloat(model.price) <= 100) ||
+      (priceRange === "100-500" && parseFloat(model.price) > 100 && parseFloat(model.price) <= 500) ||
+      (priceRange === "500+" && parseFloat(model.price) > 500);
+    
+    return matchesSearch && matchesPrice;
   }) || [];
+
+  const featuredModels = filteredModels.filter(model => model.isFeatured);
+  const categoryFilteredSubcategories = selectedCategory !== "all" 
+    ? subcategories.filter((sub: any) => sub.categoryId === parseInt(selectedCategory))
+    : subcategories;
 
   if (isLoading) {
     return (

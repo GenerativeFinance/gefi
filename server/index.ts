@@ -52,6 +52,22 @@ app.use((req, res, next) => {
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
+    
+    // Auto-seed AI model categories in development if empty
+    try {
+      const { storage } = await import('./storage');
+      const categories = await storage.getAiModelCategories();
+      
+      if (categories.length === 0) {
+        console.log("No AI model categories found, seeding database...");
+        const { AiModelSeeder } = await import('./aiModelSeeder');
+        await AiModelSeeder.seedCategories();
+        await AiModelSeeder.seedSampleModels();
+        console.log("AI model categories and sample data seeded successfully!");
+      }
+    } catch (error) {
+      console.log("AI model seeding will be available after full server startup");
+    }
   } else {
     serveStatic(app);
   }
