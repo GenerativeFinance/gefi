@@ -15,6 +15,7 @@ import Reports from "@/pages/reports";
 import RiskManagement from "@/pages/risk-management";
 import Marketplace from "@/pages/marketplace";
 import Pricing from "@/pages/pricing";
+import Checkout from "@/pages/checkout";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -34,6 +35,7 @@ function Router() {
           <Route path="/risk-management" component={RiskManagement} />
           <Route path="/marketplace" component={Marketplace} />
           <Route path="/pricing" component={Pricing} />
+          <Route path="/checkout" component={Checkout} />
         </>
       )}
       <Route component={NotFound} />

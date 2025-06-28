@@ -100,10 +100,10 @@ export default function Marketplace() {
 
   const featuredModels = filteredModels.filter(model => model.isFeatured);
   const categoryFilteredSubcategories = selectedCategory !== "all" 
-    ? subcategories.filter((sub: any) => sub.categoryId === parseInt(selectedCategory))
+    ? (subcategories as any[]).filter((sub: any) => sub.categoryId === parseInt(selectedCategory))
     : subcategories;
 
-  if (isLoading) {
+  if (categoriesLoading || modelsLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -125,68 +125,254 @@ export default function Marketplace() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">AI Financial Models Marketplace</h1>
-          <p className="text-muted-foreground">
-            Discover and subscribe to cutting-edge AI models created by financial experts
+        {/* Hero Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            AI Financial Models Marketplace
+          </h1>
+          <p className="text-xl text-muted-foreground mb-6">
+            Discover, evaluate, and deploy sophisticated AI models for financial analytics
           </p>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          
+          {/* Search Bar */}
+          <div className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
             <Input
-              placeholder="Search models..."
+              placeholder="Search AI models, creators, or techniques..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 pr-4 py-3 text-lg"
             />
           </div>
-          
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <Badge
-                key={category.id}
-                variant={selectedCategory === category.id ? "default" : "outline"}
-                className="cursor-pointer"
-                onClick={() => setSelectedCategory(category.id)}
-              >
-                {category.label}
-              </Badge>
-            ))}
-          </div>
         </div>
 
-        {/* Models Grid */}
-        {filteredModels.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground mb-4">No AI models found matching your criteria.</p>
-            <Button onClick={() => { setSearchQuery(""); setSelectedCategory("all"); }}>
-              Clear Filters
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {filteredModels.map((model: any) => (
-              <ModelCard key={model.id} model={model} />
-            ))}
-          </div>
-        )}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="browse">Browse Models</TabsTrigger>
+            <TabsTrigger value="categories">Categories</TabsTrigger>
+            <TabsTrigger value="featured">Featured</TabsTrigger>
+          </TabsList>
 
-        {/* Featured Section */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold mb-6">Featured AI Models</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {models?.slice(0, 3).map((model: any) => (
-              <ModelCard key={`featured-${model.id}`} model={model} featured />
-            ))}
-          </div>
-        </div>
+          {/* Categories Overview Tab */}
+          <TabsContent value="categories" className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold mb-4">Explore AI Model Categories</h2>
+              <p className="text-muted-foreground">
+                Browse our comprehensive collection of AI financial models organized by expertise
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {categories.map((category) => {
+                const Icon = iconMap[category.icon] || Shield;
+                const categoryModels = models.filter(model => model.categoryId === category.id);
+                
+                return (
+                  <Card 
+                    key={category.id} 
+                    className="cursor-pointer hover:shadow-lg transition-shadow"
+                    onClick={() => {
+                      setSelectedCategory(category.id.toString());
+                      setActiveTab("browse");
+                    }}
+                  >
+                    <CardHeader>
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <Icon className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">{category.name}</CardTitle>
+                          <CardDescription>{categoryModels.length} models</CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">{category.description}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </TabsContent>
+
+          {/* Featured Models Tab */}
+          <TabsContent value="featured" className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold mb-4">Featured AI Models</h2>
+              <p className="text-muted-foreground">
+                Hand-picked models with exceptional performance and reliability
+              </p>
+            </div>
+            
+            {featuredModels.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredModels.map((model) => (
+                  <ModelCard key={model.id} model={model} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Featured Models Yet</h3>
+                <p className="text-muted-foreground">
+                  Featured models will appear here once they're selected by our team
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Browse Models Tab */}
+          <TabsContent value="browse" className="space-y-6">
+            {/* Filters */}
+            <Card className="p-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <Filter className="h-5 w-5 text-muted-foreground" />
+                <h3 className="text-lg font-semibold">Filters</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Category</label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Subcategory</label>
+                  <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All subcategories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Subcategories</SelectItem>
+                      {(categoryFilteredSubcategories as any[]).map((subcategory: any) => (
+                        <SelectItem key={subcategory.id} value={subcategory.id.toString()}>
+                          {subcategory.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Price Range</label>
+                  <Select value={priceRange} onValueChange={setPriceRange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All prices" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Prices</SelectItem>
+                      <SelectItem value="free">Free</SelectItem>
+                      <SelectItem value="0-100">$0 - $100</SelectItem>
+                      <SelectItem value="100-500">$100 - $500</SelectItem>
+                      <SelectItem value="500+">$500+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Risk Level</label>
+                  <Select value={riskLevel} onValueChange={setRiskLevel}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All risk levels" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Risk Levels</SelectItem>
+                      <SelectItem value="Low">Low Risk</SelectItem>
+                      <SelectItem value="Medium">Medium Risk</SelectItem>
+                      <SelectItem value="High">High Risk</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Actions</label>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setSelectedCategory("all");
+                      setSelectedSubcategory("all");
+                      setPriceRange("all");
+                      setRiskLevel("all");
+                      setSearchQuery("");
+                    }}
+                    className="w-full"
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+            {/* Results */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                {filteredModels.length} Model{filteredModels.length !== 1 ? 's' : ''} Found
+              </h3>
+              
+              {(searchQuery || selectedCategory !== "all" || selectedSubcategory !== "all" || priceRange !== "all" || riskLevel !== "all") && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-muted-foreground">Active filters:</span>
+                  {searchQuery && <Badge variant="secondary">Search: {searchQuery}</Badge>}
+                  {selectedCategory !== "all" && (
+                    <Badge variant="secondary">
+                      {categories.find(c => c.id.toString() === selectedCategory)?.name}
+                    </Badge>
+                  )}
+                  {selectedSubcategory !== "all" && (
+                    <Badge variant="secondary">
+                      {(subcategories as any[]).find((s: any) => s.id.toString() === selectedSubcategory)?.name}
+                    </Badge>
+                  )}
+                  {priceRange !== "all" && <Badge variant="secondary">Price: {priceRange}</Badge>}
+                  {riskLevel !== "all" && <Badge variant="secondary">Risk: {riskLevel}</Badge>}
+                </div>
+              )}
+            </div>
+
+            {filteredModels.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredModels.map((model) => (
+                  <ModelCard key={model.id} model={model} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Models Found</h3>
+                <p className="text-muted-foreground mb-4">
+                  No results found. Try broader search terms or different filters.
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setSelectedCategory("all");
+                    setSelectedSubcategory("all");
+                    setPriceRange("all");
+                    setRiskLevel("all");
+                    setSearchQuery("");
+                  }}
+                >
+                  Clear All Filters
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
-
       <MobileNav />
     </div>
   );

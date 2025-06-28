@@ -102,7 +102,8 @@ export default function ModelCard({ model, featured = false }: ModelCardProps) {
       return;
     }
 
-    subscribeMutation.mutate(model.id);
+    // Navigate to checkout page with model data
+    window.location.href = `/checkout?modelId=${model.id}&name=${encodeURIComponent(model.name)}&price=${model.price}`;
   };
 
   const IconComponent = getModelIcon(model.category || 'default');
@@ -166,20 +167,80 @@ export default function ModelCard({ model, featured = false }: ModelCardProps) {
           </div>
         )}
         
-        <div className="flex justify-between items-center">
-          <div className="flex flex-col">
-            <span className="text-2xl font-bold text-primary">
-              ${model.price ? parseFloat(model.price).toFixed(0) : "299"}
-            </span>
-            <span className="text-xs text-muted-foreground">/month</span>
+        {/* Pricing Section */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-2xl font-bold text-primary">
+                ${model.price ? parseFloat(model.price).toFixed(0) : "299"}
+              </span>
+              <span className="text-sm text-muted-foreground ml-1">/month</span>
+            </div>
+            {model.isFeatured && (
+              <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0">
+                Featured
+              </Badge>
+            )}
           </div>
+
+          {/* Pricing Plans */}
+          <div className="text-xs text-muted-foreground space-y-1">
+            <div className="flex justify-between">
+              <span>Monthly:</span>
+              <span className="font-medium">${model.price ? parseFloat(model.price).toFixed(0) : "299"}/mo</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Annual:</span>
+              <span className="font-medium text-green-400">
+                ${model.price ? (parseFloat(model.price) * 10).toFixed(0) : "2990"}/yr
+                <span className="text-xs ml-1">(2 months free)</span>
+              </span>
+            </div>
+            {parseFloat(model.price || "299") > 100 && (
+              <div className="flex justify-between">
+                <span>Enterprise:</span>
+                <span className="font-medium">Contact us</span>
+              </div>
+            )}
+          </div>
+
+          {/* Risk Level & Min Investment */}
+          {(model.riskLevel || model.minInvestment) && (
+            <div className="flex items-center space-x-2 text-xs">
+              {model.riskLevel && (
+                <Badge 
+                  variant="outline" 
+                  className={`text-xs ${
+                    model.riskLevel === 'Low' ? 'border-green-500 text-green-400' :
+                    model.riskLevel === 'Medium' ? 'border-yellow-500 text-yellow-400' :
+                    'border-red-500 text-red-400'
+                  }`}
+                >
+                  {model.riskLevel} Risk
+                </Badge>
+              )}
+              {model.minInvestment && (
+                <Badge variant="outline" className="text-xs">
+                  Min: ${parseFloat(model.minInvestment).toLocaleString()}
+                </Badge>
+              )}
+            </div>
+          )}
+
           <Button 
-            className="gradient-primary hover:opacity-90"
+            className="w-full gradient-primary hover:opacity-90"
             onClick={handleSubscribe}
             disabled={subscribeMutation.isPending}
           >
-            {subscribeMutation.isPending ? "Subscribing..." : "Subscribe"}
+            {subscribeMutation.isPending ? "Processing..." : "Start Subscription"}
           </Button>
+          
+          {/* Free Trial Info */}
+          <div className="text-center">
+            <span className="text-xs text-muted-foreground">
+              14-day free trial • Cancel anytime
+            </span>
+          </div>
         </div>
 
         {/* Category Badge */}
