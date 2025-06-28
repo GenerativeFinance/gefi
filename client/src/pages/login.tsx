@@ -30,9 +30,9 @@ export default function Login() {
               <h1 className="text-3xl font-bold">GenoFi</h1>
             </div>
             <h2 className="text-4xl font-bold gradient-text">
-              AI-Powered Financial Analytics
+              AI-Powered Finance
             </h2>
-            <p className="text-xl text-muted-foreground max-w-md">
+            <p className="text-xl text-muted-foreground max-w-md mx-auto lg:mx-0 text-center lg:text-left">
               Join thousands of investors using advanced AI models for smarter financial decisions.
             </p>
           </div>
