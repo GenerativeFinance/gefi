@@ -8,6 +8,8 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import AnalyticsDashboard from "@/pages/analytics-dashboard";
+import Login from "@/pages/login";
+import LoginFailed from "@/pages/login-failed";
 import Portfolio from "@/pages/portfolio";
 import Reports from "@/pages/reports";
 import RiskManagement from "@/pages/risk-management";
