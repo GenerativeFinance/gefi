@@ -23,6 +23,7 @@ import LearningCenter from "@/pages/learning-center";
 import UserProfile from "@/pages/user-profile";
 import Settings from "@/pages/settings";
 import DeveloperDashboard from "@/pages/developer-dashboard";
+import BacktestingEnvironment from "@/pages/backtesting";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -48,6 +49,7 @@ function Router() {
           <Route path="/profile" component={UserProfile} />
           <Route path="/settings" component={Settings} />
           <Route path="/developer" component={DeveloperDashboard} />
+          <Route path="/backtesting" component={BacktestingEnvironment} />
         </>
       )}
       <Route component={NotFound} />

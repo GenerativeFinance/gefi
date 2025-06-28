@@ -358,6 +358,88 @@ export const modelRewards = pgTable("model_rewards", {
   claimedAt: timestamp("claimed_at"),
 });
 
+// Backtesting Environment Tables
+export const backtests = pgTable("backtests", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  modelId: integer("model_id").notNull().references(() => developerModels.id),
+  modelName: varchar("model_name", { length: 255 }).notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("running"), // running, completed, failed, stopped
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  initialCapital: decimal("initial_capital", { precision: 15, scale: 2 }).notNull(),
+  finalValue: decimal("final_value", { precision: 15, scale: 2 }),
+  totalReturn: decimal("total_return", { precision: 8, scale: 6 }),
+  annualizedReturn: decimal("annualized_return", { precision: 8, scale: 6 }),
+  sharpeRatio: decimal("sharpe_ratio", { precision: 8, scale: 4 }),
+  maxDrawdown: decimal("max_drawdown", { precision: 8, scale: 6 }),
+  volatility: decimal("volatility", { precision: 8, scale: 6 }),
+  winRate: decimal("win_rate", { precision: 8, scale: 6 }),
+  profitFactor: decimal("profit_factor", { precision: 8, scale: 4 }),
+  benchmark: varchar("benchmark", { length: 50 }).notNull(),
+  commission: decimal("commission", { precision: 8, scale: 6 }).notNull().default("0.001"),
+  slippage: decimal("slippage", { precision: 8, scale: 6 }).notNull().default("0.0005"),
+  riskFreeRate: decimal("risk_free_rate", { precision: 8, scale: 6 }).notNull().default("0.02"),
+  metrics: jsonb("metrics"), // Additional metrics like beta, alpha, etc.
+  config: jsonb("config"), // Backtest configuration parameters
+  createdAt: timestamp("created_at").defaultNow(),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+});
+
+export const backtestTrades = pgTable("backtest_trades", {
+  id: serial("id").primaryKey(),
+  backtestId: integer("backtest_id").notNull().references(() => backtests.id),
+  tradeDate: timestamp("trade_date").notNull(),
+  symbol: varchar("symbol", { length: 50 }).notNull(),
+  action: varchar("action", { length: 10 }).notNull(), // buy, sell
+  quantity: decimal("quantity", { precision: 15, scale: 6 }).notNull(),
+  price: decimal("price", { precision: 15, scale: 6 }).notNull(),
+  value: decimal("value", { precision: 15, scale: 2 }).notNull(),
+  commission: decimal("commission", { precision: 15, scale: 6 }).notNull(),
+  slippage: decimal("slippage", { precision: 15, scale: 6 }).notNull(),
+  pnl: decimal("pnl", { precision: 15, scale: 2 }),
+  portfolioValue: decimal("portfolio_value", { precision: 15, scale: 2 }).notNull(),
+  signal: varchar("signal", { length: 255 }), // AI model signal that triggered the trade
+  confidence: decimal("confidence", { precision: 5, scale: 4 }), // Model confidence level
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const backtestPerformance = pgTable("backtest_performance", {
+  id: serial("id").primaryKey(),
+  backtestId: integer("backtest_id").notNull().references(() => backtests.id),
+  date: timestamp("date").notNull(),
+  portfolioValue: decimal("portfolio_value", { precision: 15, scale: 2 }).notNull(),
+  benchmarkValue: decimal("benchmark_value", { precision: 15, scale: 2 }).notNull(),
+  dailyReturn: decimal("daily_return", { precision: 8, scale: 6 }),
+  cumulativeReturn: decimal("cumulative_return", { precision: 8, scale: 6 }),
+  drawdown: decimal("drawdown", { precision: 8, scale: 6 }),
+  volatility: decimal("volatility", { precision: 8, scale: 6 }),
+  cashPosition: decimal("cash_position", { precision: 15, scale: 2 }).notNull(),
+  positionsValue: decimal("positions_value", { precision: 15, scale: 2 }).notNull(),
+  exposure: decimal("exposure", { precision: 5, scale: 4 }), // Market exposure percentage
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const backtestPositions = pgTable("backtest_positions", {
+  id: serial("id").primaryKey(),
+  backtestId: integer("backtest_id").notNull().references(() => backtests.id),
+  symbol: varchar("symbol", { length: 50 }).notNull(),
+  quantity: decimal("quantity", { precision: 15, scale: 6 }).notNull(),
+  avgPrice: decimal("avg_price", { precision: 15, scale: 6 }).notNull(),
+  currentPrice: decimal("current_price", { precision: 15, scale: 6 }),
+  marketValue: decimal("market_value", { precision: 15, scale: 2 }),
+  unrealizedPnl: decimal("unrealized_pnl", { precision: 15, scale: 2 }),
+  realizedPnl: decimal("realized_pnl", { precision: 15, scale: 2 }),
+  openDate: timestamp("open_date").notNull(),
+  closeDate: timestamp("close_date"),
+  status: varchar("status", { length: 20 }).notNull().default("open"), // open, closed
+  sector: varchar("sector", { length: 100 }),
+  marketCap: varchar("market_cap", { length: 20 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type Portfolio = typeof portfolios.$inferSelect;
@@ -412,6 +494,16 @@ export type ModelChatMessage = typeof modelChat.$inferSelect;
 export type InsertModelChatMessage = typeof modelChat.$inferInsert;
 export type ModelReward = typeof modelRewards.$inferSelect;
 export type InsertModelReward = typeof modelRewards.$inferInsert;
+
+// Backtesting Types
+export type Backtest = typeof backtests.$inferSelect;
+export type InsertBacktest = typeof backtests.$inferInsert;
+export type BacktestTrade = typeof backtestTrades.$inferSelect;
+export type InsertBacktestTrade = typeof backtestTrades.$inferInsert;
+export type BacktestPerformance = typeof backtestPerformance.$inferSelect;
+export type InsertBacktestPerformance = typeof backtestPerformance.$inferInsert;
+export type BacktestPosition = typeof backtestPositions.$inferSelect;
+export type InsertBacktestPosition = typeof backtestPositions.$inferInsert;
 
 export const insertPortfolioSchema = createInsertSchema(portfolios).omit({
   id: true,
