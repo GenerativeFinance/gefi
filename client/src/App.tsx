@@ -27,6 +27,8 @@ import Settings from "@/pages/settings";
 import DeveloperDashboard from "@/pages/developer-dashboard";
 import BacktestingEnvironment from "@/pages/backtesting";
 import Bounties from "@/pages/bounties";
+import BountyLeaderboard from "@/pages/bounty-leaderboard";
+import UserDetail from "@/pages/user-detail";
 import Learning from "@/pages/learning";
 import TermsOfService from "@/pages/terms-of-service";
 import DataProcessingAgreement from "@/pages/data-processing-agreement";
@@ -77,6 +79,8 @@ function Router() {
           <Route path="/developer" component={DeveloperDashboard} />
           <Route path="/backtesting" component={BacktestingEnvironment} />
           <Route path="/bounties" component={Bounties} />
+          <Route path="/bounties/leaderboard" component={BountyLeaderboard} />
+          <Route path="/user/:userId" component={UserDetail} />
           <Route path="/learning" component={Learning} />
         </>
       ) : (
