@@ -45,6 +45,7 @@ function Router() {
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/learning-center" component={LearningCenter} />
           <Route path="/profile" component={UserProfile} />
+          <Route path="/settings" component={Settings} />
         </>
       )}
       <Route component={NotFound} />
@@ -55,11 +56,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-
-        <Router />
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
