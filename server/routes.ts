@@ -32,10 +32,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Portfolio routes
+  // Portfolio routes with AI analysis
   app.get('/api/portfolio', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const portfolio = await storage.getUserPortfolio(userId);
       
       if (!portfolio) {
@@ -47,10 +47,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
           annualReturns: "18.40",
           sharpeRatio: "2.10"
         });
-        return res.json(defaultPortfolio);
+        
+        // Create sample assets for demo
+        const sampleAssets = [
+          {
+            portfolioId: defaultPortfolio.id,
+            symbol: "AAPL",
+            assetType: "Stock",
+            allocation: "25.00",
+            value: "50000.00",
+            purchasePrice: "45000.00",
+            currentValue: "50000.00",
+            quantity: "250.00"
+          },
+          {
+            portfolioId: defaultPortfolio.id,
+            symbol: "MSFT",
+            assetType: "Stock",
+            allocation: "20.00",
+            value: "40000.00",
+            purchasePrice: "38000.00",
+            currentValue: "40000.00",
+            quantity: "120.00"
+          },
+          {
+            portfolioId: defaultPortfolio.id,
+            symbol: "BTC",
+            assetType: "Crypto",
+            allocation: "15.00",
+            value: "30000.00",
+            purchasePrice: "32000.00",
+            currentValue: "30000.00",
+            quantity: "1.20"
+          }
+        ];
+        
+        return res.json({
+          ...defaultPortfolio,
+          assets: sampleAssets,
+          analysis: {
+            optimization: {
+              recommendations: ["Initial portfolio setup complete"],
+              score: 75,
+              riskLevel: 'Medium' as const,
+              suggestedActions: []
+            },
+            riskAssessment: {
+              overallScore: 70,
+              factors: []
+            },
+            marketInsights: [],
+            metrics: {
+              expectedReturn: 0.08,
+              portfolioRisk: 0.15,
+              sharpeRatio: 0.53,
+              valueAtRisk: -2500,
+              totalValue: 120000
+            }
+          }
+        });
       }
       
-      res.json(portfolio);
+      const assets = await storage.getPortfolioAssets(portfolio.id);
+      
+      // Generate AI-powered portfolio analysis
+      const optimization = PortfolioOptimizer.generateOptimizationRecommendations(assets);
+      const riskAssessment = RiskAssessment.calculateRiskScore(portfolio, assets);
+      const marketInsights = MarketAnalysis.generateMarketInsights(assets);
+      
+      // Calculate additional metrics
+      const expectedReturn = PortfolioOptimizer.calculateExpectedReturn(assets);
+      const portfolioRisk = PortfolioOptimizer.calculatePortfolioRisk(assets);
+      const sharpeRatio = PortfolioOptimizer.calculateSharpeRatio(expectedReturn, portfolioRisk);
+      const totalValue = assets.reduce((sum, asset) => sum + parseFloat(asset.currentValue), 0);
+      const valueAtRisk = PortfolioOptimizer.calculateVaR(totalValue, expectedReturn, portfolioRisk);
+      
+      res.json({
+        ...portfolio,
+        assets,
+        analysis: {
+          optimization,
+          riskAssessment,
+          marketInsights,
+          metrics: {
+            expectedReturn,
+            portfolioRisk,
+            sharpeRatio,
+            valueAtRisk,
+            totalValue
+          }
+        }
+      });
     } catch (error) {
       console.error("Error fetching portfolio:", error);
       res.status(500).json({ message: "Failed to fetch portfolio" });
