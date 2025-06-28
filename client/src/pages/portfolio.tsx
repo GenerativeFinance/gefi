@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
+import Footer from "@/components/layout/footer";
 import PortfolioOverview from "@/components/portfolio/portfolio-overview";
 import RiskDistribution from "@/components/portfolio/risk-distribution";
 import AiModels from "@/components/portfolio/ai-models";
@@ -86,6 +87,7 @@ export default function Portfolio() {
         </div>
       </main>
 
+      <Footer />
       <MobileNav />
     </div>
   );

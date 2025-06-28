@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
+import Footer from "@/components/layout/footer";
 import MarketInsights from "@/components/reports/market-insights";
 import InvestorReports from "@/components/reports/investor-reports";
 
@@ -72,6 +73,7 @@ export default function Reports() {
         </div>
       </main>
 
+      <Footer />
       <MobileNav />
     </div>
   );
