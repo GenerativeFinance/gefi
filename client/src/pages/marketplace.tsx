@@ -267,7 +267,7 @@ export default function Marketplace() {
           {/* Browse Models Tab */}
           <TabsContent value="browse" className="space-y-6">
             {/* Filters */}
-            <Card className="p-6">
+            <Card className="p-6" data-tour="filters">
               <div className="flex items-center space-x-2 mb-4">
                 <Filter className="h-5 w-5 text-muted-foreground" />
                 <h3 className="text-lg font-semibold">Filters</h3>
@@ -366,7 +366,7 @@ export default function Marketplace() {
                 </h3>
                 
                 {filteredModels.length > 0 && (
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2" data-tour="export">
                     <Button
                       variant="outline"
                       size="sm"
@@ -410,7 +410,7 @@ export default function Marketplace() {
             </div>
 
             {filteredModels.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6" data-tour="performance">
                 {filteredModels.map((model) => (
                   <ModelCard key={model.id} model={model} />
                 ))}
