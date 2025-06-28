@@ -181,21 +181,6 @@ export default function Header() {
                       Backtesting
                     </Button>
                   </Link>
-                  
-                  {/* Marketplace Link */}
-                  <Link href="/marketplace">
-                    <Button 
-                      variant="ghost" 
-                      className={`transition-colors ${
-                        location === '/marketplace'
-                          ? 'text-primary font-medium' 
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      <Briefcase className="h-4 w-4 mr-1" />
-                      Marketplace
-                    </Button>
-                  </Link>
                 </>
               ) : (
                 /* Investor Navigation */
