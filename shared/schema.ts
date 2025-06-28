@@ -1,0 +1,157 @@
+import {
+  pgTable,
+  text,
+  varchar,
+  timestamp,
+  jsonb,
+  index,
+  serial,
+  integer,
+  decimal,
+  boolean,
+  uuid,
+} from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// Session storage table.
+// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table.
+// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  subscriptionTier: varchar("subscription_tier").default("free"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const portfolios = pgTable("portfolios", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  totalInvestment: decimal("total_investment", { precision: 12, scale: 2 }).notNull(),
+  livePnL: decimal("live_pnl", { precision: 12, scale: 2 }).notNull(),
+  annualReturns: decimal("annual_returns", { precision: 5, scale: 2 }).notNull(),
+  sharpeRatio: decimal("sharpe_ratio", { precision: 4, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const portfolioAssets = pgTable("portfolio_assets", {
+  id: serial("id").primaryKey(),
+  portfolioId: integer("portfolio_id").references(() => portfolios.id).notNull(),
+  assetType: varchar("asset_type").notNull(), // 'stocks', 'bonds', 'crypto'
+  allocation: decimal("allocation", { precision: 5, scale: 2 }).notNull(),
+  value: decimal("value", { precision: 12, scale: 2 }).notNull(),
+});
+
+export const aiModels = pgTable("ai_models", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  category: varchar("category").notNull(),
+  price: decimal("price", { precision: 8, scale: 2 }).notNull(),
+  rating: decimal("rating", { precision: 3, scale: 2 }).default("0"),
+  totalRatings: integer("total_ratings").default(0),
+  creator: varchar("creator").notNull(),
+  isActive: boolean("is_active").default(true),
+  features: jsonb("features"),
+  performance: jsonb("performance"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const userModelSubscriptions = pgTable("user_model_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  modelId: integer("model_id").references(() => aiModels.id).notNull(),
+  subscribedAt: timestamp("subscribed_at").defaultNow(),
+  isActive: boolean("is_active").default(true),
+});
+
+export const portfolioAiModels = pgTable("portfolio_ai_models", {
+  id: serial("id").primaryKey(),
+  portfolioId: integer("portfolio_id").references(() => portfolios.id).notNull(),
+  modelType: varchar("model_type").notNull(), // 'conservative', 'aggressive'
+  modelName: varchar("model_name").notNull(),
+  value: decimal("value", { precision: 12, scale: 2 }).notNull(),
+  performance: decimal("performance", { precision: 5, scale: 2 }).default("0"),
+});
+
+export const marketInsights = pgTable("market_insights", {
+  id: serial("id").primaryKey(),
+  type: varchar("type").notNull(), // 'sentiment', 'macroeconomic', 'fed_prediction'
+  title: varchar("title").notNull(),
+  value: varchar("value"),
+  trend: varchar("trend"), // 'up', 'down', 'stable'
+  confidence: decimal("confidence", { precision: 5, scale: 2 }),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const riskAlerts = pgTable("risk_alerts", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id),
+  type: varchar("type").notNull(), // 'warning', 'error', 'info'
+  title: varchar("title").notNull(),
+  description: text("description"),
+  severity: varchar("severity").notNull(), // 'low', 'medium', 'high', 'critical'
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const reports = pgTable("reports", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id),
+  type: varchar("type").notNull(), // 'monthly_performance', 'risk_compliance', 'portfolio_optimization'
+  title: varchar("title").notNull(),
+  status: varchar("status").notNull(), // 'generated', 'pending', 'failed'
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  metadata: jsonb("metadata"),
+});
+
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type Portfolio = typeof portfolios.$inferSelect;
+export type InsertPortfolio = typeof portfolios.$inferInsert;
+export type PortfolioAsset = typeof portfolioAssets.$inferSelect;
+export type InsertPortfolioAsset = typeof portfolioAssets.$inferInsert;
+export type AiModel = typeof aiModels.$inferSelect;
+export type InsertAiModel = typeof aiModels.$inferInsert;
+export type UserModelSubscription = typeof userModelSubscriptions.$inferSelect;
+export type InsertUserModelSubscription = typeof userModelSubscriptions.$inferInsert;
+export type PortfolioAiModel = typeof portfolioAiModels.$inferSelect;
+export type InsertPortfolioAiModel = typeof portfolioAiModels.$inferInsert;
+export type MarketInsight = typeof marketInsights.$inferSelect;
+export type InsertMarketInsight = typeof marketInsights.$inferInsert;
+export type RiskAlert = typeof riskAlerts.$inferSelect;
+export type InsertRiskAlert = typeof riskAlerts.$inferInsert;
+export type Report = typeof reports.$inferSelect;
+export type InsertReport = typeof reports.$inferInsert;
+
+export const insertPortfolioSchema = createInsertSchema(portfolios).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAiModelSchema = createInsertSchema(aiModels).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertRiskAlertSchema = createInsertSchema(riskAlerts).omit({
+  id: true,
+  createdAt: true,
+});
