@@ -103,7 +103,7 @@ export default function Header() {
             <Link href="/">
               <div className="flex items-center space-x-2 cursor-pointer">
                 <Brain className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold">GenoFi</span>
+                <span className="text-xl font-bold">GeFi</span>
               </div>
             </Link>
 
