@@ -156,6 +156,12 @@ Changelog:
   * Enhanced Developer workflow with incentive system and skill development resources
   * Integrated progress tracking, difficulty levels, and content categorization
   * Built comprehensive UI for both bounty management and educational content discovery
+- June 29, 2025. Fixed header navigation and search lightbox styling
+  * Corrected header to display Developer navigation on Bounties and Learning pages
+  * Updated route detection logic to include /bounties and /learning paths
+  * Added proper navigation buttons for all four developer tools: Dashboard, Backtesting, Bounties, Learning
+  * Enhanced search lightbox styling with improved dark theme appearance
+  * Added backdrop blur, better borders, and proper input field styling for both desktop and mobile search dialogs
 ```
 
 ## User Preferences

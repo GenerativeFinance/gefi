@@ -238,7 +238,7 @@ export default function Header() {
                   <Search className="h-5 w-5" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-2xl bg-background border">
+              <DialogContent className="sm:max-w-2xl bg-background/95 backdrop-blur-sm border border-border/50 shadow-2xl">
                 <DialogHeader>
                   <DialogTitle className="text-foreground">Search AI Financial Models</DialogTitle>
                   <DialogDescription className="text-muted-foreground">
@@ -252,7 +252,7 @@ export default function Header() {
                       placeholder="Search models, descriptions, or tags..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-background/50 border-border/50 focus:border-primary/50"
                       autoFocus
                     />
                   </div>
@@ -462,7 +462,7 @@ export default function Header() {
                       Search AI Models
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-2xl">
+                  <DialogContent className="sm:max-w-2xl bg-background/95 backdrop-blur-sm border border-border/50 shadow-2xl">
                     <DialogHeader>
                       <DialogTitle>Search AI Financial Models</DialogTitle>
                       <DialogDescription>
@@ -476,7 +476,7 @@ export default function Header() {
                           placeholder="Search models, descriptions, or tags..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-10"
+                          className="pl-10 bg-background/50 border-border/50 focus:border-primary/50"
                           autoFocus
                         />
                       </div>
