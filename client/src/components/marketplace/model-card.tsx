@@ -581,11 +581,33 @@ export default function ModelCard({ model, featured = false }: ModelCardProps) {
                       <div>
                         <h4 className="text-sm font-medium mb-2">Features</h4>
                         <div className="flex flex-wrap gap-1">
-                          {(model.features || ['Real-time Analysis', 'Risk Assessment', 'Portfolio Optimization']).map((feature: string, index: number) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {feature}
-                            </Badge>
-                          ))}
+                          {(() => {
+                            const features = model.features;
+                            let featureArray: string[] = [];
+                            
+                            if (Array.isArray(features)) {
+                              featureArray = features;
+                            } else if (typeof features === 'string') {
+                              try {
+                                const parsed = JSON.parse(features);
+                                featureArray = Array.isArray(parsed) ? parsed : [features];
+                              } catch {
+                                featureArray = [features];
+                              }
+                            } else if (features && typeof features === 'object') {
+                              featureArray = Object.values(features).filter(f => typeof f === 'string') as string[];
+                            }
+                            
+                            if (featureArray.length === 0) {
+                              featureArray = ['Real-time Analysis', 'Risk Assessment', 'Portfolio Optimization'];
+                            }
+                            
+                            return featureArray.map((feature: string, index: number) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {feature}
+                              </Badge>
+                            ));
+                          })()}
                         </div>
                       </div>
                     </div>
