@@ -258,6 +258,106 @@ export const modelRatings = pgTable("model_ratings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Developer Dashboard Tables
+export const developerModels = pgTable("developer_models", {
+  id: serial("id").primaryKey(),
+  developerId: varchar("developer_id").notNull().references(() => users.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("draft"), // draft, submitted, approved, rejected, testing, deployed
+  fundingGoal: decimal("funding_goal", { precision: 12, scale: 2 }).notNull(),
+  fundingRaised: decimal("funding_raised", { precision: 12, scale: 2 }).notNull().default("0.00"),
+  category: varchar("category", { length: 100 }).notNull(),
+  tags: text("tags").array().default([]),
+  githubRepo: varchar("github_repo", { length: 255 }),
+  apiEndpoint: varchar("api_endpoint", { length: 255 }),
+  deploymentUrl: varchar("deployment_url", { length: 255 }),
+  fileUrl: varchar("file_url", { length: 255 }),
+  fileName: varchar("file_name", { length: 255 }),
+  testResults: jsonb("test_results"),
+  performanceMetrics: jsonb("performance_metrics"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const modelFunding = pgTable("model_funding", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").notNull().references(() => developerModels.id),
+  investorId: varchar("investor_id").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  stake: decimal("stake", { precision: 5, scale: 2 }), // percentage stake
+  status: varchar("status", { length: 50 }).notNull().default("pledged"), // pledged, confirmed, refunded
+  transactionId: varchar("transaction_id", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const modelCollaborators = pgTable("model_collaborators", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").notNull().references(() => developerModels.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  role: varchar("role", { length: 50 }).notNull(), // owner, collaborator, tester
+  permissions: text("permissions").array().default([]), // read, write, deploy, admin
+  invitedAt: timestamp("invited_at").defaultNow(),
+  joinedAt: timestamp("joined_at"),
+  status: varchar("status", { length: 50 }).notNull().default("invited"), // invited, active, inactive
+});
+
+export const modelVersions = pgTable("model_versions", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").notNull().references(() => developerModels.id),
+  version: varchar("version", { length: 50 }).notNull(),
+  description: text("description"),
+  fileUrl: varchar("file_url", { length: 255 }),
+  fileName: varchar("file_name", { length: 255 }),
+  changes: text("changes"),
+  commitHash: varchar("commit_hash", { length: 255 }),
+  testResults: jsonb("test_results"),
+  deployedAt: timestamp("deployed_at"),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const modelTests = pgTable("model_tests", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").notNull().references(() => developerModels.id),
+  testerId: varchar("tester_id").notNull().references(() => users.id),
+  testType: varchar("test_type", { length: 50 }).notNull(), // unit, integration, performance, security
+  status: varchar("status", { length: 50 }).notNull(), // pending, running, passed, failed
+  results: jsonb("results"),
+  feedback: text("feedback"),
+  score: integer("score"), // 1-100
+  duration: integer("duration"), // milliseconds
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const modelChat = pgTable("model_chat", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").notNull().references(() => developerModels.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  message: text("message").notNull(),
+  messageType: varchar("message_type", { length: 50 }).notNull().default("text"), // text, file, code, issue
+  parentId: integer("parent_id").references(() => modelChat.id),
+  attachments: jsonb("attachments"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const modelRewards = pgTable("model_rewards", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").notNull().references(() => developerModels.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: varchar("type", { length: 50 }).notNull(), // funding_stake, bonus_points, revenue_share
+  amount: decimal("amount", { precision: 12, scale: 2 }),
+  points: integer("points"),
+  percentage: decimal("percentage", { precision: 5, scale: 2 }),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, active, claimed, expired
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  claimedAt: timestamp("claimed_at"),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type Portfolio = typeof portfolios.$inferSelect;
@@ -296,6 +396,22 @@ export type ModelComment = typeof modelComments.$inferSelect;
 export type InsertModelComment = typeof modelComments.$inferInsert;
 export type ModelRating = typeof modelRatings.$inferSelect;
 export type InsertModelRating = typeof modelRatings.$inferInsert;
+
+// Developer Dashboard Types
+export type DeveloperModel = typeof developerModels.$inferSelect;
+export type InsertDeveloperModel = typeof developerModels.$inferInsert;
+export type ModelFunding = typeof modelFunding.$inferSelect;
+export type InsertModelFunding = typeof modelFunding.$inferInsert;
+export type ModelCollaborator = typeof modelCollaborators.$inferSelect;
+export type InsertModelCollaborator = typeof modelCollaborators.$inferInsert;
+export type ModelVersion = typeof modelVersions.$inferSelect;
+export type InsertModelVersion = typeof modelVersions.$inferInsert;
+export type ModelTest = typeof modelTests.$inferSelect;
+export type InsertModelTest = typeof modelTests.$inferInsert;
+export type ModelChatMessage = typeof modelChat.$inferSelect;
+export type InsertModelChatMessage = typeof modelChat.$inferInsert;
+export type ModelReward = typeof modelRewards.$inferSelect;
+export type InsertModelReward = typeof modelRewards.$inferInsert;
 
 export const insertPortfolioSchema = createInsertSchema(portfolios).omit({
   id: true,

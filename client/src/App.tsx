@@ -22,6 +22,7 @@ import PrivacyPolicy from "@/pages/privacy-policy";
 import LearningCenter from "@/pages/learning-center";
 import UserProfile from "@/pages/user-profile";
 import Settings from "@/pages/settings";
+import DeveloperDashboard from "@/pages/developer-dashboard";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
