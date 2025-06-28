@@ -5,7 +5,7 @@ import connectPg from "connect-pg-simple";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import { Strategy as FacebookStrategy } from "passport-facebook";
-import { Strategy as MicrosoftStrategy } from "passport-microsoft";
+import { Strategy as LinkedInStrategy } from "passport-linkedin-oauth2";
 import { storage } from "./storage";
 
 export function getSession() {
@@ -97,17 +97,17 @@ export async function setupMultiAuth(app: Express) {
     }));
   }
 
-  // Microsoft OAuth Strategy
-  if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
-    passport.use(new MicrosoftStrategy({
-      clientID: process.env.MICROSOFT_CLIENT_ID,
-      clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
-      callbackURL: "/api/auth/microsoft/callback",
-      scope: ['user.read']
+  // LinkedIn OAuth Strategy
+  if (process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET) {
+    passport.use(new LinkedInStrategy({
+      clientID: process.env.LINKEDIN_CLIENT_ID,
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+      callbackURL: "/api/auth/linkedin/callback",
+      scope: ['r_emailaddress', 'r_liteprofile']
     }, async (accessToken, refreshToken, profile, done) => {
       try {
-        const user = await upsertUser(profile, 'microsoft');
-        return done(null, { ...user, provider: 'microsoft' });
+        const user = await upsertUser(profile, 'linkedin');
+        return done(null, { ...user, provider: 'linkedin' });
       } catch (error) {
         return done(error, null);
       }
@@ -157,12 +157,12 @@ export async function setupMultiAuth(app: Express) {
     })
   );
 
-  // Microsoft
-  app.get('/api/auth/microsoft',
-    passport.authenticate('microsoft')
+  // LinkedIn
+  app.get('/api/auth/linkedin',
+    passport.authenticate('linkedin')
   );
-  app.get('/api/auth/microsoft/callback',
-    passport.authenticate('microsoft', {
+  app.get('/api/auth/linkedin/callback',
+    passport.authenticate('linkedin', {
       successRedirect: '/',
       failureRedirect: '/login-failed'
     })

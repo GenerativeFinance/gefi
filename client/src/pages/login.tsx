@@ -5,7 +5,7 @@ import {
   Github, 
   Chrome, 
   Facebook, 
-  Building2,
+  Linkedin,
   TrendingUp,
   Brain,
   Shield,
@@ -91,12 +91,12 @@ export default function Login() {
               </Button>
 
               <Button
-                onClick={() => handleOAuthLogin('microsoft')}
+                onClick={() => handleOAuthLogin('linkedin')}
                 variant="outline"
                 className="w-full h-12 flex items-center justify-center space-x-3 hover:bg-secondary/50 transition-colors"
               >
-                <Building2 className="h-5 w-5 text-blue-600" />
-                <span>Continue with Microsoft</span>
+                <Linkedin className="h-5 w-5 text-blue-600" />
+                <span>Continue with LinkedIn</span>
               </Button>
 
               <Button
