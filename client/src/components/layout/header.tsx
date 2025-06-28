@@ -11,6 +11,7 @@ import { Brain, Search, Bell, Menu, User, Settings, LogOut } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { AccessibilityToggle } from "@/components/ui/accessibility-toggle";
 
 export default function Header() {
   const { user } = useAuth();
@@ -52,6 +53,7 @@ export default function Header() {
             <Button variant="ghost" size="icon" className="hidden sm:flex">
               <Bell className="h-5 w-5" />
             </Button>
+            <AccessibilityToggle />
             <LanguageSwitcher />
             
             <DropdownMenu>
