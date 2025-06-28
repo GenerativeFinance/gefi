@@ -153,13 +153,6 @@ export default function Header() {
             <nav className="hidden md:flex space-x-6">
               {dashboardMode === 'developer' ? (
                 <>
-                  {/* Developer Badge */}
-                  <div className="flex items-center space-x-2">
-                    <Code className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium text-primary">Developer</span>
-                    <Badge variant="secondary" className="text-xs bg-purple-600 text-white">DEV</Badge>
-                  </div>
-                  
                   {/* Developer Navigation Items */}
                   <Link href="/developer">
                     <Button 
