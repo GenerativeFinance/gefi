@@ -371,6 +371,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Comments routes
+  app.get('/api/ai-models/:id/comments', async (req, res) => {
+    try {
+      const modelId = parseInt(req.params.id);
+      const comments = await storage.getModelComments(modelId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  app.post('/api/ai-models/:id/comments', isAuthenticated, async (req: any, res) => {
+    try {
+      const modelId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+      const { text } = req.body;
+      
+      if (!text || text.trim().length === 0) {
+        return res.status(400).json({ message: "Comment text is required" });
+      }
+
+      const comment = await storage.createModelComment({
+        modelId,
+        userId,
+        text: text.trim(),
+        createdAt: new Date(),
+      });
+      
+      res.json(comment);
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  // Ratings routes
+  app.get('/api/ai-models/:id/ratings', async (req, res) => {
+    try {
+      const modelId = parseInt(req.params.id);
+      const ratings = await storage.getModelRatings(modelId);
+      res.json(ratings);
+    } catch (error) {
+      console.error("Error fetching ratings:", error);
+      res.status(500).json({ message: "Failed to fetch ratings" });
+    }
+  });
+
+  app.post('/api/ai-models/:id/ratings', isAuthenticated, async (req: any, res) => {
+    try {
+      const modelId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+      const { rating, review } = req.body;
+      
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      }
+
+      const ratingRecord = await storage.createModelRating({
+        modelId,
+        userId,
+        rating,
+        review: review || null,
+        createdAt: new Date(),
+      });
+      
+      res.json(ratingRecord);
+    } catch (error) {
+      console.error("Error creating rating:", error);
+      res.status(500).json({ message: "Failed to create rating" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

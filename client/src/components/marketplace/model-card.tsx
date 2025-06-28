@@ -296,7 +296,7 @@ export default function ModelCard({ model, featured = false }: ModelCardProps) {
           <span className="text-sm text-muted-foreground">
             By {model.creator || "AI Expert"}
           </span>
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-1" data-tour="ratings">
             <Star className="h-4 w-4 text-yellow-400 fill-current" />
             <span className="text-sm font-medium">
               {model.rating ? parseFloat(model.rating).toFixed(1) : "4.8"}
@@ -505,7 +505,7 @@ export default function ModelCard({ model, featured = false }: ModelCardProps) {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="comments" className="space-y-4">
+                <TabsContent value="comments" className="space-y-4" data-tour="comments">
                   {/* Comment Input */}
                   <div className="p-4 border rounded-lg">
                     <h4 className="text-sm font-medium mb-3">Discussion</h4>

@@ -240,6 +240,24 @@ export const complianceDocuments = pgTable("compliance_documents", {
   reviewedBy: varchar("reviewed_by"),
 });
 
+export const modelComments = pgTable("model_comments", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").references(() => aiModels.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  text: text("text").notNull(),
+  likes: integer("likes").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const modelRatings = pgTable("model_ratings", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").references(() => aiModels.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  rating: integer("rating").notNull(), // 1-5 stars
+  review: text("review"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type Portfolio = typeof portfolios.$inferSelect;
