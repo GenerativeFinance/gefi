@@ -52,6 +52,7 @@ export default function Header() {
             <Button variant="ghost" size="icon" className="hidden sm:flex">
               <Bell className="h-5 w-5" />
             </Button>
+            <LanguageSwitcher />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

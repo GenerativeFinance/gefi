@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/hooks/useI18n";
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
 import Footer from "@/components/layout/footer";
@@ -53,6 +54,7 @@ ChartJS.register(
 
 export default function AnalyticsDashboard() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { t } = useI18n();
   const [analytics, setAnalytics] = useState<UserAnalytics | null>(null);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('7d');
 
@@ -90,12 +92,12 @@ export default function AnalyticsDashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Sign In Required</CardTitle>
-            <CardDescription>Please sign in to view your analytics dashboard</CardDescription>
+            <CardTitle>{t('auth.authRequired')}</CardTitle>
+            <CardDescription>{t('auth.loginMessage')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => window.location.href = "/api/login"} className="w-full">
-              Sign In
+              {t('auth.signIn')}
             </Button>
           </CardContent>
         </Card>
@@ -219,24 +221,24 @@ export default function AnalyticsDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                Analytics Dashboard
+                {t('dashboard.title')}
               </h1>
               <p className="text-muted-foreground mt-1">
-                Track your AI model interactions and discover usage patterns
+                {t('dashboard.subtitle')}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={generateSampleData}>
                 <Zap className="h-4 w-4 mr-2" />
-                Generate Sample Data
+                {t('dashboard.generateSampleData')}
               </Button>
               <Button variant="outline" size="sm" onClick={clearData}>
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Clear Data
+                {t('dashboard.clearData')}
               </Button>
               <Button variant="outline" size="sm" onClick={loadAnalytics}>
                 <Activity className="h-4 w-4 mr-2" />
-                Refresh
+                {t('common.refresh')}
               </Button>
             </div>
           </div>
@@ -244,9 +246,9 @@ export default function AnalyticsDashboard() {
           {/* Time Range Selector */}
           <Tabs value={timeRange} onValueChange={(value: any) => setTimeRange(value)}>
             <TabsList>
-              <TabsTrigger value="7d">Last 7 Days</TabsTrigger>
-              <TabsTrigger value="30d">Last 30 Days</TabsTrigger>
-              <TabsTrigger value="90d">Last 90 Days</TabsTrigger>
+              <TabsTrigger value="7d">{t('dashboard.last7Days')}</TabsTrigger>
+              <TabsTrigger value="30d">{t('dashboard.last30Days')}</TabsTrigger>
+              <TabsTrigger value="90d">{t('dashboard.last90Days')}</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
