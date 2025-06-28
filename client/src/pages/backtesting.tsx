@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
 import { 
   Play, 
   Pause, 
@@ -879,6 +880,8 @@ export default function BacktestingEnvironment() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <Footer />
     </div>
   );
 }
