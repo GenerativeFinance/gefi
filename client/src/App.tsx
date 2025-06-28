@@ -64,6 +64,7 @@ function Router() {
           <Route path="/analytics" component={AnalyticsDashboard} />
           <Route path="/portfolio" component={Portfolio} />
           <Route path="/reports" component={Reports} />
+          <Route path="/reports/all" component={ReportsAll} />
           <Route path="/risk-management" component={RiskManagement} />
           <Route path="/marketplace" component={Marketplace} />
           <Route path="/pricing" component={Pricing} />
