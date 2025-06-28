@@ -3,6 +3,8 @@ import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import GuidedTour from "@/components/ui/guided-tour";
 import { 
   TrendingUp, 
   AlertTriangle, 
@@ -12,9 +14,15 @@ import {
   Brain,
   Shield,
   FileText,
-  Bell
+  Bell,
+  Star,
+  Sparkles,
+  Eye
 } from "lucide-react";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { RecommendationEngine, type RecommendedModel } from "@/lib/recommendationEngine";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const { user } = useAuth();
