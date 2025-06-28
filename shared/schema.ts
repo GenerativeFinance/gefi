@@ -53,9 +53,13 @@ export const portfolios = pgTable("portfolios", {
 export const portfolioAssets = pgTable("portfolio_assets", {
   id: serial("id").primaryKey(),
   portfolioId: integer("portfolio_id").references(() => portfolios.id).notNull(),
-  assetType: varchar("asset_type").notNull(), // 'stocks', 'bonds', 'crypto'
+  symbol: varchar("symbol").notNull(),
+  assetType: varchar("asset_type").notNull(), // 'Stock', 'Bond', 'ETF', 'Crypto', 'REIT', 'Commodity'
   allocation: decimal("allocation", { precision: 5, scale: 2 }).notNull(),
   value: decimal("value", { precision: 12, scale: 2 }).notNull(),
+  purchasePrice: decimal("purchase_price", { precision: 12, scale: 2 }).notNull(),
+  currentValue: decimal("current_value", { precision: 12, scale: 2 }).notNull(),
+  quantity: decimal("quantity", { precision: 16, scale: 8 }).notNull(),
 });
 
 export const aiModels = pgTable("ai_models", {

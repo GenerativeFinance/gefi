@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupMultiAuth, isAuthenticated } from "./multiAuth";
 import { insertPortfolioSchema, insertAiModelSchema, insertRiskAlertSchema } from "@shared/schema";
 import { z } from "zod";
+import { PortfolioOptimizer, RiskAssessment, MarketAnalysis } from "./aiModels";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
