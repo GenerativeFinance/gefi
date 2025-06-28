@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
 import { 
   Code, 
   DollarSign, 
@@ -538,6 +539,8 @@ export default function DeveloperDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <Footer />
     </div>
   );
 }

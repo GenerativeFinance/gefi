@@ -14,6 +14,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useBadgeSystem } from "@/hooks/useBadgeSystem";
 import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
 
 export default function UserProfile() {
   const { user } = useAuth();
@@ -223,6 +224,8 @@ export default function UserProfile() {
           </CardContent>
         </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 }

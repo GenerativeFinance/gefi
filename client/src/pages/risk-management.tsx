@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
+import Footer from "@/components/layout/footer";
 import RiskMonitoring from "@/components/risk/risk-monitoring";
 import RecentAlerts from "@/components/risk/recent-alerts";
 
@@ -67,6 +68,7 @@ export default function RiskManagement() {
         </div>
       </main>
 
+      <Footer />
       <MobileNav />
     </div>
   );
