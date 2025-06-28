@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
+import Footer from "@/components/layout/footer";
 import ModelCard from "@/components/marketplace/model-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -373,6 +374,7 @@ export default function Marketplace() {
           </TabsContent>
         </Tabs>
       </main>
+      <Footer />
       <MobileNav />
     </div>
   );
