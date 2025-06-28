@@ -108,6 +108,46 @@ export default function Header() {
             </Link>
 
 
+            {/* Dashboard Mode Switcher */}
+            <div className="hidden lg:flex items-center space-x-3">
+              <Select value={dashboardMode} onValueChange={handleDashboardModeChange}>
+                <SelectTrigger className="w-[140px] h-9">
+                  <SelectValue>
+                    <div className="flex items-center space-x-2">
+                      {dashboardMode === 'developer' ? (
+                        <>
+                          <Code className="h-4 w-4" />
+                          <span>Developer</span>
+                        </>
+                      ) : (
+                        <>
+                          <TrendingUp className="h-4 w-4" />
+                          <span>Investor</span>
+                        </>
+                      )}
+                    </div>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="investor">
+                    <div className="flex items-center space-x-2">
+                      <TrendingUp className="h-4 w-4" />
+                      <span>Investor Mode</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="developer">
+                    <div className="flex items-center space-x-2">
+                      <Code className="h-4 w-4" />
+                      <span>Developer Mode</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Badge variant={dashboardMode === 'developer' ? 'default' : 'secondary'} className="text-xs">
+                {dashboardMode === 'developer' ? 'DEV' : 'INV'}
+              </Badge>
+            </div>
 
             {/* Navigation Menu */}
             <nav className="hidden md:flex space-x-6">
