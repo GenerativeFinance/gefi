@@ -107,10 +107,10 @@ export default function Marketplace() {
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     try {
       const exportData = generateSampleExportData(filteredModels as any);
-      exportToPDF(exportData, 'gefi_marketplace_report');
+      await exportToPDF(exportData, 'gefi_marketplace_report');
       toast({
         title: "Report Generated",
         description: `Generated PDF report with ${filteredModels.length} models`,

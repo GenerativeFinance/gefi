@@ -15,6 +15,7 @@ import LoginFailed from "@/pages/login-failed";
 import Portfolio from "@/pages/portfolio";
 import Reports from "@/pages/reports";
 import ReportsAll from "@/pages/reports-all";
+import AlertsAll from "@/pages/alerts-all";
 import RiskManagement from "@/pages/risk-management";
 import Marketplace from "@/pages/marketplace";
 import Pricing from "@/pages/pricing";
@@ -65,6 +66,7 @@ function Router() {
           <Route path="/portfolio" component={Portfolio} />
           <Route path="/reports" component={Reports} />
           <Route path="/reports/all" component={ReportsAll} />
+          <Route path="/alerts/all" component={AlertsAll} />
           <Route path="/risk-management" component={RiskManagement} />
           <Route path="/marketplace" component={Marketplace} />
           <Route path="/pricing" component={Pricing} />

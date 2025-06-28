@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { FileText, TrendingUp, Shield, Brain, ChevronRight, Calendar, Plus } from "lucide-react";
+import { FileText, TrendingUp, Shield, Brain, ChevronRight, Calendar, Plus, Download } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
+import { generatePDFReport } from "@/utils/reportGenerator";
 
 interface InvestorReportsProps {
   reports: any[];
