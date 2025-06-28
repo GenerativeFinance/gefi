@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { analyticsService } from "@/lib/analytics";
 
 interface CheckoutFormData {
   firstName: string;
@@ -93,6 +94,15 @@ export default function Checkout() {
       await apiRequest("POST", "/api/ai-models/subscribe", subscriptionData);
     },
     onSuccess: () => {
+      // Track successful subscription
+      analyticsService.trackSubscription(
+        mockModel.id,
+        mockModel.name,
+        formData.plan,
+        getPlanPrice(),
+        mockModel.category
+      );
+
       toast({
         title: "Subscription Successful!",
         description: "Welcome to your AI model subscription. Check your email for details.",

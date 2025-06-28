@@ -7,6 +7,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
+import { analyticsService } from "@/lib/analytics";
+import { useEffect } from "react";
 
 interface ModelCardProps {
   model: any;
@@ -17,6 +19,27 @@ export default function ModelCard({ model, featured = false }: ModelCardProps) {
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
+
+  // Track model view when component mounts
+  useEffect(() => {
+    if (isAuthenticated && model.id) {
+      analyticsService.startModelView(
+        model.id, 
+        model.name, 
+        model.category || 'Uncategorized'
+      );
+
+      // Track view end when component unmounts or when user leaves
+      return () => {
+        analyticsService.endModelView(
+          model.id,
+          model.name,
+          model.category || 'Uncategorized',
+          parseFloat(model.price || "0")
+        );
+      };
+    }
+  }, [model.id, model.name, model.category, model.price, isAuthenticated]);
 
   const subscribeMutation = useMutation({
     mutationFn: async (modelId: number) => {
@@ -101,6 +124,15 @@ export default function ModelCard({ model, featured = false }: ModelCardProps) {
       }, 1000);
       return;
     }
+
+    // Track subscription click
+    analyticsService.trackInteraction(
+      model.id,
+      model.name,
+      'click',
+      model.category || 'Uncategorized',
+      parseFloat(model.price || "0")
+    );
 
     // Navigate to checkout page with model data
     window.location.href = `/checkout?modelId=${model.id}&name=${encodeURIComponent(model.name)}&price=${model.price}`;
