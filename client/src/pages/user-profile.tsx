@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useBadgeSystem } from "@/hooks/useBadgeSystem";
+import Header from "@/components/layout/header";
 
 export default function UserProfile() {
   const { user } = useAuth();
@@ -57,8 +58,9 @@ export default function UserProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Profile Header */}
         <Card>
           <CardHeader>

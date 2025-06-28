@@ -18,6 +18,7 @@ import {
   CreditCard, Key, FileText, HelpCircle, LogOut 
 } from "lucide-react";
 import { Link } from "wouter";
+import Header from "@/components/layout/header";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -91,6 +92,7 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       <div className="container mx-auto py-8 px-4 max-w-4xl">
         {/* Header */}
         <div className="mb-8">
