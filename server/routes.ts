@@ -1,39 +1,60 @@
-import type { Express } from "express";
+import type { Express, RequestHandler } from "express";
 import { createServer, type Server } from "http";
+import session from "express-session";
 import { storage } from "./storage";
-import { setupMultiAuth, isAuthenticated } from "./multiAuth";
 import { insertPortfolioSchema, insertAiModelSchema, insertRiskAlertSchema } from "@shared/schema";
 import { z } from "zod";
 import { PortfolioOptimizer, RiskAssessment, MarketAnalysis } from "./aiModels";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupMultiAuth(app);
+  // Auth middleware - simplified for demo
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'demo-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false }
+  }));
 
-  // Debug route to check session
-  app.get('/api/debug/session', (req: any, res) => {
-    res.json({
-      isAuthenticated: req.isAuthenticated(),
-      user: req.user ? 'User exists' : 'No user',
-      session: req.session ? 'Session exists' : 'No session'
-    });
+  // Simple demo login route
+  app.get('/api/login', (req: any, res) => {
+    // Create a demo user session
+    req.session.user = {
+      id: 'demo_user_123',
+      email: 'demo@example.com',
+      firstName: 'Demo',
+      lastName: 'User',
+      profileImageUrl: null
+    };
+    res.redirect('/');
   });
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      // For multi-provider auth, user ID is directly available
-      const userId = req.user.id;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+  // Simple logout route
+  app.get('/api/logout', (req: any, res) => {
+    req.session.destroy();
+    res.redirect('/');
+  });
+
+  // Auth user route
+  app.get('/api/auth/user', (req: any, res) => {
+    if (req.session?.user) {
+      res.json(req.session.user);
+    } else {
+      res.status(401).json({ message: "Unauthorized" });
     }
   });
 
+  // Simple auth middleware
+  const simpleAuth: RequestHandler = (req: any, res, next) => {
+    if (req.session?.user) {
+      req.user = req.session.user;
+      next();
+    } else {
+      res.status(401).json({ message: "Unauthorized" });
+    }
+  };
+
   // Portfolio routes with AI analysis
-  app.get('/api/portfolio', isAuthenticated, async (req: any, res) => {
+  app.get('/api/portfolio', simpleAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const portfolio = await storage.getUserPortfolio(userId);
@@ -144,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/portfolio/assets', isAuthenticated, async (req: any, res) => {
+  app.get('/api/portfolio/assets', simpleAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const portfolio = await storage.getUserPortfolio(userId);
@@ -161,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/portfolio/ai-models', isAuthenticated, async (req: any, res) => {
+  app.get('/api/portfolio/ai-models', simpleAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const portfolio = await storage.getUserPortfolio(userId);
@@ -304,7 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/ai-models/subscribe', isAuthenticated, async (req: any, res) => {
+  app.post('/api/ai-models/subscribe', simpleAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { modelId } = req.body;
@@ -337,7 +358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Risk alerts routes
-  app.get('/api/risk-alerts', isAuthenticated, async (req: any, res) => {
+  app.get('/api/risk-alerts', simpleAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const alerts = await storage.getUserRiskAlerts(userId);
@@ -348,7 +369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/risk-alerts/:id/read', isAuthenticated, async (req, res) => {
+  app.post('/api/risk-alerts/:id/read', simpleAuth, async (req, res) => {
     try {
       const alertId = parseInt(req.params.id);
       await storage.markAlertAsRead(alertId);
@@ -360,7 +381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Reports routes
-  app.get('/api/reports', isAuthenticated, async (req: any, res) => {
+  app.get('/api/reports', simpleAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const reports = await storage.getUserReports(userId);
@@ -368,6 +389,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching reports:", error);
       res.status(500).json({ message: "Failed to fetch reports" });
+    }
+  });
+
+  // Smart Contract routes
+  app.get('/api/smart-contracts', async (req, res) => {
+    try {
+      const contracts = await storage.getAllSmartContracts();
+      res.json(contracts);
+    } catch (error) {
+      console.error("Error fetching smart contracts:", error);
+      res.status(500).json({ message: "Failed to fetch smart contracts" });
+    }
+  });
+
+  app.get('/api/smart-contracts/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const contract = await storage.getSmartContract(id);
+      
+      if (!contract) {
+        return res.status(404).json({ message: "Smart contract not found" });
+      }
+      
+      res.json(contract);
+    } catch (error) {
+      console.error("Error fetching smart contract:", error);
+      res.status(500).json({ message: "Failed to fetch smart contract" });
+    }
+  });
+
+  app.post('/api/smart-contracts', simpleAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const contractData = {
+        ...req.body,
+        creatorId: userId,
+      };
+      
+      const contract = await storage.createSmartContract(contractData);
+      res.status(201).json(contract);
+    } catch (error) {
+      console.error("Error creating smart contract:", error);
+      res.status(500).json({ message: "Failed to create smart contract" });
+    }
+  });
+
+  app.get('/api/user/smart-contracts', simpleAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const contracts = await storage.getUserSmartContracts(userId);
+      res.json(contracts);
+    } catch (error) {
+      console.error("Error fetching user smart contracts:", error);
+      res.status(500).json({ message: "Failed to fetch user smart contracts" });
+    }
+  });
+
+  app.post('/api/smart-contracts/:id/invest', simpleAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const contractId = parseInt(req.params.id);
+      const { investmentAmount, tokensReceived } = req.body;
+      
+      const investment = await storage.createInvestment({
+        contractId,
+        investorId: userId,
+        investmentAmount,
+        tokensReceived,
+        status: 'pending',
+      });
+      
+      res.status(201).json(investment);
+    } catch (error) {
+      console.error("Error creating investment:", error);
+      res.status(500).json({ message: "Failed to create investment" });
+    }
+  });
+
+  app.get('/api/user/investments', simpleAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const investments = await storage.getUserInvestments(userId);
+      res.json(investments);
+    } catch (error) {
+      console.error("Error fetching user investments:", error);
+      res.status(500).json({ message: "Failed to fetch user investments" });
+    }
+  });
+
+  app.get('/api/user/token-balances', simpleAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const balances = await storage.getUserTokenBalances(userId);
+      res.json(balances);
+    } catch (error) {
+      console.error("Error fetching token balances:", error);
+      res.status(500).json({ message: "Failed to fetch token balances" });
+    }
+  });
+
+  app.get('/api/user/transactions', simpleAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const transactions = await storage.getUserTransactions(userId);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching user transactions:", error);
+      res.status(500).json({ message: "Failed to fetch user transactions" });
     }
   });
 
