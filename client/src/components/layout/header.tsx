@@ -238,10 +238,10 @@ export default function Header() {
                   <Search className="h-5 w-5" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-2xl">
+              <DialogContent className="sm:max-w-2xl bg-background border">
                 <DialogHeader>
-                  <DialogTitle>Search AI Financial Models</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-foreground">Search AI Financial Models</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
                     Find the perfect AI model for your financial needs
                   </DialogDescription>
                 </DialogHeader>
