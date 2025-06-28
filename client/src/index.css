@@ -90,6 +90,6 @@
   }
   
   .glass {
-    @apply bg-secondary/50 backdrop-blur-sm border border-secondary;
+    @apply bg-secondary backdrop-blur-sm border border-secondary;
   }
 }
