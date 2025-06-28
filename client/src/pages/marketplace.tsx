@@ -11,7 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Filter, Star, TrendingUp, Shield, PieChart, Brain, Building, LineChart, FileCheck, MessageCircle, Users } from "lucide-react";
+import { Search, Filter, Star, TrendingUp, Shield, PieChart, Brain, Building, LineChart, FileCheck, MessageCircle, Users, Download, FileText, FileSpreadsheet } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { exportToCSV, exportToPDF, generateSampleExportData } from "@/utils/exportUtils";
 
 interface AiModelCategory {
   id: number;

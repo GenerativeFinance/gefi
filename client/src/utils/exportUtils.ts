@@ -19,26 +19,28 @@ export interface ExportData {
 export const exportToCSV = (data: ExportData, filename: string = 'gefi_export') => {
   const { models, portfolioData, reportData } = data;
   
-  // Prepare CSV data
+  // Prepare CSV data with proper null checks
   const csvData = models.map(model => ({
     'Model Name': model.name,
-    'Description': model.description,
-    'Category': model.categoryId, // This could be enhanced to show category name
-    'Price': `$${model.price}`,
-    'Risk Level': model.riskLevel,
-    'AI Technique': model.aiTechnique,
-    'Target User Type': model.targetUserType,
-    'Financial Instrument': model.financialInstrument,
-    'Accuracy Score': `${model.accuracyScore}%`,
-    'Backtesting Period': model.backtestingPeriod,
-    'Model Size': model.modelSize,
-    'Created Date': new Date(model.createdAt).toLocaleDateString(),
-    'Updated Date': new Date(model.updatedAt).toLocaleDateString()
+    'Description': model.description || 'N/A',
+    'Category': model.category || 'N/A',
+    'Price': `$${model.price || '0'}`,
+    'Rating': model.rating ? `${model.rating}/5` : 'Not rated',
+    'Total Ratings': model.totalRatings || 0,
+    'Creator': model.creator || 'Unknown',
+    'Risk Level': model.riskLevel || 'Not specified',
+    'AI Technique': model.aiTechnique || 'Not specified',
+    'Target User Type': model.targetUserType || 'Not specified',
+    'Financial Instrument': model.financialInstrument || 'Not specified',
+    'Min Investment': model.minInvestment ? `$${model.minInvestment}` : 'Not specified',
+    'Is Featured': model.isFeatured ? 'Yes' : 'No',
+    'Created Date': model.createdAt ? new Date(model.createdAt).toLocaleDateString() : 'N/A',
+    'Updated Date': model.updatedAt ? new Date(model.updatedAt).toLocaleDateString() : 'N/A'
   }));
 
-  // Include portfolio data if available
+  // Include portfolio data if available  
   if (portfolioData) {
-    csvData.forEach((row, index) => {
+    csvData.forEach((row: any, index) => {
       if (portfolioData[index]) {
         row['Portfolio Value'] = portfolioData[index].value || 'N/A';
         row['Portfolio Weight'] = portfolioData[index].weight || 'N/A';

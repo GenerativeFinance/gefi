@@ -27,13 +27,12 @@ export function NotificationBanner() {
   useEffect(() => {
     // Load dismissed notifications from localStorage
     const dismissed = localStorage.getItem('gefi_dismissed_notifications');
-    if (dismissed) {
-      setDismissedIds(JSON.parse(dismissed));
-    }
+    const dismissedList = dismissed ? JSON.parse(dismissed) : [];
+    setDismissedIds(dismissedList);
 
     // Filter out dismissed notifications and sort by priority and date
     const activeNotifications = (notificationsData as Notification[])
-      .filter(notification => !dismissedIds.includes(notification.id))
+      .filter(notification => !dismissedList.includes(notification.id))
       .sort((a, b) => {
         // Sort by priority first (high > medium > low)
         const priorityOrder = { high: 3, medium: 2, low: 1 };
@@ -46,12 +45,21 @@ export function NotificationBanner() {
       .slice(0, 3); // Show up to 3 notifications
 
     setNotifications(activeNotifications);
-  }, [dismissedIds]);
+  }, []); // Remove dismissedIds dependency to prevent infinite loop
 
   const dismissNotification = (id: string) => {
     const newDismissedIds = [...dismissedIds, id];
     setDismissedIds(newDismissedIds);
     localStorage.setItem('gefi_dismissed_notifications', JSON.stringify(newDismissedIds));
+    
+    // Filter out the dismissed notification from current notifications
+    const updatedNotifications = notifications.filter(n => n.id !== id);
+    setNotifications(updatedNotifications);
+    
+    // Reset current index if needed
+    if (currentIndex >= updatedNotifications.length && updatedNotifications.length > 0) {
+      setCurrentIndex(0);
+    }
   };
 
   const nextNotification = () => {
