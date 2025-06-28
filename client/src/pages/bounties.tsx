@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
 import Footer from "@/components/layout/footer";
@@ -162,7 +163,7 @@ export default function Bounties() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <Card>
+            <Card className="hover:shadow-lg transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
                   <Target className="h-5 w-5 text-green-600" />
@@ -174,7 +175,7 @@ export default function Bounties() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="hover:shadow-lg transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
                   <DollarSign className="h-5 w-5 text-green-600" />
@@ -186,29 +187,35 @@ export default function Bounties() {
               </CardContent>
             </Card>
             
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <Users className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Active Developers</p>
-                    <p className="text-2xl font-bold">47</p>
+            <Link href="/bounties/leaderboard">
+              <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer">
+                <CardContent className="p-4 relative">
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Active Developers</p>
+                      <p className="text-2xl font-bold">47</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <TrendingUp className="absolute top-2 right-2 h-4 w-4 text-blue-600/40" />
+                </CardContent>
+              </Card>
+            </Link>
             
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <Award className="h-5 w-5 text-purple-600" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Completed</p>
-                    <p className="text-2xl font-bold">156</p>
+            <Link href="/bounties/leaderboard">
+              <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer">
+                <CardContent className="p-4 relative">
+                  <div className="flex items-center space-x-2">
+                    <Award className="h-5 w-5 text-purple-600" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Completed</p>
+                      <p className="text-2xl font-bold">156</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <TrendingUp className="absolute top-2 right-2 h-4 w-4 text-purple-600/40" />
+                </CardContent>
+              </Card>
+            </Link>
           </div>
 
         {/* Filters */}

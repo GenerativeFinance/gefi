@@ -344,6 +344,97 @@ export const modelChat = pgTable("model_chat", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Bounty system tables
+export const bounties = pgTable("bounties", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  reward: integer("reward").notNull(),
+  difficulty: varchar("difficulty", { length: 50 }).notNull(), // beginner, intermediate, advanced, expert
+  category: varchar("category", { length: 100 }).notNull(),
+  requirements: text("requirements").array().default([]),
+  status: varchar("status", { length: 50 }).notNull().default("open"), // open, claimed, in_progress, completed, expired
+  deadline: timestamp("deadline"),
+  claimedBy: varchar("claimed_by").references(() => users.id),
+  completedBy: varchar("completed_by").references(() => users.id),
+  submissionCount: integer("submission_count").default(0),
+  teamAllowed: boolean("team_allowed").default(false),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const bountySubmissions = pgTable("bounty_submissions", {
+  id: serial("id").primaryKey(),
+  bountyId: integer("bounty_id").notNull().references(() => bounties.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  solutionUrl: varchar("solution_url", { length: 500 }),
+  githubUrl: varchar("github_url", { length: 500 }),
+  demoUrl: varchar("demo_url", { length: 500 }),
+  status: varchar("status", { length: 50 }).notNull().default("submitted"), // submitted, under_review, approved, rejected
+  feedback: text("feedback"),
+  score: integer("score"), // 1-100
+  submittedAt: timestamp("submitted_at").defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
+// User profiles and performance tracking
+export const userProfiles = pgTable("user_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  displayName: varchar("display_name", { length: 255 }),
+  bio: text("bio"),
+  location: varchar("location", { length: 255 }),
+  website: varchar("website", { length: 500 }),
+  githubUsername: varchar("github_username", { length: 255 }),
+  linkedinUrl: varchar("linkedin_url", { length: 500 }),
+  skills: text("skills").array().default([]),
+  specializations: text("specializations").array().default([]),
+  yearsExperience: integer("years_experience"),
+  
+  // Performance metrics
+  totalBountiesCompleted: integer("total_bounties_completed").default(0),
+  totalRewardsEarned: integer("total_rewards_earned").default(0),
+  averageCompletionTime: integer("average_completion_time"), // in days
+  successRate: decimal("success_rate", { precision: 5, scale: 2 }).default("0.00"), // percentage
+  
+  // Reputation and rankings
+  reputationScore: integer("reputation_score").default(0),
+  globalRank: integer("global_rank"),
+  categoryRanks: jsonb("category_ranks"), // { "Portfolio Management": 15, "Risk Management": 8 }
+  
+  // Activity stats
+  activeDays: integer("active_days").default(0),
+  streakDays: integer("streak_days").default(0),
+  lastActiveAt: timestamp("last_active_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const userAchievements = pgTable("user_achievements", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  achievementType: varchar("achievement_type", { length: 100 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  iconName: varchar("icon_name", { length: 100 }),
+  rarity: varchar("rarity", { length: 50 }).default("common"), // common, rare, epic, legendary
+  pointsAwarded: integer("points_awarded").default(0),
+  unlockedAt: timestamp("unlocked_at").defaultNow(),
+});
+
+export const userSkillRatings = pgTable("user_skill_ratings", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  skill: varchar("skill", { length: 100 }).notNull(),
+  rating: decimal("rating", { precision: 3, scale: 1 }).notNull(), // 1.0 to 5.0
+  endorsements: integer("endorsements").default(0),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
 export const modelRewards = pgTable("model_rewards", {
   id: serial("id").primaryKey(),
   modelId: integer("model_id").notNull().references(() => developerModels.id),
@@ -504,6 +595,20 @@ export type BacktestPerformance = typeof backtestPerformance.$inferSelect;
 export type InsertBacktestPerformance = typeof backtestPerformance.$inferInsert;
 export type BacktestPosition = typeof backtestPositions.$inferSelect;
 export type InsertBacktestPosition = typeof backtestPositions.$inferInsert;
+
+// Bounty System Types
+export type Bounty = typeof bounties.$inferSelect;
+export type InsertBounty = typeof bounties.$inferInsert;
+export type BountySubmission = typeof bountySubmissions.$inferSelect;
+export type InsertBountySubmission = typeof bountySubmissions.$inferInsert;
+
+// User Profile Types
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertUserProfile = typeof userProfiles.$inferInsert;
+export type UserAchievement = typeof userAchievements.$inferSelect;
+export type InsertUserAchievement = typeof userAchievements.$inferInsert;
+export type UserSkillRating = typeof userSkillRatings.$inferSelect;
+export type InsertUserSkillRating = typeof userSkillRatings.$inferInsert;
 
 export const insertPortfolioSchema = createInsertSchema(portfolios).omit({
   id: true,
