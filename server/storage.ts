@@ -14,6 +14,11 @@ import {
   regulatoryReports,
   riskLimits,
   complianceDocuments,
+  smartContracts,
+  contractInvestments,
+  revenueDistributions,
+  userTokenBalances,
+  blockchainTransactions,
   type User,
   type UpsertUser,
   type Portfolio,
@@ -120,6 +125,34 @@ export interface IStorage {
   updateRiskLimit(limitId: number, updates: Partial<InsertRiskLimit>): Promise<RiskLimit>;
   getUserComplianceDocuments(userId: string): Promise<ComplianceDocument[]>;
   createComplianceDocument(document: InsertComplianceDocument): Promise<ComplianceDocument>;
+  
+  // Smart Contract operations
+  getAllSmartContracts(): Promise<SmartContract[]>;
+  getSmartContract(id: number): Promise<SmartContract | undefined>;
+  getSmartContractByAddress(address: string): Promise<SmartContract | undefined>;
+  createSmartContract(contract: InsertSmartContract): Promise<SmartContract>;
+  updateSmartContract(id: number, updates: Partial<InsertSmartContract>): Promise<SmartContract>;
+  getUserSmartContracts(userId: string): Promise<SmartContract[]>;
+  
+  // Investment operations
+  getContractInvestments(contractId: number): Promise<ContractInvestment[]>;
+  getUserInvestments(userId: string): Promise<ContractInvestment[]>;
+  createInvestment(investment: InsertContractInvestment): Promise<ContractInvestment>;
+  updateInvestmentStatus(id: number, status: string, transactionHash?: string): Promise<ContractInvestment>;
+  
+  // Revenue distribution operations
+  getRevenueDistributions(contractId: number): Promise<RevenueDistribution[]>;
+  createRevenueDistribution(distribution: InsertRevenueDistribution): Promise<RevenueDistribution>;
+  
+  // Token balance operations
+  getUserTokenBalances(userId: string): Promise<UserTokenBalance[]>;
+  getTokenBalance(userId: string, contractId: number): Promise<UserTokenBalance | undefined>;
+  updateTokenBalance(userId: string, contractId: number, balance: string): Promise<UserTokenBalance>;
+  
+  // Blockchain transaction operations
+  getUserTransactions(userId: string): Promise<BlockchainTransaction[]>;
+  createTransaction(transaction: InsertBlockchainTransaction): Promise<BlockchainTransaction>;
+  updateTransactionStatus(hash: string, status: string, blockNumber?: number): Promise<BlockchainTransaction>;
 }
 
 export class DatabaseStorage implements IStorage {

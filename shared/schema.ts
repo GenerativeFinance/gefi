@@ -290,3 +290,92 @@ export const insertRiskAlertSchema = createInsertSchema(riskAlerts).omit({
   id: true,
   createdAt: true,
 });
+
+// Smart Contracts for Revenue Sharing and Crowdfunding
+export const smartContracts = pgTable("smart_contracts", {
+  id: serial("id").primaryKey(),
+  contractAddress: varchar("contract_address").unique().notNull(),
+  contractType: varchar("contract_type").notNull(), // 'revenue_sharing', 'crowdfunding', 'subscription'
+  creatorId: varchar("creator_id").notNull().references(() => users.id),
+  aiModelId: integer("ai_model_id").references(() => aiModels.id),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  totalSupply: varchar("total_supply"), // Token total supply as string for precision
+  currentSupply: varchar("current_supply").default("0"),
+  tokenPrice: varchar("token_price"), // Price per token in ETH/USD
+  revenueSharePercentage: varchar("revenue_share_percentage"), // Percentage of revenue shared
+  minimumInvestment: varchar("minimum_investment"),
+  fundingGoal: varchar("funding_goal"),
+  currentFunding: varchar("current_funding").default("0"),
+  fundingDeadline: timestamp("funding_deadline"),
+  status: varchar("status").default("active"), // 'active', 'funded', 'expired', 'cancelled'
+  blockchainNetwork: varchar("blockchain_network").default("ethereum"), // 'ethereum', 'polygon', 'bsc'
+  deployedAt: timestamp("deployed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const contractInvestments = pgTable("contract_investments", {
+  id: serial("id").primaryKey(),
+  contractId: integer("contract_id").notNull().references(() => smartContracts.id),
+  investorId: varchar("investor_id").notNull().references(() => users.id),
+  investmentAmount: varchar("investment_amount").notNull(),
+  tokensReceived: varchar("tokens_received").notNull(),
+  transactionHash: varchar("transaction_hash").unique(),
+  blockNumber: integer("block_number"),
+  status: varchar("status").default("pending"), // 'pending', 'confirmed', 'failed'
+  investedAt: timestamp("invested_at").defaultNow(),
+});
+
+export const revenueDistributions = pgTable("revenue_distributions", {
+  id: serial("id").primaryKey(),
+  contractId: integer("contract_id").notNull().references(() => smartContracts.id),
+  distributionPeriod: varchar("distribution_period").notNull(), // '2024-Q1', '2024-01', etc.
+  totalRevenue: varchar("total_revenue").notNull(),
+  totalDistributed: varchar("total_distributed").notNull(),
+  distributionPerToken: varchar("distribution_per_token").notNull(),
+  transactionHash: varchar("transaction_hash").unique(),
+  blockNumber: integer("block_number"),
+  status: varchar("status").default("pending"), // 'pending', 'distributed', 'failed'
+  distributedAt: timestamp("distributed_at").defaultNow(),
+});
+
+export const userTokenBalances = pgTable("user_token_balances", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  contractId: integer("contract_id").notNull().references(() => smartContracts.id),
+  tokenBalance: varchar("token_balance").notNull().default("0"),
+  totalEarnings: varchar("total_earnings").default("0"),
+  lastClaimedAt: timestamp("last_claimed_at"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const blockchainTransactions = pgTable("blockchain_transactions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  contractId: integer("contract_id").references(() => smartContracts.id),
+  transactionHash: varchar("transaction_hash").unique().notNull(),
+  transactionType: varchar("transaction_type").notNull(), // 'investment', 'revenue_claim', 'token_transfer'
+  amount: varchar("amount"),
+  fromAddress: varchar("from_address"),
+  toAddress: varchar("to_address"),
+  blockNumber: integer("block_number"),
+  gasUsed: integer("gas_used"),
+  gasPrice: varchar("gas_price"),
+  status: varchar("status").default("pending"), // 'pending', 'confirmed', 'failed'
+  network: varchar("network").default("ethereum"),
+  createdAt: timestamp("created_at").defaultNow(),
+  confirmedAt: timestamp("confirmed_at"),
+});
+
+// Smart Contract Types
+export type SmartContract = typeof smartContracts.$inferSelect;
+export type InsertSmartContract = typeof smartContracts.$inferInsert;
+export type ContractInvestment = typeof contractInvestments.$inferSelect;
+export type InsertContractInvestment = typeof contractInvestments.$inferInsert;
+export type RevenueDistribution = typeof revenueDistributions.$inferSelect;
+export type InsertRevenueDistribution = typeof revenueDistributions.$inferInsert;
+export type UserTokenBalance = typeof userTokenBalances.$inferSelect;
+export type InsertUserTokenBalance = typeof userTokenBalances.$inferInsert;
+export type BlockchainTransaction = typeof blockchainTransactions.$inferSelect;
+export type InsertBlockchainTransaction = typeof blockchainTransactions.$inferInsert;
