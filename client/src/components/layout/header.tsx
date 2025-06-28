@@ -153,48 +153,41 @@ export default function Header() {
             <nav className="hidden md:flex space-x-6">
               {dashboardMode === 'developer' ? (
                 <>
-                  {/* Developer Dropdown Menu */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        className={`flex items-center space-x-1 transition-colors px-2 ${
-                          location?.includes('/developer') || location?.includes('/backtesting')
-                            ? 'text-primary font-medium' 
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        <Code className="h-4 w-4" />
-                        <span>Developer</span>
-                        <Badge variant="secondary" className="ml-1 text-xs bg-purple-600 text-white">DEV</Badge>
-                        <svg className="h-3 w-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-56 p-2">
-                      <Link href="/developer">
-                        <DropdownMenuItem className={`cursor-pointer p-3 rounded-md ${location === '/developer' ? 'bg-accent text-accent-foreground' : ''}`}>
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                              <BarChart3 className="h-4 w-4 text-primary" />
-                            </div>
-                            <span className="font-medium">Dashboard</span>
-                          </div>
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link href="/backtesting">
-                        <DropdownMenuItem className={`cursor-pointer p-3 rounded-md ${location === '/backtesting' ? 'bg-accent text-accent-foreground' : ''}`}>
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                              <BarChart3 className="h-4 w-4 text-primary" />
-                            </div>
-                            <span className="font-medium">Backtesting</span>
-                          </div>
-                        </DropdownMenuItem>
-                      </Link>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {/* Developer Badge */}
+                  <div className="flex items-center space-x-2">
+                    <Code className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">Developer</span>
+                    <Badge variant="secondary" className="text-xs bg-purple-600 text-white">DEV</Badge>
+                  </div>
+                  
+                  {/* Developer Navigation Items */}
+                  <Link href="/developer">
+                    <Button 
+                      variant="ghost" 
+                      className={`transition-colors ${
+                        location === '/developer'
+                          ? 'text-primary font-medium' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <BarChart3 className="h-4 w-4 mr-1" />
+                      Dashboard
+                    </Button>
+                  </Link>
+                  
+                  <Link href="/backtesting">
+                    <Button 
+                      variant="ghost" 
+                      className={`transition-colors ${
+                        location === '/backtesting'
+                          ? 'text-primary font-medium' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <BarChart3 className="h-4 w-4 mr-1" />
+                      Backtesting
+                    </Button>
+                  </Link>
                   
                   {/* Marketplace Link */}
                   <Link href="/marketplace">
