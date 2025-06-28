@@ -146,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/portfolio/assets', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const portfolio = await storage.getUserPortfolio(userId);
       
       if (!portfolio) {
@@ -163,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/portfolio/ai-models', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const portfolio = await storage.getUserPortfolio(userId);
       
       if (!portfolio) {

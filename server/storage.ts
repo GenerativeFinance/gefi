@@ -67,6 +67,26 @@ export interface IStorage {
   getUserModelSubscriptions(userId: string): Promise<UserModelSubscription[]>;
   subscribeToModel(subscription: InsertUserModelSubscription): Promise<UserModelSubscription>;
   
+  // AI Model Categories operations
+  getAiModelCategories(): Promise<AiModelCategory[]>;
+  createAiModelCategory(category: InsertAiModelCategory): Promise<AiModelCategory>;
+  getAiModelSubcategories(): Promise<AiModelSubcategory[]>;
+  getAiModelSubcategoriesByCategory(categoryId: number): Promise<AiModelSubcategory[]>;
+  createAiModelSubcategory(subcategory: InsertAiModelSubcategory): Promise<AiModelSubcategory>;
+  getAiModelsByCategory(categoryId: number): Promise<AiModel[]>;
+  getAiModelsBySubcategory(subcategoryId: number): Promise<AiModel[]>;
+  searchAiModels(filters: {
+    category?: number;
+    subcategory?: number;
+    priceMin?: number;
+    priceMax?: number;
+    riskLevel?: string;
+    aiTechnique?: string;
+    targetUserType?: string;
+    financialInstrument?: string;
+    tags?: string[];
+  }): Promise<AiModel[]>;
+  
   // Market insights operations
   getLatestMarketInsights(): Promise<MarketInsight[]>;
   createMarketInsight(insight: InsertMarketInsight): Promise<MarketInsight>;
@@ -345,6 +365,101 @@ export class DatabaseStorage implements IStorage {
       .values(document)
       .returning();
     return newDocument;
+  }
+
+  // AI Model Categories implementation
+  async getAiModelCategories(): Promise<AiModelCategory[]> {
+    return await db.select().from(aiModelCategories).where(eq(aiModelCategories.isActive, true)).orderBy(aiModelCategories.sortOrder);
+  }
+
+  async createAiModelCategory(category: InsertAiModelCategory): Promise<AiModelCategory> {
+    const [newCategory] = await db
+      .insert(aiModelCategories)
+      .values(category)
+      .returning();
+    return newCategory;
+  }
+
+  async getAiModelSubcategories(): Promise<AiModelSubcategory[]> {
+    return await db.select().from(aiModelSubcategories).where(eq(aiModelSubcategories.isActive, true)).orderBy(aiModelSubcategories.sortOrder);
+  }
+
+  async getAiModelSubcategoriesByCategory(categoryId: number): Promise<AiModelSubcategory[]> {
+    return await db.select().from(aiModelSubcategories)
+      .where(and(eq(aiModelSubcategories.categoryId, categoryId), eq(aiModelSubcategories.isActive, true)))
+      .orderBy(aiModelSubcategories.sortOrder);
+  }
+
+  async createAiModelSubcategory(subcategory: InsertAiModelSubcategory): Promise<AiModelSubcategory> {
+    const [newSubcategory] = await db
+      .insert(aiModelSubcategories)
+      .values(subcategory)
+      .returning();
+    return newSubcategory;
+  }
+
+  async getAiModelsByCategory(categoryId: number): Promise<AiModel[]> {
+    return await db.select().from(aiModels)
+      .where(and(eq(aiModels.categoryId, categoryId), eq(aiModels.isActive, true)))
+      .orderBy(desc(aiModels.isFeatured), desc(aiModels.rating));
+  }
+
+  async getAiModelsBySubcategory(subcategoryId: number): Promise<AiModel[]> {
+    return await db.select().from(aiModels)
+      .where(and(eq(aiModels.subcategoryId, subcategoryId), eq(aiModels.isActive, true)))
+      .orderBy(desc(aiModels.isFeatured), desc(aiModels.rating));
+  }
+
+  async searchAiModels(filters: {
+    category?: number;
+    subcategory?: number;
+    priceMin?: number;
+    priceMax?: number;
+    riskLevel?: string;
+    aiTechnique?: string;
+    targetUserType?: string;
+    financialInstrument?: string;
+    tags?: string[];
+  }): Promise<AiModel[]> {
+    let query = db.select().from(aiModels).where(eq(aiModels.isActive, true));
+    
+    const conditions = [eq(aiModels.isActive, true)];
+    
+    if (filters.category) {
+      conditions.push(eq(aiModels.categoryId, filters.category));
+    }
+    
+    if (filters.subcategory) {
+      conditions.push(eq(aiModels.subcategoryId, filters.subcategory));
+    }
+    
+    if (filters.priceMin !== undefined) {
+      conditions.push(gte(aiModels.price, filters.priceMin.toString()));
+    }
+    
+    if (filters.priceMax !== undefined) {
+      conditions.push(lte(aiModels.price, filters.priceMax.toString()));
+    }
+    
+    if (filters.riskLevel) {
+      conditions.push(eq(aiModels.riskLevel, filters.riskLevel));
+    }
+    
+    if (filters.aiTechnique) {
+      conditions.push(eq(aiModels.aiTechnique, filters.aiTechnique));
+    }
+    
+    if (filters.targetUserType) {
+      conditions.push(eq(aiModels.targetUserType, filters.targetUserType));
+    }
+    
+    if (filters.financialInstrument) {
+      conditions.push(eq(aiModels.financialInstrument, filters.financialInstrument));
+    }
+    
+    return await db.select().from(aiModels)
+      .where(and(...conditions))
+      .orderBy(desc(aiModels.isFeatured), desc(aiModels.rating));
   }
 }
 

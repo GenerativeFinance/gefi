@@ -62,11 +62,32 @@ export const portfolioAssets = pgTable("portfolio_assets", {
   quantity: decimal("quantity", { precision: 16, scale: 8 }).notNull(),
 });
 
+// AI Model Categories and Subcategories
+export const aiModelCategories = pgTable("ai_model_categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull().unique(),
+  description: text("description"),
+  icon: varchar("icon"), // Lucide icon name
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true),
+});
+
+export const aiModelSubcategories = pgTable("ai_model_subcategories", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").references(() => aiModelCategories.id),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true),
+});
+
 export const aiModels = pgTable("ai_models", {
   id: serial("id").primaryKey(),
   name: varchar("name").notNull(),
   description: text("description"),
-  category: varchar("category").notNull(),
+  category: varchar("category").notNull(), // Keep for backward compatibility
+  categoryId: integer("category_id").references(() => aiModelCategories.id),
+  subcategoryId: integer("subcategory_id").references(() => aiModelSubcategories.id),
   price: decimal("price", { precision: 8, scale: 2 }).notNull(),
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0"),
   totalRatings: integer("total_ratings").default(0),
@@ -74,7 +95,19 @@ export const aiModels = pgTable("ai_models", {
   isActive: boolean("is_active").default(true),
   features: jsonb("features"),
   performance: jsonb("performance"),
+  // Enhanced categorization fields
+  tags: text("tags").array(), // Additional tags for filtering
+  aiTechnique: varchar("ai_technique"), // ML, Deep Learning, NLP, etc.
+  targetUserType: varchar("target_user_type"), // Retail Banking, Investment Banking, etc.
+  financialInstrument: varchar("financial_instrument"), // Equities, Fixed Income, etc.
+  riskLevel: varchar("risk_level"), // Low, Medium, High
+  minInvestment: decimal("min_investment", { precision: 12, scale: 2 }),
+  dataRequirements: text("data_requirements").array(),
+  supportedRegions: text("supported_regions").array(),
+  complianceFrameworks: text("compliance_frameworks").array(), // BASEL III, MiFID II, etc.
+  isFeatured: boolean("is_featured").default(false),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const userModelSubscriptions = pgTable("user_model_subscriptions", {
@@ -237,6 +270,10 @@ export type RiskLimit = typeof riskLimits.$inferSelect;
 export type InsertRiskLimit = typeof riskLimits.$inferInsert;
 export type ComplianceDocument = typeof complianceDocuments.$inferSelect;
 export type InsertComplianceDocument = typeof complianceDocuments.$inferInsert;
+export type AiModelCategory = typeof aiModelCategories.$inferSelect;
+export type InsertAiModelCategory = typeof aiModelCategories.$inferInsert;
+export type AiModelSubcategory = typeof aiModelSubcategories.$inferSelect;
+export type InsertAiModelSubcategory = typeof aiModelSubcategories.$inferInsert;
 
 export const insertPortfolioSchema = createInsertSchema(portfolios).omit({
   id: true,
