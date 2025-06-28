@@ -444,6 +444,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Backtesting API endpoints
+  app.get('/api/backtests', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Mock backtesting data for demonstration
+      const mockBacktests = [
+        {
+          id: '1',
+          modelId: '1',
+          modelName: 'Advanced Portfolio Optimizer',
+          status: 'completed',
+          startDate: '2023-01-01',
+          endDate: '2023-12-31',
+          initialCapital: 100000,
+          finalValue: 125000,
+          totalReturn: 0.25,
+          annualizedReturn: 0.22,
+          sharpeRatio: 1.45,
+          maxDrawdown: -0.08,
+          volatility: 0.15,
+          winRate: 0.68,
+          profitFactor: 1.85,
+          createdAt: '2024-01-15T10:00:00Z',
+          completedAt: '2024-01-15T10:30:00Z',
+          trades: [],
+          performanceData: Array.from({length: 252}, (_, i) => ({
+            date: new Date(2023, 0, 1 + i).toISOString().split('T')[0],
+            value: 100000 + (Math.random() - 0.4) * 5000 + i * 100,
+            drawdown: Math.random() * -0.1,
+            returns: Math.random() * 0.02 - 0.01
+          })),
+          benchmarkData: Array.from({length: 252}, (_, i) => ({
+            date: new Date(2023, 0, 1 + i).toISOString().split('T')[0],
+            value: 100000 + (Math.random() - 0.5) * 3000 + i * 80,
+            drawdown: Math.random() * -0.08,
+            returns: Math.random() * 0.015 - 0.007
+          })),
+          metrics: {
+            totalTrades: 45,
+            winningTrades: 31,
+            losingTrades: 14,
+            avgWinSize: 2800,
+            avgLossSize: -1200,
+            largestWin: 8500,
+            largestLoss: -3200,
+            avgHoldingPeriod: 12,
+            beta: 0.85,
+            alpha: 0.08,
+            informationRatio: 1.2,
+            calmarRatio: 2.1,
+            sortinoRatio: 1.8
+          }
+        }
+      ];
+      
+      res.json(mockBacktests);
+    } catch (error) {
+      console.error("Error fetching backtests:", error);
+      res.status(500).json({ message: "Failed to fetch backtests" });
+    }
+  });
+
+  app.post('/api/backtests', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Create a new backtest with running status
+      const newBacktest = {
+        id: Math.random().toString(36).substr(2, 9),
+        ...req.body,
+        userId,
+        status: 'running',
+        createdAt: new Date().toISOString(),
+        startedAt: new Date().toISOString(),
+      };
+      
+      // Simulate backtest completion after 5 seconds
+      setTimeout(() => {
+        console.log(`Backtest ${newBacktest.id} completed (simulated)`);
+      }, 5000);
+
+      res.json(newBacktest);
+    } catch (error) {
+      console.error("Error creating backtest:", error);
+      res.status(500).json({ message: "Failed to create backtest" });
+    }
+  });
+
+  app.post('/api/backtests/:id/stop', isAuthenticated, async (req: any, res) => {
+    try {
+      const backtestId = req.params.id;
+      res.json({ message: "Backtest stopped successfully" });
+    } catch (error) {
+      console.error("Error stopping backtest:", error);
+      res.status(500).json({ message: "Failed to stop backtest" });
+    }
+  });
+
+  app.get('/api/market-data/historical', isAuthenticated, async (req: any, res) => {
+    try {
+      const historicalData = {
+        symbols: ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN'],
+        dateRange: {
+          start: '2020-01-01',
+          end: new Date().toISOString().split('T')[0]
+        },
+        dataTypes: ['price', 'volume', 'dividends', 'splits']
+      };
+      res.json(historicalData);
+    } catch (error) {
+      console.error("Error fetching market data:", error);
+      res.status(500).json({ message: "Failed to fetch market data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
