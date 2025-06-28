@@ -9,6 +9,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Debug route to check session
+  app.get('/api/debug/session', (req: any, res) => {
+    res.json({
+      isAuthenticated: req.isAuthenticated(),
+      user: req.user ? 'User exists' : 'No user',
+      session: req.session ? 'Session exists' : 'No session'
+    });
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
