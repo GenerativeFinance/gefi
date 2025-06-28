@@ -24,7 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Brain, Search, Bell, Menu, User, Settings, LogOut, Code, TrendingUp, BarChart3, Briefcase, X } from "lucide-react";
+import { Brain, Search, Bell, Menu, User, Settings, LogOut, Code, TrendingUp, BarChart3, Briefcase, X, Target, BookOpen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useLocation } from "wouter";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
@@ -179,6 +179,34 @@ export default function Header() {
                     >
                       <BarChart3 className="h-4 w-4 mr-1" />
                       Backtesting
+                    </Button>
+                  </Link>
+
+                  <Link href="/bounties">
+                    <Button 
+                      variant="ghost" 
+                      className={`transition-colors ${
+                        location === '/bounties'
+                          ? 'text-primary font-medium' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Target className="h-4 w-4 mr-1" />
+                      Bounties
+                    </Button>
+                  </Link>
+
+                  <Link href="/learning">
+                    <Button 
+                      variant="ghost" 
+                      className={`transition-colors ${
+                        location === '/learning'
+                          ? 'text-primary font-medium' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <BookOpen className="h-4 w-4 mr-1" />
+                      Learning
                     </Button>
                   </Link>
                 </>
