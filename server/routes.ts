@@ -240,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Risk alerts routes
   app.get('/api/risk-alerts', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const alerts = await storage.getUserRiskAlerts(userId);
       res.json(alerts);
     } catch (error) {
