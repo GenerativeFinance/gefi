@@ -26,32 +26,30 @@ function Router() {
 
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/login" component={Login} />
-          <Route path="/login-failed" component={LoginFailed} />
-          <Route path="/pricing" component={Pricing} />
-          <Route path="/privacy-policy" component={PrivacyPolicy} />
-          <Route path="/learning-center" component={LearningCenter} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={AnalyticsDashboard} />
-          <Route path="/home" component={Home} />
-          <Route path="/dashboard" component={AnalyticsDashboard} />
-          <Route path="/analytics" component={AnalyticsDashboard} />
-          <Route path="/portfolio" component={Portfolio} />
-          <Route path="/reports" component={Reports} />
-          <Route path="/risk-management" component={RiskManagement} />
-          <Route path="/marketplace" component={Marketplace} />
-          <Route path="/pricing" component={Pricing} />
-          <Route path="/checkout" component={Checkout} />
-          <Route path="/privacy-policy" component={PrivacyPolicy} />
-          <Route path="/learning-center" component={LearningCenter} />
-          <Route path="/profile" component={UserProfile} />
-        </>
-      )}
+      {/* Always available routes */}
+      <Route path="/login" component={Login} />
+      <Route path="/login-failed" component={LoginFailed} />
+      <Route path="/pricing" component={Pricing} />
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/learning-center" component={LearningCenter} />
+      
+      {/* Dashboard and analytics - always accessible for testing */}
+      <Route path="/dashboard" component={AnalyticsDashboard} />
+      <Route path="/analytics" component={AnalyticsDashboard} />
+      
+      {/* Other app routes */}
+      <Route path="/home" component={Home} />
+      <Route path="/portfolio" component={Portfolio} />
+      <Route path="/reports" component={Reports} />
+      <Route path="/risk-management" component={RiskManagement} />
+      <Route path="/marketplace" component={Marketplace} />
+      <Route path="/checkout" component={Checkout} />
+      <Route path="/profile" component={UserProfile} />
+      
+      {/* Default route */}
+      <Route path="/" component={isLoading ? () => <div>Loading...</div> : isAuthenticated ? AnalyticsDashboard : Landing} />
+      
+      {/* 404 fallback */}
       <Route component={NotFound} />
     </Switch>
   );

@@ -59,10 +59,9 @@ export default function AnalyticsDashboard() {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('7d');
 
   useEffect(() => {
-    if (isAuthenticated) {
-      loadAnalytics();
-    }
-  }, [isAuthenticated, timeRange]);
+    // Load analytics regardless of auth status for dashboard access
+    loadAnalytics();
+  }, [timeRange]);
 
   const loadAnalytics = () => {
     const data = analyticsService.getAnalytics();

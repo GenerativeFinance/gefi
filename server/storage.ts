@@ -53,6 +53,16 @@ import {
   type InsertAiModelCategory,
   type AiModelSubcategory,
   type InsertAiModelSubcategory,
+  type SmartContract,
+  type InsertSmartContract,
+  type ContractInvestment,
+  type InsertContractInvestment,
+  type RevenueDistribution,
+  type InsertRevenueDistribution,
+  type UserTokenBalance,
+  type InsertUserTokenBalance,
+  type BlockchainTransaction,
+  type InsertBlockchainTransaction,
   aiModelCategories,
   aiModelSubcategories,
 } from "@shared/schema";
@@ -499,6 +509,144 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(aiModels)
       .where(and(...conditions))
       .orderBy(desc(aiModels.isFeatured), desc(aiModels.rating));
+  }
+
+  // Smart Contract operations
+  async getAllSmartContracts(): Promise<SmartContract[]> {
+    return await db.select().from(smartContracts).orderBy(desc(smartContracts.createdAt));
+  }
+
+  async getSmartContract(id: number): Promise<SmartContract | undefined> {
+    const [contract] = await db.select().from(smartContracts).where(eq(smartContracts.id, id));
+    return contract;
+  }
+
+  async getSmartContractByAddress(address: string): Promise<SmartContract | undefined> {
+    const [contract] = await db.select().from(smartContracts).where(eq(smartContracts.contractAddress, address));
+    return contract;
+  }
+
+  async createSmartContract(contract: InsertSmartContract): Promise<SmartContract> {
+    const [newContract] = await db.insert(smartContracts).values(contract).returning();
+    return newContract;
+  }
+
+  async updateSmartContract(id: number, updates: Partial<InsertSmartContract>): Promise<SmartContract> {
+    const [updatedContract] = await db.update(smartContracts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(smartContracts.id, id))
+      .returning();
+    return updatedContract;
+  }
+
+  async getUserSmartContracts(userId: string): Promise<SmartContract[]> {
+    return await db.select().from(smartContracts)
+      .where(eq(smartContracts.creatorId, userId))
+      .orderBy(desc(smartContracts.createdAt));
+  }
+
+  // Investment operations
+  async getContractInvestments(contractId: number): Promise<ContractInvestment[]> {
+    return await db.select().from(contractInvestments)
+      .where(eq(contractInvestments.contractId, contractId))
+      .orderBy(desc(contractInvestments.investedAt));
+  }
+
+  async getUserInvestments(userId: string): Promise<ContractInvestment[]> {
+    return await db.select().from(contractInvestments)
+      .where(eq(contractInvestments.investorId, userId))
+      .orderBy(desc(contractInvestments.investedAt));
+  }
+
+  async createInvestment(investment: InsertContractInvestment): Promise<ContractInvestment> {
+    const [newInvestment] = await db.insert(contractInvestments).values(investment).returning();
+    return newInvestment;
+  }
+
+  async updateInvestmentStatus(id: number, status: string, transactionHash?: string): Promise<ContractInvestment> {
+    const updates: Partial<InsertContractInvestment> = { status };
+    if (transactionHash) {
+      updates.transactionHash = transactionHash;
+    }
+    const [updatedInvestment] = await db.update(contractInvestments)
+      .set(updates)
+      .where(eq(contractInvestments.id, id))
+      .returning();
+    return updatedInvestment;
+  }
+
+  // Revenue distribution operations
+  async getRevenueDistributions(contractId: number): Promise<RevenueDistribution[]> {
+    return await db.select().from(revenueDistributions)
+      .where(eq(revenueDistributions.contractId, contractId))
+      .orderBy(desc(revenueDistributions.distributedAt));
+  }
+
+  async createRevenueDistribution(distribution: InsertRevenueDistribution): Promise<RevenueDistribution> {
+    const [newDistribution] = await db.insert(revenueDistributions).values(distribution).returning();
+    return newDistribution;
+  }
+
+  // Token balance operations
+  async getUserTokenBalances(userId: string): Promise<UserTokenBalance[]> {
+    return await db.select().from(userTokenBalances)
+      .where(eq(userTokenBalances.userId, userId))
+      .orderBy(desc(userTokenBalances.updatedAt));
+  }
+
+  async getTokenBalance(userId: string, contractId: number): Promise<UserTokenBalance | undefined> {
+    const [balance] = await db.select().from(userTokenBalances)
+      .where(and(
+        eq(userTokenBalances.userId, userId),
+        eq(userTokenBalances.contractId, contractId)
+      ));
+    return balance;
+  }
+
+  async updateTokenBalance(userId: string, contractId: number, balance: string): Promise<UserTokenBalance> {
+    const existing = await this.getTokenBalance(userId, contractId);
+    if (existing) {
+      const [updated] = await db.update(userTokenBalances)
+        .set({ tokenBalance: balance, updatedAt: new Date() })
+        .where(and(
+          eq(userTokenBalances.userId, userId),
+          eq(userTokenBalances.contractId, contractId)
+        ))
+        .returning();
+      return updated;
+    } else {
+      const [newBalance] = await db.insert(userTokenBalances)
+        .values({ userId, contractId, tokenBalance: balance })
+        .returning();
+      return newBalance;
+    }
+  }
+
+  // Blockchain transaction operations
+  async getUserTransactions(userId: string): Promise<BlockchainTransaction[]> {
+    return await db.select().from(blockchainTransactions)
+      .where(eq(blockchainTransactions.userId, userId))
+      .orderBy(desc(blockchainTransactions.createdAt));
+  }
+
+  async createTransaction(transaction: InsertBlockchainTransaction): Promise<BlockchainTransaction> {
+    const [newTransaction] = await db.insert(blockchainTransactions).values(transaction).returning();
+    return newTransaction;
+  }
+
+  async updateTransactionStatus(hash: string, status: string, blockNumber?: number): Promise<BlockchainTransaction> {
+    const updates: Partial<InsertBlockchainTransaction> = { 
+      status,
+      confirmedAt: status === 'confirmed' ? new Date() : undefined
+    };
+    if (blockNumber) {
+      updates.blockNumber = blockNumber;
+    }
+    const [updatedTransaction] = await db.update(blockchainTransactions)
+      .set(updates)
+      .where(eq(blockchainTransactions.transactionHash, hash))
+      .returning();
+    return updatedTransaction;
   }
 }
 
