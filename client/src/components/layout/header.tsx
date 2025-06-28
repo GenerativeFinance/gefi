@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -15,12 +16,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Brain, Search, Bell, Menu, User, Settings, LogOut, Code, TrendingUp, BarChart3, Briefcase } from "lucide-react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Brain, Search, Bell, Menu, User, Settings, LogOut, Code, TrendingUp, BarChart3, Briefcase, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useLocation } from "wouter";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { AccessibilityToggle } from "@/components/ui/accessibility-toggle";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 type DashboardMode = 'investor' | 'developer';
 
@@ -28,6 +38,27 @@ export default function Header() {
   const { user } = useAuth();
   const [location, navigate] = useLocation();
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('investor');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Fetch AI models for search
+  const { data: aiModels = [] } = useQuery({
+    queryKey: ["/api/ai-models"],
+    enabled: searchOpen,
+  });
+
+  // Filter models based on search query
+  const filteredModels = Array.isArray(aiModels) ? aiModels.filter((model: any) =>
+    model.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    model.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    model.tags?.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+  ) : [];
+
+  const handleSearchSelect = (modelId: number) => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    navigate(`/marketplace?model=${modelId}`);
+  };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Determine dashboard mode based on current route
@@ -136,9 +167,100 @@ export default function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <Search className="h-5 w-5" />
-            </Button>
+            <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="hidden sm:flex">
+                  <Search className="h-5 w-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Search AI Financial Models</DialogTitle>
+                  <DialogDescription>
+                    Find the perfect AI model for your financial needs
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search models, descriptions, or tags..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                      autoFocus
+                    />
+                  </div>
+                  
+                  <div className="max-h-96 overflow-y-auto space-y-2">
+                    {searchQuery && filteredModels.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No models found matching "{searchQuery}"</p>
+                        <p className="text-sm">Try different keywords or browse the marketplace</p>
+                      </div>
+                    )}
+                    
+                    {searchQuery && filteredModels.length > 0 && (
+                      <div className="text-sm text-muted-foreground mb-2">
+                        Found {filteredModels.length} model{filteredModels.length !== 1 ? 's' : ''}
+                      </div>
+                    )}
+                    
+                    {(searchQuery ? filteredModels : aiModels.slice(0, 8)).map((model: any) => (
+                      <div
+                        key={model.id}
+                        onClick={() => handleSearchSelect(model.id)}
+                        className="flex items-center space-x-3 p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                      >
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <Brain className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm truncate">{model.name}</h4>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {model.description}
+                          </p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Badge variant="secondary" className="text-xs">
+                              ${model.price || 0}/mo
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {model.riskLevel || 'Medium'}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {!searchQuery && aiModels.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>Loading AI models...</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchOpen(false);
+                        navigate('/marketplace');
+                      }}
+                    >
+                      Browse All Models
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setSearchOpen(false)}
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button variant="ghost" size="icon" className="hidden sm:flex">
               <Bell className="h-5 w-5" />
             </Button>
@@ -208,6 +330,109 @@ export default function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border">
+              {/* Mobile Search */}
+              <div className="px-3 py-2">
+                <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start">
+                      <Search className="h-4 w-4 mr-2" />
+                      Search AI Models
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Search AI Financial Models</DialogTitle>
+                      <DialogDescription>
+                        Find the perfect AI model for your financial needs
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search models, descriptions, or tags..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-10"
+                          autoFocus
+                        />
+                      </div>
+                      
+                      <div className="max-h-96 overflow-y-auto space-y-2">
+                        {searchQuery && filteredModels.length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>No models found matching "{searchQuery}"</p>
+                            <p className="text-sm">Try different keywords or browse the marketplace</p>
+                          </div>
+                        )}
+                        
+                        {searchQuery && filteredModels.length > 0 && (
+                          <div className="text-sm text-muted-foreground mb-2">
+                            Found {filteredModels.length} model{filteredModels.length !== 1 ? 's' : ''}
+                          </div>
+                        )}
+                        
+                        {(searchQuery ? filteredModels : aiModels.slice(0, 8)).map((model: any) => (
+                          <div
+                            key={model.id}
+                            onClick={() => {
+                              handleSearchSelect(model.id);
+                              setMobileMenuOpen(false);
+                            }}
+                            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                          >
+                            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                              <Brain className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm truncate">{model.name}</h4>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {model.description}
+                              </p>
+                              <div className="flex items-center space-x-2 mt-1">
+                                <Badge variant="secondary" className="text-xs">
+                                  ${model.price || 0}/mo
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  {model.riskLevel || 'Medium'}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {!searchQuery && aiModels.length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>Loading AI models...</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex justify-between items-center pt-4 border-t">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setSearchOpen(false);
+                            setMobileMenuOpen(false);
+                            navigate('/marketplace');
+                          }}
+                        >
+                          Browse All Models
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => setSearchOpen(false)}
+                        >
+                          Close
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
               {/* Mobile Dashboard Switcher */}
               <div className="px-3 py-2">
                 <Select value={dashboardMode} onValueChange={handleDashboardModeChange}>
