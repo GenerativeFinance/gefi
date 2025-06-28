@@ -63,7 +63,7 @@ export default function Header() {
 
   // Determine dashboard mode based on current route
   useEffect(() => {
-    if (location?.includes('/developer') || location?.includes('/backtesting')) {
+    if (location?.includes('/developer') || location?.includes('/backtesting') || location?.includes('/bounties') || location?.includes('/learning')) {
       setDashboardMode('developer');
     } else {
       setDashboardMode('investor');
@@ -632,6 +632,34 @@ export default function Header() {
                       >
                         <BarChart3 className="h-5 w-5" />
                         <span>Backtesting</span>
+                      </a>
+                    </Link>
+                    
+                    <Link href="/bounties">
+                      <a 
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                          location === '/bounties' 
+                            ? 'text-primary bg-primary/10' 
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Target className="h-5 w-5" />
+                        <span>Bounties</span>
+                      </a>
+                    </Link>
+                    
+                    <Link href="/learning">
+                      <a 
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                          location === '/learning' 
+                            ? 'text-primary bg-primary/10' 
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <BookOpen className="h-5 w-5" />
+                        <span>Learning</span>
                       </a>
                     </Link>
                   </div>
