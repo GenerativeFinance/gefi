@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-
+import { NotificationBanner } from "@/components/ui/notification-banner";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
@@ -20,38 +20,31 @@ import Checkout from "@/pages/checkout";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import LearningCenter from "@/pages/learning-center";
 import UserProfile from "@/pages/user-profile";
-import SmartContracts from "@/pages/smart-contracts";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <Switch>
-      {/* Always available routes */}
       <Route path="/login" component={Login} />
       <Route path="/login-failed" component={LoginFailed} />
-      <Route path="/pricing" component={Pricing} />
-      <Route path="/privacy-policy" component={PrivacyPolicy} />
-      <Route path="/learning-center" component={LearningCenter} />
-      
-      {/* Dashboard and analytics - always accessible for testing */}
-      <Route path="/dashboard" component={AnalyticsDashboard} />
-      <Route path="/analytics" component={AnalyticsDashboard} />
-      
-      {/* Other app routes */}
-      <Route path="/home" component={Home} />
-      <Route path="/portfolio" component={Portfolio} />
-      <Route path="/reports" component={Reports} />
-      <Route path="/risk-management" component={RiskManagement} />
-      <Route path="/marketplace" component={Marketplace} />
-      <Route path="/checkout" component={Checkout} />
-      <Route path="/profile" component={UserProfile} />
-      <Route path="/smart-contracts" component={SmartContracts} />
-      
-      {/* Default route */}
-      <Route path="/" component={isLoading ? () => <div>Loading...</div> : isAuthenticated ? AnalyticsDashboard : Landing} />
-      
-      {/* 404 fallback */}
+      {isLoading || !isAuthenticated ? (
+        <Route path="/" component={Login} />
+      ) : (
+        <>
+          <Route path="/" component={AnalyticsDashboard} />
+          <Route path="/home" component={Home} />
+          <Route path="/portfolio" component={Portfolio} />
+          <Route path="/reports" component={Reports} />
+          <Route path="/risk-management" component={RiskManagement} />
+          <Route path="/marketplace" component={Marketplace} />
+          <Route path="/pricing" component={Pricing} />
+          <Route path="/checkout" component={Checkout} />
+          <Route path="/privacy-policy" component={PrivacyPolicy} />
+          <Route path="/learning-center" component={LearningCenter} />
+          <Route path="/profile" component={UserProfile} />
+        </>
+      )}
       <Route component={NotFound} />
     </Switch>
   );

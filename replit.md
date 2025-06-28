@@ -125,13 +125,6 @@ Changelog:
   * User experience improvements: Better loading states, retry mechanisms, and popular model suggestions
   * Fixed notification banner infinite loop issue (temporarily disabled for debugging)
   * Type-safe export utilities with proper null handling and schema compatibility
-- June 28, 2025. Completed smart contract blockchain functionality implementation
-  * Full database schema for smart contracts, investments, and revenue sharing
-  * Backend API endpoints for CRUD operations on smart contracts and investments
-  * Token balance tracking and blockchain transaction management
-  * Frontend smart contracts page with investment and revenue sharing interfaces
-  * Simplified authentication system for demo purposes with session management
-  * Successfully integrated smart contracts into application routing
 ```
 
 ## User Preferences

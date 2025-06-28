@@ -1,111 +1,35 @@
-import type { Express, RequestHandler } from "express";
+import type { Express } from "express";
 import { createServer, type Server } from "http";
-import session from "express-session";
-import passport from "passport";
-import { Strategy as GitHubStrategy } from "passport-github2";
-import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { setupMultiAuth, isAuthenticated } from "./multiAuth";
 import { insertPortfolioSchema, insertAiModelSchema, insertRiskAlertSchema } from "@shared/schema";
 import { z } from "zod";
 import { PortfolioOptimizer, RiskAssessment, MarketAnalysis } from "./aiModels";
 
-async function setupGitHubAuth(app: Express) {
-  // Session configuration
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
-    ttl: sessionTtl,
-    tableName: "sessions",
-  });
-
-  app.use(session({
-    secret: process.env.SESSION_SECRET || 'dev-secret',
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: false, // Set to true in production with HTTPS
-      maxAge: sessionTtl,
-    },
-  }));
-
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  // GitHub OAuth strategy
-  passport.use(new GitHubStrategy({
-    clientID: process.env.GITHUB_CLIENT_ID!,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    callbackURL: "/api/auth/github/callback"
-  }, async (accessToken: any, refreshToken: any, profile: any, done: any) => {
-    try {
-      const user = await storage.upsertUser({
-        id: `github_${profile.id}`,
-        email: profile.emails?.[0]?.value || null,
-        firstName: profile.displayName?.split(' ')[0] || profile.username,
-        lastName: profile.displayName?.split(' ').slice(1).join(' ') || null,
-        profileImageUrl: profile.photos?.[0]?.value || null,
-      });
-      done(null, user);
-    } catch (error) {
-      done(error, null);
-    }
-  }));
-
-  passport.serializeUser((user: any, done) => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: string, done) => {
-    try {
-      const user = await storage.getUser(id);
-      done(null, user);
-    } catch (error) {
-      done(error, null);
-    }
-  });
-}
-
-const isAuthenticated: RequestHandler = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.status(401).json({ message: "Unauthorized" });
-};
-
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup GitHub authentication
-  await setupGitHubAuth(app);
+  // Auth middleware
+  await setupMultiAuth(app);
 
-  // GitHub OAuth routes
-  app.get('/api/auth/github', passport.authenticate('github', { scope: ['user:email'] }));
-  
-  app.get('/api/auth/github/callback', 
-    passport.authenticate('github', { failureRedirect: '/login-failed' }),
-    (req, res) => {
-      res.redirect('/');
-    }
-  );
-
-  app.get('/api/login', (req, res) => {
-    res.redirect('/api/auth/github');
-  });
-
-  app.get('/api/logout', (req: any, res) => {
-    req.logout((err: any) => {
-      if (err) {
-        console.error('Logout error:', err);
-      }
-      res.redirect('/');
+  // Debug route to check session
+  app.get('/api/debug/session', (req: any, res) => {
+    res.json({
+      isAuthenticated: req.isAuthenticated(),
+      user: req.user ? 'User exists' : 'No user',
+      session: req.session ? 'Session exists' : 'No session'
     });
   });
 
-  // Auth user route
-  app.get('/api/auth/user', isAuthenticated, (req: any, res) => {
-    res.json(req.user);
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      // For multi-provider auth, user ID is directly available
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
   });
 
   // Portfolio routes with AI analysis
@@ -444,114 +368,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching reports:", error);
       res.status(500).json({ message: "Failed to fetch reports" });
-    }
-  });
-
-  // Smart Contract routes
-  app.get('/api/smart-contracts', async (req, res) => {
-    try {
-      const contracts = await storage.getAllSmartContracts();
-      res.json(contracts);
-    } catch (error) {
-      console.error("Error fetching smart contracts:", error);
-      res.status(500).json({ message: "Failed to fetch smart contracts" });
-    }
-  });
-
-  app.get('/api/smart-contracts/:id', async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const contract = await storage.getSmartContract(id);
-      
-      if (!contract) {
-        return res.status(404).json({ message: "Smart contract not found" });
-      }
-      
-      res.json(contract);
-    } catch (error) {
-      console.error("Error fetching smart contract:", error);
-      res.status(500).json({ message: "Failed to fetch smart contract" });
-    }
-  });
-
-  app.post('/api/smart-contracts', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const contractData = {
-        ...req.body,
-        creatorId: userId,
-      };
-      
-      const contract = await storage.createSmartContract(contractData);
-      res.status(201).json(contract);
-    } catch (error) {
-      console.error("Error creating smart contract:", error);
-      res.status(500).json({ message: "Failed to create smart contract" });
-    }
-  });
-
-  app.get('/api/user/smart-contracts', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const contracts = await storage.getUserSmartContracts(userId);
-      res.json(contracts);
-    } catch (error) {
-      console.error("Error fetching user smart contracts:", error);
-      res.status(500).json({ message: "Failed to fetch user smart contracts" });
-    }
-  });
-
-  app.post('/api/smart-contracts/:id/invest', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const contractId = parseInt(req.params.id);
-      const { investmentAmount, tokensReceived } = req.body;
-      
-      const investment = await storage.createInvestment({
-        contractId,
-        investorId: userId,
-        investmentAmount,
-        tokensReceived,
-        status: 'pending',
-      });
-      
-      res.status(201).json(investment);
-    } catch (error) {
-      console.error("Error creating investment:", error);
-      res.status(500).json({ message: "Failed to create investment" });
-    }
-  });
-
-  app.get('/api/user/investments', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const investments = await storage.getUserInvestments(userId);
-      res.json(investments);
-    } catch (error) {
-      console.error("Error fetching user investments:", error);
-      res.status(500).json({ message: "Failed to fetch user investments" });
-    }
-  });
-
-  app.get('/api/user/token-balances', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const balances = await storage.getUserTokenBalances(userId);
-      res.json(balances);
-    } catch (error) {
-      console.error("Error fetching token balances:", error);
-      res.status(500).json({ message: "Failed to fetch token balances" });
-    }
-  });
-
-  app.get('/api/user/transactions', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const transactions = await storage.getUserTransactions(userId);
-      res.json(transactions);
-    } catch (error) {
-      console.error("Error fetching user transactions:", error);
-      res.status(500).json({ message: "Failed to fetch user transactions" });
     }
   });
 
