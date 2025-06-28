@@ -1,25 +1,111 @@
 import type { Express, RequestHandler } from "express";
 import { createServer, type Server } from "http";
+import session from "express-session";
+import passport from "passport";
+import { Strategy as GitHubStrategy } from "passport-github2";
+import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertPortfolioSchema, insertAiModelSchema, insertRiskAlertSchema } from "@shared/schema";
 import { z } from "zod";
 import { PortfolioOptimizer, RiskAssessment, MarketAnalysis } from "./aiModels";
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+async function setupGitHubAuth(app: Express) {
+  // Session configuration
+  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const pgStore = connectPg(session);
+  const sessionStore = new pgStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: false,
+    ttl: sessionTtl,
+    tableName: "sessions",
+  });
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'dev-secret',
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: false, // Set to true in production with HTTPS
+      maxAge: sessionTtl,
+    },
+  }));
+
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // GitHub OAuth strategy
+  passport.use(new GitHubStrategy({
+    clientID: process.env.GITHUB_CLIENT_ID!,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    callbackURL: "/api/auth/github/callback"
+  }, async (accessToken: any, refreshToken: any, profile: any, done: any) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      const user = await storage.upsertUser({
+        id: `github_${profile.id}`,
+        email: profile.emails?.[0]?.value || null,
+        firstName: profile.displayName?.split(' ')[0] || profile.username,
+        lastName: profile.displayName?.split(' ').slice(1).join(' ') || null,
+        profileImageUrl: profile.photos?.[0]?.value || null,
+      });
+      done(null, user);
     } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      done(error, null);
     }
+  }));
+
+  passport.serializeUser((user: any, done) => {
+    done(null, user.id);
+  });
+
+  passport.deserializeUser(async (id: string, done) => {
+    try {
+      const user = await storage.getUser(id);
+      done(null, user);
+    } catch (error) {
+      done(error, null);
+    }
+  });
+}
+
+const isAuthenticated: RequestHandler = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ message: "Unauthorized" });
+};
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup GitHub authentication
+  await setupGitHubAuth(app);
+
+  // GitHub OAuth routes
+  app.get('/api/auth/github', passport.authenticate('github', { scope: ['user:email'] }));
+  
+  app.get('/api/auth/github/callback', 
+    passport.authenticate('github', { failureRedirect: '/login-failed' }),
+    (req, res) => {
+      res.redirect('/');
+    }
+  );
+
+  app.get('/api/login', (req, res) => {
+    res.redirect('/api/auth/github');
+  });
+
+  app.get('/api/logout', (req: any, res) => {
+    req.logout((err: any) => {
+      if (err) {
+        console.error('Logout error:', err);
+      }
+      res.redirect('/');
+    });
+  });
+
+  // Auth user route
+  app.get('/api/auth/user', isAuthenticated, (req: any, res) => {
+    res.json(req.user);
   });
 
   // Portfolio routes with AI analysis
