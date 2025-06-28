@@ -150,18 +150,72 @@ export default function Header() {
 
             {/* Navigation Menu */}
             <nav className="hidden md:flex space-x-6">
-              {currentNavItems.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <a className={`flex items-center space-x-1 transition-colors ${
-                    location === item.href 
-                      ? 'text-primary font-medium' 
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}>
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </a>
-                </Link>
-              ))}
+              {dashboardMode === 'developer' ? (
+                <>
+                  {/* Developer Dropdown Menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        className={`flex items-center space-x-1 transition-colors px-2 ${
+                          location?.includes('/developer') || location?.includes('/backtesting')
+                            ? 'text-primary font-medium' 
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <Code className="h-4 w-4" />
+                        <span>Developer</span>
+                        <Badge variant="secondary" className="ml-1 text-xs bg-purple-600 text-white">DEV</Badge>
+                        <svg className="h-3 w-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48">
+                      <Link href="/developer">
+                        <DropdownMenuItem className={`cursor-pointer ${location === '/developer' ? 'bg-accent text-accent-foreground' : ''}`}>
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          Dashboard
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href="/backtesting">
+                        <DropdownMenuItem className={`cursor-pointer ${location === '/backtesting' ? 'bg-accent text-accent-foreground' : ''}`}>
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          Backtesting
+                        </DropdownMenuItem>
+                      </Link>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  
+                  {/* Marketplace Link */}
+                  <Link href="/marketplace">
+                    <a className={`flex items-center space-x-1 transition-colors ${
+                      location === '/marketplace' 
+                        ? 'text-primary font-medium' 
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}>
+                      <Briefcase className="h-4 w-4" />
+                      <span>Marketplace</span>
+                    </a>
+                  </Link>
+                </>
+              ) : (
+                /* Investor Navigation */
+                <>
+                  {investorNavItems.map((item) => (
+                    <Link key={item.href} href={item.href}>
+                      <a className={`flex items-center space-x-1 transition-colors ${
+                        location === item.href 
+                          ? 'text-primary font-medium' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                      </a>
+                    </Link>
+                  ))}
+                </>
+              )}
             </nav>
           </div>
 
@@ -529,21 +583,83 @@ export default function Header() {
               </div>
 
               {/* Mobile Navigation */}
-              {currentNavItems.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <a 
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                      location === item.href 
-                        ? 'text-primary bg-primary/10' 
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    <span>{item.label}</span>
-                  </a>
-                </Link>
-              ))}
+              {dashboardMode === 'developer' ? (
+                <>
+                  {/* Developer Section with Badge */}
+                  <div className="px-3 py-2">
+                    <div className="flex items-center space-x-2 px-3 py-2 text-primary bg-primary/10 rounded-md">
+                      <Code className="h-5 w-5" />
+                      <span className="text-base font-medium">Developer</span>
+                      <Badge variant="secondary" className="text-xs bg-purple-600 text-white">DEV</Badge>
+                    </div>
+                  </div>
+                  
+                  {/* Developer Sub-items */}
+                  <div className="pl-6">
+                    <Link href="/developer">
+                      <a 
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                          location === '/developer' 
+                            ? 'text-primary bg-primary/10' 
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <BarChart3 className="h-5 w-5" />
+                        <span>Dashboard</span>
+                      </a>
+                    </Link>
+                    
+                    <Link href="/backtesting">
+                      <a 
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                          location === '/backtesting' 
+                            ? 'text-primary bg-primary/10' 
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <BarChart3 className="h-5 w-5" />
+                        <span>Backtesting</span>
+                      </a>
+                    </Link>
+                  </div>
+                  
+                  {/* Marketplace Link */}
+                  <Link href="/marketplace">
+                    <a 
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                        location === '/marketplace' 
+                          ? 'text-primary bg-primary/10' 
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Briefcase className="h-5 w-5" />
+                      <span>Marketplace</span>
+                    </a>
+                  </Link>
+                </>
+              ) : (
+                /* Investor Mobile Navigation */
+                <>
+                  {investorNavItems.map((item) => (
+                    <Link key={item.href} href={item.href}>
+                      <a 
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                          location === item.href 
+                            ? 'text-primary bg-primary/10' 
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <item.icon className="h-5 w-5" />
+                        <span>{item.label}</span>
+                      </a>
+                    </Link>
+                  ))}
+                </>
+              )}
             </div>
           </div>
         )}
