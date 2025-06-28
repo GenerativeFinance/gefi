@@ -10,6 +10,7 @@ import {
 import { Brain, Search, Bell, Menu, User, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 export default function Header() {
   const { user } = useAuth();
