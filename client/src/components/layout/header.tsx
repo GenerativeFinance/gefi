@@ -172,17 +172,25 @@ export default function Header() {
                         </svg>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-48">
+                    <DropdownMenuContent align="start" className="w-56 p-2">
                       <Link href="/developer">
-                        <DropdownMenuItem className={`cursor-pointer ${location === '/developer' ? 'bg-accent text-accent-foreground' : ''}`}>
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          Dashboard
+                        <DropdownMenuItem className={`cursor-pointer p-3 rounded-md ${location === '/developer' ? 'bg-accent text-accent-foreground' : ''}`}>
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                              <BarChart3 className="h-4 w-4 text-primary" />
+                            </div>
+                            <span className="font-medium">Dashboard</span>
+                          </div>
                         </DropdownMenuItem>
                       </Link>
                       <Link href="/backtesting">
-                        <DropdownMenuItem className={`cursor-pointer ${location === '/backtesting' ? 'bg-accent text-accent-foreground' : ''}`}>
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          Backtesting
+                        <DropdownMenuItem className={`cursor-pointer p-3 rounded-md ${location === '/backtesting' ? 'bg-accent text-accent-foreground' : ''}`}>
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                              <BarChart3 className="h-4 w-4 text-primary" />
+                            </div>
+                            <span className="font-medium">Backtesting</span>
+                          </div>
                         </DropdownMenuItem>
                       </Link>
                     </DropdownMenuContent>
