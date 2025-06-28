@@ -89,27 +89,27 @@ export const exportToPDF = (data: ExportData, filename: string = 'gefi_report') 
   doc.text(`Total Models: ${models.length}`, 20, yPosition);
   yPosition += 8;
   
-  const avgPrice = models.reduce((sum, model) => sum + model.price, 0) / models.length;
+  const avgPrice = models.reduce((sum, model) => sum + parseFloat(model.price || '0'), 0) / models.length;
   doc.text(`Average Model Price: $${avgPrice.toFixed(2)}`, 20, yPosition);
   yPosition += 8;
   
-  const avgAccuracy = models.reduce((sum, model) => sum + model.accuracyScore, 0) / models.length;
-  doc.text(`Average Accuracy Score: ${avgAccuracy.toFixed(1)}%`, 20, yPosition);
+  const avgRating = models.reduce((sum, model) => sum + parseFloat(model.rating || '0'), 0) / models.length;
+  doc.text(`Average Rating: ${avgRating.toFixed(1)}/5`, 20, yPosition);
   yPosition += 15;
   
   // Prepare table data
   const tableData = models.map(model => [
     model.name,
-    model.riskLevel,
-    `$${model.price}`,
-    `${model.accuracyScore}%`,
-    model.aiTechnique,
-    new Date(model.createdAt).toLocaleDateString()
+    model.riskLevel || 'N/A',
+    `$${model.price || '0'}`,
+    model.rating ? `${model.rating}/5` : 'N/A',
+    model.aiTechnique || 'N/A',
+    model.createdAt ? new Date(model.createdAt).toLocaleDateString() : 'N/A'
   ]);
   
   // Add table
   doc.autoTable({
-    head: [['Model Name', 'Risk Level', 'Price', 'Accuracy', 'AI Technique', 'Created']],
+    head: [['Model Name', 'Risk Level', 'Price', 'Rating', 'AI Technique', 'Created']],
     body: tableData,
     startY: yPosition,
     styles: {
@@ -127,7 +127,7 @@ export const exportToPDF = (data: ExportData, filename: string = 'gefi_report') 
   
   // Add portfolio data if available
   if (portfolioData && portfolioData.length > 0) {
-    const finalY = doc.lastAutoTable?.finalY || yPosition + 100;
+    const finalY = (doc as any).lastAutoTable?.finalY || yPosition + 100;
     
     doc.setFontSize(14);
     doc.text('Portfolio Performance', 20, finalY + 20);

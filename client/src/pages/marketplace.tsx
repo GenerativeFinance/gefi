@@ -62,6 +62,7 @@ const iconMap: Record<string, any> = {
 
 export default function Marketplace() {
   const { t } = useI18n();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
@@ -79,7 +80,7 @@ export default function Marketplace() {
     retry: false,
   });
 
-  const { data: models = [], isLoading: modelsLoading } = useQuery<AiModel[]>({
+  const { data: models = [], isLoading: modelsLoading, error: modelsError } = useQuery<AiModel[]>({
     queryKey: ["/api/ai-models", { 
       category: selectedCategory !== "all" ? selectedCategory : undefined,
       subcategory: selectedSubcategory !== "all" ? selectedSubcategory : undefined,
@@ -87,6 +88,41 @@ export default function Marketplace() {
     }],
     retry: false,
   });
+
+  // Export functions
+  const handleExportCSV = () => {
+    try {
+      const exportData = generateSampleExportData(filteredModels as any);
+      exportToCSV(exportData, 'gefi_marketplace_models');
+      toast({
+        title: "Export Successful",
+        description: `Exported ${filteredModels.length} models to CSV`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Unable to export data. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportPDF = () => {
+    try {
+      const exportData = generateSampleExportData(filteredModels as any);
+      exportToPDF(exportData, 'gefi_marketplace_report');
+      toast({
+        title: "Report Generated",
+        description: `Generated PDF report with ${filteredModels.length} models`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed", 
+        description: "Unable to generate PDF report. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const filteredModels = models?.filter((model: AiModel) => {
     const matchesSearch = searchQuery === "" || 
@@ -322,14 +358,39 @@ export default function Marketplace() {
               </div>
             </Card>
 
-            {/* Results */}
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">
-                {filteredModels.length} Model{filteredModels.length !== 1 ? 's' : ''} Found
-              </h3>
+            {/* Results Header with Export Options */}
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center space-x-4">
+                <h3 className="text-lg font-semibold">
+                  {filteredModels.length} Model{filteredModels.length !== 1 ? 's' : ''} Found
+                </h3>
+                
+                {filteredModels.length > 0 && (
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportCSV}
+                      className="flex items-center space-x-2"
+                    >
+                      <FileSpreadsheet className="h-4 w-4" />
+                      <span>Export CSV</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportPDF}
+                      className="flex items-center space-x-2"
+                    >
+                      <FileText className="h-4 w-4" />
+                      <span>Export PDF</span>
+                    </Button>
+                  </div>
+                )}
+              </div>
               
               {(searchQuery || selectedCategory !== "all" || selectedSubcategory !== "all" || priceRange !== "all" || riskLevel !== "all") && (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 flex-wrap">
                   <span className="text-sm text-muted-foreground">Active filters:</span>
                   {searchQuery && <Badge variant="secondary">Search: {searchQuery}</Badge>}
                   {selectedCategory !== "all" && (
