@@ -28,30 +28,47 @@ import BacktestingEnvironment from "@/pages/backtesting";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   return (
     <Switch>
+      {/* Public routes */}
       <Route path="/login" component={Login} />
       <Route path="/login-failed" component={LoginFailed} />
-      {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Login} />
-      ) : (
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      
+      {/* Protected routes */}
+      {isAuthenticated ? (
         <>
-          <Route path="/" component={AnalyticsDashboard} />
+          <Route path="/" component={Home} />
           <Route path="/home" component={Home} />
+          <Route path="/analytics" component={AnalyticsDashboard} />
           <Route path="/portfolio" component={Portfolio} />
           <Route path="/reports" component={Reports} />
           <Route path="/risk-management" component={RiskManagement} />
           <Route path="/marketplace" component={Marketplace} />
           <Route path="/pricing" component={Pricing} />
           <Route path="/checkout" component={Checkout} />
-          <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/learning-center" component={LearningCenter} />
           <Route path="/profile" component={UserProfile} />
           <Route path="/settings" component={Settings} />
           <Route path="/developer" component={DeveloperDashboard} />
           <Route path="/backtesting" component={BacktestingEnvironment} />
         </>
+      ) : (
+        <>
+          <Route path="/" component={Login} />
+          <Route path="*" component={Login} />
+        </>
       )}
+      
+      {/* 404 fallback */}
       <Route component={NotFound} />
     </Switch>
   );
