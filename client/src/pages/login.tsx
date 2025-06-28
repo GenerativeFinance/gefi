@@ -27,7 +27,7 @@ export default function Login() {
               <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center">
                 <TrendingUp className="h-6 w-6 text-white" />
               </div>
-              <h1 className="text-3xl font-bold">GenoFi</h1>
+              <h1 className="text-3xl font-bold">GeFi</h1>
             </div>
             <h2 className="text-4xl font-bold gradient-text">
               AI-Powered Finance

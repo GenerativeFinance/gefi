@@ -263,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Reports routes
   app.get('/api/reports', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const reports = await storage.getUserReports(userId);
       res.json(reports);
     } catch (error) {

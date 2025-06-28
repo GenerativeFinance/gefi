@@ -1,8 +1,8 @@
-# GenoFi - AI Financial Platform
+# GeFi - AI Financial Platform
 
 ## Overview
 
-GenoFi is a comprehensive AI-powered financial platform that enables developers to create and monetize AI financial models while providing investors with access to sophisticated financial analytics and risk management tools. The platform combines modern web technologies with machine learning capabilities to deliver real-time portfolio management, risk assessment, and market insights.
+GeFi is a comprehensive AI-powered financial platform that enables developers to create and monetize AI financial models while providing investors with access to sophisticated financial analytics and risk management tools. The platform combines modern web technologies with machine learning capabilities to deliver real-time portfolio management, risk assessment, and market insights.
 
 ## System Architecture
 

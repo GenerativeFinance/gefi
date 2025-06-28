@@ -24,7 +24,7 @@ export default function Landing() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <Brain className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">GenoFi</span>
+              <span className="text-xl font-bold">GeFi</span>
             </div>
             <nav className="hidden md:flex space-x-6">
               <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
@@ -419,7 +419,7 @@ export default function Landing() {
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
                 <Brain className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold">GenoFi</span>
+                <span className="text-xl font-bold">GeFi</span>
               </div>
               <p className="text-muted-foreground">
                 AI-powered financial platform for advanced analytics, predictive insights, and automated decision-making.
