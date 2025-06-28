@@ -43,6 +43,9 @@ export default function Header() {
               <Link href="/marketplace">
                 <a className="text-muted-foreground hover:text-foreground transition-colors">Marketplace</a>
               </Link>
+              <Link href="/developer">
+                <a className="text-muted-foreground hover:text-foreground transition-colors">Developer</a>
+              </Link>
             </nav>
           </div>
           

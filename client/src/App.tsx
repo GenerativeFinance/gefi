@@ -47,6 +47,7 @@ function Router() {
           <Route path="/learning-center" component={LearningCenter} />
           <Route path="/profile" component={UserProfile} />
           <Route path="/settings" component={Settings} />
+          <Route path="/developer" component={DeveloperDashboard} />
         </>
       )}
       <Route component={NotFound} />
