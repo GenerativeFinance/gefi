@@ -44,6 +44,23 @@ export default function InvestorReports({ reports }: InvestorReportsProps) {
     setIsGenerating(true);
     generateReportMutation.mutate();
   };
+
+  // Download report function
+  const handleDownloadReport = async (reportType: string) => {
+    try {
+      await generatePDFReport(reportType);
+      toast({
+        title: "Download Complete",
+        description: "Your report has been downloaded successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Download Failed",
+        description: error.message || "Failed to download report. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   
   // Default reports if no data
   const defaultReports = [
@@ -143,7 +160,18 @@ export default function InvestorReports({ reports }: InvestorReportsProps) {
                   </div>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDownloadReport(report.type);
+                }}
+                disabled={report.status !== 'generated'}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
             </div>
           ))}
         </div>

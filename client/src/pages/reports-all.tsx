@@ -8,6 +8,7 @@ import Footer from "@/components/layout/footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, TrendingUp, Shield, Brain, Download, Calendar } from "lucide-react";
+import { generatePDFReport } from "@/utils/reportGenerator";
 
 export default function ReportsAll() {
   const { toast } = useToast();
@@ -32,6 +33,23 @@ export default function ReportsAll() {
     queryKey: ["/api/reports"],
     retry: false,
   });
+
+  // Download report function
+  const handleDownloadReport = async (reportType: string) => {
+    try {
+      await generatePDFReport(reportType);
+      toast({
+        title: "Download Complete",
+        description: "Your report has been downloaded successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Download Failed",
+        description: error.message || "Failed to download report. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -127,7 +145,12 @@ export default function ReportsAll() {
                     }`}>
                       {report.status === 'generated' ? 'Ready' : 'Processing'}
                     </span>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDownloadReport(report.type)}
+                      disabled={report.status !== 'generated'}
+                    >
                       <Download className="h-4 w-4 mr-2" />
                       Download
                     </Button>
