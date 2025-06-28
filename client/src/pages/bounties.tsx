@@ -1,4 +1,7 @@
 import { useState } from "react";
+import Header from "@/components/layout/header";
+import MobileNav from "@/components/layout/mobile-nav";
+import Footer from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -140,23 +143,26 @@ export default function Bounties() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-4">
-            <Target className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">Bounty Board</h1>
+    <div className="min-h-screen bg-background flex flex-col">
+      <Header />
+      <MobileNav />
+      <main className="flex-1">
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center space-x-3 mb-4">
+              <Target className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl font-bold">Bounty Board</h1>
+            </div>
+            <p className="text-muted-foreground text-lg">
+              Discover and claim bounties to build cutting-edge AI financial models. 
+              Earn rewards while contributing to the future of finance.
+            </p>
           </div>
-          <p className="text-muted-foreground text-lg">
-            Discover and claim bounties to build cutting-edge AI financial models. 
-            Earn rewards while contributing to the future of finance.
-          </p>
-        </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card>
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
                 <Target className="h-5 w-5 text-green-600" />
@@ -387,7 +393,9 @@ export default function Bounties() {
             </CardContent>
           </Card>
         )}
-      </div>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }
