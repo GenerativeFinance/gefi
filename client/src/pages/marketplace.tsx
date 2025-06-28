@@ -273,7 +273,7 @@ export default function Marketplace() {
                 <h3 className="text-lg font-semibold">Filters</h3>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Category</label>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -410,18 +410,89 @@ export default function Marketplace() {
             </div>
 
             {filteredModels.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {filteredModels.map((model) => (
                   <ModelCard key={model.id} model={model} />
                 ))}
+              </div>
+            ) : modelsError ? (
+              <div className="text-center py-12">
+                <Shield className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Unable to Load Models</h3>
+                <p className="text-muted-foreground mb-4">
+                  We're having trouble loading the AI models. Please check your connection and try again.
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.location.reload()}
+                >
+                  Retry Loading
+                </Button>
               </div>
             ) : (
               <div className="text-center py-12">
                 <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Models Found</h3>
-                <p className="text-muted-foreground mb-4">
-                  No results found. Try broader search terms or different filters.
+                <p className="text-muted-foreground mb-6">
+                  No AI models match your current search criteria. Try adjusting your filters or search terms.
                 </p>
+                
+                {/* Helpful suggestions */}
+                <div className="max-w-md mx-auto mb-6">
+                  <h4 className="text-sm font-medium text-muted-foreground mb-3">Suggestions:</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center space-x-2 text-muted-foreground">
+                      <span>•</span>
+                      <span>Try broader search terms</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-muted-foreground">
+                      <span>•</span>
+                      <span>Remove price filters</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-muted-foreground">
+                      <span>•</span>
+                      <span>Try different categories</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-muted-foreground">
+                      <span>•</span>
+                      <span>Check featured models</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Popular suggestions */}
+                <div className="flex flex-wrap justify-center gap-2 mb-6">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedCategory("1"); // Risk Assessment
+                      setSearchQuery("");
+                    }}
+                  >
+                    Try Risk Assessment
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setActiveTab("featured");
+                    }}
+                  >
+                    View Featured Models
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setPriceRange("free");
+                      setSearchQuery("");
+                    }}
+                  >
+                    Show Free Models
+                  </Button>
+                </div>
+                
                 <Button 
                   variant="outline" 
                   onClick={() => {
