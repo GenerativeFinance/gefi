@@ -154,20 +154,6 @@ export default function Header() {
               {dashboardMode === 'developer' ? (
                 <>
                   {/* Developer Navigation Items */}
-                  <Link href="/">
-                    <Button 
-                      variant="ghost" 
-                      className={`transition-colors ${
-                        location === '/' || location === '/home'
-                          ? 'text-primary font-medium' 
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      <Home className="h-4 w-4 mr-1" />
-                      Home
-                    </Button>
-                  </Link>
-                  
                   <Link href="/developer">
                     <Button 
                       variant="ghost" 

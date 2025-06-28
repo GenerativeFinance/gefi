@@ -171,6 +171,12 @@ Changelog:
   * Updated footer navigation to properly link to all legal and compliance pages
   * Added Home button to developer navigation for easy return to main platform
   * Integrated all new pages into routing system for proper accessibility
+- June 29, 2025. Enhanced PDF report generation and removed Home from developer navigation
+  * Fixed PDF report generator with comprehensive error handling and API data integration
+  * Added functional download buttons to all report components (InvestorReports and ReportsAll)
+  * Created downloadable PDF reports for monthly performance, risk compliance, portfolio optimization, and comprehensive analysis
+  * Removed Home button from developer dashboard navigation as requested by user
+  * Maintained clean developer navigation with Dashboard, Backtesting, Bounties, and Learning sections
 ```
 
 ## User Preferences
