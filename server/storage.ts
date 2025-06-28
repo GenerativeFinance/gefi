@@ -120,6 +120,12 @@ export interface IStorage {
   updateRiskLimit(limitId: number, updates: Partial<InsertRiskLimit>): Promise<RiskLimit>;
   getUserComplianceDocuments(userId: string): Promise<ComplianceDocument[]>;
   createComplianceDocument(document: InsertComplianceDocument): Promise<ComplianceDocument>;
+  
+  // Comments and ratings operations
+  getModelComments(modelId: number): Promise<ModelComment[]>;
+  createModelComment(comment: InsertModelComment): Promise<ModelComment>;
+  getModelRatings(modelId: number): Promise<ModelRating[]>;
+  createModelRating(rating: InsertModelRating): Promise<ModelRating>;
 }
 
 export class DatabaseStorage implements IStorage {

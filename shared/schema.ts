@@ -292,6 +292,10 @@ export type AiModelCategory = typeof aiModelCategories.$inferSelect;
 export type InsertAiModelCategory = typeof aiModelCategories.$inferInsert;
 export type AiModelSubcategory = typeof aiModelSubcategories.$inferSelect;
 export type InsertAiModelSubcategory = typeof aiModelSubcategories.$inferInsert;
+export type ModelComment = typeof modelComments.$inferSelect;
+export type InsertModelComment = typeof modelComments.$inferInsert;
+export type ModelRating = typeof modelRatings.$inferSelect;
+export type InsertModelRating = typeof modelRatings.$inferInsert;
 
 export const insertPortfolioSchema = createInsertSchema(portfolios).omit({
   id: true,

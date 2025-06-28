@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NotificationBanner } from "@/components/ui/notification-banner";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
@@ -20,6 +21,7 @@ import Checkout from "@/pages/checkout";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import LearningCenter from "@/pages/learning-center";
 import UserProfile from "@/pages/user-profile";
+import Settings from "@/pages/settings";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
