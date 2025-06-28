@@ -49,6 +49,11 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/login-failed" component={LoginFailed} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/terms-of-service" component={TermsOfService} />
+      <Route path="/data-processing-agreement" component={DataProcessingAgreement} />
+      <Route path="/security-compliance" component={SecurityCompliance} />
+      <Route path="/bug-bounty-program" component={BugBountyProgram} />
+      <Route path="/enterprise-sales" component={EnterpriseSales} />
       
       {/* Protected routes */}
       {isAuthenticated ? (
