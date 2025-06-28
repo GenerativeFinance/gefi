@@ -20,6 +20,7 @@ import Checkout from "@/pages/checkout";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import LearningCenter from "@/pages/learning-center";
 import UserProfile from "@/pages/user-profile";
+import SmartContracts from "@/pages/smart-contracts";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/marketplace" component={Marketplace} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/profile" component={UserProfile} />
+      <Route path="/smart-contracts" component={SmartContracts} />
       
       {/* Default route */}
       <Route path="/" component={isLoading ? () => <div>Loading...</div> : isAuthenticated ? AnalyticsDashboard : Landing} />
