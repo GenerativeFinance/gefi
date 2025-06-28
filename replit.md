@@ -125,6 +125,13 @@ Changelog:
   * User experience improvements: Better loading states, retry mechanisms, and popular model suggestions
   * Fixed notification banner infinite loop issue (temporarily disabled for debugging)
   * Type-safe export utilities with proper null handling and schema compatibility
+- June 28, 2025. Implemented comprehensive user settings and theme system
+  * Created ThemeProvider with light/dark mode toggle functionality
+  * Built comprehensive settings page with all user parameters (profile, notifications, security, display, trading preferences)
+  * Updated CSS variables for proper light/dark mode support
+  * Integrated settings page with navigation header and routing system
+  * Removed system preferences option as requested, keeping only light and dark modes
+  * Added extensive user preference controls for notifications, privacy, security, and trading settings
 ```
 
 ## User Preferences
