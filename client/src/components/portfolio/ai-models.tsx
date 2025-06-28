@@ -62,35 +62,69 @@ export default function AiModels({ models }: AiModelsProps) {
   // Download report function
   const handleDownloadReport = async () => {
     try {
-      const response = await fetch("/api/portfolio/report", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/pdf",
-        },
-      });
+      const reportData = await apiRequest("GET", "/api/portfolio/report");
       
-      if (!response.ok) {
-        throw new Error("Failed to generate report");
+      // Generate PDF using jsPDF
+      const { default: jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(20);
+      doc.text('Portfolio Performance Report', 20, 30);
+      
+      // Add generation date
+      doc.setFontSize(12);
+      doc.text(`Generated: ${new Date(reportData.generatedAt).toLocaleDateString()}`, 20, 45);
+      
+      // Add portfolio summary
+      doc.setFontSize(16);
+      doc.text('Portfolio Summary', 20, 65);
+      
+      doc.setFontSize(12);
+      doc.text(`Total Value: $${reportData.portfolio.totalValue.toLocaleString()}`, 20, 80);
+      doc.text(`Live P&L: $${reportData.portfolio.livePnL.toLocaleString()}`, 20, 95);
+      doc.text(`Annual Returns: ${reportData.portfolio.annualReturns}%`, 20, 110);
+      doc.text(`Sharpe Ratio: ${reportData.portfolio.sharpeRatio}`, 20, 125);
+      doc.text(`Number of Assets: ${reportData.portfolio.assetsCount}`, 20, 140);
+      
+      // Add assets table if there are assets
+      if (reportData.assets && reportData.assets.length > 0) {
+        doc.setFontSize(16);
+        doc.text('Asset Breakdown', 20, 165);
+        
+        let yPosition = 180;
+        doc.setFontSize(12);
+        doc.text('Symbol', 20, yPosition);
+        doc.text('Quantity', 70, yPosition);
+        doc.text('Purchase Price', 120, yPosition);
+        doc.text('Current Value', 170, yPosition);
+        
+        yPosition += 10;
+        reportData.assets.forEach((asset: any, index: number) => {
+          if (yPosition > 250) {
+            doc.addPage();
+            yPosition = 30;
+          }
+          
+          doc.text(asset.symbol || 'N/A', 20, yPosition);
+          doc.text(asset.quantity.toString(), 70, yPosition);
+          doc.text(`$${asset.purchasePrice.toFixed(2)}`, 120, yPosition);
+          doc.text(`$${asset.currentValue.toFixed(2)}`, 170, yPosition);
+          yPosition += 15;
+        });
       }
       
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `portfolio-report-${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      // Save the PDF
+      doc.save(`portfolio-report-${new Date().toISOString().split('T')[0]}.pdf`);
       
       toast({
         title: "Report Downloaded",
         description: "Your portfolio report has been downloaded successfully.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Download Failed",
-        description: "Failed to download portfolio report. Please try again.",
+        description: error.message || "Failed to download portfolio report. Please try again.",
         variant: "destructive",
       });
     }

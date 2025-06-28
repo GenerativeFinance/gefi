@@ -470,32 +470,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const assets = await storage.getPortfolioAssets(portfolio.id);
       
-      // Generate PDF content (simplified for demo)
-      const reportContent = {
+      // Generate report data for frontend PDF generation
+      const reportData = {
         title: "Portfolio Performance Report",
         generatedAt: new Date().toISOString(),
         portfolio: {
-          totalValue: portfolio.totalInvestment,
-          totalProfit: portfolio.totalProfit,
-          totalReturn: portfolio.totalReturn,
+          totalValue: parseFloat(portfolio.totalInvestment || "0"),
+          livePnL: parseFloat(portfolio.livePnL || "0"),
+          annualReturns: parseFloat(portfolio.annualReturns || "0"),
+          sharpeRatio: parseFloat(portfolio.sharpeRatio || "0"),
           assetsCount: assets.length
         },
         assets: assets.map(asset => ({
           symbol: asset.symbol,
-          quantity: asset.quantity,
-          currentPrice: asset.currentPrice,
-          value: asset.quantity * asset.currentPrice,
-          allocation: asset.allocation
+          quantity: parseFloat(asset.quantity || "0"),
+          purchasePrice: parseFloat(asset.purchasePrice || "0"),
+          currentValue: parseFloat(asset.currentValue || "0"),
+          allocation: parseFloat(asset.allocation || "0")
         }))
       };
 
-      // Set headers for PDF download
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="portfolio-report-${new Date().toISOString().split('T')[0]}.pdf"`);
-      
-      // In a real app, you'd generate actual PDF here using libraries like puppeteer or jsPDF
-      // For now, return JSON content as plain text to simulate PDF
-      res.send(JSON.stringify(reportContent, null, 2));
+      // Return JSON data for client-side PDF generation
+      res.json(reportData);
       
     } catch (error) {
       console.error("Error generating portfolio report:", error);
