@@ -39,6 +39,7 @@ import BugBountyProgram from "@/pages/bug-bounty-program";
 import EnterpriseSales from "@/pages/enterprise-sales";
 import ModelFunding from "@/pages/model-funding";
 import BountyFunding from "@/pages/bounty-funding";
+import BotFunding from "@/pages/bot-funding";
 import ProfileSetup from "@/pages/profile-setup";
 import ModelProfile from "@/pages/model-profile";
 import TradingBots from "@/pages/trading-bots";

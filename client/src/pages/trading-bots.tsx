@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { TradingBot as TradingBotDB } from "@shared/schema";
+import { Link } from "wouter";
 import { 
   Bot, 
   TrendingUp, 
@@ -239,16 +240,28 @@ export default function TradingBots() {
           <h1 className="text-3xl font-bold">Trading Bots</h1>
           <p className="text-muted-foreground">Automate your trading strategies with AI-powered bots</p>
         </div>
-        <Dialog open={createBotOpen} onOpenChange={setCreateBotOpen}>
-          <DialogTrigger asChild>
-            <Button className="gradient-primary">
-              <Bot className="h-4 w-4 mr-2" />
-              Create Bot
+        <div className="flex space-x-2">
+          <Link href="/bot-funding">
+            <Button variant="outline">
+              <DollarSign className="h-4 w-4 mr-2" />
+              Fund Bots
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create Trading Bot</DialogTitle>
+          </Link>
+          <Dialog open={createBotOpen} onOpenChange={setCreateBotOpen}>
+            <DialogTrigger asChild>
+              <Button className="gradient-primary">
+                <Bot className="h-4 w-4 mr-2" />
+                Create Bot
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+        </div>
+        
+      {/* Create Bot Dialog */}
+      <Dialog open={createBotOpen} onOpenChange={setCreateBotOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Trading Bot</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               {tradingBotTypes.map((botType) => {
