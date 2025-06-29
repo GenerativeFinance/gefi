@@ -24,7 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Brain, Search, Bell, Menu, User, Settings, LogOut, Code, TrendingUp, BarChart3, Briefcase, X, Target, BookOpen, Home, Activity, DollarSign, Bot, CircleDollarSign } from "lucide-react";
+import { Brain, Search, Bell, Menu, User, Settings, LogOut, Code, TrendingUp, BarChart3, Briefcase, X, Target, BookOpen, Home, Activity, DollarSign, Bot, CircleDollarSign, Shield, FileText, AlertTriangle, BookOpenCheck, Zap, Eye, TrendingDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useLocation } from "wouter";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
@@ -72,24 +72,44 @@ export default function Header() {
       )
     : [];
 
-  const investorNavItems = [
-    { href: "/portfolio", label: "Portfolio", icon: BarChart3 },
-    { href: "/live-trading", label: "Trading", icon: Activity },
-    { href: "/trading-bots", label: "Bots", icon: Bot },
-    { href: "/web3-defi", label: "Web3 & DeFi", icon: CircleDollarSign },
-    { href: "/marketplace", label: "Marketplace", icon: Briefcase },
+  // Market Insights submenu items
+  const marketInsightsNavItems = [
+    { href: "/live-trading", label: "Real-Time Market Data", icon: Activity },
+    { href: "/market-sentiment", label: "AI-Generated Insights", icon: Brain },
+    { href: "/alerts/all", label: "Recent Alerts", icon: Bell },
   ];
 
-  const fundingNavItems = [
-    { href: "/model-funding", label: "Model Funding", icon: DollarSign },
-    { href: "/bounty-funding", label: "Bounty Funding", icon: Target },
-    { href: "/bot-funding", label: "Bot Funding", icon: Bot },
+  // Portfolio submenu items
+  const portfolioNavItems = [
+    { href: "/portfolio", label: "Overview", icon: BarChart3 },
+    { href: "/portfolio/ai-models", label: "AI Models", icon: Brain },
+    { href: "/portfolio/risk-distribution", label: "Risk Distribution", icon: Shield },
+    { href: "/portfolio/rebalance", label: "Rebalance & Actions", icon: TrendingUp },
   ];
 
-  const analyticsNavItems = [
-    { href: "/analytics", label: "User Analytics", icon: BarChart3 },
-    { href: "/reports", label: "Reports", icon: BarChart3 },
-    { href: "/risk-management", label: "Risk Management", icon: BarChart3 },
+  // Reports submenu items
+  const reportsNavItems = [
+    { href: "/reports", label: "Investor Reports", icon: FileText },
+    { href: "/reports/all", label: "Generate New Report", icon: BarChart3 },
+  ];
+
+  // Risk Management submenu items
+  const riskManagementNavItems = [
+    { href: "/risk-management", label: "AI Risk Monitoring", icon: AlertTriangle },
+    { href: "/risk-management/assessment", label: "Current Risk Assessment", icon: Shield },
+  ];
+
+  // Trading submenu items
+  const tradingNavItems = [
+    { href: "/live-trading", label: "Live Market Data", icon: Activity },
+    { href: "/live-trading?tab=orderbook", label: "Order Book", icon: BarChart3 },
+  ];
+
+  // Learning submenu items for investors
+  const learningNavItems = [
+    { href: "/learning?tab=tutorials&type=investor", label: "Tutorials", icon: BookOpen },
+    { href: "/learning?tab=webinars&type=investor", label: "Webinars", icon: BookOpenCheck },
+    { href: "/learning?tab=faq&type=investor", label: "FAQ", icon: BookOpen },
   ];
 
   const developerNavItems = [
@@ -98,7 +118,7 @@ export default function Header() {
     { href: "/marketplace", label: "Marketplace", icon: Briefcase },
   ];
 
-  const currentNavItems = dashboardMode === 'developer' ? developerNavItems : investorNavItems;
+  const currentNavItems = dashboardMode === 'developer' ? developerNavItems : [];
 
   return (
     <header className="glass sticky top-0 z-50">
@@ -255,41 +275,40 @@ export default function Header() {
                   ) : (
                     /* Investor Navigation */
                     <>
-                      {investorNavItems.map((item) => (
-                        <Link key={item.href} href={item.href}>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className={`transition-colors ${
-                              location === item.href 
-                                ? 'text-primary font-medium' 
-                                : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                          >
-                            <item.icon className="h-4 w-4 mr-1" />
-                            {item.label}
-                          </Button>
-                        </Link>
-                      ))}
-                      
-                      {/* Funding Dropdown */}
+                      {/* Home */}
+                      <Link href="/">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className={`transition-colors ${
+                            location === '/' 
+                              ? 'text-primary font-medium' 
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          <Home className="h-4 w-4 mr-1" />
+                          Home
+                        </Button>
+                      </Link>
+
+                      {/* Market Insights Dropdown */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button 
                             variant="ghost" 
                             size="sm"
                             className={`transition-colors ${
-                              fundingNavItems.some(item => location === item.href)
+                              marketInsightsNavItems.some(item => location === item.href)
                                 ? 'text-primary font-medium' 
                                 : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
-                            <DollarSign className="h-4 w-4 mr-1" />
-                            Funding
+                            <Eye className="h-4 w-4 mr-1" />
+                            Market Insights
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                          {fundingNavItems.map((item) => (
+                          {marketInsightsNavItems.map((item) => (
                             <DropdownMenuItem key={item.href} asChild>
                               <Link href={item.href}>
                                 <item.icon className="h-4 w-4 mr-2" />
@@ -300,24 +319,24 @@ export default function Header() {
                         </DropdownMenuContent>
                       </DropdownMenu>
 
-                      {/* Analytics Dropdown */}
+                      {/* Portfolio Dropdown */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button 
                             variant="ghost" 
                             size="sm"
                             className={`transition-colors ${
-                              analyticsNavItems.some(item => location === item.href)
+                              portfolioNavItems.some(item => location === item.href)
                                 ? 'text-primary font-medium' 
                                 : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
                             <BarChart3 className="h-4 w-4 mr-1" />
-                            Analytics
+                            Portfolio
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                          {analyticsNavItems.map((item) => (
+                          {portfolioNavItems.map((item) => (
                             <DropdownMenuItem key={item.href} asChild>
                               <Link href={item.href}>
                                 <item.icon className="h-4 w-4 mr-2" />
@@ -328,14 +347,98 @@ export default function Header() {
                         </DropdownMenuContent>
                       </DropdownMenu>
 
-                      {/* Learning Section for Investors */}
+                      {/* Reports Dropdown */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button 
                             variant="ghost" 
                             size="sm"
                             className={`transition-colors ${
-                              location === '/learning'
+                              reportsNavItems.some(item => location === item.href)
+                                ? 'text-primary font-medium' 
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <FileText className="h-4 w-4 mr-1" />
+                            Reports
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          {reportsNavItems.map((item) => (
+                            <DropdownMenuItem key={item.href} asChild>
+                              <Link href={item.href}>
+                                <item.icon className="h-4 w-4 mr-2" />
+                                {item.label}
+                              </Link>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      {/* Risk Management Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className={`transition-colors ${
+                              riskManagementNavItems.some(item => location === item.href)
+                                ? 'text-primary font-medium' 
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <Shield className="h-4 w-4 mr-1" />
+                            Risk Management
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          {riskManagementNavItems.map((item) => (
+                            <DropdownMenuItem key={item.href} asChild>
+                              <Link href={item.href}>
+                                <item.icon className="h-4 w-4 mr-2" />
+                                {item.label}
+                              </Link>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      {/* Trading Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className={`transition-colors ${
+                              tradingNavItems.some(item => location === item.href)
+                                ? 'text-primary font-medium' 
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <Activity className="h-4 w-4 mr-1" />
+                            Trading
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          {tradingNavItems.map((item) => (
+                            <DropdownMenuItem key={item.href} asChild>
+                              <Link href={item.href}>
+                                <item.icon className="h-4 w-4 mr-2" />
+                                {item.label}
+                              </Link>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      {/* Learning Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className={`transition-colors ${
+                              learningNavItems.some(item => location.includes('/learning'))
                                 ? 'text-primary font-medium' 
                                 : 'text-muted-foreground hover:text-foreground'
                             }`}
@@ -345,36 +448,14 @@ export default function Header() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                          <DropdownMenuItem asChild>
-                            <Link href="/learning?tab=get-started&type=investor">
-                              <BookOpen className="h-4 w-4 mr-2" />
-                              Get Started
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href="/learning?tab=tutorials&type=investor">
-                              <BookOpen className="h-4 w-4 mr-2" />
-                              Tutorials
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href="/learning?tab=webinars&type=investor">
-                              <BookOpen className="h-4 w-4 mr-2" />
-                              Webinars
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href="/learning?tab=blog&type=investor">
-                              <BookOpen className="h-4 w-4 mr-2" />
-                              Blog
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href="/learning?tab=faq&type=investor">
-                              <BookOpen className="h-4 w-4 mr-2" />
-                              FAQ
-                            </Link>
-                          </DropdownMenuItem>
+                          {learningNavItems.map((item) => (
+                            <DropdownMenuItem key={item.href} asChild>
+                              <Link href={item.href}>
+                                <item.icon className="h-4 w-4 mr-2" />
+                                {item.label}
+                              </Link>
+                            </DropdownMenuItem>
+                          ))}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </>
@@ -826,7 +907,126 @@ export default function Header() {
                   ) : (
                     /* Investor Mobile Navigation */
                     <>
-                      {investorNavItems.map((item) => (
+                      {/* Home */}
+                      <Link href="/">
+                        <a 
+                          className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                            location === '/' 
+                              ? 'text-primary bg-primary/10' 
+                              : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                          }`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Home className="h-5 w-5" />
+                          <span>Home</span>
+                        </a>
+                      </Link>
+
+                      {/* Market Insights Links */}
+                      <div className="mt-4 mb-2">
+                        <h4 className="text-sm font-semibold text-muted-foreground px-3">Market Insights</h4>
+                      </div>
+                      {marketInsightsNavItems.map((item) => (
+                        <Link key={item.href} href={item.href}>
+                          <a 
+                            className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                              location === item.href 
+                                ? 'text-primary bg-primary/10' 
+                                : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                            }`}
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <item.icon className="h-5 w-5" />
+                            <span>{item.label}</span>
+                          </a>
+                        </Link>
+                      ))}
+
+                      {/* Portfolio Links */}
+                      <div className="mt-4 mb-2">
+                        <h4 className="text-sm font-semibold text-muted-foreground px-3">Portfolio</h4>
+                      </div>
+                      {portfolioNavItems.map((item) => (
+                        <Link key={item.href} href={item.href}>
+                          <a 
+                            className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                              location === item.href 
+                                ? 'text-primary bg-primary/10' 
+                                : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                            }`}
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <item.icon className="h-5 w-5" />
+                            <span>{item.label}</span>
+                          </a>
+                        </Link>
+                      ))}
+
+                      {/* Reports Links */}
+                      <div className="mt-4 mb-2">
+                        <h4 className="text-sm font-semibold text-muted-foreground px-3">Reports</h4>
+                      </div>
+                      {reportsNavItems.map((item) => (
+                        <Link key={item.href} href={item.href}>
+                          <a 
+                            className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                              location === item.href 
+                                ? 'text-primary bg-primary/10' 
+                                : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                            }`}
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <item.icon className="h-5 w-5" />
+                            <span>{item.label}</span>
+                          </a>
+                        </Link>
+                      ))}
+
+                      {/* Risk Management Links */}
+                      <div className="mt-4 mb-2">
+                        <h4 className="text-sm font-semibold text-muted-foreground px-3">Risk Management</h4>
+                      </div>
+                      {riskManagementNavItems.map((item) => (
+                        <Link key={item.href} href={item.href}>
+                          <a 
+                            className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                              location === item.href 
+                                ? 'text-primary bg-primary/10' 
+                                : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                            }`}
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <item.icon className="h-5 w-5" />
+                            <span>{item.label}</span>
+                          </a>
+                        </Link>
+                      ))}
+
+                      {/* Trading Links */}
+                      <div className="mt-4 mb-2">
+                        <h4 className="text-sm font-semibold text-muted-foreground px-3">Trading</h4>
+                      </div>
+                      {tradingNavItems.map((item) => (
+                        <Link key={item.href} href={item.href}>
+                          <a 
+                            className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                              location === item.href 
+                                ? 'text-primary bg-primary/10' 
+                                : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                            }`}
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <item.icon className="h-5 w-5" />
+                            <span>{item.label}</span>
+                          </a>
+                        </Link>
+                      ))}
+
+                      {/* Learning Links */}
+                      <div className="mt-4 mb-2">
+                        <h4 className="text-sm font-semibold text-muted-foreground px-3">Learning</h4>
+                      </div>
+                      {learningNavItems.map((item) => (
                         <Link key={item.href} href={item.href}>
                           <a 
                             className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${

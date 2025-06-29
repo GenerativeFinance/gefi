@@ -1,0 +1,37 @@
+Home
+Purpose: A landing page offering an overview of the platform with quick links to key sections.
+Why: Provides a starting point for investors to orient themselves.
+Market Insights
+Submenu:
+Real-Time Market Data: Live price feeds, order books, and trading activity (inspired by Image 7).
+AI-Generated Insights: Market sentiment, macroeconomic trends, and predictions (Image 1).
+Recent Alerts: AI-powered notifications for market anomalies or recommendations (Image 2).
+Why: Investors need up-to-date market information and actionable insights to make informed decisions.
+Portfolio
+Submenu:
+Overview: Total investment, P&L, annual returns, and risk metrics (Image 3).
+AI Models: Performance details of models like "Conservative AI" and "Aggressive Growth" (Images 3, 6).
+Risk Distribution: Asset allocation breakdown (e.g., stocks, bonds, crypto) (Image 3).
+Rebalance & Actions: Options for AI-driven rebalancing or manual adjustments (Image 3).
+Why: Centralizes portfolio management, a core concern for investors.
+Reports
+Submenu:
+Investor Reports: Pre-generated reports like "Monthly AI Performance Review" or "Risk & Compliance Analysis" (Image 1).
+Generate New Report: Tool to create custom reports (Image 1).
+Why: Offers detailed analytics and documentation, essential for tracking performance and compliance.
+Risk Management
+Submenu:
+AI Risk Monitoring: Tools for market anomalies, VaR estimation, tail risk, and stress testing (Images 2, 5).
+Current Risk Assessment: Metrics like VaR, maximum drawdown, and risk score (Image 2).
+Why: Helps investors mitigate risks, a top priority in financial decision-making.
+Trading
+Submenu:
+Live Market Data: Detailed stock/asset info (e.g., bid/ask, volume) (Image 7).
+Order Book: Real-time buy/sell orders (Image 7).
+Why: Facilitates active trading, appealing to investors engaged in market transactions.
+Learning
+Submenu:
+Tutorials: Guides on platform use and key metrics.
+Webinars: Sessions on AI in finance and investment strategies.
+FAQ: Answers to common questions.
+Why: Supports investor education, enhancing their ability to leverage the platform.
