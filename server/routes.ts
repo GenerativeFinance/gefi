@@ -347,6 +347,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bot Funding Routes
+  app.get('/api/bot-funding/requests', async (req, res) => {
+    try {
+      const requests = await storage.getAllBotFundingRequests();
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching bot funding requests:", error);
+      res.status(500).json({ message: "Failed to fetch funding requests" });
+    }
+  });
+
+  app.get('/api/bot-funding/my-requests', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const requests = await storage.getUserBotFundingRequests(userId);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching user funding requests:", error);
+      res.status(500).json({ message: "Failed to fetch user requests" });
+    }
+  });
+
+  app.get('/api/bot-funding/my-contributions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const contributions = await storage.getUserBotFundingContributions(userId);
+      res.json(contributions);
+    } catch (error) {
+      console.error("Error fetching user contributions:", error);
+      res.status(500).json({ message: "Failed to fetch contributions" });
+    }
+  });
+
+  app.post('/api/bot-funding/requests', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const requestData = {
+        ...req.body,
+        developerId: userId,
+        fundingRaised: "0.00",
+        status: "open",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      const request = await storage.createBotFundingRequest(requestData);
+      res.json(request);
+    } catch (error) {
+      console.error("Error creating funding request:", error);
+      res.status(500).json({ message: "Failed to create funding request" });
+    }
+  });
+
+  app.post('/api/bot-funding/contribute', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { requestId, amount, message } = req.body;
+      
+      const contributionData = {
+        requestId,
+        contributorId: userId,
+        amount: amount.toString(),
+        message,
+        status: "confirmed",
+        createdAt: new Date(),
+      };
+      
+      const contribution = await storage.createBotFundingContribution(contributionData);
+      res.json(contribution);
+    } catch (error) {
+      console.error("Error creating contribution:", error);
+      res.status(500).json({ message: "Failed to create contribution" });
+    }
+  });
+
   app.get('/api/ai-models/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);

@@ -94,6 +94,7 @@ function Router() {
             <Route path="/live-trading" component={LiveTradingPage} />
             <Route path="/model-funding" component={ModelFunding} />
             <Route path="/bounty-funding" component={BountyFunding} />
+            <Route path="/bot-funding" component={BotFunding} />
             <Route path="/bounties" component={Bounties} />
             <Route path="/bounties/leaderboard" component={BountyLeaderboard} />
             <Route path="/user/:userId" component={UserDetail} />

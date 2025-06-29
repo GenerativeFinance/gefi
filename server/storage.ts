@@ -83,6 +83,12 @@ import {
   type InsertYieldFarmingPosition,
   type NftHolding,
   type InsertNftHolding,
+  botFundingRequests,
+  botFundingContributions,
+  type BotFundingRequest,
+  type InsertBotFundingRequest,
+  type BotFundingContribution,
+  type InsertBotFundingContribution,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, lte, inArray } from "drizzle-orm";
@@ -830,6 +836,85 @@ export class DatabaseStorage implements IStorage {
       .where(eq(nftHoldings.id, nftId))
       .returning();
     return updatedNFT;
+  }
+
+  // Bot Funding operations
+  async getAllBotFundingRequests(): Promise<BotFundingRequest[]> {
+    return await db.select()
+      .from(botFundingRequests)
+      .orderBy(desc(botFundingRequests.createdAt));
+  }
+
+  async getBotFundingRequest(id: number): Promise<BotFundingRequest | undefined> {
+    const [request] = await db.select()
+      .from(botFundingRequests)
+      .where(eq(botFundingRequests.id, id));
+    return request;
+  }
+
+  async createBotFundingRequest(request: InsertBotFundingRequest): Promise<BotFundingRequest> {
+    const [newRequest] = await db.insert(botFundingRequests)
+      .values(request)
+      .returning();
+    return newRequest;
+  }
+
+  async getUserBotFundingRequests(userId: string): Promise<BotFundingRequest[]> {
+    return await db.select()
+      .from(botFundingRequests)
+      .where(eq(botFundingRequests.developerId, userId))
+      .orderBy(desc(botFundingRequests.createdAt));
+  }
+
+  async createBotFundingContribution(contribution: InsertBotFundingContribution): Promise<BotFundingContribution> {
+    const [newContribution] = await db.insert(botFundingContributions)
+      .values(contribution)
+      .returning();
+    
+    // Update the funding raised amount
+    const request = await this.getBotFundingRequest(contribution.requestId);
+    if (request) {
+      const newRaised = parseFloat(request.fundingRaised) + parseFloat(contribution.amount);
+      await db.update(botFundingRequests)
+        .set({ 
+          fundingRaised: newRaised.toString(),
+          updatedAt: new Date()
+        })
+        .where(eq(botFundingRequests.id, contribution.requestId));
+    }
+    
+    return newContribution;
+  }
+
+  async getUserBotFundingContributions(userId: string): Promise<any[]> {
+    return await db.select({
+      id: botFundingContributions.id,
+      requestId: botFundingContributions.requestId,
+      amount: botFundingContributions.amount,
+      message: botFundingContributions.message,
+      status: botFundingContributions.status,
+      createdAt: botFundingContributions.createdAt,
+      requestTitle: botFundingRequests.title,
+      requestStatus: botFundingRequests.status,
+    })
+    .from(botFundingContributions)
+    .leftJoin(botFundingRequests, eq(botFundingContributions.requestId, botFundingRequests.id))
+    .where(eq(botFundingContributions.contributorId, userId))
+    .orderBy(desc(botFundingContributions.createdAt));
+  }
+
+  async getBotFundingRequestWithContributions(requestId: number): Promise<any> {
+    const request = await this.getBotFundingRequest(requestId);
+    if (!request) return null;
+
+    const contributions = await db.select()
+      .from(botFundingContributions)
+      .where(eq(botFundingContributions.requestId, requestId));
+
+    return {
+      ...request,
+      contributions
+    };
   }
 }
 
