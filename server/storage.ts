@@ -18,8 +18,11 @@ import {
   modelRatings,
   developerModels,
   modelFunding,
+  userProfiles,
   type User,
   type UpsertUser,
+  type UserProfile,
+  type InsertUserProfile,
   type Portfolio,
   type InsertPortfolio,
   type PortfolioAsset,
@@ -70,6 +73,11 @@ export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<UpsertUser>): Promise<User>;
+  
+  // User Profile operations
+  getUserProfile(userId: string): Promise<UserProfile | undefined>;
+  createOrUpdateUserProfile(userId: string, profile: Partial<InsertUserProfile>): Promise<UserProfile>;
   
   // Portfolio operations
   getUserPortfolio(userId: string): Promise<Portfolio | undefined>;
@@ -171,6 +179,43 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async updateUser(id: string, updates: Partial<UpsertUser>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  // User Profile operations
+  async getUserProfile(userId: string): Promise<UserProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(userProfiles)
+      .where(eq(userProfiles.userId, userId));
+    return profile;
+  }
+
+  async createOrUpdateUserProfile(userId: string, profile: Partial<InsertUserProfile>): Promise<UserProfile> {
+    const [userProfile] = await db
+      .insert(userProfiles)
+      .values({
+        ...profile,
+        userId,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: userProfiles.userId,
+        set: {
+          ...profile,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return userProfile;
   }
 
   // Portfolio operations
