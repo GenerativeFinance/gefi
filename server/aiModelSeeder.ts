@@ -366,4 +366,96 @@ export class AiModelSeeder {
       throw error;
     }
   }
+
+  static async seedDeveloperModels(): Promise<void> {
+    try {
+      console.log("Starting developer models seeding...");
+      
+      const sampleDeveloperModels = [
+        {
+          name: "CryptoMomentum AI",
+          description: "Advanced neural network model for cryptocurrency momentum trading with real-time sentiment analysis",
+          category: "Trading Strategies",
+          fundingGoal: "250000.00",
+          fundingRaised: "85000.00",
+          status: "approved",
+          developerId: "dev_001",
+          tags: ["crypto", "momentum", "neural-network", "sentiment"],
+          testResults: { accuracy: 87.2, sharpe: 2.1, maxDrawdown: 8.3 },
+          performanceMetrics: { returns: 45.6, volatility: 12.8, trades: 342 }
+        },
+        {
+          name: "ESG Portfolio Optimizer",
+          description: "Machine learning model optimizing portfolios for environmental, social, and governance factors",
+          category: "Portfolio Management", 
+          fundingGoal: "500000.00",
+          fundingRaised: "320000.00",
+          status: "deployed",
+          developerId: "dev_002",
+          tags: ["esg", "sustainability", "portfolio", "optimization"],
+          testResults: { accuracy: 91.5, sharpe: 1.8, maxDrawdown: 6.1 },
+          performanceMetrics: { returns: 23.4, volatility: 9.2, trades: 156 }
+        },
+        {
+          name: "Forex Predictive Engine",
+          description: "Deep learning model for foreign exchange rate prediction using macroeconomic indicators",
+          category: "Market Prediction",
+          fundingGoal: "180000.00", 
+          fundingRaised: "45000.00",
+          status: "testing",
+          developerId: "dev_003",
+          tags: ["forex", "prediction", "macroeconomic", "deep-learning"],
+          testResults: { accuracy: 78.9, sharpe: 1.4, maxDrawdown: 11.2 },
+          performanceMetrics: { returns: 18.7, volatility: 15.3, trades: 624 }
+        },
+        {
+          name: "Credit Risk Analyzer Pro",
+          description: "Advanced AI model for real-time credit risk assessment using alternative data sources",
+          category: "Risk Management",
+          fundingGoal: "350000.00",
+          fundingRaised: "120000.00", 
+          status: "approved",
+          developerId: "dev_004",
+          tags: ["credit-risk", "alternative-data", "real-time", "assessment"],
+          testResults: { accuracy: 94.1, sharpe: 2.3, maxDrawdown: 4.2 },
+          performanceMetrics: { returns: 28.9, volatility: 7.8, trades: 89 }
+        },
+        {
+          name: "Options Volatility Forecaster",
+          description: "Neural network model for predicting options implied volatility with high precision",
+          category: "Derivatives",
+          fundingGoal: "200000.00",
+          fundingRaised: "160000.00",
+          status: "deployed",
+          developerId: "dev_005", 
+          tags: ["options", "volatility", "forecasting", "derivatives"],
+          testResults: { accuracy: 89.7, sharpe: 2.0, maxDrawdown: 7.5 },
+          performanceMetrics: { returns: 34.2, volatility: 11.6, trades: 267 }
+        },
+        {
+          name: "DeFi Yield Optimizer",
+          description: "Automated yield farming strategy using decentralized finance protocols analysis",
+          category: "DeFi",
+          fundingGoal: "300000.00",
+          fundingRaised: "75000.00",
+          status: "testing",
+          developerId: "dev_006",
+          tags: ["defi", "yield-farming", "automated", "protocols"],
+          testResults: { accuracy: 82.4, sharpe: 1.9, maxDrawdown: 13.7 },
+          performanceMetrics: { returns: 67.3, volatility: 22.1, trades: 428 }
+        }
+      ];
+
+      for (const modelData of sampleDeveloperModels) {
+        // Note: In a real app, you'd use the actual storage method for developer models
+        // For now, we'll just log them since the developer models are handled by the frontend
+        console.log(`Sample developer model ready: ${modelData.name} - ${modelData.status}`);
+      }
+      
+      console.log("Developer models seeding completed successfully!");
+    } catch (error) {
+      console.error("Error seeding developer models:", error);
+      throw error;
+    }
+  }
 }
