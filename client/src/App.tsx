@@ -38,12 +38,12 @@ import BugBountyProgram from "@/pages/bug-bounty-program";
 import EnterpriseSales from "@/pages/enterprise-sales";
 import ModelFunding from "@/pages/model-funding";
 import BountyFunding from "@/pages/bounty-funding";
+import ProfileSetup from "@/pages/profile-setup";
 import ModelProfile from "@/pages/model-profile";
 import TradingBots from "@/pages/trading-bots";
-import ProfileSetup from "@/pages/profile-setup";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -64,6 +64,9 @@ function Router() {
       <Route path="/security-compliance" component={SecurityCompliance} />
       <Route path="/bug-bounty-program" component={BugBountyProgram} />
       <Route path="/enterprise-sales" component={EnterpriseSales} />
+      
+      {/* Profile setup route */}
+      <Route path="/profile-setup" component={ProfileSetup} />
       
       {/* Protected routes */}
       {isAuthenticated ? (
