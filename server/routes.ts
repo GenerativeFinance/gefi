@@ -761,7 +761,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Trading API endpoints
   app.post('/api/trading/orders', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const orderRequest = req.body;
       
       // Validate required fields
@@ -779,7 +779,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/trading/orders/:orderId', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const orderId = req.params.orderId;
       
       const order = await tradingService.cancelOrder(userId, orderId);
@@ -792,7 +792,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/trading/orders', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const status = req.query.status as string;
       
       const orders = tradingService.getOrders(userId, status);
@@ -805,7 +805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/trading/positions', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const positions = tradingService.getPositions(userId);
       res.json(positions);
     } catch (error) {
@@ -816,7 +816,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/trading/portfolio', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const portfolio = tradingService.getPortfolio(userId);
       res.json(portfolio);
     } catch (error) {
@@ -827,12 +827,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/trading/portfolio/stream', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const portfolio = tradingService.streamPortfolio(userId);
       res.json(portfolio);
     } catch (error) {
       console.error("Error streaming portfolio:", error);
       res.status(500).json({ message: "Failed to stream portfolio" });
+    }
+  });
+
+  // Model funding endpoints
+  app.get('/api/developer-models', isAuthenticated, async (req: any, res) => {
+    try {
+      const fundable = req.query.fundable === 'true';
+      let models;
+      
+      if (fundable) {
+        // Return only approved/testing models for funding
+        models = await storage.getDeveloperModels('approved', 'testing');
+      } else {
+        models = await storage.getAllDeveloperModels();
+      }
+      
+      res.json(models);
+    } catch (error) {
+      console.error("Error fetching developer models:", error);
+      res.status(500).json({ message: "Failed to fetch models" });
+    }
+  });
+
+  app.get('/api/developer-models/categories', isAuthenticated, async (req: any, res) => {
+    try {
+      const categories = await storage.getDeveloperModelCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching model categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  app.post('/api/model-funding/invest', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { modelId, amount, expectedStake } = req.body;
+      
+      // Validate investment
+      if (!modelId || !amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid investment parameters" });
+      }
+      
+      // Get model details
+      const model = await storage.getDeveloperModel(modelId);
+      if (!model) {
+        return res.status(404).json({ message: "Model not found" });
+      }
+      
+      // Check if model is fundable
+      if (!['approved', 'testing'].includes(model.status)) {
+        return res.status(400).json({ message: "Model is not available for funding" });
+      }
+      
+      // Check if funding goal would be exceeded
+      const currentRaised = parseFloat(model.fundingRaised || "0");
+      const goal = parseFloat(model.fundingGoal);
+      const newTotal = currentRaised + amount;
+      
+      if (newTotal > goal) {
+        return res.status(400).json({ 
+          message: `Investment would exceed funding goal. Maximum available: $${(goal - currentRaised).toFixed(2)}` 
+        });
+      }
+      
+      // Create funding record
+      const funding = await storage.createModelFunding({
+        modelId,
+        investorId: userId,
+        amount: amount.toString(),
+        stake: expectedStake.toString(),
+        status: "pledged",
+        transactionId: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      });
+      
+      // Update model funding raised
+      await storage.updateDeveloperModelFunding(modelId, newTotal.toString());
+      
+      // Create audit trail
+      await storage.createAuditEntry({
+        userId,
+        action: "model_funding_investment",
+        entityType: "developer_model",
+        entityId: modelId.toString(),
+        newValues: JSON.stringify({ amount, stake: expectedStake }),
+      });
+      
+      res.json({ success: true, funding });
+    } catch (error) {
+      console.error("Error creating investment:", error);
+      res.status(500).json({ message: "Failed to process investment" });
+    }
+  });
+
+  app.get('/api/model-funding/my-investments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const investments = await storage.getUserModelFunding(userId);
+      res.json(investments);
+    } catch (error) {
+      console.error("Error fetching user investments:", error);
+      res.status(500).json({ message: "Failed to fetch investments" });
     }
   });
 
