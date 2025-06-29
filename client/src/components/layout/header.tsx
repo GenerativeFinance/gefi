@@ -83,6 +83,7 @@ export default function Header() {
   const fundingNavItems = [
     { href: "/model-funding", label: "Model Funding", icon: DollarSign },
     { href: "/bounty-funding", label: "Bounty Funding", icon: Target },
+    { href: "/bot-funding", label: "Bot Funding", icon: Bot },
   ];
 
   const analyticsNavItems = [
