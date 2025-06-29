@@ -14,6 +14,10 @@ import {
   regulatoryReports,
   riskLimits,
   complianceDocuments,
+  modelComments,
+  modelRatings,
+  developerModels,
+  modelFunding,
   type User,
   type UpsertUser,
   type Portfolio,
@@ -50,9 +54,17 @@ import {
   type InsertAiModelSubcategory,
   aiModelCategories,
   aiModelSubcategories,
+  type ModelComment,
+  type InsertModelComment,
+  type ModelRating,
+  type InsertModelRating,
+  type DeveloperModel,
+  type InsertDeveloperModel,
+  type ModelFunding,
+  type InsertModelFunding,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, gte, lte } from "drizzle-orm";
+import { eq, desc, and, gte, lte, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -126,6 +138,17 @@ export interface IStorage {
   createModelComment(comment: InsertModelComment): Promise<ModelComment>;
   getModelRatings(modelId: number): Promise<ModelRating[]>;
   createModelRating(rating: InsertModelRating): Promise<ModelRating>;
+  
+  // Developer Models operations
+  getAllDeveloperModels(): Promise<DeveloperModel[]>;
+  getDeveloperModels(...statuses: string[]): Promise<DeveloperModel[]>;
+  getDeveloperModel(id: number): Promise<DeveloperModel | undefined>;
+  getDeveloperModelCategories(): Promise<string[]>;
+  updateDeveloperModelFunding(modelId: number, newAmount: string): Promise<void>;
+  
+  // Model Funding operations
+  createModelFunding(funding: InsertModelFunding): Promise<ModelFunding>;
+  getUserModelFunding(userId: string): Promise<ModelFunding[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -472,6 +495,85 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(aiModels)
       .where(and(...conditions))
       .orderBy(desc(aiModels.isFeatured), desc(aiModels.rating));
+  }
+
+  // Developer Models operations
+  async getAllDeveloperModels(): Promise<DeveloperModel[]> {
+    return await db.select().from(developerModels)
+      .orderBy(desc(developerModels.createdAt));
+  }
+
+  async getDeveloperModels(...statuses: string[]): Promise<DeveloperModel[]> {
+    if (statuses.length === 0) {
+      return this.getAllDeveloperModels();
+    }
+    
+    return await db.select().from(developerModels)
+      .where(inArray(developerModels.status, statuses))
+      .orderBy(desc(developerModels.createdAt));
+  }
+
+  async getDeveloperModel(id: number): Promise<DeveloperModel | undefined> {
+    const [model] = await db.select().from(developerModels)
+      .where(eq(developerModels.id, id));
+    return model;
+  }
+
+  async getDeveloperModelCategories(): Promise<string[]> {
+    const result = await db.selectDistinct({ category: developerModels.category })
+      .from(developerModels);
+    return result.map(r => r.category);
+  }
+
+  async updateDeveloperModelFunding(modelId: number, newAmount: string): Promise<void> {
+    await db.update(developerModels)
+      .set({ fundingRaised: newAmount, updatedAt: new Date() })
+      .where(eq(developerModels.id, modelId));
+  }
+
+  // Model Funding operations
+  async createModelFunding(funding: InsertModelFunding): Promise<ModelFunding> {
+    const [newFunding] = await db.insert(modelFunding)
+      .values(funding)
+      .returning();
+    return newFunding;
+  }
+
+  async getUserModelFunding(userId: string): Promise<ModelFunding[]> {
+    return await db.select({
+      id: modelFunding.id,
+      modelId: modelFunding.modelId,
+      investorId: modelFunding.investorId,
+      amount: modelFunding.amount,
+      stake: modelFunding.stake,
+      status: modelFunding.status,
+      transactionId: modelFunding.transactionId,
+      createdAt: modelFunding.createdAt,
+      updatedAt: modelFunding.updatedAt,
+      modelName: developerModels.name,
+      modelStatus: developerModels.status,
+    })
+    .from(modelFunding)
+    .leftJoin(developerModels, eq(modelFunding.modelId, developerModels.id))
+    .where(eq(modelFunding.investorId, userId))
+    .orderBy(desc(modelFunding.createdAt));
+  }
+
+  // Placeholder implementations for missing methods
+  async getModelComments(modelId: number): Promise<ModelComment[]> {
+    return [];
+  }
+
+  async createModelComment(comment: InsertModelComment): Promise<ModelComment> {
+    throw new Error("Method not implemented");
+  }
+
+  async getModelRatings(modelId: number): Promise<ModelRating[]> {
+    return [];
+  }
+
+  async createModelRating(rating: InsertModelRating): Promise<ModelRating> {
+    throw new Error("Method not implemented");
   }
 }
 
