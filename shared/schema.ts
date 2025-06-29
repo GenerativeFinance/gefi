@@ -10,7 +10,9 @@ import {
   decimal,
   boolean,
   uuid,
+  date,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -642,6 +644,76 @@ export type InsertBountyFundingRequest = typeof bountyFundingRequests.$inferInse
 export type BountyFundingContribution = typeof bountyFundingContributions.$inferSelect;
 export type InsertBountyFundingContribution = typeof bountyFundingContributions.$inferInsert;
 
+// Trading Bots Tables
+export const tradingBots = pgTable("trading_bots", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 100 }).notNull(), // spot_grid, futures_grid, arbitrage_bot, etc.
+  symbol: varchar("symbol", { length: 50 }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active, paused, stopped
+  configuration: jsonb("configuration"), // Bot-specific settings
+  investment: decimal("investment", { precision: 15, scale: 2 }).notNull(),
+  currentPnL: decimal("current_pnl", { precision: 15, scale: 2 }).default("0.00"),
+  totalTrades: integer("total_trades").default(0),
+  successfulTrades: integer("successful_trades").default(0),
+  runtime: varchar("runtime", { length: 100 }),
+  priceRange: varchar("price_range", { length: 100 }),
+  grids: integer("grids"),
+  profitPerGrid: decimal("profit_per_grid", { precision: 5, scale: 2 }),
+  mode: varchar("mode", { length: 50 }), // geometric, arithmetic
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  startedAt: timestamp("started_at"),
+  stoppedAt: timestamp("stopped_at"),
+});
+
+export const botTrades = pgTable("bot_trades", {
+  id: serial("id").primaryKey(),
+  botId: integer("bot_id").notNull().references(() => tradingBots.id),
+  tradeType: varchar("trade_type", { length: 10 }).notNull(), // buy, sell
+  symbol: varchar("symbol", { length: 50 }).notNull(),
+  quantity: decimal("quantity", { precision: 15, scale: 8 }).notNull(),
+  price: decimal("price", { precision: 15, scale: 8 }).notNull(),
+  value: decimal("value", { precision: 15, scale: 2 }).notNull(),
+  fees: decimal("fees", { precision: 15, scale: 8 }).default("0.00"),
+  profit: decimal("profit", { precision: 15, scale: 2 }),
+  executedAt: timestamp("executed_at").defaultNow(),
+  gridLevel: integer("grid_level"),
+});
+
+export const botPerformance = pgTable("bot_performance", {
+  id: serial("id").primaryKey(),
+  botId: integer("bot_id").notNull().references(() => tradingBots.id),
+  date: date("date").notNull(),
+  pnl: decimal("pnl", { precision: 15, scale: 2 }).notNull(),
+  roi: decimal("roi", { precision: 5, scale: 2 }).notNull(),
+  trades: integer("trades").default(0),
+  volume: decimal("volume", { precision: 15, scale: 2 }).default("0.00"),
+  fees: decimal("fees", { precision: 15, scale: 8 }).default("0.00"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Trading Bot Relations
+export const tradingBotsRelations = relations(tradingBots, ({ many }) => ({
+  trades: many(botTrades),
+  performance: many(botPerformance),
+}));
+
+export const botTradesRelations = relations(botTrades, ({ one }) => ({
+  bot: one(tradingBots, {
+    fields: [botTrades.botId],
+    references: [tradingBots.id],
+  }),
+}));
+
+export const botPerformanceRelations = relations(botPerformance, ({ one }) => ({
+  bot: one(tradingBots, {
+    fields: [botPerformance.botId],
+    references: [tradingBots.id],
+  }),
+}));
+
 // User Profile Types
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type InsertUserProfile = typeof userProfiles.$inferInsert;
@@ -649,6 +721,15 @@ export type UserAchievement = typeof userAchievements.$inferSelect;
 export type InsertUserAchievement = typeof userAchievements.$inferInsert;
 export type UserSkillRating = typeof userSkillRatings.$inferSelect;
 export type InsertUserSkillRating = typeof userSkillRatings.$inferInsert;
+
+// Trading Bot Types
+// Trading Bot Types
+export type TradingBot = typeof tradingBots.$inferSelect;
+export type InsertTradingBot = typeof tradingBots.$inferInsert;
+export type BotTrade = typeof botTrades.$inferSelect;
+export type InsertBotTrade = typeof botTrades.$inferInsert;
+export type BotPerformance = typeof botPerformance.$inferSelect;
+export type InsertBotPerformance = typeof botPerformance.$inferInsert;
 
 export const insertPortfolioSchema = createInsertSchema(portfolios).omit({
   id: true,

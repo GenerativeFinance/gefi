@@ -24,7 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Brain, Search, Bell, Menu, User, Settings, LogOut, Code, TrendingUp, BarChart3, Briefcase, X, Target, BookOpen, Home, Activity, DollarSign } from "lucide-react";
+import { Brain, Search, Bell, Menu, User, Settings, LogOut, Code, TrendingUp, BarChart3, Briefcase, X, Target, BookOpen, Home, Activity, DollarSign, Bot } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useLocation } from "wouter";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
@@ -83,6 +83,7 @@ export default function Header() {
     { href: "/", label: "Home", icon: TrendingUp },
     { href: "/portfolio", label: "Portfolio", icon: BarChart3 },
     { href: "/live-trading", label: "Trading", icon: Activity },
+    { href: "/trading-bots", label: "Trading Bots", icon: Bot },
     { href: "/marketplace", label: "Marketplace", icon: Briefcase },
   ];
 

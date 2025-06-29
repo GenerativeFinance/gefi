@@ -39,6 +39,7 @@ import EnterpriseSales from "@/pages/enterprise-sales";
 import ModelFunding from "@/pages/model-funding";
 import BountyFunding from "@/pages/bounty-funding";
 import ModelProfile from "@/pages/model-profile";
+import TradingBots from "@/pages/trading-bots";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -90,6 +91,7 @@ function Router() {
           <Route path="/user/:userId" component={UserDetail} />
           <Route path="/learning" component={Learning} />
           <Route path="/model/:id" component={ModelProfile} />
+          <Route path="/trading-bots" component={TradingBots} />
         </>
       ) : (
         <>
