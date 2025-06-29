@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWeb3 } from "@/contexts/Web3Context";
 import { apiRequest } from "@/lib/queryClient";
+import Layout from "@/components/layout/Layout";
 import { 
   Wallet, 
   TrendingUp, 
@@ -76,7 +77,7 @@ const SUPPORTED_CHAINS = {
   250: { name: 'Fantom', symbol: 'FTM', color: '#1969FF' }
 };
 
-export default function Web3DeFi() {
+function Web3DeFi() {
   const { 
     isConnected, 
     account, 
@@ -196,44 +197,47 @@ export default function Web3DeFi() {
 
   if (!isConnected) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="text-center py-12">
-          <Wallet className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold mb-2">Connect Your Web3 Wallet</h2>
-          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Connect your cryptocurrency wallet to access DeFi features, view your portfolio, and manage your digital assets.
-          </p>
-          <Button 
-            onClick={handleConnectWallet} 
-            disabled={web3Loading}
-            size="lg"
-            className="min-w-[200px]"
-          >
-            {web3Loading ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Connecting...
-              </>
-            ) : (
-              <>
-                <Wallet className="h-4 w-4 mr-2" />
-                Connect Wallet
-              </>
+      <Layout>
+        <div className="p-6 max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <Wallet className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-2xl font-semibold mb-2">Connect Your Web3 Wallet</h2>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Connect your cryptocurrency wallet to access DeFi features, view your portfolio, and manage your digital assets.
+            </p>
+            <Button 
+              onClick={handleConnectWallet} 
+              disabled={web3Loading}
+              size="lg"
+              className="min-w-[200px]"
+            >
+              {web3Loading ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Connect Wallet
+                </>
+              )}
+            </Button>
+            {web3Error && (
+              <div className="mt-4 p-3 bg-destructive/10 text-destructive rounded-lg flex items-center justify-center max-w-md mx-auto">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                {web3Error}
+              </div>
             )}
-          </Button>
-          {web3Error && (
-            <div className="mt-4 p-3 bg-destructive/10 text-destructive rounded-lg flex items-center justify-center max-w-md mx-auto">
-              <AlertCircle className="h-4 w-4 mr-2" />
-              {web3Error}
-            </div>
-          )}
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <Layout>
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
@@ -621,6 +625,9 @@ export default function Web3DeFi() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </Layout>
   );
 }
+
+export default Web3DeFi;
