@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { useWeb3 } from '@/context/Web3Context';
+import { useWeb3 } from '@/contexts/Web3Context';
 import { smartContractService, type ModelInfo, type CampaignInfo, type RevenueDistribution, type Contribution } from '@/lib/smartContractService';
 import { Wallet, DollarSign, TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Target, Clock, CheckCircle, XCircle, Zap, Shield } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
