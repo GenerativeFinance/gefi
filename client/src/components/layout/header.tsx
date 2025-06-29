@@ -301,6 +301,7 @@ export default function Header() {
                           {marketInsightsNavItems.map((item) => (
                             <DropdownMenuItem key={item.href} asChild>
                               <Link href={item.href}>
+                                <item.icon className="h-4 w-4 mr-2" />
                                 {item.label}
                               </Link>
                             </DropdownMenuItem>
@@ -328,6 +329,7 @@ export default function Header() {
                           {portfolioNavItems.map((item) => (
                             <DropdownMenuItem key={item.href} asChild>
                               <Link href={item.href}>
+                                <item.icon className="h-4 w-4 mr-2" />
                                 {item.label}
                               </Link>
                             </DropdownMenuItem>
@@ -355,6 +357,7 @@ export default function Header() {
                           {reportsNavItems.map((item) => (
                             <DropdownMenuItem key={item.href} asChild>
                               <Link href={item.href}>
+                                <item.icon className="h-4 w-4 mr-2" />
                                 {item.label}
                               </Link>
                             </DropdownMenuItem>
@@ -382,6 +385,7 @@ export default function Header() {
                           {riskManagementNavItems.map((item) => (
                             <DropdownMenuItem key={item.href} asChild>
                               <Link href={item.href}>
+                                <item.icon className="h-4 w-4 mr-2" />
                                 {item.label}
                               </Link>
                             </DropdownMenuItem>
@@ -409,6 +413,7 @@ export default function Header() {
                           {tradingNavItems.map((item) => (
                             <DropdownMenuItem key={item.href} asChild>
                               <Link href={item.href}>
+                                <item.icon className="h-4 w-4 mr-2" />
                                 {item.label}
                               </Link>
                             </DropdownMenuItem>
@@ -436,6 +441,7 @@ export default function Header() {
                           {learningNavItems.map((item) => (
                             <DropdownMenuItem key={item.href} asChild>
                               <Link href={item.href}>
+                                <item.icon className="h-4 w-4 mr-2" />
                                 {item.label}
                               </Link>
                             </DropdownMenuItem>
