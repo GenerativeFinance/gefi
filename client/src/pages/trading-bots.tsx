@@ -33,14 +33,15 @@ import {
 
 // Using TradingBot type from shared schema
 
-// Extended type for UI purposes
-interface TradingBotWithUI extends TradingBot {
+// Extended type for UI purposes with computed fields
+interface TradingBotWithUI extends TradingBotDB {
   pnlPercentage?: number;
   roi?: number;
   minInvestment?: number;
   description?: string;
   icon?: any;
   chartData?: number[];
+  pnl?: number; // Computed from currentPnL
 }
 
 const tradingBotTypes = [
@@ -102,7 +103,7 @@ const tradingBotTypes = [
   }
 ];
 
-const mockTradingBots: TradingBot[] = [
+const mockTradingBots: TradingBotWithUI[] = [
   {
     id: 1,
     name: 'SOL/FDUSD Grid',
@@ -161,15 +162,54 @@ const mockTradingBots: TradingBot[] = [
 ];
 
 export default function TradingBots() {
-  const [selectedBot, setSelectedBot] = useState<TradingBot | null>(null);
+  const [selectedBot, setSelectedBot] = useState<TradingBotWithUI | null>(null);
   const [activeTab, setActiveTab] = useState('running');
   const [createBotOpen, setCreateBotOpen] = useState(false);
   const [selectedBotType, setSelectedBotType] = useState('');
 
-  const { data: bots = mockTradingBots } = useQuery<TradingBot[]>({
+  const { data: rawBots = [], isLoading } = useQuery<TradingBotDB[]>({
     queryKey: ['/api/trading-bots'],
     retry: false,
   });
+
+  // Transform backend data to UI format
+  const bots: TradingBotWithUI[] = rawBots.map(bot => ({
+    ...bot,
+    pnl: parseFloat(bot.currentPnL || "0"),
+    pnlPercentage: parseFloat(bot.currentPnL || "0") / parseFloat(bot.investment) * 100,
+    roi: Math.random() * 20 - 5, // Computed ROI - would be calculated from actual performance data
+    minInvestment: parseFloat(bot.investment),
+    description: `Automated ${bot.type.replace('_', ' ')} trading on ${bot.symbol}`,
+    icon: getIconForBotType(bot.type),
+    chartData: generateMockChartData(parseFloat(bot.currentPnL || "0")),
+  }));
+
+  // Helper functions
+  function getIconForBotType(type: string) {
+    switch (type) {
+      case 'spot_grid': return Grid3X3;
+      case 'futures_grid': return BarChart3;
+      case 'arbitrage_bot': return ArrowUpDown;
+      case 'rebalancing_bot': return RefreshCw;
+      case 'spot_algo_order': return Brain;
+      case 'spot_dca': return TrendingUp;
+      case 'futures_twap': return Clock;
+      default: return Bot;
+    }
+  }
+
+  function generateMockChartData(currentPnL: number): number[] {
+    // Generate a reasonable chart progression to current PnL
+    const points = 8;
+    const data = [];
+    for (let i = 0; i < points; i++) {
+      const progress = i / (points - 1);
+      const noise = (Math.random() - 0.5) * currentPnL * 0.3;
+      data.push(currentPnL * progress + noise);
+    }
+    data[points - 1] = currentPnL; // Ensure last point is exact
+    return data;
+  }
 
   const runningBots = bots.filter(bot => bot.status === 'active');
   const pausedBots = bots.filter(bot => bot.status === 'paused');

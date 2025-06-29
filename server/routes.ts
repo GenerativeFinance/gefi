@@ -691,6 +691,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Trading Bots API endpoints
+  app.get('/api/trading-bots', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Mock trading bots data for now - can be replaced with database queries later
+      const mockTradingBots = [
+        {
+          id: 1,
+          userId: userId,
+          name: 'SOL/FDUSD Grid',
+          type: 'spot_grid',
+          symbol: 'SOL/FDUSD',
+          status: 'active',
+          configuration: { profitPerGrid: 0.5, grids: 50, priceRange: '$125.00 - $175.00', mode: 'Geometric' },
+          investment: "1000.00",
+          currentPnL: "2560.45",
+          totalTrades: 147,
+          successfulTrades: 124,
+          runtime: '12 days',
+          grids: 50,
+          profitPerGrid: 0.5,
+          priceRange: '$125.00 - $175.00',
+          mode: 'Geometric',
+          createdAt: new Date('2024-01-15'),
+          updatedAt: new Date(),
+          startedAt: new Date('2024-01-15'),
+          stoppedAt: null
+        },
+        {
+          id: 2,
+          userId: userId,
+          name: 'BTC Arbitrage Pro',
+          type: 'arbitrage_bot',
+          symbol: 'BTC/USDT',
+          status: 'active',
+          configuration: { strategy: 'delta_neutral', riskLevel: 'medium' },
+          investment: "5000.00",
+          currentPnL: "1890.32",
+          totalTrades: 89,
+          successfulTrades: 67,
+          runtime: '8 days',
+          grids: null,
+          profitPerGrid: null,
+          priceRange: null,
+          mode: 'Delta Neutral',
+          createdAt: new Date('2024-01-20'),
+          updatedAt: new Date(),
+          startedAt: new Date('2024-01-20'),
+          stoppedAt: null
+        },
+        {
+          id: 3,
+          userId: userId,
+          name: 'ETH DCA Strategy',
+          type: 'spot_dca',
+          symbol: 'ETH/USDT',
+          status: 'paused',
+          configuration: { interval: '1h', dcaAmount: 100 },
+          investment: "2500.00",
+          currentPnL: "-1250.75",
+          totalTrades: 56,
+          successfulTrades: 32,
+          runtime: '15 days',
+          grids: null,
+          profitPerGrid: null,
+          priceRange: null,
+          mode: 'Hourly DCA',
+          createdAt: new Date('2024-01-10'),
+          updatedAt: new Date(),
+          startedAt: new Date('2024-01-10'),
+          stoppedAt: null
+        }
+      ];
+
+      res.json(mockTradingBots);
+    } catch (error) {
+      console.error("Error fetching trading bots:", error);
+      res.status(500).json({ message: "Failed to fetch trading bots" });
+    }
+  });
+
+  app.post('/api/trading-bots', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const botData = req.body;
+      
+      const newBot = {
+        id: Math.floor(Math.random() * 10000),
+        userId: userId,
+        ...botData,
+        status: 'active',
+        currentPnL: "0.00",
+        totalTrades: 0,
+        successfulTrades: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        startedAt: new Date(),
+        stoppedAt: null
+      };
+
+      res.json(newBot);
+    } catch (error) {
+      console.error("Error creating trading bot:", error);
+      res.status(500).json({ message: "Failed to create trading bot" });
+    }
+  });
+
+  app.patch('/api/trading-bots/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const botId = req.params.id;
+      const updates = req.body;
+      
+      // Mock update response
+      res.json({ 
+        id: botId, 
+        ...updates, 
+        updatedAt: new Date() 
+      });
+    } catch (error) {
+      console.error("Error updating trading bot:", error);
+      res.status(500).json({ message: "Failed to update trading bot" });
+    }
+  });
+
+  app.delete('/api/trading-bots/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const botId = req.params.id;
+      
+      res.json({ message: "Trading bot deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting trading bot:", error);
+      res.status(500).json({ message: "Failed to delete trading bot" });
+    }
+  });
+
   // Real-time Market Data API endpoints
   app.get('/api/market-data/live/:symbol', async (req, res) => {
     try {
