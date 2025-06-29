@@ -82,6 +82,7 @@ export default function Header() {
   const investorNavItems = [
     { href: "/", label: "Home", icon: TrendingUp },
     { href: "/portfolio", label: "Portfolio", icon: BarChart3 },
+    { href: "/live-trading", label: "Trading", icon: Activity },
     { href: "/reports", label: "Reports", icon: BarChart3 },
     { href: "/risk-management", label: "Risk", icon: BarChart3 },
     { href: "/marketplace", label: "Marketplace", icon: Briefcase },

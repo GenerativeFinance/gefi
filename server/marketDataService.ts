@@ -84,8 +84,8 @@ class MarketDataService extends EventEmitter {
 
   private connectToFeed(symbol: string): void {
     // In production, this would connect to real market data providers
-    // For now, we'll simulate with mock data
-    this.generateMockData(symbol);
+    // For now, we'll use the mock data setup in constructor
+    console.log(`Connected to feed for ${symbol}`);
   }
 
   private setupMockDataFeed(): void {
@@ -149,7 +149,7 @@ class MarketDataService extends EventEmitter {
         timestamp: Date.now(),
         bid: newPrice * 0.999,
         ask: newPrice * 1.001,
-        change24h: data.change24h + change
+        change24h: (data.change24h || 0) + change
       };
 
       this.priceCache.set(symbol, updatedData);

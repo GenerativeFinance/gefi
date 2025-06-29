@@ -26,6 +26,7 @@ import UserProfile from "@/pages/user-profile";
 import Settings from "@/pages/settings";
 import DeveloperDashboard from "@/pages/developer-dashboard";
 import BacktestingEnvironment from "@/pages/backtesting";
+import LiveTradingPage from "@/pages/live-trading";
 import Bounties from "@/pages/bounties";
 import BountyLeaderboard from "@/pages/bounty-leaderboard";
 import UserDetail from "@/pages/user-detail";
@@ -78,6 +79,7 @@ function Router() {
           <Route path="/settings" component={Settings} />
           <Route path="/developer" component={DeveloperDashboard} />
           <Route path="/backtesting" component={BacktestingEnvironment} />
+          <Route path="/live-trading" component={LiveTradingPage} />
           <Route path="/bounties" component={Bounties} />
           <Route path="/bounties/leaderboard" component={BountyLeaderboard} />
           <Route path="/user/:userId" component={UserDetail} />
