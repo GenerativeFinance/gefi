@@ -760,3 +760,182 @@ export const insertRiskAlertSchema = createInsertSchema(riskAlerts).omit({
   id: true,
   createdAt: true,
 });
+
+// Web3 Wallets table
+export const web3Wallets = pgTable("web3_wallets", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  walletAddress: varchar("wallet_address").notNull(),
+  walletType: varchar("wallet_type").notNull(), // MetaMask, WalletConnect, etc.
+  chainId: integer("chain_id").notNull(), // 1 for Ethereum, 56 for BSC, etc.
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Cryptocurrency Holdings table
+export const cryptoHoldings = pgTable("crypto_holdings", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  walletId: integer("wallet_id").references(() => web3Wallets.id),
+  tokenAddress: varchar("token_address").notNull(), // Contract address or "native" for ETH/BNB
+  tokenSymbol: varchar("token_symbol").notNull(),
+  tokenName: varchar("token_name").notNull(),
+  balance: decimal("balance", { precision: 20, scale: 8 }).notNull(),
+  usdValue: decimal("usd_value", { precision: 12, scale: 2 }),
+  chainId: integer("chain_id").notNull(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// DeFi Positions table
+export const defiPositions = pgTable("defi_positions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  walletId: integer("wallet_id").references(() => web3Wallets.id),
+  protocol: varchar("protocol").notNull(), // Uniswap, Aave, Compound, etc.
+  positionType: varchar("position_type").notNull(), // liquidity, lending, borrowing, staking
+  tokenPair: varchar("token_pair"), // For LP positions like ETH/USDC
+  principal: decimal("principal", { precision: 20, scale: 8 }).notNull(),
+  currentValue: decimal("current_value", { precision: 20, scale: 8 }),
+  rewards: decimal("rewards", { precision: 20, scale: 8 }).default("0"),
+  apy: decimal("apy", { precision: 5, scale: 2 }),
+  chainId: integer("chain_id").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// DeFi Transactions table
+export const defiTransactions = pgTable("defi_transactions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  walletId: integer("wallet_id").references(() => web3Wallets.id),
+  transactionHash: varchar("transaction_hash").notNull(),
+  protocol: varchar("protocol").notNull(),
+  action: varchar("action").notNull(), // swap, deposit, withdraw, claim
+  tokenIn: varchar("token_in"),
+  tokenOut: varchar("token_out"),
+  amountIn: decimal("amount_in", { precision: 20, scale: 8 }),
+  amountOut: decimal("amount_out", { precision: 20, scale: 8 }),
+  gasUsed: decimal("gas_used", { precision: 12, scale: 0 }),
+  gasFee: decimal("gas_fee", { precision: 12, scale: 8 }),
+  chainId: integer("chain_id").notNull(),
+  blockNumber: integer("block_number"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+// Yield Farming Positions table
+export const yieldFarmingPositions = pgTable("yield_farming_positions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  walletId: integer("wallet_id").references(() => web3Wallets.id),
+  protocol: varchar("protocol").notNull(),
+  poolName: varchar("pool_name").notNull(),
+  lpTokenAddress: varchar("lp_token_address").notNull(),
+  stakedAmount: decimal("staked_amount", { precision: 20, scale: 8 }).notNull(),
+  rewardTokens: jsonb("reward_tokens").notNull(), // Array of reward token info
+  totalRewards: decimal("total_rewards", { precision: 20, scale: 8 }).default("0"),
+  apy: decimal("apy", { precision: 5, scale: 2 }),
+  chainId: integer("chain_id").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// NFT Holdings table
+export const nftHoldings = pgTable("nft_holdings", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  walletId: integer("wallet_id").references(() => web3Wallets.id),
+  contractAddress: varchar("contract_address").notNull(),
+  tokenId: varchar("token_id").notNull(),
+  name: varchar("name"),
+  description: text("description"),
+  imageUrl: varchar("image_url"),
+  collectionName: varchar("collection_name"),
+  floorPrice: decimal("floor_price", { precision: 12, scale: 8 }),
+  lastSalePrice: decimal("last_sale_price", { precision: 12, scale: 8 }),
+  chainId: integer("chain_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Web3 Relations
+export const web3WalletsRelations = relations(web3Wallets, ({ one, many }) => ({
+  user: one(users, {
+    fields: [web3Wallets.userId],
+    references: [users.id],
+  }),
+  cryptoHoldings: many(cryptoHoldings),
+  defiPositions: many(defiPositions),
+  defiTransactions: many(defiTransactions),
+  yieldFarmingPositions: many(yieldFarmingPositions),
+  nftHoldings: many(nftHoldings),
+}));
+
+export const cryptoHoldingsRelations = relations(cryptoHoldings, ({ one }) => ({
+  user: one(users, {
+    fields: [cryptoHoldings.userId],
+    references: [users.id],
+  }),
+  wallet: one(web3Wallets, {
+    fields: [cryptoHoldings.walletId],
+    references: [web3Wallets.id],
+  }),
+}));
+
+export const defiPositionsRelations = relations(defiPositions, ({ one }) => ({
+  user: one(users, {
+    fields: [defiPositions.userId],
+    references: [users.id],
+  }),
+  wallet: one(web3Wallets, {
+    fields: [defiPositions.walletId],
+    references: [web3Wallets.id],
+  }),
+}));
+
+// Web3 Types
+export type Web3Wallet = typeof web3Wallets.$inferSelect;
+export type InsertWeb3Wallet = typeof web3Wallets.$inferInsert;
+export type CryptoHolding = typeof cryptoHoldings.$inferSelect;
+export type InsertCryptoHolding = typeof cryptoHoldings.$inferInsert;
+export type DefiPosition = typeof defiPositions.$inferSelect;
+export type InsertDefiPosition = typeof defiPositions.$inferInsert;
+export type DefiTransaction = typeof defiTransactions.$inferSelect;
+export type InsertDefiTransaction = typeof defiTransactions.$inferInsert;
+export type YieldFarmingPosition = typeof yieldFarmingPositions.$inferSelect;
+export type InsertYieldFarmingPosition = typeof yieldFarmingPositions.$inferInsert;
+export type NftHolding = typeof nftHoldings.$inferSelect;
+export type InsertNftHolding = typeof nftHoldings.$inferInsert;
+
+// Web3 Insert Schemas
+export const insertWeb3WalletSchema = createInsertSchema(web3Wallets).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCryptoHoldingSchema = createInsertSchema(cryptoHoldings).omit({
+  id: true,
+  lastUpdated: true,
+});
+
+export const insertDefiPositionSchema = createInsertSchema(defiPositions).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+});
+
+export const insertDefiTransactionSchema = createInsertSchema(defiTransactions).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertYieldFarmingPositionSchema = createInsertSchema(yieldFarmingPositions).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+});
+
+export const insertNftHoldingSchema = createInsertSchema(nftHoldings).omit({
+  id: true,
+  createdAt: true,
+});
