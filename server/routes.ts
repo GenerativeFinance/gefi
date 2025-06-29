@@ -1,10 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer } from "ws";
 import { storage } from "./storage";
 import { setupMultiAuth, isAuthenticated } from "./multiAuth";
 import { insertPortfolioSchema, insertAiModelSchema, insertRiskAlertSchema } from "@shared/schema";
 import { z } from "zod";
 import { PortfolioOptimizer, RiskAssessment, MarketAnalysis } from "./aiModels";
+import { marketDataService } from "./marketDataService";
+import { tradingService } from "./tradingService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -688,6 +691,268 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Real-time Market Data API endpoints
+  app.get('/api/market-data/live/:symbol', async (req, res) => {
+    try {
+      const symbol = req.params.symbol.toUpperCase();
+      const data = marketDataService.getCurrentPrice(symbol);
+      
+      if (!data) {
+        return res.status(404).json({ message: `No data available for symbol: ${symbol}` });
+      }
+      
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching live market data:", error);
+      res.status(500).json({ message: "Failed to fetch live market data" });
+    }
+  });
+
+  app.get('/api/market-data/live', async (req, res) => {
+    try {
+      const allPrices = marketDataService.getAllPrices();
+      const pricesArray = Array.from(allPrices.values());
+      res.json(pricesArray);
+    } catch (error) {
+      console.error("Error fetching all live market data:", error);
+      res.status(500).json({ message: "Failed to fetch live market data" });
+    }
+  });
+
+  app.get('/api/market-data/orderbook/:symbol', async (req, res) => {
+    try {
+      const symbol = req.params.symbol.toUpperCase();
+      const orderBook = marketDataService.getOrderBook(symbol);
+      
+      if (!orderBook) {
+        return res.status(404).json({ message: `No order book available for symbol: ${symbol}` });
+      }
+      
+      res.json(orderBook);
+    } catch (error) {
+      console.error("Error fetching order book:", error);
+      res.status(500).json({ message: "Failed to fetch order book" });
+    }
+  });
+
+  app.get('/api/market-data/historical/:symbol', async (req, res) => {
+    try {
+      const symbol = req.params.symbol.toUpperCase();
+      const { startDate, endDate, interval = '1d' } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "Start date and end date are required" });
+      }
+      
+      const data = await marketDataService.getHistoricalData(
+        symbol, 
+        startDate as string, 
+        endDate as string, 
+        interval as string
+      );
+      
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching historical market data:", error);
+      res.status(500).json({ message: "Failed to fetch historical market data" });
+    }
+  });
+
+  // Trading API endpoints
+  app.post('/api/trading/orders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const orderRequest = req.body;
+      
+      // Validate required fields
+      if (!orderRequest.symbol || !orderRequest.side || !orderRequest.type || !orderRequest.quantity) {
+        return res.status(400).json({ message: "Missing required order fields" });
+      }
+      
+      const order = await tradingService.submitOrder(userId, orderRequest);
+      res.json(order);
+    } catch (error) {
+      console.error("Error submitting order:", error);
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.delete('/api/trading/orders/:orderId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const orderId = req.params.orderId;
+      
+      const order = await tradingService.cancelOrder(userId, orderId);
+      res.json(order);
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.get('/api/trading/orders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const status = req.query.status as string;
+      
+      const orders = tradingService.getOrders(userId, status);
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      res.status(500).json({ message: "Failed to fetch orders" });
+    }
+  });
+
+  app.get('/api/trading/positions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const positions = tradingService.getPositions(userId);
+      res.json(positions);
+    } catch (error) {
+      console.error("Error fetching positions:", error);
+      res.status(500).json({ message: "Failed to fetch positions" });
+    }
+  });
+
+  app.get('/api/trading/portfolio', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const portfolio = tradingService.getPortfolio(userId);
+      res.json(portfolio);
+    } catch (error) {
+      console.error("Error fetching portfolio:", error);
+      res.status(500).json({ message: "Failed to fetch portfolio" });
+    }
+  });
+
+  app.get('/api/trading/portfolio/stream', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const portfolio = tradingService.streamPortfolio(userId);
+      res.json(portfolio);
+    } catch (error) {
+      console.error("Error streaming portfolio:", error);
+      res.status(500).json({ message: "Failed to stream portfolio" });
+    }
+  });
+
   const httpServer = createServer(app);
+  
+  // Add WebSocket server for real-time data streaming
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  wss.on('connection', (ws, req) => {
+    console.log('WebSocket client connected');
+    
+    // Handle subscription requests
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        if (data.type === 'subscribe') {
+          const { symbols } = data;
+          if (symbols && Array.isArray(symbols)) {
+            marketDataService.subscribe(symbols);
+            ws.send(JSON.stringify({ type: 'subscribed', symbols }));
+          }
+        } else if (data.type === 'unsubscribe') {
+          const { symbols } = data;
+          if (symbols && Array.isArray(symbols)) {
+            marketDataService.unsubscribe(symbols);
+            ws.send(JSON.stringify({ type: 'unsubscribed', symbols }));
+          }
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+        ws.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }));
+      }
+    });
+    
+    // Forward market data updates to connected clients
+    const handlePriceUpdate = (marketData: any) => {
+      if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'priceUpdate',
+          data: marketData
+        }));
+      }
+    };
+    
+    const handleOrderBookUpdate = (orderBook: any) => {
+      if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'orderBookUpdate',
+          data: orderBook
+        }));
+      }
+    };
+    
+    const handleTrade = (trade: any) => {
+      if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'trade',
+          data: trade
+        }));
+      }
+    };
+    
+    const handleOrderStatus = (order: any) => {
+      if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'orderStatus',
+          data: order
+        }));
+      }
+    };
+    
+    const handleExecution = (execution: any) => {
+      if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'execution',
+          data: execution
+        }));
+      }
+    };
+    
+    const handlePositionUpdate = (position: any) => {
+      if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'positionUpdate',
+          data: position
+        }));
+      }
+    };
+    
+    const handlePortfolioUpdate = (portfolio: any) => {
+      if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'portfolioUpdate',
+          data: portfolio
+        }));
+      }
+    };
+    
+    // Subscribe to events
+    marketDataService.on('priceUpdate', handlePriceUpdate);
+    marketDataService.on('orderBookUpdate', handleOrderBookUpdate);
+    marketDataService.on('trade', handleTrade);
+    tradingService.on('orderStatus', handleOrderStatus);
+    tradingService.on('execution', handleExecution);
+    tradingService.on('positionUpdate', handlePositionUpdate);
+    tradingService.on('portfolioUpdate', handlePortfolioUpdate);
+    
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+      // Clean up event listeners
+      marketDataService.removeListener('priceUpdate', handlePriceUpdate);
+      marketDataService.removeListener('orderBookUpdate', handleOrderBookUpdate);
+      marketDataService.removeListener('trade', handleTrade);
+      tradingService.removeListener('orderStatus', handleOrderStatus);
+      tradingService.removeListener('execution', handleExecution);
+      tradingService.removeListener('positionUpdate', handlePositionUpdate);
+      tradingService.removeListener('portfolioUpdate', handlePortfolioUpdate);
+    });
+  });
+  
   return httpServer;
 }
