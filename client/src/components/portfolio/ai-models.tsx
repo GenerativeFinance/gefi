@@ -15,18 +15,21 @@ interface AiModelsProps {
 export default function AiModels({ models }: AiModelsProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [isRebalancing, setIsRebalancing] = useState(false);
   const [manualOverrideOpen, setManualOverrideOpen] = useState(false);
   
-  // Default AI models if no data
+  // Default AI models if no data with ID mapping for navigation
   const defaultModels = [
     {
+      id: 1,
       modelType: "conservative",
       modelName: "Conservative AI",
       value: "148548.00",
       performance: "12.4"
     },
     {
+      id: 2,
       modelType: "aggressive",
       modelName: "Aggressive Growth",
       value: "99032.00",
@@ -35,6 +38,11 @@ export default function AiModels({ models }: AiModelsProps) {
   ];
 
   const aiModels = models && models.length > 0 ? models : defaultModels;
+
+  // Navigate to model profile
+  const handleModelClick = (modelId: number) => {
+    setLocation(`/model/${modelId}`);
+  };
 
   // AI Rebalancing mutation
   const rebalanceMutation = useMutation({
@@ -144,7 +152,11 @@ export default function AiModels({ models }: AiModelsProps) {
       <CardContent>
         <div className="space-y-4 mb-6">
           {aiModels.map((model, index) => (
-            <div key={index} className="flex justify-between items-center p-4 bg-secondary/50 rounded-lg hover:bg-secondary/70 transition-colors cursor-pointer group">
+            <div 
+              key={index} 
+              className="flex justify-between items-center p-4 bg-secondary/50 rounded-lg hover:bg-secondary/70 transition-colors cursor-pointer group"
+              onClick={() => handleModelClick(model.id || (index + 1))}
+            >
               <div>
                 <h4 className="font-semibold">{model.modelName}</h4>
                 <p className="text-sm text-muted-foreground">
