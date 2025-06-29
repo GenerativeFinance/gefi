@@ -82,13 +82,20 @@ export default function ProfileSetup() {
         investmentGoals: selectedGoals
       });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Profile Setup Complete!",
         description: "Welcome to GeFi. Your dashboard is ready.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      navigate('/');
+      
+      // Invalidate both user and profile queries to ensure fresh data
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
+      
+      // Small delay to ensure cache invalidation completes before navigation
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
     },
     onError: (error) => {
       toast({
