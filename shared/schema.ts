@@ -380,6 +380,42 @@ export const bountySubmissions = pgTable("bounty_submissions", {
   reviewedAt: timestamp("reviewed_at"),
 });
 
+// Bounty funding requests and management
+export const bountyFundingRequests = pgTable("bounty_funding_requests", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  fundingRequired: decimal("funding_required", { precision: 12, scale: 2 }).notNull(),
+  fundingRaised: decimal("funding_raised", { precision: 12, scale: 2 }).default("0.00"),
+  timeline: varchar("timeline", { length: 100 }).notNull(),
+  difficulty: varchar("difficulty", { length: 50 }).notNull(), // beginner, intermediate, advanced, expert
+  skills: text("skills").array().default([]),
+  deliverables: text("deliverables").array().default([]),
+  status: varchar("status", { length: 50 }).notNull().default("draft"), // draft, submitted, approved, funded, in_progress, completed, rejected
+  estimatedReward: decimal("estimated_reward", { precision: 12, scale: 2 }),
+  developerName: varchar("developer_name", { length: 255 }),
+  submitterId: varchar("submitter_id").notNull().references(() => users.id),
+  approvedBy: varchar("approved_by").references(() => users.id),
+  backers: integer("backers").default(0),
+  submittedAt: timestamp("submitted_at").defaultNow(),
+  approvedAt: timestamp("approved_at"),
+  fundedAt: timestamp("funded_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const bountyFundingContributions = pgTable("bounty_funding_contributions", {
+  id: serial("id").primaryKey(),
+  requestId: integer("request_id").notNull().references(() => bountyFundingRequests.id),
+  contributorId: varchar("contributor_id").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("active"), // active, refunded, claimed
+  contributedAt: timestamp("contributed_at").defaultNow(),
+  claimedAt: timestamp("claimed_at"),
+});
+
 // User profiles and performance tracking
 export const userProfiles = pgTable("user_profiles", {
   id: serial("id").primaryKey(),
@@ -601,6 +637,10 @@ export type Bounty = typeof bounties.$inferSelect;
 export type InsertBounty = typeof bounties.$inferInsert;
 export type BountySubmission = typeof bountySubmissions.$inferSelect;
 export type InsertBountySubmission = typeof bountySubmissions.$inferInsert;
+export type BountyFundingRequest = typeof bountyFundingRequests.$inferSelect;
+export type InsertBountyFundingRequest = typeof bountyFundingRequests.$inferInsert;
+export type BountyFundingContribution = typeof bountyFundingContributions.$inferSelect;
+export type InsertBountyFundingContribution = typeof bountyFundingContributions.$inferInsert;
 
 // User Profile Types
 export type UserProfile = typeof userProfiles.$inferSelect;
