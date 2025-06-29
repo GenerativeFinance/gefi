@@ -24,7 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Brain, Search, Bell, Menu, User, Settings, LogOut, Code, TrendingUp, BarChart3, Briefcase, X, Target, BookOpen, Home, Activity, DollarSign, Bot, CircleDollarSign, Shield, FileText, AlertTriangle, BookOpenCheck, Zap, Eye, TrendingDown } from "lucide-react";
+import { Brain, Search, Bell, Menu, User, Settings, LogOut, Code, TrendingUp, BarChart3, Briefcase, X, Target, BookOpen, Home, Activity, DollarSign, Bot, CircleDollarSign, Shield, FileText, AlertTriangle, BookOpenCheck, Zap, Eye, TrendingDown, Coins } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useLocation } from "wouter";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
@@ -445,6 +445,44 @@ export default function Header() {
                               </Link>
                             </DropdownMenuItem>
                           ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      {/* Funding Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className={`transition-colors ${
+                              ['/model-funding', '/bounty-funding', '/bot-funding'].some(path => location === path)
+                                ? 'text-primary font-medium' 
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <DollarSign className="h-4 w-4 mr-2" />
+                            Funding
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem asChild>
+                            <Link href="/model-funding">
+                              <Brain className="h-4 w-4 mr-2" />
+                              AI Model Funding
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/bounty-funding">
+                              <Target className="h-4 w-4 mr-2" />
+                              Bounty Funding
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/bot-funding">
+                              <Bot className="h-4 w-4 mr-2" />
+                              Bot Funding
+                            </Link>
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </>
