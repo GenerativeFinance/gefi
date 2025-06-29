@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NotificationBanner } from "@/components/ui/notification-banner";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { Web3Provider } from "@/contexts/Web3Context";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
@@ -41,6 +42,7 @@ import BountyFunding from "@/pages/bounty-funding";
 import ProfileSetup from "@/pages/profile-setup";
 import ModelProfile from "@/pages/model-profile";
 import TradingBots from "@/pages/trading-bots";
+import Web3DeFi from "@/pages/web3-defi";
 
 function Router() {
   const { isAuthenticated, isLoading, user, hasCompletedProfile } = useAuth();
@@ -98,6 +100,7 @@ function Router() {
             <Route path="/learning" component={Learning} />
             <Route path="/model/:id" component={ModelProfile} />
             <Route path="/trading-bots" component={TradingBots} />
+            <Route path="/web3-defi" component={Web3DeFi} />
           </>
         ) : (
           <>
@@ -122,10 +125,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <Web3Provider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </Web3Provider>
       </ThemeProvider>
     </QueryClientProvider>
   );
