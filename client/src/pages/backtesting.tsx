@@ -14,6 +14,9 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
+import AdvancedAnalytics from "@/components/backtesting/advanced-analytics";
+import RealTimeMonitor from "@/components/backtesting/real-time-monitor";
+import ModelOptimizer from "@/components/backtesting/model-optimizer";
 import { 
   Play, 
   Pause, 
@@ -592,8 +595,10 @@ export default function BacktestingEnvironment() {
 
         {/* Main Content */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="configure">Configure</TabsTrigger>
+            <TabsTrigger value="monitor">Live Monitor</TabsTrigger>
+            <TabsTrigger value="optimizer">Optimizer</TabsTrigger>
             <TabsTrigger value="results">Results</TabsTrigger>
             <TabsTrigger value="analysis">Analysis</TabsTrigger>
             <TabsTrigger value="comparison">Comparison</TabsTrigger>
