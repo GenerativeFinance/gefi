@@ -103,10 +103,45 @@ export default function Login() {
 
             <Separator />
 
-            <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                By signing in, you agree to our Terms of Service and Privacy Policy
-              </p>
+            {/* Sign Up Section */}
+            <div className="text-center space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm font-medium">New to GeFi?</p>
+                <p className="text-xs text-muted-foreground">
+                  Create an account using any of the options above. After signing up, you'll be able to:
+                </p>
+              </div>
+              
+              <div className="bg-muted/30 rounded-lg p-4 space-y-3">
+                <h4 className="text-sm font-semibold text-primary">Sign Up Benefits</h4>
+                <div className="grid grid-cols-1 gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                    <span>Complete your profile with trading preferences</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                    <span>Set up personalized risk tolerance settings</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                    <span>Access developer tools and AI model marketplace</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
+                    <span>Customize dashboard and notification preferences</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">
+                  By signing up, you agree to our{" "}
+                  <a href="/terms" className="text-primary hover:underline">Terms of Service</a>
+                  {" "}and{" "}
+                  <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
+                </p>
+              </div>
             </div>
 
             {/* Features Preview */}

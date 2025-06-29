@@ -40,6 +40,7 @@ import ModelFunding from "@/pages/model-funding";
 import BountyFunding from "@/pages/bounty-funding";
 import ModelProfile from "@/pages/model-profile";
 import TradingBots from "@/pages/trading-bots";
+import ProfileSetup from "@/pages/profile-setup";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -81,6 +82,7 @@ function Router() {
           <Route path="/learning-center" component={LearningCenter} />
           <Route path="/profile" component={UserProfile} />
           <Route path="/settings" component={Settings} />
+          <Route path="/profile-setup" component={ProfileSetup} />
           <Route path="/developer" component={DeveloperDashboard} />
           <Route path="/backtesting" component={BacktestingEnvironment} />
           <Route path="/live-trading" component={LiveTradingPage} />

@@ -432,6 +432,19 @@ export const userProfiles = pgTable("user_profiles", {
   specializations: text("specializations").array().default([]),
   yearsExperience: integer("years_experience"),
   
+  // Profile setup fields
+  company: varchar("company"),
+  jobTitle: varchar("job_title"),
+  investmentExperience: varchar("investment_experience"), // 'beginner', 'intermediate', 'advanced', 'expert'
+  riskTolerance: varchar("risk_tolerance"), // 'conservative', 'moderate', 'aggressive'
+  preferredAssetTypes: jsonb("preferred_asset_types"), // array of strings
+  investmentGoals: jsonb("investment_goals"), // array of strings
+  tradingFrequency: varchar("trading_frequency"), // 'daily', 'weekly', 'monthly', 'longterm'
+  portfolioSize: varchar("portfolio_size"), // 'under10k', '10k-50k', etc.
+  interestedInDeveloping: boolean("interested_in_developing").default(false),
+  notifications: jsonb("notifications"), // notification preferences object
+  profileCompleted: boolean("profile_completed").default(false),
+  
   // Performance metrics
   totalBountiesCompleted: integer("total_bounties_completed").default(0),
   totalRewardsEarned: integer("total_rewards_earned").default(0),
@@ -571,6 +584,8 @@ export const backtestPositions = pgTable("backtest_positions", {
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+
 export type Portfolio = typeof portfolios.$inferSelect;
 export type InsertPortfolio = typeof portfolios.$inferInsert;
 export type PortfolioAsset = typeof portfolioAssets.$inferSelect;

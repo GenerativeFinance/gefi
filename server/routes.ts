@@ -35,6 +35,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Profile setup route
+  app.post('/api/profile/setup', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const profileData = req.body;
+
+      // First update the user's basic information
+      if (profileData.firstName || profileData.lastName) {
+        await storage.updateUser(userId, {
+          firstName: profileData.firstName,
+          lastName: profileData.lastName
+        });
+      }
+
+      // Create or update user profile
+      const userProfile = await storage.createOrUpdateUserProfile(userId, {
+        company: profileData.company,
+        jobTitle: profileData.jobTitle,
+        location: profileData.location,
+        bio: profileData.bio,
+        investmentExperience: profileData.investmentExperience,
+        riskTolerance: profileData.riskTolerance,
+        preferredAssetTypes: profileData.preferredAssetTypes,
+        investmentGoals: profileData.investmentGoals,
+        tradingFrequency: profileData.tradingFrequency,
+        portfolioSize: profileData.portfolioSize,
+        interestedInDeveloping: profileData.interestedInDeveloping,
+        notifications: profileData.notifications,
+        profileCompleted: true
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Profile setup completed successfully",
+        profile: userProfile 
+      });
+    } catch (error) {
+      console.error("Error setting up user profile:", error);
+      res.status(500).json({ message: "Failed to setup profile" });
+    }
+  });
+
+  // Get user profile route
+  app.get('/api/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const profile = await storage.getUserProfile(userId);
+      res.json(profile);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
   // Portfolio routes with AI analysis
   app.get('/api/portfolio', isAuthenticated, async (req: any, res) => {
     try {
