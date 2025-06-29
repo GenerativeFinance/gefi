@@ -45,6 +45,7 @@ import ModelProfile from "@/pages/model-profile";
 import TradingBots from "@/pages/trading-bots";
 import Web3DeFi from "@/pages/web3-defi";
 import BlockchainContracts from "@/pages/blockchain-contracts";
+import MarketSentiment from "@/pages/market-sentiment";
 
 function Router() {
   const { isAuthenticated, isLoading, user, hasCompletedProfile } = useAuth();
@@ -105,6 +106,7 @@ function Router() {
             <Route path="/trading-bots" component={TradingBots} />
             <Route path="/web3-defi" component={Web3DeFi} />
             <Route path="/smart-contracts" component={BlockchainContracts} />
+            <Route path="/market-sentiment" component={MarketSentiment} />
           </>
         ) : (
           <>

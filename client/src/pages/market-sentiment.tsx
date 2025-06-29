@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Layout } from "@/components/layout/Layout";
+import Layout from "@/components/layout/Layout";
 import { 
   Brain, 
   TrendingUp, 
