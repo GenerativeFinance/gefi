@@ -224,16 +224,76 @@ export default function Header() {
                 <>
                   {investorNavItems.map((item) => (
                     <Link key={item.href} href={item.href}>
-                      <a className={`flex items-center space-x-1 transition-colors ${
-                        location === item.href 
-                          ? 'text-primary font-medium' 
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </a>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className={`transition-colors ${
+                          location === item.href 
+                            ? 'text-primary font-medium' 
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <item.icon className="h-4 w-4 mr-1" />
+                        {item.label}
+                      </Button>
                     </Link>
                   ))}
+                  
+                  {/* Funding Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className={`transition-colors ${
+                          fundingNavItems.some(item => location === item.href)
+                            ? 'text-primary font-medium' 
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <DollarSign className="h-4 w-4 mr-1" />
+                        Funding
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {fundingNavItems.map((item) => (
+                        <DropdownMenuItem key={item.href} asChild>
+                          <Link href={item.href}>
+                            <item.icon className="h-4 w-4 mr-2" />
+                            {item.label}
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Analytics Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className={`transition-colors ${
+                          analyticsNavItems.some(item => location === item.href)
+                            ? 'text-primary font-medium' 
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <BarChart3 className="h-4 w-4 mr-1" />
+                        Analytics
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {analyticsNavItems.map((item) => (
+                        <DropdownMenuItem key={item.href} asChild>
+                          <Link href={item.href}>
+                            <item.icon className="h-4 w-4 mr-2" />
+                            {item.label}
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </>
               )}
             </nav>
@@ -464,7 +524,7 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border">
               {/* Mobile Search */}
               <div className="px-3 py-2">
