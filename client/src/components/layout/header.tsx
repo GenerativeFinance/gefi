@@ -190,7 +190,6 @@ export default function Header() {
                               : 'text-muted-foreground hover:text-foreground'
                           }`}
                         >
-                          <BarChart3 className="h-4 w-4 mr-1" />
                           Dashboard
                         </Button>
                       </Link>
@@ -204,7 +203,6 @@ export default function Header() {
                               : 'text-muted-foreground hover:text-foreground'
                           }`}
                         >
-                          <BarChart3 className="h-4 w-4 mr-1" />
                           Backtesting
                         </Button>
                       </Link>
@@ -218,7 +216,6 @@ export default function Header() {
                               : 'text-muted-foreground hover:text-foreground'
                           }`}
                         >
-                          <Target className="h-4 w-4 mr-1" />
                           Bounties
                         </Button>
                       </Link>
@@ -234,38 +231,32 @@ export default function Header() {
                                 : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
-                            <BookOpen className="h-4 w-4 mr-1" />
                             Learning
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <DropdownMenuItem asChild>
                             <Link href="/learning?tab=get-started&type=developer">
-                              <BookOpen className="h-4 w-4 mr-2" />
                               Get Started
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link href="/learning?tab=tutorials&type=developer">
-                              <BookOpen className="h-4 w-4 mr-2" />
                               Tutorials
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link href="/learning?tab=webinars&type=developer">
-                              <BookOpen className="h-4 w-4 mr-2" />
                               Webinars
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link href="/learning?tab=blog&type=developer">
-                              <BookOpen className="h-4 w-4 mr-2" />
                               Blog
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link href="/learning?tab=faq&type=developer">
-                              <BookOpen className="h-4 w-4 mr-2" />
                               FAQ
                             </Link>
                           </DropdownMenuItem>
@@ -286,7 +277,6 @@ export default function Header() {
                               : 'text-muted-foreground hover:text-foreground'
                           }`}
                         >
-                          <Home className="h-4 w-4 mr-1" />
                           Home
                         </Button>
                       </Link>
