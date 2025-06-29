@@ -26,13 +26,16 @@ import {
   Filter,
   ArrowUpRight,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  ExternalLink,
+  Heart,
+  Code
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import type { BotFundingRequest } from "@shared/schema";
+import Layout from "@/components/layout/Layout";
 
 interface FundingRequestForm {
   title: string;
@@ -250,7 +253,8 @@ export default function BotFunding() {
   const completedBots = fundingRequests.filter((req: BotFundingRequest) => req.status === "completed").length;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <Layout>
+      <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -812,6 +816,7 @@ export default function BotFunding() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </Layout>
   );
 }
