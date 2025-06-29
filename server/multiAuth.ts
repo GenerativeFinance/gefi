@@ -149,6 +149,20 @@ export async function setupMultiAuth(app: Express) {
     })
   );
 
+  // General login route - redirects to first available OAuth provider
+  app.get('/api/login', (req, res) => {
+    // Priority order: Google, GitHub, LinkedIn
+    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+      return res.redirect('/api/auth/google');
+    } else if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+      return res.redirect('/api/auth/github');
+    } else if (process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET) {
+      return res.redirect('/api/auth/linkedin');
+    } else {
+      return res.status(500).json({ message: 'No OAuth providers configured' });
+    }
+  });
+
   // Logout
   app.get('/api/logout', (req, res) => {
     req.logout((err) => {
