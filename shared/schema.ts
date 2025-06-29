@@ -729,6 +729,91 @@ export const botPerformanceRelations = relations(botPerformance, ({ one }) => ({
   }),
 }));
 
+// Bot Funding Tables
+export const botFunding = pgTable("bot_funding", {
+  id: serial("id").primaryKey(),
+  botId: integer("bot_id").notNull().references(() => tradingBots.id),
+  investorId: varchar("investor_id").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  stake: decimal("stake", { precision: 5, scale: 2 }), // percentage stake in bot profits
+  status: varchar("status", { length: 50 }).notNull().default("pledged"), // pledged, confirmed, refunded
+  transactionId: varchar("transaction_id", { length: 255 }),
+  expectedReturn: decimal("expected_return", { precision: 5, scale: 2 }), // expected annual return %
+  riskLevel: varchar("risk_level", { length: 20 }).default("medium"), // low, medium, high
+  investmentPeriod: integer("investment_period").default(30), // days
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const botFundingRequests = pgTable("bot_funding_requests", {
+  id: serial("id").primaryKey(),
+  developerId: varchar("developer_id").notNull().references(() => users.id),
+  title: varchar("title").notNull(),
+  description: text("description").notNull(),
+  botType: varchar("bot_type").notNull(), // spot_grid, futures_grid, arbitrage, etc.
+  fundingGoal: decimal("funding_goal", { precision: 12, scale: 2 }).notNull(),
+  fundingRaised: decimal("funding_raised", { precision: 12, scale: 2 }).default("0.00"),
+  expectedReturn: decimal("expected_return", { precision: 5, scale: 2 }).notNull(),
+  riskLevel: varchar("risk_level", { length: 20 }).notNull(),
+  minimumInvestment: decimal("minimum_investment", { precision: 12, scale: 2 }).default("100.00"),
+  maximumInvestment: decimal("maximum_investment", { precision: 12, scale: 2 }),
+  tradingStrategy: text("trading_strategy").notNull(),
+  backtestResults: jsonb("backtest_results"), // JSON with performance metrics
+  requiredSkills: text("required_skills").array().default([]),
+  deliverables: text("deliverables").array().default([]),
+  timeline: varchar("timeline").notNull(), // "30 days", "3 months", etc.
+  status: varchar("status").notNull().default("open"), // open, funded, completed, cancelled
+  category: varchar("category").notNull(), // "DeFi", "Grid Trading", "Arbitrage", etc.
+  tags: text("tags").array().default([]),
+  developerExperience: text("developer_experience"),
+  fundingDeadline: timestamp("funding_deadline"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const botFundingContributions = pgTable("bot_funding_contributions", {
+  id: serial("id").primaryKey(),
+  requestId: integer("request_id").notNull().references(() => botFundingRequests.id),
+  contributorId: varchar("contributor_id").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  message: text("message"),
+  status: varchar("status").notNull().default("pledged"), // pledged, confirmed, refunded
+  transactionId: varchar("transaction_id"),
+  expectedStake: decimal("expected_stake", { precision: 5, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Bot Funding Relations
+export const botFundingRelations = relations(botFunding, ({ one }) => ({
+  bot: one(tradingBots, {
+    fields: [botFunding.botId],
+    references: [tradingBots.id],
+  }),
+  investor: one(users, {
+    fields: [botFunding.investorId],
+    references: [users.id],
+  }),
+}));
+
+export const botFundingRequestsRelations = relations(botFundingRequests, ({ one, many }) => ({
+  developer: one(users, {
+    fields: [botFundingRequests.developerId],
+    references: [users.id],
+  }),
+  contributions: many(botFundingContributions),
+}));
+
+export const botFundingContributionsRelations = relations(botFundingContributions, ({ one }) => ({
+  request: one(botFundingRequests, {
+    fields: [botFundingContributions.requestId],
+    references: [botFundingRequests.id],
+  }),
+  contributor: one(users, {
+    fields: [botFundingContributions.contributorId],
+    references: [users.id],
+  }),
+}));
+
 // User Profile Types
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type InsertUserProfile = typeof userProfiles.$inferInsert;
@@ -744,6 +829,14 @@ export type BotTrade = typeof botTrades.$inferSelect;
 export type InsertBotTrade = typeof botTrades.$inferInsert;
 export type BotPerformance = typeof botPerformance.$inferSelect;
 export type InsertBotPerformance = typeof botPerformance.$inferInsert;
+
+// Bot Funding Types
+export type BotFunding = typeof botFunding.$inferSelect;
+export type InsertBotFunding = typeof botFunding.$inferInsert;
+export type BotFundingRequest = typeof botFundingRequests.$inferSelect;
+export type InsertBotFundingRequest = typeof botFundingRequests.$inferInsert;
+export type BotFundingContribution = typeof botFundingContributions.$inferSelect;
+export type InsertBotFundingContribution = typeof botFundingContributions.$inferInsert;
 
 export const insertPortfolioSchema = createInsertSchema(portfolios).omit({
   id: true,
