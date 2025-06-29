@@ -202,19 +202,54 @@ export default function Header() {
                         </Button>
                       </Link>
 
-                      <Link href="/learning">
-                        <Button 
-                          variant="ghost" 
-                          className={`transition-colors ${
-                            location === '/learning'
-                              ? 'text-primary font-medium' 
-                              : 'text-muted-foreground hover:text-foreground'
-                          }`}
-                        >
-                          <BookOpen className="h-4 w-4 mr-1" />
-                          Learning
-                        </Button>
-                      </Link>
+                      {/* Learning Section for Developers */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            className={`transition-colors ${
+                              location === '/learning'
+                                ? 'text-primary font-medium' 
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <BookOpen className="h-4 w-4 mr-1" />
+                            Learning
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem asChild>
+                            <Link href="/learning?tab=get-started&type=developer">
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Get Started
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/learning?tab=tutorials&type=developer">
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Tutorials
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/learning?tab=webinars&type=developer">
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Webinars
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/learning?tab=blog&type=developer">
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Blog
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/learning?tab=faq&type=developer">
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              FAQ
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </>
                   ) : (
                     /* Investor Navigation */
@@ -289,6 +324,56 @@ export default function Header() {
                               </Link>
                             </DropdownMenuItem>
                           ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      {/* Learning Section for Investors */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className={`transition-colors ${
+                              location === '/learning'
+                                ? 'text-primary font-medium' 
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <BookOpen className="h-4 w-4 mr-1" />
+                            Learning
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem asChild>
+                            <Link href="/learning?tab=get-started&type=investor">
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Get Started
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/learning?tab=tutorials&type=investor">
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Tutorials
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/learning?tab=webinars&type=investor">
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Webinars
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/learning?tab=blog&type=investor">
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Blog
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/learning?tab=faq&type=investor">
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              FAQ
+                            </Link>
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </>

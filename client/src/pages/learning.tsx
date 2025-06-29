@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
 import Footer from "@/components/layout/footer";
@@ -21,8 +22,9 @@ import {
   FileText, Video, Download, Star, CheckCircle
 } from "lucide-react";
 
-type ContentType = 'tutorial' | 'guide' | 'workshop' | 'project' | 'certification' | 'documentation';
+type ContentType = 'tutorial' | 'guide' | 'workshop' | 'project' | 'certification' | 'documentation' | 'get-started' | 'webinar' | 'blog' | 'faq';
 type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'expert';
+type UserType = 'developer' | 'investor' | 'all';
 
 interface LearningContent {
   id: string;
@@ -39,29 +41,32 @@ interface LearningContent {
   progress?: number;
   instructor?: string;
   thumbnail?: string;
+  targetAudience: UserType;
 }
 
 const mockContent: LearningContent[] = [
+  // Developer Content
   {
-    id: "1",
-    title: "Introduction to AI in Financial Markets",
-    description: "Learn the fundamentals of applying artificial intelligence to financial market analysis and trading strategies.",
-    type: "tutorial",
+    id: "dev-1",
+    title: "Getting Started with AI Financial Models",
+    description: "Complete guide to creating your first AI financial model on GeFi platform.",
+    type: "get-started",
     difficulty: "beginner",
-    duration: "2h 30m",
-    category: "AI Fundamentals",
-    tags: ["AI", "Finance", "Basics"],
-    rating: 4.8,
-    enrollments: 2340,
-    instructor: "Dr. Sarah Chen",
+    duration: "1h 30m",
+    category: "Getting Started",
+    tags: ["Setup", "First Steps", "Platform"],
+    rating: 4.9,
+    enrollments: 3200,
+    instructor: "GeFi Team",
     isCompleted: false,
-    progress: 0
+    progress: 0,
+    targetAudience: "developer"
   },
   {
-    id: "2",
+    id: "dev-2",
     title: "Building Portfolio Optimization Models",
     description: "Master the art of creating AI-powered portfolio optimization algorithms using modern portfolio theory.",
-    type: "guide",
+    type: "tutorial",
     difficulty: "intermediate",
     duration: "4h 15m",
     category: "Portfolio Management",
@@ -70,13 +75,14 @@ const mockContent: LearningContent[] = [
     enrollments: 1850,
     instructor: "Prof. Michael Torres",
     isCompleted: true,
-    progress: 100
+    progress: 100,
+    targetAudience: "developer"
   },
   {
-    id: "3",
-    title: "Risk Management with Machine Learning",
-    description: "Comprehensive workshop on implementing ML-based risk assessment systems for financial institutions.",
-    type: "workshop",
+    id: "dev-3",
+    title: "Machine Learning for Risk Assessment",
+    description: "Comprehensive tutorial on implementing ML-based risk assessment systems for financial institutions.",
+    type: "tutorial",
     difficulty: "advanced",
     duration: "6h 00m",
     category: "Risk Management",
@@ -85,51 +91,122 @@ const mockContent: LearningContent[] = [
     enrollments: 980,
     instructor: "Dr. James Wilson",
     isCompleted: false,
-    progress: 45
+    progress: 45,
+    targetAudience: "developer"
   },
   {
-    id: "4",
-    title: "Algorithmic Trading Bot Project",
-    description: "Build your first algorithmic trading bot from scratch using real market data and backtesting frameworks.",
-    type: "project",
+    id: "dev-4",
+    title: "AI Model Development Workshop",
+    description: "Live workshop on developing and deploying AI financial models for the marketplace.",
+    type: "webinar",
     difficulty: "intermediate",
-    duration: "8h 30m",
-    category: "Algorithmic Trading",
-    tags: ["Trading", "Algorithms", "Project"],
+    duration: "2h 00m",
+    category: "Model Development",
+    tags: ["Workshop", "Live", "Development"],
+    rating: 4.8,
+    enrollments: 1250,
+    instructor: "Dr. Sarah Chen",
+    isCompleted: false,
+    progress: 0,
+    targetAudience: "developer"
+  },
+  {
+    id: "dev-5",
+    title: "Advanced Backtesting Strategies",
+    description: "Learn advanced backtesting techniques and performance optimization for trading algorithms.",
+    type: "blog",
+    difficulty: "advanced",
+    duration: "30m",
+    category: "Trading",
+    tags: ["Backtesting", "Optimization", "Strategies"],
     rating: 4.6,
-    enrollments: 1520,
+    enrollments: 890,
     instructor: "Alex Rodriguez",
     isCompleted: false,
-    progress: 0
+    progress: 0,
+    targetAudience: "developer"
   },
+  
+  // Investor Content
   {
-    id: "5",
-    title: "Financial AI Certification Program",
-    description: "Complete certification program covering all aspects of AI application in finance, from basics to advanced implementation.",
-    type: "certification",
-    difficulty: "expert",
-    duration: "40h 00m",
-    category: "Certification",
-    tags: ["Certification", "Complete", "Professional"],
-    rating: 4.9,
-    enrollments: 650,
-    instructor: "Multiple Instructors",
-    isCompleted: false,
-    progress: 0
-  },
-  {
-    id: "6",
-    title: "Platform API Documentation",
-    description: "Complete reference guide for GeFi platform APIs, including authentication, data access, and model deployment.",
-    type: "documentation",
+    id: "inv-1",
+    title: "Getting Started with GeFi Investment Platform",
+    description: "Complete guide to using GeFi for portfolio management and AI model subscriptions.",
+    type: "get-started",
     difficulty: "beginner",
-    duration: "1h 00m",
-    category: "Platform",
-    tags: ["API", "Documentation", "Platform"],
-    rating: 4.5,
-    enrollments: 3200,
+    duration: "45m",
+    category: "Getting Started",
+    tags: ["Platform", "Portfolio", "Basics"],
+    rating: 4.8,
+    enrollments: 5600,
+    instructor: "GeFi Team",
     isCompleted: false,
-    progress: 0
+    progress: 0,
+    targetAudience: "investor"
+  },
+  {
+    id: "inv-2",
+    title: "Understanding AI Investment Models",
+    description: "Learn how to evaluate and select AI models for your investment strategy.",
+    type: "tutorial",
+    difficulty: "beginner",
+    duration: "2h 00m",
+    category: "Investment Strategy",
+    tags: ["AI Models", "Selection", "Strategy"],
+    rating: 4.7,
+    enrollments: 2800,
+    instructor: "Jennifer Park",
+    isCompleted: false,
+    progress: 20,
+    targetAudience: "investor"
+  },
+  {
+    id: "inv-3",
+    title: "Portfolio Risk Management Webinar",
+    description: "Live session on managing portfolio risk using AI-powered analytics.",
+    type: "webinar",
+    difficulty: "intermediate",
+    duration: "1h 30m",
+    category: "Risk Management",
+    tags: ["Risk", "Portfolio", "Live"],
+    rating: 4.9,
+    enrollments: 1900,
+    instructor: "Dr. Robert Kim",
+    isCompleted: false,
+    progress: 0,
+    targetAudience: "investor"
+  },
+  {
+    id: "inv-4",
+    title: "Market Trends and AI Insights",
+    description: "Stay updated with the latest market trends and how AI models are performing.",
+    type: "blog",
+    difficulty: "beginner",
+    duration: "15m",
+    category: "Market Analysis",
+    tags: ["Trends", "Insights", "Performance"],
+    rating: 4.5,
+    enrollments: 4200,
+    instructor: "Market Analysis Team",
+    isCompleted: true,
+    progress: 100,
+    targetAudience: "investor"
+  },
+  {
+    id: "faq-1",
+    title: "Frequently Asked Questions",
+    description: "Common questions and answers about using GeFi platform for investments.",
+    type: "faq",
+    difficulty: "beginner",
+    duration: "Variable",
+    category: "Support",
+    tags: ["FAQ", "Help", "Support"],
+    rating: 4.8,
+    enrollments: 0,
+    instructor: "Support Team",
+    isCompleted: false,
+    progress: 0,
+    targetAudience: "all"
   }
 ];
 
