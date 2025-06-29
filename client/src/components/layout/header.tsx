@@ -35,7 +35,7 @@ import { useQuery } from "@tanstack/react-query";
 type DashboardMode = 'investor' | 'developer';
 
 export default function Header() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [location, navigate] = useLocation();
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('investor');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -118,49 +118,52 @@ export default function Header() {
             </Link>
 
 
-            {/* Dashboard Mode Switcher */}
-            <div className="hidden lg:flex items-center space-x-3">
-              <Select value={dashboardMode} onValueChange={handleDashboardModeChange}>
-                <SelectTrigger className="w-[140px] h-9">
-                  <SelectValue>
-                    <div className="flex items-center space-x-2">
-                      {dashboardMode === 'developer' ? (
-                        <>
-                          <Code className="h-4 w-4" />
-                          <span>Developer</span>
-                        </>
-                      ) : (
-                        <>
-                          <TrendingUp className="h-4 w-4" />
-                          <span>Investor</span>
-                        </>
-                      )}
-                    </div>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="investor">
-                    <div className="flex items-center space-x-2">
-                      <TrendingUp className="h-4 w-4" />
-                      <span>Investor Mode</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="developer">
-                    <div className="flex items-center space-x-2">
-                      <Code className="h-4 w-4" />
-                      <span>Developer Mode</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Badge variant={dashboardMode === 'developer' ? 'default' : 'secondary'} className="text-xs">
-                {dashboardMode === 'developer' ? 'DEV' : 'INV'}
-              </Badge>
-            </div>
+            {/* Dashboard Mode Switcher - Only for authenticated users */}
+            {isAuthenticated && (
+              <div className="hidden lg:flex items-center space-x-3">
+                <Select value={dashboardMode} onValueChange={handleDashboardModeChange}>
+                  <SelectTrigger className="w-[140px] h-9">
+                    <SelectValue>
+                      <div className="flex items-center space-x-2">
+                        {dashboardMode === 'developer' ? (
+                          <>
+                            <Code className="h-4 w-4" />
+                            <span>Developer</span>
+                          </>
+                        ) : (
+                          <>
+                            <TrendingUp className="h-4 w-4" />
+                            <span>Investor</span>
+                          </>
+                        )}
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="investor">
+                      <div className="flex items-center space-x-2">
+                        <TrendingUp className="h-4 w-4" />
+                        <span>Investor Mode</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="developer">
+                      <div className="flex items-center space-x-2">
+                        <Code className="h-4 w-4" />
+                        <span>Developer Mode</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Badge variant={dashboardMode === 'developer' ? 'default' : 'secondary'} className="text-xs">
+                  {dashboardMode === 'developer' ? 'DEV' : 'INV'}
+                </Badge>
+              </div>
+            )}
 
-            {/* Desktop Navigation Menu */}
-            <nav className="hidden lg:flex space-x-1">
+            {/* Desktop Navigation Menu - Only for authenticated users */}
+            {isAuthenticated && (
+              <nav className="hidden lg:flex space-x-1">
               {dashboardMode === 'developer' ? (
                 <>
                   {/* Developer Navigation Items */}
@@ -297,11 +300,14 @@ export default function Header() {
                   </DropdownMenu>
                 </>
               )}
-            </nav>
+              </nav>
+            )}
           </div>
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
+            {isAuthenticated ? (
+              <>
             <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
               <DialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="hidden sm:flex">
@@ -506,6 +512,16 @@ export default function Header() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+              </>
+            ) : (
+              /* Sign In Button for unauthenticated users */
+              <Button 
+                onClick={() => window.location.href = '/api/login'}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Sign In
+              </Button>
+            )}
 
             {/* Mobile Menu Button */}
             <Button 
