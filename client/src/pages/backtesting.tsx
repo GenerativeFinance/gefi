@@ -763,9 +763,62 @@ export default function BacktestingEnvironment() {
             </div>
           </TabsContent>
 
+          <TabsContent value="monitor" className="space-y-4">
+            {selectedBacktest && selectedBacktest.status === 'running' ? (
+              <RealTimeMonitor 
+                backtest={selectedBacktest}
+                onStop={() => {
+                  // Handle backtest stop
+                  console.log("Stopping backtest");
+                }}
+                onPause={() => {
+                  // Handle backtest pause
+                  console.log("Pausing backtest");
+                }}
+                onResume={() => {
+                  // Handle backtest resume
+                  console.log("Resuming backtest");
+                }}
+              />
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center h-40">
+                  <Activity className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-lg font-semibold mb-2">No active backtest</p>
+                  <p className="text-muted-foreground text-center">
+                    Start a new backtest to see real-time monitoring capabilities.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="optimizer" className="space-y-4">
+            {selectedBacktest ? (
+              <ModelOptimizer 
+                backtest={selectedBacktest}
+                onOptimize={(parameters) => {
+                  // Handle optimization
+                  console.log("Optimizing with parameters:", parameters);
+                }}
+              />
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center h-40">
+                  <Brain className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-lg font-semibold mb-2">Select a backtest to optimize</p>
+                  <p className="text-muted-foreground text-center">
+                    Choose a completed backtest to explore optimization opportunities.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
           <TabsContent value="analysis" className="space-y-4">
             {selectedBacktest && selectedBacktest.status === 'completed' ? (
               <div className="space-y-6">
+                <AdvancedAnalytics backtest={selectedBacktest} />
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
