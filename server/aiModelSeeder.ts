@@ -1,5 +1,5 @@
 import { storage } from "./storage";
-import { InsertAiModelCategory, InsertAiModelSubcategory } from "@shared/schema";
+import { InsertAiModelCategory, InsertAiModelSubcategory, InsertDeveloperModel } from "@shared/schema";
 
 // Comprehensive AI Financial Model Categories and Subcategories
 export const AI_MODEL_CATEGORIES = [

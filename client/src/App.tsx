@@ -36,6 +36,7 @@ import DataProcessingAgreement from "@/pages/data-processing-agreement";
 import SecurityCompliance from "@/pages/security-compliance";
 import BugBountyProgram from "@/pages/bug-bounty-program";
 import EnterpriseSales from "@/pages/enterprise-sales";
+import ModelFunding from "@/pages/model-funding";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -80,6 +81,7 @@ function Router() {
           <Route path="/developer" component={DeveloperDashboard} />
           <Route path="/backtesting" component={BacktestingEnvironment} />
           <Route path="/live-trading" component={LiveTradingPage} />
+          <Route path="/model-funding" component={ModelFunding} />
           <Route path="/bounties" component={Bounties} />
           <Route path="/bounties/leaderboard" component={BountyLeaderboard} />
           <Route path="/user/:userId" component={UserDetail} />
