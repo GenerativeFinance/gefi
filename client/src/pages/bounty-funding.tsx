@@ -70,12 +70,12 @@ export default function BountyFundingPage() {
   });
 
   // Fetch bounty funding requests
-  const { data: fundingRequests, isLoading } = useQuery({
+  const { data: fundingRequests = [], isLoading } = useQuery({
     queryKey: ["/api/bounty-funding"],
   });
 
   // Fetch categories
-  const { data: categories } = useQuery({
+  const { data: categories = [] } = useQuery({
     queryKey: ["/api/bounty-categories"],
   });
 
@@ -167,10 +167,11 @@ export default function BountyFundingPage() {
     }
   };
 
-  const filteredRequests = (fundingRequests || []).filter((request: BountyFundingRequest) => {
-    if (selectedCategory !== "all" && request.category !== selectedCategory) return false;
-    return true;
-  }).sort((a: BountyFundingRequest, b: BountyFundingRequest) => {
+  const filteredRequests = Array.isArray(fundingRequests) 
+    ? fundingRequests.filter((request: any) => {
+        if (selectedCategory !== "all" && request.category !== selectedCategory) return false;
+        return true;
+      }).sort((a: any, b: any) => {
     switch (sortBy) {
       case 'newest':
         return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
@@ -181,7 +182,7 @@ export default function BountyFundingPage() {
       default:
         return 0;
     }
-  });
+  }) : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
