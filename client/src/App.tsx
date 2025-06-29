@@ -46,6 +46,11 @@ import TradingBots from "@/pages/trading-bots";
 import Web3DeFi from "@/pages/web3-defi";
 import BlockchainContracts from "@/pages/blockchain-contracts";
 import MarketSentiment from "@/pages/market-sentiment";
+import AIModels from "@/pages/ai-models";
+import RiskDistribution from "@/pages/risk-distribution";
+import RebalanceActions from "@/pages/rebalance-actions";
+import CurrentRiskAssessment from "@/pages/current-risk-assessment";
+import OrderBook from "@/pages/order-book";
 
 function Router() {
   const { isAuthenticated, isLoading, user, hasCompletedProfile } = useAuth();
@@ -107,6 +112,11 @@ function Router() {
             <Route path="/web3-defi" component={Web3DeFi} />
             <Route path="/smart-contracts" component={BlockchainContracts} />
             <Route path="/market-sentiment" component={MarketSentiment} />
+            <Route path="/ai-models" component={AIModels} />
+            <Route path="/risk-distribution" component={RiskDistribution} />
+            <Route path="/rebalance-actions" component={RebalanceActions} />
+            <Route path="/current-risk-assessment" component={CurrentRiskAssessment} />
+            <Route path="/order-book" component={OrderBook} />
           </>
         ) : (
           <>
