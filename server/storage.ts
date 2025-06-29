@@ -539,7 +539,7 @@ export class DatabaseStorage implements IStorage {
     return newFunding;
   }
 
-  async getUserModelFunding(userId: string): Promise<ModelFunding[]> {
+  async getUserModelFunding(userId: string): Promise<any[]> {
     try {
       return await db.select({
         id: modelFunding.id,
@@ -547,7 +547,6 @@ export class DatabaseStorage implements IStorage {
         investorId: modelFunding.investorId,
         amount: modelFunding.amount,
         status: modelFunding.status,
-        transactionId: modelFunding.transactionId,
         createdAt: modelFunding.createdAt,
         updatedAt: modelFunding.updatedAt,
         modelName: developerModels.name,
