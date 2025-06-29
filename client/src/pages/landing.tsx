@@ -458,7 +458,7 @@ export default function Landing() {
           </div>
           
           <div className="border-t border-border mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-muted-foreground">© 2025 GenoFi. All rights reserved.</p>
+            <p className="text-muted-foreground">© 2025 GeFi. All rights reserved.</p>
             <p className="text-muted-foreground mt-4 md:mt-0">Powered by AI • Built for the Future</p>
           </div>
         </div>

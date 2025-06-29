@@ -62,7 +62,7 @@ export default function Login() {
         {/* Right Side - Login Form */}
         <Card className="glass w-full max-w-md mx-auto">
           <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-2xl">Welcome to GenoFi</CardTitle>
+            <CardTitle className="text-2xl">Welcome to GeFi</CardTitle>
             <p className="text-muted-foreground">
               Sign in to access your financial analytics dashboard
             </p>
