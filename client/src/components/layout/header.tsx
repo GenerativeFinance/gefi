@@ -40,6 +40,7 @@ export default function Header() {
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('investor');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Fetch AI models for search
   const { data: aiModels = [] } = useQuery({
@@ -59,7 +60,6 @@ export default function Header() {
     setSearchQuery("");
     navigate(`/marketplace?model=${modelId}`);
   };
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Determine dashboard mode based on current route
   useEffect(() => {
@@ -83,11 +83,17 @@ export default function Header() {
     { href: "/", label: "Home", icon: TrendingUp },
     { href: "/portfolio", label: "Portfolio", icon: BarChart3 },
     { href: "/live-trading", label: "Trading", icon: Activity },
+    { href: "/marketplace", label: "Marketplace", icon: Briefcase },
+  ];
+
+  const fundingNavItems = [
     { href: "/model-funding", label: "Model Funding", icon: DollarSign },
     { href: "/bounty-funding", label: "Bounty Funding", icon: Target },
+  ];
+
+  const analyticsNavItems = [
     { href: "/reports", label: "Reports", icon: BarChart3 },
     { href: "/risk-management", label: "Risk", icon: BarChart3 },
-    { href: "/marketplace", label: "Marketplace", icon: Briefcase },
   ];
 
   const developerNavItems = [
