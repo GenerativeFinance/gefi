@@ -723,7 +723,6 @@ export type UserSkillRating = typeof userSkillRatings.$inferSelect;
 export type InsertUserSkillRating = typeof userSkillRatings.$inferInsert;
 
 // Trading Bot Types
-// Trading Bot Types
 export type TradingBot = typeof tradingBots.$inferSelect;
 export type InsertTradingBot = typeof tradingBots.$inferInsert;
 export type BotTrade = typeof botTrades.$inferSelect;

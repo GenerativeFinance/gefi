@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
+import { TradingBot as TradingBotDB } from "@shared/schema";
 import { 
   Bot, 
   TrendingUp, 
@@ -30,25 +31,15 @@ import {
   Calendar
 } from "lucide-react";
 
-interface TradingBot {
-  id: number;
-  name: string;
-  type: string;
-  symbol: string;
-  status: 'active' | 'paused' | 'stopped';
-  pnl: number;
-  pnlPercentage: number;
-  roi: number;
-  runtime: string;
-  minInvestment: number;
-  totalTrades: number;
-  successfulTrades: number;
-  profitPerGrid?: number;
-  grids?: number;
-  priceRange?: string;
-  mode?: string;
-  description: string;
-  icon: any;
+// Using TradingBot type from shared schema
+
+// Extended type for UI purposes
+interface TradingBotWithUI extends TradingBot {
+  pnlPercentage?: number;
+  roi?: number;
+  minInvestment?: number;
+  description?: string;
+  icon?: any;
   chartData?: number[];
 }
 
@@ -175,7 +166,7 @@ export default function TradingBots() {
   const [createBotOpen, setCreateBotOpen] = useState(false);
   const [selectedBotType, setSelectedBotType] = useState('');
 
-  const { data: bots = mockTradingBots } = useQuery({
+  const { data: bots = mockTradingBots } = useQuery<TradingBot[]>({
     queryKey: ['/api/trading-bots'],
     retry: false,
   });
