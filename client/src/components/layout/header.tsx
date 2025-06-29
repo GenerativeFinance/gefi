@@ -527,6 +527,50 @@ export default function Header() {
         {mobileMenuOpen && (
           <div className="lg:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border">
+              
+              {/* Mobile Dashboard Switcher - Top Priority */}
+              <div className="px-3 py-2 border-b border-border mb-2">
+                <div className="text-xs font-medium text-muted-foreground mb-2">DASHBOARD MODE</div>
+                <Select value={dashboardMode} onValueChange={handleDashboardModeChange}>
+                  <SelectTrigger className="w-full h-10 bg-background">
+                    <SelectValue>
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center space-x-2">
+                          {dashboardMode === 'developer' ? (
+                            <>
+                              <Code className="h-4 w-4" />
+                              <span>Developer Dashboard</span>
+                            </>
+                          ) : (
+                            <>
+                              <TrendingUp className="h-4 w-4" />
+                              <span>Investor Dashboard</span>
+                            </>
+                          )}
+                        </div>
+                        <Badge variant={dashboardMode === 'developer' ? 'default' : 'secondary'} className="text-xs ml-2">
+                          {dashboardMode === 'developer' ? 'DEV' : 'INV'}
+                        </Badge>
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="investor">
+                      <div className="flex items-center space-x-2">
+                        <TrendingUp className="h-4 w-4" />
+                        <span>Investor Dashboard</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="developer">
+                      <div className="flex items-center space-x-2">
+                        <Code className="h-4 w-4" />
+                        <span>Developer Dashboard</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Mobile Search */}
               <div className="px-3 py-2">
                 <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
@@ -629,43 +673,7 @@ export default function Header() {
                   </DialogContent>
                 </Dialog>
               </div>
-              
-              {/* Mobile Dashboard Switcher */}
-              <div className="px-3 py-2">
-                <Select value={dashboardMode} onValueChange={handleDashboardModeChange}>
-                  <SelectTrigger className="w-full h-9">
-                    <SelectValue>
-                      <div className="flex items-center space-x-2">
-                        {dashboardMode === 'developer' ? (
-                          <>
-                            <Code className="h-4 w-4" />
-                            <span>Developer Dashboard</span>
-                          </>
-                        ) : (
-                          <>
-                            <TrendingUp className="h-4 w-4" />
-                            <span>Investor Dashboard</span>
-                          </>
-                        )}
-                      </div>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="investor">
-                      <div className="flex items-center space-x-2">
-                        <TrendingUp className="h-4 w-4" />
-                        <span>Investor Dashboard</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="developer">
-                      <div className="flex items-center space-x-2">
-                        <Code className="h-4 w-4" />
-                        <span>Developer Dashboard</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+
 
               {/* Mobile Navigation */}
               {dashboardMode === 'developer' ? (
