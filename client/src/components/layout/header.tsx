@@ -158,8 +158,8 @@ export default function Header() {
               </Badge>
             </div>
 
-            {/* Navigation Menu */}
-            <nav className="hidden md:flex space-x-6">
+            {/* Desktop Navigation Menu */}
+            <nav className="hidden lg:flex space-x-1">
               {dashboardMode === 'developer' ? (
                 <>
                   {/* Developer Navigation Items */}
@@ -450,10 +450,14 @@ export default function Header() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="md:hidden"
+              className="lg:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              <Menu className="h-5 w-5" />
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </Button>
           </div>
         </div>
