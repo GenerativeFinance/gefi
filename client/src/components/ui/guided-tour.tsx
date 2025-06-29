@@ -159,13 +159,13 @@ export default function GuidedTour() {
   return (
     <>
       {/* Help Button - always visible */}
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed top-4 right-4 z-40">
         <Button
           onClick={startTour}
-          className="rounded-full w-12 h-12 bg-primary hover:bg-primary/90 shadow-lg"
+          className="rounded-full w-10 h-10 bg-primary hover:bg-primary/90 shadow-lg"
           title="Take a guided tour"
         >
-          <HelpCircle className="h-5 w-5" />
+          <HelpCircle className="h-4 w-4" />
         </Button>
       </div>
 
