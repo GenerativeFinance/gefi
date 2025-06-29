@@ -171,9 +171,7 @@ export default function Header() {
                     </SelectContent>
                   </Select>
                   
-                  <Badge variant={dashboardMode === 'developer' ? 'default' : 'secondary'} className="text-xs">
-                    {dashboardMode === 'developer' ? 'DEV' : 'INV'}
-                  </Badge>
+
                 </div>
 
                 {/* Desktop Navigation Menu */}
@@ -695,12 +693,7 @@ export default function Header() {
                               </div>
                             </div>
                           </div>
-                          <Badge 
-                            variant={dashboardMode === 'developer' ? 'default' : 'secondary'} 
-                            className={`text-xs font-bold ${dashboardMode === 'developer' ? 'bg-purple-600' : 'bg-blue-600'} text-white`}
-                          >
-                            {dashboardMode === 'developer' ? 'DEV' : 'INV'}
-                          </Badge>
+
                         </div>
                       </div>
 
@@ -817,7 +810,7 @@ export default function Header() {
                         <div className="flex items-center space-x-2 px-3 py-2 text-primary bg-primary/10 rounded-md">
                           <Code className="h-5 w-5" />
                           <span className="text-base font-medium">Developer</span>
-                          <Badge variant="secondary" className="text-xs bg-purple-600 text-white">DEV</Badge>
+
                         </div>
                       </div>
                       
