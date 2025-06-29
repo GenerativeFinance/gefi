@@ -116,37 +116,54 @@ export async function setupMultiAuth(app: Express) {
 
   // Google
   app.get('/api/auth/google', 
-    passport.authenticate('google', { scope: ['profile', 'email'] })
+    passport.authenticate('google', { 
+      scope: ['profile', 'email'],
+      session: true
+    })
   );
   app.get('/api/auth/google/callback', 
     passport.authenticate('google', { 
-      successRedirect: '/',
       failureRedirect: '/login-failed'
-    })
+    }),
+    (req, res) => {
+      // Custom redirect logic to ensure single-window experience
+      res.redirect('/');
+    }
   );
 
   // GitHub
   app.get('/api/auth/github',
-    passport.authenticate('github', { scope: ['user:email'] })
+    passport.authenticate('github', { 
+      scope: ['user:email'],
+      session: true
+    })
   );
   app.get('/api/auth/github/callback',
     passport.authenticate('github', {
-      successRedirect: '/',
       failureRedirect: '/login-failed'
-    })
+    }),
+    (req, res) => {
+      // Custom redirect logic to ensure single-window experience
+      res.redirect('/');
+    }
   );
 
 
 
   // LinkedIn
   app.get('/api/auth/linkedin',
-    passport.authenticate('linkedin')
+    passport.authenticate('linkedin', {
+      session: true
+    })
   );
   app.get('/api/auth/linkedin/callback',
     passport.authenticate('linkedin', {
-      successRedirect: '/',
       failureRedirect: '/login-failed'
-    })
+    }),
+    (req, res) => {
+      // Custom redirect logic to ensure single-window experience
+      res.redirect('/');
+    }
   );
 
   // General login route - redirect to login page

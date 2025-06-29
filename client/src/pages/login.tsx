@@ -1,11 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain } from "lucide-react";
+import { Brain, Loader2 } from "lucide-react";
 import { FaGoogle, FaGithub, FaLinkedin } from "react-icons/fa";
+import { useState } from "react";
 
 export default function Login() {
+  const [loading, setLoading] = useState<string | null>(null);
+
   const handleLogin = (provider: string) => {
-    window.location.href = `/api/auth/${provider}`;
+    setLoading(provider);
+    // Use replace instead of href to prevent back button issues
+    window.location.replace(`/api/auth/${provider}`);
   };
 
   return (
@@ -35,29 +40,44 @@ export default function Login() {
             {/* Google Login */}
             <Button
               onClick={() => handleLogin('google')}
-              className="w-full h-12 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 flex items-center justify-center space-x-3"
+              disabled={loading !== null}
+              className="w-full h-12 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 flex items-center justify-center space-x-3 disabled:opacity-50"
               variant="outline"
             >
-              <FaGoogle className="h-5 w-5 text-red-500" />
-              <span>Continue with Google</span>
+              {loading === 'google' ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <FaGoogle className="h-5 w-5 text-red-500" />
+              )}
+              <span>{loading === 'google' ? 'Connecting...' : 'Continue with Google'}</span>
             </Button>
 
             {/* GitHub Login */}
             <Button
               onClick={() => handleLogin('github')}
-              className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center space-x-3"
+              disabled={loading !== null}
+              className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center space-x-3 disabled:opacity-50"
             >
-              <FaGithub className="h-5 w-5" />
-              <span>Continue with GitHub</span>
+              {loading === 'github' ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <FaGithub className="h-5 w-5" />
+              )}
+              <span>{loading === 'github' ? 'Connecting...' : 'Continue with GitHub'}</span>
             </Button>
 
             {/* LinkedIn Login */}
             <Button
               onClick={() => handleLogin('linkedin')}
-              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center space-x-3"
+              disabled={loading !== null}
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center space-x-3 disabled:opacity-50"
             >
-              <FaLinkedin className="h-5 w-5" />
-              <span>Continue with LinkedIn</span>
+              {loading === 'linkedin' ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <FaLinkedin className="h-5 w-5" />
+              )}
+              <span>{loading === 'linkedin' ? 'Connecting...' : 'Continue with LinkedIn'}</span>
             </Button>
 
             {/* Divider */}
