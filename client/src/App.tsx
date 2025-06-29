@@ -43,7 +43,7 @@ import ModelProfile from "@/pages/model-profile";
 import TradingBots from "@/pages/trading-bots";
 
 function Router() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user, hasCompletedProfile } = useAuth();
 
   if (isLoading) {
     return (
@@ -70,38 +70,45 @@ function Router() {
       
       {/* Protected routes */}
       {isAuthenticated ? (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/home" component={Home} />
-          <Route path="/analytics" component={AnalyticsDashboard} />
-          <Route path="/portfolio" component={Portfolio} />
-          <Route path="/reports" component={Reports} />
-          <Route path="/reports/all" component={ReportsAll} />
-          <Route path="/alerts/all" component={AlertsAll} />
-          <Route path="/risk-management" component={RiskManagement} />
-          <Route path="/marketplace" component={Marketplace} />
-          <Route path="/pricing" component={Pricing} />
-          <Route path="/checkout" component={Checkout} />
-          <Route path="/learning-center" component={LearningCenter} />
-          <Route path="/profile" component={UserProfile} />
-          <Route path="/settings" component={Settings} />
-          <Route path="/profile-setup" component={ProfileSetup} />
-          <Route path="/developer" component={DeveloperDashboard} />
-          <Route path="/backtesting" component={BacktestingEnvironment} />
-          <Route path="/live-trading" component={LiveTradingPage} />
-          <Route path="/model-funding" component={ModelFunding} />
-          <Route path="/bounty-funding" component={BountyFunding} />
-          <Route path="/bounties" component={Bounties} />
-          <Route path="/bounties/leaderboard" component={BountyLeaderboard} />
-          <Route path="/user/:userId" component={UserDetail} />
-          <Route path="/learning" component={Learning} />
-          <Route path="/model/:id" component={ModelProfile} />
-          <Route path="/trading-bots" component={TradingBots} />
-        </>
+        hasCompletedProfile ? (
+          <>
+            <Route path="/" component={Home} />
+            <Route path="/home" component={Home} />
+            <Route path="/analytics" component={AnalyticsDashboard} />
+            <Route path="/portfolio" component={Portfolio} />
+            <Route path="/reports" component={Reports} />
+            <Route path="/reports/all" component={ReportsAll} />
+            <Route path="/alerts/all" component={AlertsAll} />
+            <Route path="/risk-management" component={RiskManagement} />
+            <Route path="/marketplace" component={Marketplace} />
+            <Route path="/pricing" component={Pricing} />
+            <Route path="/checkout" component={Checkout} />
+            <Route path="/learning-center" component={LearningCenter} />
+            <Route path="/profile" component={UserProfile} />
+            <Route path="/settings" component={Settings} />
+            <Route path="/profile-setup" component={ProfileSetup} />
+            <Route path="/developer" component={DeveloperDashboard} />
+            <Route path="/backtesting" component={BacktestingEnvironment} />
+            <Route path="/live-trading" component={LiveTradingPage} />
+            <Route path="/model-funding" component={ModelFunding} />
+            <Route path="/bounty-funding" component={BountyFunding} />
+            <Route path="/bounties" component={Bounties} />
+            <Route path="/bounties/leaderboard" component={BountyLeaderboard} />
+            <Route path="/user/:userId" component={UserDetail} />
+            <Route path="/learning" component={Learning} />
+            <Route path="/model/:id" component={ModelProfile} />
+            <Route path="/trading-bots" component={TradingBots} />
+          </>
+        ) : (
+          <>
+            <Route path="/" component={ProfileSetup} />
+            <Route path="*" component={ProfileSetup} />
+          </>
+        )
       ) : (
         <>
-          <Route path="/" component={Login} />
-          <Route path="*" component={Login} />
+          <Route path="/" component={Landing} />
+          <Route path="*" component={Landing} />
         </>
       )}
       
