@@ -212,6 +212,14 @@ Changelog:
   * Integrated funding contribution system with real-time progress updates and backer tracking
   * Added comprehensive form for submitting new funding requests with validation and user authentication
   * Built statistics dashboard showing total funded amounts, active bounties, contributors, and completion rates
+- June 29, 2025. Enhanced mobile navigation with responsive dashboard switching dropdown
+  * Created sophisticated mobile dashboard switcher with visual feedback and smooth transitions
+  * Added current mode display with contextual descriptions and colored badges (DEV/INV)
+  * Implemented two-button grid layout for easy dashboard mode switching on mobile
+  * Added quick action buttons that dynamically change based on current dashboard mode
+  * Enhanced UX with gradient backgrounds, hover effects, and visual indicators
+  * Integrated quick navigation to key features (Dashboard, Backtest for dev; Portfolio, Bots for investor)
+  * Improved mobile menu hierarchy with prominent dashboard mode section at top
 ```
 
 ## User Preferences

@@ -528,47 +528,144 @@ export default function Header() {
           <div className="lg:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border">
               
-              {/* Mobile Dashboard Switcher - Top Priority */}
-              <div className="px-3 py-2 border-b border-border mb-2">
-                <div className="text-xs font-medium text-muted-foreground mb-2">DASHBOARD MODE</div>
-                <Select value={dashboardMode} onValueChange={handleDashboardModeChange}>
-                  <SelectTrigger className="w-full h-10 bg-background">
-                    <SelectValue>
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center space-x-2">
+              {/* Enhanced Mobile Dashboard Switcher */}
+              <div className="px-3 py-3 border-b border-border mb-3 bg-gradient-to-r from-background to-muted/20 rounded-lg mx-2">
+                <div className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Dashboard Mode</div>
+                
+                {/* Custom Dropdown for Better Mobile Experience */}
+                <div className="space-y-2">
+                  {/* Current Selection Display */}
+                  <div className="bg-background border border-border rounded-lg p-3 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-2 rounded-full ${dashboardMode === 'developer' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300' : 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'}`}>
                           {dashboardMode === 'developer' ? (
-                            <>
-                              <Code className="h-4 w-4" />
-                              <span>Developer Dashboard</span>
-                            </>
+                            <Code className="h-4 w-4" />
                           ) : (
-                            <>
-                              <TrendingUp className="h-4 w-4" />
-                              <span>Investor Dashboard</span>
-                            </>
+                            <TrendingUp className="h-4 w-4" />
                           )}
                         </div>
-                        <Badge variant={dashboardMode === 'developer' ? 'default' : 'secondary'} className="text-xs ml-2">
-                          {dashboardMode === 'developer' ? 'DEV' : 'INV'}
-                        </Badge>
+                        <div>
+                          <div className="font-medium text-sm">
+                            {dashboardMode === 'developer' ? 'Developer Dashboard' : 'Investor Dashboard'}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {dashboardMode === 'developer' ? 'Build and deploy AI models' : 'Manage investments and trading'}
+                          </div>
+                        </div>
                       </div>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="investor">
-                      <div className="flex items-center space-x-2">
-                        <TrendingUp className="h-4 w-4" />
-                        <span>Investor Dashboard</span>
+                      <Badge 
+                        variant={dashboardMode === 'developer' ? 'default' : 'secondary'} 
+                        className={`text-xs font-bold ${dashboardMode === 'developer' ? 'bg-purple-600' : 'bg-blue-600'} text-white`}
+                      >
+                        {dashboardMode === 'developer' ? 'DEV' : 'INV'}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Switch Options */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => handleDashboardModeChange('investor')}
+                      className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                        dashboardMode === 'investor'
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/50'
+                          : 'border-border hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-950/20'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className={`p-2 rounded-full ${dashboardMode === 'investor' ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'}`}>
+                          <TrendingUp className="h-4 w-4" />
+                        </div>
+                        <div className="text-xs font-medium">Investor</div>
+                        {dashboardMode === 'investor' && (
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        )}
                       </div>
-                    </SelectItem>
-                    <SelectItem value="developer">
-                      <div className="flex items-center space-x-2">
-                        <Code className="h-4 w-4" />
-                        <span>Developer Dashboard</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleDashboardModeChange('developer')}
+                      className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                        dashboardMode === 'developer'
+                          ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/50'
+                          : 'border-border hover:border-purple-300 hover:bg-purple-50/50 dark:hover:bg-purple-950/20'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className={`p-2 rounded-full ${dashboardMode === 'developer' ? 'bg-purple-500 text-white' : 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300'}`}>
+                          <Code className="h-4 w-4" />
+                        </div>
+                        <div className="text-xs font-medium">Developer</div>
+                        {dashboardMode === 'developer' && (
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        )}
                       </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                    </button>
+                  </div>
+
+                  {/* Quick Actions Based on Mode */}
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <div className="text-xs text-muted-foreground mb-2">Quick Actions</div>
+                    <div className="flex gap-2">
+                      {dashboardMode === 'developer' ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 h-8 text-xs"
+                            onClick={() => {
+                              navigate('/developer');
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <BarChart3 className="h-3 w-3 mr-1" />
+                            Dashboard
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 h-8 text-xs"
+                            onClick={() => {
+                              navigate('/backtesting');
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <Activity className="h-3 w-3 mr-1" />
+                            Backtest
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 h-8 text-xs"
+                            onClick={() => {
+                              navigate('/portfolio');
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <BarChart3 className="h-3 w-3 mr-1" />
+                            Portfolio
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 h-8 text-xs"
+                            onClick={() => {
+                              navigate('/trading-bots');
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <Bot className="h-3 w-3 mr-1" />
+                            Bots
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Mobile Search */}
