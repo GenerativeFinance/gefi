@@ -420,34 +420,6 @@ export default function Header() {
                         </DropdownMenuContent>
                       </DropdownMenu>
 
-                      {/* Learning Dropdown */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className={`transition-colors ${
-                              learningNavItems.some(item => location.includes('/learning'))
-                                ? 'text-primary font-medium' 
-                                : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                          >
-                            <BookOpen className="h-4 w-4 mr-2" />
-                            Learning
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          {learningNavItems.map((item) => (
-                            <DropdownMenuItem key={item.href} asChild>
-                              <Link href={item.href}>
-                                <item.icon className="h-4 w-4 mr-2" />
-                                {item.label}
-                              </Link>
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
                       {/* Funding Dropdown */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -483,6 +455,34 @@ export default function Header() {
                               Bot Funding
                             </Link>
                           </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      {/* Learning Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className={`transition-colors ${
+                              learningNavItems.some(item => location.includes('/learning'))
+                                ? 'text-primary font-medium' 
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <BookOpen className="h-4 w-4 mr-2" />
+                            Learning
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          {learningNavItems.map((item) => (
+                            <DropdownMenuItem key={item.href} asChild>
+                              <Link href={item.href}>
+                                <item.icon className="h-4 w-4 mr-2" />
+                                {item.label}
+                              </Link>
+                            </DropdownMenuItem>
+                          ))}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </>
