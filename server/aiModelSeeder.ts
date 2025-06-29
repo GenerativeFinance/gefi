@@ -252,6 +252,86 @@ export class AiModelSeeder {
       
       const sampleModels = [
         {
+          name: "Conservative AI",
+          description: "Risk-averse AI model designed for capital preservation with steady, consistent returns. Employs defensive strategies, dividend-focused stock selection, and bond allocation optimization with sophisticated risk management.",
+          category: "Portfolio Management",
+          categoryId: portfolioCategory.id,
+          subcategoryId: assetAllocationSub?.id,
+          price: "199.00",
+          rating: "4.9",
+          totalRatings: 342,
+          creator: "Prudent Capital Management",
+          tags: ["conservative", "capital-preservation", "dividend-focused", "low-risk", "bonds"],
+          aiTechnique: "Machine Learning",
+          targetUserType: "Wealth Management",
+          financialInstrument: "Mixed",
+          riskLevel: "Low",
+          minInvestment: "5000.00",
+          dataRequirements: ["dividend_yields", "bond_ratings", "market_data", "volatility_measures"],
+          supportedRegions: ["US", "EU", "APAC"],
+          complianceFrameworks: ["SEC", "MiFID II", "GDPR"],
+          features: {
+            "rebalancing": true,
+            "dividend_reinvestment": true,
+            "tax_optimization": true,
+            "capital_preservation": true,
+            "risk_monitoring": true,
+            "income_optimization": true
+          },
+          performance: {
+            "accuracy": 89.7,
+            "sharpe_ratio": 1.8,
+            "max_drawdown": 4.2,
+            "annual_return": 12.4,
+            "current_value": 148548,
+            "beta": 0.65,
+            "alpha": 5.2,
+            "win_rate": 68.2
+          },
+          isFeatured: true,
+          isActive: true
+        },
+        {
+          name: "Aggressive Growth",
+          description: "High-performance growth-oriented AI model targeting maximum capital appreciation through technology stocks, emerging markets, and momentum strategies. Utilizes advanced pattern recognition for growth opportunities.",
+          category: "Trading Strategies", 
+          categoryId: tradingCategory.id,
+          subcategoryId: algoTradingSub?.id,
+          price: "349.00",
+          rating: "4.6",
+          totalRatings: 198,
+          creator: "GrowthTech Dynamics",
+          tags: ["aggressive", "growth", "high-risk", "momentum", "tech-focused", "emerging-markets"],
+          aiTechnique: "Deep Learning",
+          targetUserType: "Hedge Funds",
+          financialInstrument: "Equities",
+          riskLevel: "High",
+          minInvestment: "15000.00",
+          dataRequirements: ["growth_metrics", "momentum_indicators", "earnings_data", "sector_rotation"],
+          supportedRegions: ["US", "EU", "APAC", "Emerging"],
+          complianceFrameworks: ["SEC", "CFTC", "FCA"],
+          features: {
+            "real_time": true,
+            "momentum_detection": true,
+            "sector_rotation": true,
+            "growth_screening": true,
+            "risk_scaling": true,
+            "volatility_targeting": true
+          },
+          performance: {
+            "accuracy": 91.2,
+            "sharpe_ratio": 1.6,
+            "max_drawdown": 18.7,
+            "annual_return": 24.8,
+            "current_value": 299032,
+            "beta": 1.35,
+            "alpha": 8.7,
+            "win_rate": 64.8
+          },
+          isFeatured: true,
+          isActive: true
+        },
+        {
           name: "Quantum Risk Predictor",
           description: "Advanced ML model for predicting market volatility with 94% accuracy using quantum-inspired algorithms",
           category: "Risk Assessment",
@@ -283,74 +363,6 @@ export class AiModelSeeder {
             "annual_return": 18.7
           },
           isFeatured: true,
-          isActive: true
-        },
-        {
-          name: "Alpha Generation Engine",
-          description: "Sophisticated algorithmic trading system generating consistent alpha through multi-factor models",
-          category: "Trading Strategies", 
-          categoryId: tradingCategory.id,
-          subcategoryId: algoTradingSub?.id,
-          price: "599.00",
-          rating: "4.6",
-          totalRatings: 89,
-          creator: "QuantEdge",
-          tags: ["alpha", "algorithmic", "multi-factor"],
-          aiTechnique: "Reinforcement Learning",
-          targetUserType: "Asset Management",
-          financialInstrument: "Mixed",
-          riskLevel: "High",
-          minInvestment: "50000.00",
-          dataRequirements: ["price_data", "volume_data", "fundamental_data"],
-          supportedRegions: ["US", "EU"],
-          complianceFrameworks: ["SEC", "FCA"],
-          features: {
-            "real_time": true,
-            "paper_trading": true,
-            "portfolio_optimization": true,
-            "risk_management": true
-          },
-          performance: {
-            "accuracy": 87.3,
-            "sharpe_ratio": 1.8,
-            "max_drawdown": 12.1,
-            "annual_return": 22.4
-          },
-          isFeatured: true,
-          isActive: true
-        },
-        {
-          name: "Smart Asset Allocator",
-          description: "AI-driven portfolio optimization using Modern Portfolio Theory with machine learning enhancements",
-          category: "Portfolio Management",
-          categoryId: portfolioCategory.id,
-          subcategoryId: assetAllocationSub?.id,
-          price: "199.00",
-          rating: "4.7",
-          totalRatings: 203,
-          creator: "WealthTech AI",
-          tags: ["portfolio", "optimization", "mpt", "robo-advisor"],
-          aiTechnique: "Machine Learning",
-          targetUserType: "Wealth Management",
-          financialInstrument: "Mixed",
-          riskLevel: "Low",
-          minInvestment: "5000.00",
-          dataRequirements: ["asset_prices", "correlation_matrix", "risk_preferences"],
-          supportedRegions: ["Global"],
-          complianceFrameworks: ["GDPR", "SOX"],
-          features: {
-            "rebalancing": true,
-            "tax_optimization": true,
-            "goal_tracking": true,
-            "reporting": true
-          },
-          performance: {
-            "accuracy": 91.5,
-            "sharpe_ratio": 1.6,
-            "max_drawdown": 6.8,
-            "annual_return": 14.2
-          },
-          isFeatured: false,
           isActive: true
         }
       ];

@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { ChevronRight, Download, Brain, Settings, FileText } from "lucide-react";
 import { useState } from "react";
+import { useLocation } from "wouter";
 
 interface AiModelsProps {
   models: any[];

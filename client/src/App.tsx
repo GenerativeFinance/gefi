@@ -38,6 +38,7 @@ import BugBountyProgram from "@/pages/bug-bounty-program";
 import EnterpriseSales from "@/pages/enterprise-sales";
 import ModelFunding from "@/pages/model-funding";
 import BountyFunding from "@/pages/bounty-funding";
+import ModelProfile from "@/pages/model-profile";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -88,6 +89,7 @@ function Router() {
           <Route path="/bounties/leaderboard" component={BountyLeaderboard} />
           <Route path="/user/:userId" component={UserDetail} />
           <Route path="/learning" component={Learning} />
+          <Route path="/model/:id" component={ModelProfile} />
         </>
       ) : (
         <>
