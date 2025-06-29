@@ -11,6 +11,19 @@ export interface MarketDataPoint {
   high24h?: number;
   low24h?: number;
   change24h?: number;
+  assetType: 'stock' | 'crypto' | 'forex' | 'commodity' | 'index';
+  marketCap?: number;
+  sentiment?: SentimentData;
+}
+
+export interface SentimentData {
+  score: number; // -1 to 1 scale
+  confidence: number; // 0 to 1 scale
+  sources: string[];
+  keywords: string[];
+  news_sentiment: number;
+  social_sentiment: number;
+  technical_sentiment: number;
 }
 
 export interface OrderBookLevel {
@@ -89,37 +102,112 @@ class MarketDataService extends EventEmitter {
   }
 
   private setupMockDataFeed(): void {
-    // Simulate market data for common symbols
-    const symbols = ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN', 'NVDA', 'META', 'NFLX'];
+    // Comprehensive multi-asset market data simulation
+    const assetData = [
+      // Stocks
+      { symbol: 'AAPL', type: 'stock', basePrice: 185.00, volume: 50000000 },
+      { symbol: 'GOOGL', type: 'stock', basePrice: 2617.61, volume: 1200000 },
+      { symbol: 'MSFT', type: 'stock', basePrice: 391.22, volume: 25000000 },
+      { symbol: 'TSLA', type: 'stock', basePrice: 240.56, volume: 80000000 },
+      { symbol: 'AMZN', type: 'stock', basePrice: 3072.76, volume: 35000000 },
+      { symbol: 'NVDA', type: 'stock', basePrice: 440.61, volume: 45000000 },
+      { symbol: 'META', type: 'stock', basePrice: 337.19, volume: 20000000 },
+      { symbol: 'NFLX', type: 'stock', basePrice: 456.15, volume: 8000000 },
+      
+      // Cryptocurrencies
+      { symbol: 'BTC', type: 'crypto', basePrice: 65000, volume: 25000, marketCap: 1200000000000 },
+      { symbol: 'ETH', type: 'crypto', basePrice: 3200, volume: 120000, marketCap: 380000000000 },
+      { symbol: 'XRP', type: 'crypto', basePrice: 0.60, volume: 1500000000, marketCap: 28000000000 },
+      { symbol: 'LTC', type: 'crypto', basePrice: 150, volume: 300000, marketCap: 10000000000 },
+      
+      // Forex
+      { symbol: 'EURUSD', type: 'forex', basePrice: 1.0850, volume: 2500000000 },
+      { symbol: 'GBPUSD', type: 'forex', basePrice: 1.2650, volume: 1800000000 },
+      { symbol: 'USDJPY', type: 'forex', basePrice: 149.50, volume: 2200000000 },
+      
+      // Commodities
+      { symbol: 'GOLD', type: 'commodity', basePrice: 2300, volume: 850000 },
+      { symbol: 'SILVER', type: 'commodity', basePrice: 28, volume: 12000000 },
+      { symbol: 'OIL', type: 'commodity', basePrice: 75, volume: 350000000 },
+      
+      // Indices
+      { symbol: 'SPX', type: 'index', basePrice: 5200, volume: 0 },
+      { symbol: 'NDX', type: 'index', basePrice: 18000, volume: 0 },
+      { symbol: 'DJI', type: 'index', basePrice: 42000, volume: 0 }
+    ];
     
-    symbols.forEach(symbol => {
-      // Initialize with base prices
-      const basePrice = this.getBasePriceForSymbol(symbol);
-      this.priceCache.set(symbol, {
-        symbol,
-        price: basePrice,
-        volume: Math.floor(Math.random() * 1000000),
+    assetData.forEach(asset => {
+      const sentiment = this.generateSentimentData(asset.symbol);
+      const change24h = (Math.random() - 0.5) * 0.1;
+      
+      this.priceCache.set(asset.symbol, {
+        symbol: asset.symbol,
+        price: asset.basePrice,
+        volume: asset.volume + Math.floor(Math.random() * asset.volume * 0.2),
         timestamp: Date.now(),
-        bid: basePrice * 0.999,
-        ask: basePrice * 1.001,
-        high24h: basePrice * 1.05,
-        low24h: basePrice * 0.95,
-        change24h: (Math.random() - 0.5) * 0.1
+        assetType: asset.type as any,
+        bid: asset.basePrice * 0.999,
+        ask: asset.basePrice * 1.001,
+        high24h: asset.basePrice * (1 + Math.abs(change24h) + 0.02),
+        low24h: asset.basePrice * (1 - Math.abs(change24h) - 0.02),
+        change24h,
+        marketCap: asset.marketCap,
+        sentiment
       });
 
-      // Initialize order book
-      this.orderBooks.set(symbol, this.generateOrderBook(symbol, basePrice));
+      // Initialize order book for tradeable assets
+      if (asset.type !== 'index') {
+        this.orderBooks.set(asset.symbol, this.generateOrderBook(asset.symbol, asset.basePrice));
+      }
     });
 
-    // Update prices every second
+    // Update prices and sentiment every second
     setInterval(() => {
-      this.updateMockPrices();
+      this.updateMockPricesWithSentiment();
     }, 1000);
 
     // Update order books every 500ms
     setInterval(() => {
       this.updateOrderBooks();
     }, 500);
+
+    // Update sentiment data every 30 seconds
+    setInterval(() => {
+      this.updateSentimentData();
+    }, 30000);
+  }
+
+  private generateSentimentData(symbol: string): SentimentData {
+    const baseScore = (Math.random() - 0.5) * 2; // -1 to 1
+    const confidence = 0.6 + Math.random() * 0.4; // 0.6 to 1.0
+    
+    const newsScore = baseScore + (Math.random() - 0.5) * 0.3;
+    const socialScore = baseScore + (Math.random() - 0.5) * 0.4;
+    const technicalScore = baseScore + (Math.random() - 0.5) * 0.2;
+    
+    return {
+      score: Math.max(-1, Math.min(1, baseScore)),
+      confidence,
+      sources: ['news', 'social', 'technical'],
+      keywords: this.generateSentimentKeywords(symbol, baseScore),
+      news_sentiment: Math.max(-1, Math.min(1, newsScore)),
+      social_sentiment: Math.max(-1, Math.min(1, socialScore)),
+      technical_sentiment: Math.max(-1, Math.min(1, technicalScore))
+    };
+  }
+
+  private generateSentimentKeywords(symbol: string, score: number): string[] {
+    const positiveKeywords = ['bullish', 'growth', 'strong', 'momentum', 'rally', 'breakout'];
+    const negativeKeywords = ['bearish', 'decline', 'weak', 'sell-off', 'correction', 'volatility'];
+    const neutralKeywords = ['sideways', 'consolidation', 'mixed', 'uncertain', 'ranging'];
+    
+    if (score > 0.3) {
+      return positiveKeywords.slice(0, 2 + Math.floor(Math.random() * 2));
+    } else if (score < -0.3) {
+      return negativeKeywords.slice(0, 2 + Math.floor(Math.random() * 2));
+    } else {
+      return neutralKeywords.slice(0, 1 + Math.floor(Math.random() * 2));
+    }
   }
 
   private getBasePriceForSymbol(symbol: string): number {
@@ -156,6 +244,59 @@ class MarketDataService extends EventEmitter {
       
       // Emit price update event
       this.emit('priceUpdate', updatedData);
+    });
+  }
+
+  private updateMockPricesWithSentiment(): void {
+    this.priceCache.forEach((data, symbol) => {
+      // Simulate price movement influenced by sentiment
+      const sentimentInfluence = data.sentiment ? data.sentiment.score * 0.002 : 0;
+      const randomChange = (Math.random() - 0.5) * 0.01;
+      const change = randomChange + sentimentInfluence;
+      
+      const newPrice = data.price * (1 + change);
+      
+      const updatedData: MarketDataPoint = {
+        ...data,
+        price: newPrice,
+        volume: data.volume + Math.floor(Math.random() * (data.volume * 0.05)),
+        timestamp: Date.now(),
+        bid: newPrice * 0.999,
+        ask: newPrice * 1.001,
+        change24h: (data.change24h || 0) + change,
+        high24h: Math.max(data.high24h || newPrice, newPrice),
+        low24h: Math.min(data.low24h || newPrice, newPrice)
+      };
+
+      this.priceCache.set(symbol, updatedData);
+      
+      // Emit price update event
+      this.emit('priceUpdate', updatedData);
+    });
+  }
+
+  private updateSentimentData(): void {
+    this.priceCache.forEach((data, symbol) => {
+      if (data.sentiment) {
+        // Update sentiment with some evolution
+        const newSentiment = this.generateSentimentData(symbol);
+        const blendedSentiment: SentimentData = {
+          ...newSentiment,
+          score: (data.sentiment.score * 0.7) + (newSentiment.score * 0.3),
+          confidence: (data.sentiment.confidence * 0.8) + (newSentiment.confidence * 0.2)
+        };
+
+        const updatedData: MarketDataPoint = {
+          ...data,
+          sentiment: blendedSentiment,
+          timestamp: Date.now()
+        };
+
+        this.priceCache.set(symbol, updatedData);
+        
+        // Emit sentiment update event
+        this.emit('sentimentUpdate', { symbol, sentiment: blendedSentiment });
+      }
     });
   }
 
