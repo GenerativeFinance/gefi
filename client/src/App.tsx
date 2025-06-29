@@ -111,6 +111,8 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Landing} />
+          <Route path="/login" component={Login} />
+          <Route path="/login-failed" component={LoginFailed} />
           <Route path="*" component={Landing} />
         </>
       )}

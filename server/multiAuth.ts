@@ -149,18 +149,12 @@ export async function setupMultiAuth(app: Express) {
     })
   );
 
-  // General login route - redirects to first available OAuth provider
+  // General login route - redirect to login page
   app.get('/api/login', (req, res) => {
-    // Priority order: Google, GitHub, LinkedIn
-    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-      return res.redirect('/api/auth/google');
-    } else if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
-      return res.redirect('/api/auth/github');
-    } else if (process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET) {
-      return res.redirect('/api/auth/linkedin');
-    } else {
-      return res.status(500).json({ message: 'No OAuth providers configured' });
-    }
+    // Use a full redirect to the login page
+    const protocol = req.get('x-forwarded-proto') || req.protocol || 'http';
+    const host = req.get('host');
+    return res.redirect(`${protocol}://${host}/login`);
   });
 
   // Logout
