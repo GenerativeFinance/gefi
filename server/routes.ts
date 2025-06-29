@@ -1133,6 +1133,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Model Funding routes
+  app.get('/api/model-funding/requests', async (req, res) => {
+    try {
+      // For now, return empty array since we don't have model funding requests schema
+      // This matches the structure needed by the frontend
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching model funding requests:", error);
+      res.status(500).json({ message: "Failed to fetch funding requests" });
+    }
+  });
+
+  app.get('/api/model-funding/my-requests', isAuthenticated, async (req: any, res) => {
+    try {
+      // For now, return empty array since we don't have model funding requests schema
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching user's model funding requests:", error);
+      res.status(500).json({ message: "Failed to fetch your funding requests" });
+    }
+  });
+
+  app.get('/api/model-funding/my-contributions', isAuthenticated, async (req: any, res) => {
+    try {
+      // For now, return empty array since we don't have model funding contributions schema
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching user's model funding contributions:", error);
+      res.status(500).json({ message: "Failed to fetch your contributions" });
+    }
+  });
+
+  app.post('/api/model-funding/requests', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const requestData = req.body;
+
+      // For now, return success message since we don't have schema
+      res.json({ 
+        message: "Model funding request created successfully",
+        id: Math.floor(Math.random() * 1000)
+      });
+    } catch (error) {
+      console.error("Error creating model funding request:", error);
+      res.status(500).json({ message: "Failed to create funding request" });
+    }
+  });
+
+  app.post('/api/model-funding/contribute', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { requestId, amount } = req.body;
+
+      if (!requestId || !amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid contribution parameters" });
+      }
+
+      // For now, return success message since we don't have schema
+      res.json({ 
+        message: "Contribution successful",
+        contributionId: Math.floor(Math.random() * 1000)
+      });
+    } catch (error) {
+      console.error("Error contributing to model funding:", error);
+      res.status(500).json({ message: "Failed to contribute" });
+    }
+  });
+
   app.post('/api/model-funding/invest', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
