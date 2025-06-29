@@ -211,12 +211,16 @@ const mockContent: LearningContent[] = [
 ];
 
 const typeColors = {
-  tutorial: "bg-blue-100 text-blue-800",
-  guide: "bg-green-100 text-green-800",
-  workshop: "bg-purple-100 text-purple-800",
-  project: "bg-orange-100 text-orange-800",
-  certification: "bg-red-100 text-red-800",
-  documentation: "bg-gray-100 text-gray-800"
+  "tutorial": "bg-blue-100 text-blue-800",
+  "guide": "bg-green-100 text-green-800",
+  "workshop": "bg-purple-100 text-purple-800",
+  "project": "bg-orange-100 text-orange-800",
+  "certification": "bg-red-100 text-red-800",
+  "documentation": "bg-gray-100 text-gray-800",
+  "get-started": "bg-emerald-100 text-emerald-800",
+  "webinar": "bg-purple-100 text-purple-800",
+  "blog": "bg-yellow-100 text-yellow-800",
+  "faq": "bg-gray-100 text-gray-800"
 };
 
 const difficultyColors = {
@@ -227,13 +231,39 @@ const difficultyColors = {
 };
 
 export default function Learning() {
+  const [location] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
   const [activeTab, setActiveTab] = useState("all");
 
-  const categories = ["AI Fundamentals", "Portfolio Management", "Risk Management", "Algorithmic Trading", "Platform", "Certification"];
+  // Parse URL parameters
+  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const urlTab = urlParams.get('tab') || 'all';
+  const urlType = urlParams.get('type') as UserType || 'all';
+
+  // Set initial tab and type from URL
+  useEffect(() => {
+    if (urlTab && urlTab !== activeTab) {
+      setActiveTab(urlTab);
+    }
+    
+    // Set content type based on URL parameter
+    if (urlTab === 'get-started') {
+      setSelectedType('get-started');
+    } else if (urlTab === 'tutorials') {
+      setSelectedType('tutorial');
+    } else if (urlTab === 'webinars') {
+      setSelectedType('webinar');
+    } else if (urlTab === 'blog') {
+      setSelectedType('blog');
+    } else if (urlTab === 'faq') {
+      setSelectedType('faq');
+    }
+  }, [urlTab, activeTab]);
+
+  const categories = ["Getting Started", "AI Fundamentals", "Portfolio Management", "Risk Management", "Investment Strategy", "Model Development", "Trading", "Market Analysis", "Support"];
   
   const filteredContent = mockContent.filter(content => {
     const matchesSearch = content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -242,10 +272,13 @@ export default function Learning() {
     const matchesType = selectedType === "all" || content.type === selectedType;
     const matchesDifficulty = selectedDifficulty === "all" || content.difficulty === selectedDifficulty;
     
-    if (activeTab === "completed") return matchesSearch && matchesCategory && matchesType && matchesDifficulty && content.isCompleted;
-    if (activeTab === "in_progress") return matchesSearch && matchesCategory && matchesType && matchesDifficulty && content.progress && content.progress > 0 && content.progress < 100;
+    // Filter by target audience based on URL type parameter
+    const matchesAudience = urlType === 'all' || content.targetAudience === urlType || content.targetAudience === 'all';
     
-    return matchesSearch && matchesCategory && matchesType && matchesDifficulty;
+    if (activeTab === "completed") return matchesSearch && matchesCategory && matchesType && matchesDifficulty && matchesAudience && content.isCompleted;
+    if (activeTab === "in_progress") return matchesSearch && matchesCategory && matchesType && matchesDifficulty && matchesAudience && content.progress && content.progress > 0 && content.progress < 100;
+    
+    return matchesSearch && matchesCategory && matchesType && matchesDifficulty && matchesAudience;
   });
 
   const handleStartLearning = (contentId: string) => {
@@ -266,11 +299,24 @@ export default function Learning() {
           <div className="mb-8">
             <div className="flex items-center space-x-3 mb-4">
               <BookOpen className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-bold">Learning Center</h1>
+              <h1 className="text-3xl font-bold">
+                Learning Center
+                {urlType === 'developer' && (
+                  <span className="text-lg text-muted-foreground ml-2">for Developers</span>
+                )}
+                {urlType === 'investor' && (
+                  <span className="text-lg text-muted-foreground ml-2">for Investors</span>
+                )}
+              </h1>
             </div>
             <p className="text-muted-foreground text-lg">
-              Master AI financial modeling through comprehensive tutorials, workshops, and hands-on projects.
-              Build expertise and earn certifications.
+              {urlType === 'developer' ? (
+                "Master AI financial model development through comprehensive tutorials, workshops, and hands-on projects. Build and deploy models on our platform."
+              ) : urlType === 'investor' ? (
+                "Learn how to maximize your investment returns using AI-powered financial models. Discover strategies and analytics tools."
+              ) : (
+                "Master AI financial modeling through comprehensive tutorials, workshops, and hands-on projects. Build expertise and earn certifications."
+              )}
             </p>
           </div>
 
