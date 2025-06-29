@@ -4,12 +4,26 @@ import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import MarketDataFeed from "@/components/trading/market-data-feed";
 import TradingInterface from "@/components/trading/trading-interface";
+import SentimentVisualizer from "@/components/trading/sentiment-visualizer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Activity, TrendingUp, Zap, Shield } from "lucide-react";
+import { Activity, TrendingUp, Zap, Shield, Brain } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 export default function LiveTradingPage() {
   const [selectedTab, setSelectedTab] = useState("trading");
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+
+  // Fetch real-time market data with sentiment
+  const { data: marketData, isLoading: isMarketDataLoading } = useQuery({
+    queryKey: ["/api/market-data/live"],
+    refetchInterval: 1000, // Refresh every second for real-time data
+  });
+
+  const handleAssetSelect = (symbol: string) => {
+    setSelectedSymbol(symbol);
+    setSelectedTab("trading"); // Switch to trading tab when asset is selected
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
@@ -85,7 +99,7 @@ export default function LiveTradingPage() {
 
         {/* Main Trading Interface */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="trading" className="flex items-center space-x-2">
               <Zap className="h-4 w-4" />
               <span>Trading Interface</span>
@@ -93,6 +107,10 @@ export default function LiveTradingPage() {
             <TabsTrigger value="market-data" className="flex items-center space-x-2">
               <Activity className="h-4 w-4" />
               <span>Market Data Feed</span>
+            </TabsTrigger>
+            <TabsTrigger value="sentiment" className="flex items-center space-x-2">
+              <Brain className="h-4 w-4" />
+              <span>Sentiment Analysis</span>
             </TabsTrigger>
           </TabsList>
 
@@ -126,6 +144,32 @@ export default function LiveTradingPage() {
               </CardHeader>
               <CardContent>
                 <MarketDataFeed />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sentiment" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Brain className="h-5 w-5" />
+                  <span>AI Sentiment Analysis</span>
+                </CardTitle>
+                <CardDescription>
+                  Real-time sentiment analysis across stocks, crypto, forex, commodities, and indices
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isMarketDataLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+                  </div>
+                ) : (
+                  <SentimentVisualizer 
+                    marketData={marketData || []} 
+                    onAssetSelect={handleAssetSelect}
+                  />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
