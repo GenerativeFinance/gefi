@@ -37,6 +37,7 @@ import SecurityCompliance from "@/pages/security-compliance";
 import BugBountyProgram from "@/pages/bug-bounty-program";
 import EnterpriseSales from "@/pages/enterprise-sales";
 import ModelFunding from "@/pages/model-funding";
+import BountyFunding from "@/pages/bounty-funding";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -82,6 +83,7 @@ function Router() {
           <Route path="/backtesting" component={BacktestingEnvironment} />
           <Route path="/live-trading" component={LiveTradingPage} />
           <Route path="/model-funding" component={ModelFunding} />
+          <Route path="/bounty-funding" component={BountyFunding} />
           <Route path="/bounties" component={Bounties} />
           <Route path="/bounties/leaderboard" component={BountyLeaderboard} />
           <Route path="/user/:userId" component={UserDetail} />

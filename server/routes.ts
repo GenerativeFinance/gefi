@@ -938,6 +938,200 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bounty Funding API routes
+  app.get('/api/bounty-funding', async (req: any, res) => {
+    try {
+      // Sample bounty funding requests data
+      const sampleRequests = [
+        {
+          id: 1,
+          title: "Advanced Portfolio Risk Analytics",
+          description: "Develop an AI model that provides real-time portfolio risk assessment using advanced machine learning algorithms.",
+          category: "risk-management",
+          fundingRequired: 25000,
+          fundingRaised: 18500,
+          timeline: "3 months",
+          difficulty: "advanced",
+          skills: ["Python", "Machine Learning", "Risk Management", "TensorFlow"],
+          deliverables: ["Complete AI model implementation", "Documentation and API", "Testing suite", "Performance benchmarks"],
+          status: "approved",
+          estimatedReward: 30000,
+          developerName: "Alex Rodriguez",
+          submittedAt: "2024-06-20T10:00:00Z",
+          approvedAt: "2024-06-22T14:30:00Z",
+          backers: 12,
+        },
+        {
+          id: 2,
+          title: "Cryptocurrency Trading Algorithm",
+          description: "Create a sophisticated trading algorithm that analyzes market sentiment and executes trades automatically.",
+          category: "trading-algorithms",
+          fundingRequired: 35000,
+          fundingRaised: 8200,
+          timeline: "4 months",
+          difficulty: "expert",
+          skills: ["Python", "Algorithmic Trading", "Cryptocurrency", "Deep Learning"],
+          deliverables: ["Trading algorithm", "Backtesting framework", "Real-time execution system", "Performance analytics"],
+          status: "submitted",
+          estimatedReward: 45000,
+          developerName: "Sarah Chen",
+          submittedAt: "2024-06-25T09:15:00Z",
+          backers: 6,
+        },
+        {
+          id: 3,
+          title: "ESG Portfolio Optimization",
+          description: "Build an AI system that optimizes portfolios while maintaining ESG compliance and maximizing returns.",
+          category: "portfolio-optimization",
+          fundingRequired: 20000,
+          fundingRaised: 20000,
+          timeline: "2 months",
+          difficulty: "intermediate",
+          skills: ["Portfolio Theory", "ESG Analysis", "Optimization", "Python"],
+          deliverables: ["Optimization engine", "ESG scoring system", "Portfolio recommendations", "Compliance reports"],
+          status: "funded",
+          estimatedReward: 25000,
+          developerName: "Michael Thompson",
+          submittedAt: "2024-06-18T16:45:00Z",
+          approvedAt: "2024-06-19T10:00:00Z",
+          fundedAt: "2024-06-21T12:30:00Z",
+          backers: 15,
+        },
+        {
+          id: 4,
+          title: "Market Sentiment Analysis Engine",
+          description: "Develop a comprehensive sentiment analysis system that processes news, social media, and market data.",
+          category: "sentiment-analysis",
+          fundingRequired: 30000,
+          fundingRaised: 12000,
+          timeline: "3.5 months",
+          difficulty: "advanced",
+          skills: ["NLP", "Sentiment Analysis", "Data Mining", "API Integration"],
+          deliverables: ["Sentiment engine", "Data pipelines", "Real-time dashboard", "API endpoints"],
+          status: "approved",
+          estimatedReward: 38000,
+          developerName: "Emma Wilson",
+          submittedAt: "2024-06-23T11:20:00Z",
+          approvedAt: "2024-06-24T15:45:00Z",
+          backers: 8,
+        },
+        {
+          id: 5,
+          title: "Derivatives Pricing Model",
+          description: "Create an advanced AI model for pricing complex financial derivatives with high accuracy.",
+          category: "market-prediction",
+          fundingRequired: 40000,
+          fundingRaised: 2500,
+          timeline: "5 months",
+          difficulty: "expert",
+          skills: ["Quantitative Finance", "Derivatives", "Machine Learning", "Monte Carlo"],
+          deliverables: ["Pricing model", "Risk calculations", "Validation framework", "Documentation"],
+          status: "submitted",
+          estimatedReward: 50000,
+          developerName: "David Kumar",
+          submittedAt: "2024-06-26T14:00:00Z",
+          backers: 3,
+        }
+      ];
+      
+      res.json(sampleRequests);
+    } catch (error) {
+      console.error("Error fetching bounty funding requests:", error);
+      res.status(500).json({ message: "Failed to fetch funding requests" });
+    }
+  });
+
+  app.get('/api/bounty-categories', async (req: any, res) => {
+    try {
+      const categories = [
+        { id: "risk-management", name: "Risk Management", count: 12 },
+        { id: "trading-algorithms", name: "Trading Algorithms", count: 8 },
+        { id: "portfolio-optimization", name: "Portfolio Optimization", count: 15 },
+        { id: "market-prediction", name: "Market Prediction", count: 6 },
+        { id: "sentiment-analysis", name: "Sentiment Analysis", count: 9 }
+      ];
+      
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching bounty categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  app.post('/api/bounty-funding', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const requestData = req.body;
+      
+      // Validate required fields
+      if (!requestData.title || !requestData.description || !requestData.category || 
+          !requestData.fundingRequired || !requestData.timeline || !requestData.difficulty) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Get user information for developer name
+      const user = await storage.getUser(userId);
+      const developerName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Anonymous Developer';
+      
+      // Create new funding request
+      const newRequest = {
+        id: Math.floor(Math.random() * 10000) + 100,
+        ...requestData,
+        fundingRaised: 0,
+        status: 'submitted',
+        developerName,
+        submittedAt: new Date().toISOString(),
+        backers: 0,
+        estimatedReward: Math.floor(requestData.fundingRequired * 1.2),
+      };
+      
+      // In a real application, you would save to database here
+      // await storage.createBountyFundingRequest(newRequest);
+      
+      res.status(201).json(newRequest);
+    } catch (error) {
+      console.error("Error creating bounty funding request:", error);
+      res.status(500).json({ message: "Failed to create funding request" });
+    }
+  });
+
+  app.post('/api/bounty-funding/:id/fund', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const requestId = parseInt(req.params.id);
+      const { amount } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid funding amount" });
+      }
+      
+      // In a real application, you would:
+      // 1. Get the funding request from database
+      // 2. Validate that funding is still needed
+      // 3. Process payment
+      // 4. Update funding amounts
+      // 5. Create contribution record
+      
+      const contribution = {
+        id: Math.floor(Math.random() * 10000) + 1000,
+        requestId,
+        contributorId: userId,
+        amount,
+        status: 'active',
+        contributedAt: new Date().toISOString(),
+      };
+      
+      // Mock success response
+      res.status(201).json({
+        message: "Funding contribution successful",
+        contribution,
+      });
+    } catch (error) {
+      console.error("Error processing funding contribution:", error);
+      res.status(500).json({ message: "Failed to process funding" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Add WebSocket server for real-time data streaming
