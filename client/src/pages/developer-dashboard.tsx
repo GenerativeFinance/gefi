@@ -28,6 +28,7 @@ import {
   Play,
   Download,
   TrendingUp,
+  Bot,
   AlertTriangle,
   CheckCircle
 } from "lucide-react";
@@ -157,14 +158,15 @@ export default function DeveloperDashboard() {
             <h1 className="text-3xl font-bold text-foreground">Developer Dashboard</h1>
             <p className="text-muted-foreground">Build, fund, and deploy AI financial models</p>
           </div>
-          <Dialog open={showNewModelDialog} onOpenChange={setShowNewModelDialog}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                New Model
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+          <div className="flex space-x-2">
+            <Dialog open={showNewModelDialog} onOpenChange={setShowNewModelDialog}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Financial Model
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Create New AI Model</DialogTitle>
                 <DialogDescription>
@@ -260,7 +262,12 @@ export default function DeveloperDashboard() {
                 </form>
               </Form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+            <Button variant="outline">
+              <Bot className="h-4 w-4 mr-2" />
+              New Trade Bot
+            </Button>
+          </div>
         </div>
 
         {/* Analytics Cards */}
@@ -457,7 +464,7 @@ export default function DeveloperDashboard() {
                     </p>
                     <Button onClick={() => setShowNewModelDialog(true)}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Create Your First Model
+                      Create Your First Financial Model
                     </Button>
                   </CardContent>
                 </Card>
