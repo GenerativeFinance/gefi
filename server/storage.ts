@@ -175,6 +175,44 @@ export interface IStorage {
   // Model Funding operations
   createModelFunding(funding: InsertModelFunding): Promise<ModelFunding>;
   getUserModelFunding(userId: string): Promise<ModelFunding[]>;
+  
+  // Web3 Wallet operations
+  getUserWallets(userId: string): Promise<Web3Wallet[]>;
+  getWallet(walletId: number): Promise<Web3Wallet | undefined>;
+  addWallet(wallet: InsertWeb3Wallet): Promise<Web3Wallet>;
+  updateWallet(walletId: number, updates: Partial<InsertWeb3Wallet>): Promise<Web3Wallet>;
+  removeWallet(walletId: number): Promise<void>;
+  
+  // Crypto Holdings operations
+  getWalletHoldings(walletId: number): Promise<CryptoHolding[]>;
+  getUserCryptoHoldings(userId: string): Promise<CryptoHolding[]>;
+  addCryptoHolding(holding: InsertCryptoHolding): Promise<CryptoHolding>;
+  updateCryptoHolding(holdingId: number, updates: Partial<InsertCryptoHolding>): Promise<CryptoHolding>;
+  removeCryptoHolding(holdingId: number): Promise<void>;
+  
+  // DeFi Positions operations
+  getWalletDefiPositions(walletId: number): Promise<DefiPosition[]>;
+  getUserDefiPositions(userId: string): Promise<DefiPosition[]>;
+  addDefiPosition(position: InsertDefiPosition): Promise<DefiPosition>;
+  updateDefiPosition(positionId: number, updates: Partial<InsertDefiPosition>): Promise<DefiPosition>;
+  removeDefiPosition(positionId: number): Promise<void>;
+  
+  // DeFi Transactions operations
+  getWalletTransactions(walletId: number, limit?: number): Promise<DefiTransaction[]>;
+  getUserTransactions(userId: string, limit?: number): Promise<DefiTransaction[]>;
+  addTransaction(transaction: InsertDefiTransaction): Promise<DefiTransaction>;
+  
+  // Yield Farming operations
+  getWalletYieldPositions(walletId: number): Promise<YieldFarmingPosition[]>;
+  getUserYieldPositions(userId: string): Promise<YieldFarmingPosition[]>;
+  addYieldPosition(position: InsertYieldFarmingPosition): Promise<YieldFarmingPosition>;
+  updateYieldPosition(positionId: number, updates: Partial<InsertYieldFarmingPosition>): Promise<YieldFarmingPosition>;
+  
+  // NFT Holdings operations
+  getWalletNFTs(walletId: number): Promise<NftHolding[]>;
+  getUserNFTs(userId: string): Promise<NftHolding[]>;
+  addNFT(nft: InsertNftHolding): Promise<NftHolding>;
+  updateNFT(nftId: number, updates: Partial<InsertNftHolding>): Promise<NftHolding>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -640,6 +678,158 @@ export class DatabaseStorage implements IStorage {
 
   async createModelRating(rating: InsertModelRating): Promise<ModelRating> {
     throw new Error("Method not implemented");
+  }
+
+  // Web3 Wallet operations
+  async getUserWallets(userId: string): Promise<Web3Wallet[]> {
+    return await db.select().from(web3Wallets).where(eq(web3Wallets.userId, userId));
+  }
+
+  async getWallet(walletId: number): Promise<Web3Wallet | undefined> {
+    const [wallet] = await db.select().from(web3Wallets).where(eq(web3Wallets.id, walletId));
+    return wallet;
+  }
+
+  async addWallet(wallet: InsertWeb3Wallet): Promise<Web3Wallet> {
+    const [newWallet] = await db.insert(web3Wallets).values(wallet).returning();
+    return newWallet;
+  }
+
+  async updateWallet(walletId: number, updates: Partial<InsertWeb3Wallet>): Promise<Web3Wallet> {
+    const [updatedWallet] = await db
+      .update(web3Wallets)
+      .set(updates)
+      .where(eq(web3Wallets.id, walletId))
+      .returning();
+    return updatedWallet;
+  }
+
+  async removeWallet(walletId: number): Promise<void> {
+    await db.delete(web3Wallets).where(eq(web3Wallets.id, walletId));
+  }
+
+  // Crypto Holdings operations
+  async getWalletHoldings(walletId: number): Promise<CryptoHolding[]> {
+    return await db.select().from(cryptoHoldings).where(eq(cryptoHoldings.walletId, walletId));
+  }
+
+  async getUserCryptoHoldings(userId: string): Promise<CryptoHolding[]> {
+    return await db.select().from(cryptoHoldings).where(eq(cryptoHoldings.userId, userId));
+  }
+
+  async addCryptoHolding(holding: InsertCryptoHolding): Promise<CryptoHolding> {
+    const [newHolding] = await db.insert(cryptoHoldings).values(holding).returning();
+    return newHolding;
+  }
+
+  async updateCryptoHolding(holdingId: number, updates: Partial<InsertCryptoHolding>): Promise<CryptoHolding> {
+    const [updatedHolding] = await db
+      .update(cryptoHoldings)
+      .set(updates)
+      .where(eq(cryptoHoldings.id, holdingId))
+      .returning();
+    return updatedHolding;
+  }
+
+  async removeCryptoHolding(holdingId: number): Promise<void> {
+    await db.delete(cryptoHoldings).where(eq(cryptoHoldings.id, holdingId));
+  }
+
+  // DeFi Positions operations
+  async getWalletDefiPositions(walletId: number): Promise<DefiPosition[]> {
+    return await db.select().from(defiPositions).where(eq(defiPositions.walletId, walletId));
+  }
+
+  async getUserDefiPositions(userId: string): Promise<DefiPosition[]> {
+    return await db.select().from(defiPositions).where(eq(defiPositions.userId, userId));
+  }
+
+  async addDefiPosition(position: InsertDefiPosition): Promise<DefiPosition> {
+    const [newPosition] = await db.insert(defiPositions).values(position).returning();
+    return newPosition;
+  }
+
+  async updateDefiPosition(positionId: number, updates: Partial<InsertDefiPosition>): Promise<DefiPosition> {
+    const [updatedPosition] = await db
+      .update(defiPositions)
+      .set(updates)
+      .where(eq(defiPositions.id, positionId))
+      .returning();
+    return updatedPosition;
+  }
+
+  async removeDefiPosition(positionId: number): Promise<void> {
+    await db.delete(defiPositions).where(eq(defiPositions.id, positionId));
+  }
+
+  // DeFi Transactions operations
+  async getWalletTransactions(walletId: number, limit: number = 50): Promise<DefiTransaction[]> {
+    return await db
+      .select()
+      .from(defiTransactions)
+      .where(eq(defiTransactions.walletId, walletId))
+      .orderBy(desc(defiTransactions.timestamp))
+      .limit(limit);
+  }
+
+  async getUserTransactions(userId: string, limit: number = 50): Promise<DefiTransaction[]> {
+    return await db
+      .select()
+      .from(defiTransactions)
+      .where(eq(defiTransactions.userId, userId))
+      .orderBy(desc(defiTransactions.timestamp))
+      .limit(limit);
+  }
+
+  async addTransaction(transaction: InsertDefiTransaction): Promise<DefiTransaction> {
+    const [newTransaction] = await db.insert(defiTransactions).values(transaction).returning();
+    return newTransaction;
+  }
+
+  // Yield Farming operations
+  async getWalletYieldPositions(walletId: number): Promise<YieldFarmingPosition[]> {
+    return await db.select().from(yieldFarmingPositions).where(eq(yieldFarmingPositions.walletId, walletId));
+  }
+
+  async getUserYieldPositions(userId: string): Promise<YieldFarmingPosition[]> {
+    return await db.select().from(yieldFarmingPositions).where(eq(yieldFarmingPositions.userId, userId));
+  }
+
+  async addYieldPosition(position: InsertYieldFarmingPosition): Promise<YieldFarmingPosition> {
+    const [newPosition] = await db.insert(yieldFarmingPositions).values(position).returning();
+    return newPosition;
+  }
+
+  async updateYieldPosition(positionId: number, updates: Partial<InsertYieldFarmingPosition>): Promise<YieldFarmingPosition> {
+    const [updatedPosition] = await db
+      .update(yieldFarmingPositions)
+      .set(updates)
+      .where(eq(yieldFarmingPositions.id, positionId))
+      .returning();
+    return updatedPosition;
+  }
+
+  // NFT Holdings operations
+  async getWalletNFTs(walletId: number): Promise<NftHolding[]> {
+    return await db.select().from(nftHoldings).where(eq(nftHoldings.walletId, walletId));
+  }
+
+  async getUserNFTs(userId: string): Promise<NftHolding[]> {
+    return await db.select().from(nftHoldings).where(eq(nftHoldings.userId, userId));
+  }
+
+  async addNFT(nft: InsertNftHolding): Promise<NftHolding> {
+    const [newNFT] = await db.insert(nftHoldings).values(nft).returning();
+    return newNFT;
+  }
+
+  async updateNFT(nftId: number, updates: Partial<InsertNftHolding>): Promise<NftHolding> {
+    const [updatedNFT] = await db
+      .update(nftHoldings)
+      .set(updates)
+      .where(eq(nftHoldings.id, nftId))
+      .returning();
+    return updatedNFT;
   }
 }
 

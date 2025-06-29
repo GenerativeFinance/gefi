@@ -8,6 +8,8 @@ import { z } from "zod";
 import { PortfolioOptimizer, RiskAssessment, MarketAnalysis } from "./aiModels";
 import { marketDataService } from "./marketDataService";
 import { tradingService } from "./tradingService";
+import { web3Service } from "./web3Service";
+import { insertWeb3WalletSchema, insertCryptoHoldingSchema, insertDefiPositionSchema, insertDefiTransactionSchema, insertYieldFarmingPositionSchema, insertNftHoldingSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -1319,6 +1321,204 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing funding contribution:", error);
       res.status(500).json({ message: "Failed to process funding" });
+    }
+  });
+
+  // Web3 and Cryptocurrency API Routes
+  
+  // Get user's connected wallets
+  app.get('/api/web3/wallets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const wallets = await storage.getUserWallets(userId);
+      res.json(wallets);
+    } catch (error) {
+      console.error("Error fetching wallets:", error);
+      res.status(500).json({ message: "Failed to fetch wallets" });
+    }
+  });
+
+  // Add a new wallet
+  app.post('/api/web3/wallets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const walletData = insertWeb3WalletSchema.parse({
+        ...req.body,
+        userId
+      });
+
+      // Validate wallet address
+      if (!web3Service.isValidAddress(walletData.walletAddress)) {
+        return res.status(400).json({ message: "Invalid wallet address" });
+      }
+
+      const wallet = await storage.addWallet(walletData);
+      res.status(201).json(wallet);
+    } catch (error) {
+      console.error("Error adding wallet:", error);
+      res.status(500).json({ message: "Failed to add wallet" });
+    }
+  });
+
+  // Get wallet portfolio
+  app.get('/api/web3/wallets/:walletId/portfolio', isAuthenticated, async (req: any, res) => {
+    try {
+      const walletId = parseInt(req.params.walletId);
+      const wallet = await storage.getWallet(walletId);
+      
+      if (!wallet || wallet.userId !== req.user.id) {
+        return res.status(404).json({ message: "Wallet not found" });
+      }
+
+      const portfolio = await web3Service.getWalletPortfolio(
+        wallet.walletAddress, 
+        wallet.chainId
+      );
+      
+      res.json(portfolio);
+    } catch (error) {
+      console.error("Error fetching wallet portfolio:", error);
+      res.status(500).json({ message: "Failed to fetch portfolio" });
+    }
+  });
+
+  // Get user's crypto holdings
+  app.get('/api/web3/holdings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const holdings = await storage.getUserCryptoHoldings(userId);
+      res.json(holdings);
+    } catch (error) {
+      console.error("Error fetching holdings:", error);
+      res.status(500).json({ message: "Failed to fetch holdings" });
+    }
+  });
+
+  // Update holdings for a wallet
+  app.post('/api/web3/wallets/:walletId/sync', isAuthenticated, async (req: any, res) => {
+    try {
+      const walletId = parseInt(req.params.walletId);
+      const wallet = await storage.getWallet(walletId);
+      
+      if (!wallet || wallet.userId !== req.user.id) {
+        return res.status(404).json({ message: "Wallet not found" });
+      }
+
+      // Get native balance
+      const nativeBalance = await web3Service.getNativeBalance(
+        wallet.walletAddress, 
+        wallet.chainId
+      );
+
+      // Update or create native token holding
+      const nativeHolding = {
+        userId: req.user.id,
+        walletId: walletId,
+        tokenAddress: "native",
+        tokenSymbol: "ETH", // This would be dynamic based on chain
+        tokenName: "Ethereum",
+        balance: nativeBalance,
+        chainId: wallet.chainId
+      };
+
+      await storage.addCryptoHolding(nativeHolding);
+
+      res.json({ message: "Holdings synced successfully" });
+    } catch (error) {
+      console.error("Error syncing holdings:", error);
+      res.status(500).json({ message: "Failed to sync holdings" });
+    }
+  });
+
+  // Get user's DeFi positions
+  app.get('/api/web3/defi/positions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const positions = await storage.getUserDefiPositions(userId);
+      res.json(positions);
+    } catch (error) {
+      console.error("Error fetching DeFi positions:", error);
+      res.status(500).json({ message: "Failed to fetch DeFi positions" });
+    }
+  });
+
+  // Get user's DeFi transactions
+  app.get('/api/web3/defi/transactions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const transactions = await storage.getUserTransactions(userId, limit);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  // Get DeFi protocol data
+  app.get('/api/web3/defi/protocols/:protocol', async (req, res) => {
+    try {
+      const protocol = req.params.protocol;
+      const chainId = parseInt(req.query.chainId as string) || 1;
+      
+      const protocolData = await web3Service.getDefiProtocolData(protocol, chainId);
+      
+      if (!protocolData) {
+        return res.status(404).json({ message: "Protocol data not found" });
+      }
+      
+      res.json(protocolData);
+    } catch (error) {
+      console.error("Error fetching protocol data:", error);
+      res.status(500).json({ message: "Failed to fetch protocol data" });
+    }
+  });
+
+  // Get user's NFTs
+  app.get('/api/web3/nfts', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const nfts = await storage.getUserNFTs(userId);
+      res.json(nfts);
+    } catch (error) {
+      console.error("Error fetching NFTs:", error);
+      res.status(500).json({ message: "Failed to fetch NFTs" });
+    }
+  });
+
+  // Get gas price for a chain
+  app.get('/api/web3/gas/:chainId', async (req, res) => {
+    try {
+      const chainId = parseInt(req.params.chainId);
+      const gasPrice = await web3Service.getGasPrice(chainId);
+      res.json({ gasPrice, chainId });
+    } catch (error) {
+      console.error("Error fetching gas price:", error);
+      res.status(500).json({ message: "Failed to fetch gas price" });
+    }
+  });
+
+  // Get transaction history for a wallet
+  app.get('/api/web3/wallets/:walletId/transactions', isAuthenticated, async (req: any, res) => {
+    try {
+      const walletId = parseInt(req.params.walletId);
+      const wallet = await storage.getWallet(walletId);
+      
+      if (!wallet || wallet.userId !== req.user.id) {
+        return res.status(404).json({ message: "Wallet not found" });
+      }
+
+      const limit = parseInt(req.query.limit as string) || 10;
+      const transactions = await web3Service.getTransactionHistory(
+        wallet.walletAddress,
+        wallet.chainId,
+        limit
+      );
+      
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching transaction history:", error);
+      res.status(500).json({ message: "Failed to fetch transaction history" });
     }
   });
 
