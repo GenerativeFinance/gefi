@@ -64,8 +64,9 @@ export default function ModelFunding() {
   });
 
   // Fetch user's funding history
-  const { data: userFunding = [], isLoading: isLoadingFunding } = useQuery({
+  const { data: userFunding = [], isLoading: isLoadingFunding, error: fundingError } = useQuery({
     queryKey: ["/api/model-funding/my-investments"],
+    retry: false,
   });
 
   // Fetch funding categories

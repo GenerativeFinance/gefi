@@ -540,23 +540,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserModelFunding(userId: string): Promise<ModelFunding[]> {
-    return await db.select({
-      id: modelFunding.id,
-      modelId: modelFunding.modelId,
-      investorId: modelFunding.investorId,
-      amount: modelFunding.amount,
-      stake: modelFunding.stake,
-      status: modelFunding.status,
-      transactionId: modelFunding.transactionId,
-      createdAt: modelFunding.createdAt,
-      updatedAt: modelFunding.updatedAt,
-      modelName: developerModels.name,
-      modelStatus: developerModels.status,
-    })
-    .from(modelFunding)
-    .leftJoin(developerModels, eq(modelFunding.modelId, developerModels.id))
-    .where(eq(modelFunding.investorId, userId))
-    .orderBy(desc(modelFunding.createdAt));
+    try {
+      return await db.select({
+        id: modelFunding.id,
+        modelId: modelFunding.modelId,
+        investorId: modelFunding.investorId,
+        amount: modelFunding.amount,
+        status: modelFunding.status,
+        transactionId: modelFunding.transactionId,
+        createdAt: modelFunding.createdAt,
+        updatedAt: modelFunding.updatedAt,
+        modelName: developerModels.name,
+        modelStatus: developerModels.status,
+      })
+      .from(modelFunding)
+      .leftJoin(developerModels, eq(modelFunding.modelId, developerModels.id))
+      .where(eq(modelFunding.investorId, userId))
+      .orderBy(desc(modelFunding.createdAt));
+    } catch (error) {
+      console.error('Error fetching user model funding:', error);
+      return []; // Return empty array if query fails
+    }
   }
 
   // Placeholder implementations for missing methods
