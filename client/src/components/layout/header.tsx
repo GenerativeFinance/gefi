@@ -275,6 +275,7 @@ export default function Header() {
                               : 'text-muted-foreground hover:text-foreground'
                           }`}
                         >
+                          <Home className="h-4 w-4 mr-2" />
                           Home
                         </Button>
                       </Link>
@@ -291,7 +292,7 @@ export default function Header() {
                                 : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
-                            
+                            <TrendingUp className="h-4 w-4 mr-2" />
                             Market Insights
                           </Button>
                         </DropdownMenuTrigger>
@@ -319,7 +320,7 @@ export default function Header() {
                                 : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
-                            
+                            <Briefcase className="h-4 w-4 mr-2" />
                             Portfolio
                           </Button>
                         </DropdownMenuTrigger>
@@ -347,7 +348,7 @@ export default function Header() {
                                 : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
-                            
+                            <FileText className="h-4 w-4 mr-2" />
                             Reports
                           </Button>
                         </DropdownMenuTrigger>
@@ -375,7 +376,7 @@ export default function Header() {
                                 : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
-                            
+                            <Shield className="h-4 w-4 mr-2" />
                             Risk Management
                           </Button>
                         </DropdownMenuTrigger>
@@ -403,7 +404,7 @@ export default function Header() {
                                 : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
-                            
+                            <BarChart3 className="h-4 w-4 mr-2" />
                             Trading
                           </Button>
                         </DropdownMenuTrigger>
@@ -431,7 +432,7 @@ export default function Header() {
                                 : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
-                            
+                            <BookOpen className="h-4 w-4 mr-2" />
                             Learning
                           </Button>
                         </DropdownMenuTrigger>
