@@ -484,7 +484,7 @@ export default function Header() {
             ) : (
               /* Sign In Button for unauthenticated users */
               <Button 
-                onClick={() => window.location.href = '/api/login'}
+                onClick={() => window.location.href = '/login'}
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 Sign In
@@ -762,7 +762,7 @@ export default function Header() {
                 <div className="px-3 py-4">
                   <Button 
                     onClick={() => {
-                      window.location.href = '/api/login';
+                      window.location.href = '/login';
                       setMobileMenuOpen(false);
                     }}
                     className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
