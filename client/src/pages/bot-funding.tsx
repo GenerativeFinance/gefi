@@ -254,7 +254,8 @@ export default function BotFunding() {
   const completedBots = fundingRequests.filter((req: BotFundingRequest) => req.status === "completed").length;
 
   return (
-    <Layout>
+    <div className="min-h-screen bg-background">
+      <Header />
       <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
@@ -818,6 +819,7 @@ export default function BotFunding() {
         </DialogContent>
       </Dialog>
       </div>
-    </Layout>
+      <Footer />
+    </div>
   );
 }
