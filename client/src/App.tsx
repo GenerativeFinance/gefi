@@ -40,6 +40,7 @@ import EnterpriseSales from "@/pages/enterprise-sales";
 import ModelFunding from "@/pages/model-funding";
 import BountyFunding from "@/pages/bounty-funding";
 import BotFunding from "@/pages/bot-funding";
+
 import ProfileSetup from "@/pages/profile-setup";
 import ModelProfile from "@/pages/model-profile";
 import TradingBots from "@/pages/trading-bots";
@@ -92,7 +93,6 @@ function Router() {
             <Route path="/portfolio/risk-distribution" component={RiskDistribution} />
             <Route path="/portfolio/rebalance" component={RebalanceActions} />
             <Route path="/risk-management/assessment" component={RiskAssessment} />
-            <Route path="/bot-funding" component={BotFunding} />
             <Route path="/reports" component={Reports} />
             <Route path="/reports/all" component={ReportsAll} />
             <Route path="/alerts/all" component={AlertsAll} />
