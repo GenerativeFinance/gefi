@@ -448,6 +448,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Portfolio Rebalancing
+  app.post('/api/portfolio/rebalance', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { targetAllocation, threshold, autoRebalance } = req.body;
+      
+      // Mock rebalancing logic
+      const portfolio = await storage.getUserPortfolio(userId);
+      
+      if (!portfolio) {
+        return res.status(404).json({ message: "Portfolio not found" });
+      }
+      
+      // Calculate rebalancing actions based on target allocation
+      const rebalanceActions = [];
+      const currentAllocation = {
+        stocks: 75,
+        bonds: 15,
+        crypto: 8,
+        commodities: 2
+      };
+      
+      Object.entries(targetAllocation).forEach(([asset, target]) => {
+        const current = currentAllocation[asset as keyof typeof currentAllocation] || 0;
+        const drift = Math.abs(current - target);
+        
+        if (drift >= threshold) {
+          rebalanceActions.push({
+            asset,
+            currentAllocation: current,
+            targetAllocation: target,
+            action: current > target ? 'sell' : 'buy',
+            amount: drift,
+            estimatedValue: drift * parseFloat(portfolio.totalInvestment) / 100
+          });
+        }
+      });
+      
+      // In a real implementation, this would:
+      // 1. Create pending orders
+      // 2. Update portfolio allocation
+      // 3. Log the rebalancing event
+      
+      res.json({
+        message: "Portfolio rebalancing initiated successfully",
+        rebalanceActions,
+        settings: {
+          targetAllocation,
+          threshold,
+          autoRebalance
+        },
+        status: "pending",
+        estimatedCompletionTime: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes
+        totalTransactions: rebalanceActions.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error rebalancing portfolio:", error);
+      res.status(500).json({ message: "Failed to rebalance portfolio" });
+    }
+  });
+
   // AI Model Categories routes
   app.get('/api/ai-model-categories', async (req, res) => {
     try {

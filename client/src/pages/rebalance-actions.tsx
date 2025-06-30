@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import Layout from "@/components/layout/Layout";
+import Header from "@/components/layout/header";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
@@ -107,8 +107,9 @@ export default function RebalanceActions() {
   };
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-6">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="container mx-auto px-4 pt-8 pb-12">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -387,6 +388,6 @@ export default function RebalanceActions() {
           </Card>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }
