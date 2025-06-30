@@ -151,7 +151,7 @@ export default function Header() {
       ];
     }
 
-    // Default submenu
+    // Default submenu - includes main navigation items
     return [
       { name: "Dashboard", href: "/", icon: BarChart3 },
       { name: "Portfolio", href: "/portfolio", icon: Wallet },
@@ -202,54 +202,7 @@ export default function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Main Menu Items */}
-              <Link
-                href="/"
-                className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  location === "/"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                }`}
-              >
-                <Home className="h-4 w-4" />
-                <span>Home</span>
-              </Link>
-
-              <Link
-                href="/portfolio"
-                className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  location.startsWith("/portfolio") || location.startsWith("/rebalance") || location.startsWith("/risk-assessment")
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                }`}
-              >
-                <Wallet className="h-4 w-4" />
-                <span>Portfolio</span>
-              </Link>
-
-              <Link
-                href="/reports"
-                className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  location.startsWith("/reports")
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                }`}
-              >
-                <FileText className="h-4 w-4" />
-                <span>Reports</span>
-              </Link>
-
-              <Link
-                href="/risk-dashboard"
-                className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  location.startsWith("/risk") || location.startsWith("/compliance")
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                }`}
-              >
-                <Shield className="h-4 w-4" />
-                <span>Risk Management</span>
-              </Link>
+              {/* Main Menu Items - now empty since moved to submenu */}
             </div>
 
             {/* Right Side Actions */}

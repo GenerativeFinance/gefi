@@ -97,6 +97,7 @@ function Router() {
             <Route path="/reports/all" component={ReportsAll} />
             <Route path="/alerts/all" component={AlertsAll} />
             <Route path="/risk-management" component={RiskManagement} />
+            <Route path="/risk-dashboard" component={RiskManagement} />
             <Route path="/marketplace" component={Marketplace} />
             <Route path="/pricing" component={Pricing} />
             <Route path="/checkout" component={Checkout} />
