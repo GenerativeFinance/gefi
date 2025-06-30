@@ -49,6 +49,7 @@ import MarketSentiment from "@/pages/market-sentiment";
 import AIModels from "@/pages/ai-models";
 import RiskDistribution from "@/pages/risk-distribution";
 import RebalanceActions from "@/pages/rebalance-actions";
+import RiskAssessment from "@/pages/risk-assessment";
 import CurrentRiskAssessment from "@/pages/current-risk-assessment";
 import OrderBook from "@/pages/order-book";
 import PortfolioAIModels from "@/pages/portfolio-ai-models";
@@ -90,6 +91,7 @@ function Router() {
             <Route path="/portfolio/ai-models" component={PortfolioAIModels} />
             <Route path="/portfolio/risk-distribution" component={RiskDistribution} />
             <Route path="/portfolio/rebalance" component={RebalanceActions} />
+            <Route path="/risk-management/assessment" component={RiskAssessment} />
             <Route path="/reports" component={Reports} />
             <Route path="/reports/all" component={ReportsAll} />
             <Route path="/alerts/all" component={AlertsAll} />

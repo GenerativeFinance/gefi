@@ -34,7 +34,7 @@ import { useQuery } from "@tanstack/react-query";
 
 type DashboardMode = 'investor' | 'developer';
 
-export default function Header() {
+function Header() {
   const { user, isAuthenticated } = useAuth();
   const [location, navigate] = useLocation();
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('investor');

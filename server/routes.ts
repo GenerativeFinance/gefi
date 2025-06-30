@@ -510,6 +510,132 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Risk Assessment Endpoints
+  app.get('/api/risk-assessment/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Mock risk profile data
+      const riskProfile = {
+        id: 1,
+        userId,
+        riskTolerance: 'moderate',
+        investmentHorizon: 10,
+        financialGoals: ['retirement', 'wealth building', 'emergency fund'],
+        currentIncome: 75000,
+        netWorth: 250000,
+        age: 35,
+        experience: 'intermediate',
+        riskCapacity: 65,
+        questionnaire: {
+          riskComfort: 6,
+          volatilityTolerance: 5,
+          lossReaction: 'hold',
+          investmentKnowledge: 7,
+          financialStability: 8
+        },
+        lastAssessment: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
+        riskScore: 58
+      };
+      
+      res.json(riskProfile);
+    } catch (error) {
+      console.error("Error fetching risk profile:", error);
+      res.status(500).json({ message: "Failed to fetch risk profile" });
+    }
+  });
+
+  app.get('/api/risk-assessment/metrics', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mock risk metrics
+      const riskMetrics = {
+        portfolioRisk: 12.5,
+        valueAtRisk: 8420,
+        expectedReturn: 8.2,
+        sharpeRatio: 1.15,
+        maxDrawdown: 18.3,
+        volatility: 15.8,
+        correlationRisk: 23.1,
+        concentrationRisk: 31.5
+      };
+      
+      res.json(riskMetrics);
+    } catch (error) {
+      console.error("Error fetching risk metrics:", error);
+      res.status(500).json({ message: "Failed to fetch risk metrics" });
+    }
+  });
+
+  app.get('/api/risk-assessment/recommendations', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mock recommendations
+      const recommendations = [
+        {
+          id: 1,
+          title: "Diversify International Exposure",
+          description: "Consider increasing international equity allocation to reduce concentration risk in domestic markets.",
+          priority: "medium",
+          category: "allocation",
+          impact: "moderate"
+        },
+        {
+          id: 2,
+          title: "Review Bond Duration",
+          description: "Your bond holdings may be overly sensitive to interest rate changes. Consider shorter duration bonds.",
+          priority: "low",
+          category: "risk_management",
+          impact: "low"
+        },
+        {
+          id: 3,
+          title: "Rebalance Portfolio",
+          description: "Several asset classes have drifted significantly from target allocation. Consider rebalancing.",
+          priority: "high",
+          category: "rebalancing",
+          impact: "high"
+        }
+      ];
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+      res.status(500).json({ message: "Failed to fetch recommendations" });
+    }
+  });
+
+  app.post('/api/risk-assessment', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const assessmentData = req.body;
+      
+      // In a real implementation, this would save to database
+      // For now, we'll just return success with calculated data
+      
+      const riskProfile = {
+        id: Date.now(),
+        userId,
+        ...assessmentData,
+        lastAssessment: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+      
+      res.json({
+        message: "Risk assessment saved successfully",
+        profile: riskProfile,
+        recommendations: [
+          {
+            title: "Assessment Complete",
+            description: "Your risk profile has been updated based on your responses.",
+            priority: "info"
+          }
+        ]
+      });
+    } catch (error) {
+      console.error("Error saving risk assessment:", error);
+      res.status(500).json({ message: "Failed to save risk assessment" });
+    }
+  });
+
   // AI Model Categories routes
   app.get('/api/ai-model-categories', async (req, res) => {
     try {
