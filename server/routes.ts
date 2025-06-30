@@ -237,6 +237,217 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Portfolio AI Models Subscriptions
+  app.get('/api/portfolio/ai-models/subscriptions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Mock data for user subscriptions with detailed info
+      const subscriptions = [
+        {
+          id: 1,
+          name: "Quantum Risk Predictor",
+          description: "Advanced quantum computing algorithms for predicting market volatility and risk patterns with 94% accuracy.",
+          category: "Risk Assessment",
+          creator: "QuantumTech Labs",
+          rating: 4.8,
+          totalRatings: 156,
+          subscription: {
+            id: 1,
+            plan: "monthly",
+            status: "active",
+            price: 299.99,
+            subscribedAt: "2024-11-15T10:00:00Z",
+            renewalDate: "2025-01-15T10:00:00Z",
+            totalUsageHours: 47.5
+          },
+          performance: {
+            totalReturn: 12.45,
+            sharpeRatio: 1.8,
+            maxDrawdown: -8.2,
+            winRate: 68.5
+          }
+        },
+        {
+          id: 2,
+          name: "Neural Portfolio Optimizer",
+          description: "Deep learning model that optimizes portfolio allocation based on market sentiment and technical indicators.",
+          category: "Portfolio Optimization",
+          creator: "AI Capital Solutions",
+          rating: 4.6,
+          totalRatings: 89,
+          subscription: {
+            id: 2,
+            plan: "monthly",
+            status: "active",
+            price: 199.99,
+            subscribedAt: "2024-12-01T10:00:00Z",
+            renewalDate: "2025-01-01T10:00:00Z",
+            totalUsageHours: 23.2
+          },
+          performance: {
+            totalReturn: 8.73,
+            sharpeRatio: 1.6,
+            maxDrawdown: -5.1,
+            winRate: 72.3
+          }
+        }
+      ];
+      
+      res.json(subscriptions);
+    } catch (error) {
+      console.error("Error fetching AI model subscriptions:", error);
+      res.status(500).json({ message: "Failed to fetch subscriptions" });
+    }
+  });
+
+  // Portfolio AI Models Usage History
+  app.get('/api/portfolio/ai-models/usage-history', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Mock usage history data
+      const usageHistory = [
+        {
+          id: 1,
+          modelName: "Quantum Risk Predictor",
+          sessionDuration: 2.5,
+          performanceResult: 3.2,
+          profitLoss: 1250.75,
+          usageType: "live_trading",
+          sessionStarted: "2024-12-29T14:30:00Z",
+          sessionEnded: "2024-12-29T17:00:00Z"
+        },
+        {
+          id: 2,
+          modelName: "Neural Portfolio Optimizer",
+          sessionDuration: 1.8,
+          performanceResult: -1.1,
+          profitLoss: -345.20,
+          usageType: "backtesting",
+          sessionStarted: "2024-12-28T09:15:00Z",
+          sessionEnded: "2024-12-28T11:03:00Z"
+        },
+        {
+          id: 3,
+          modelName: "Quantum Risk Predictor",
+          sessionDuration: 4.2,
+          performanceResult: 5.7,
+          profitLoss: 2890.45,
+          usageType: "analysis",
+          sessionStarted: "2024-12-27T13:20:00Z",
+          sessionEnded: "2024-12-27T17:32:00Z"
+        },
+        {
+          id: 4,
+          modelName: "Neural Portfolio Optimizer",
+          sessionDuration: 3.1,
+          performanceResult: 2.8,
+          profitLoss: 987.60,
+          usageType: "live_trading",
+          sessionStarted: "2024-12-26T10:45:00Z",
+          sessionEnded: "2024-12-26T13:51:00Z"
+        }
+      ];
+      
+      res.json(usageHistory);
+    } catch (error) {
+      console.error("Error fetching usage history:", error);
+      res.status(500).json({ message: "Failed to fetch usage history" });
+    }
+  });
+
+  // Portfolio AI Models Recommendations
+  app.get('/api/portfolio/ai-models/recommendations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Mock recommendations based on user profile and current models
+      const recommendations = [
+        {
+          id: 3,
+          name: "Sentiment-Driven Alpha Generator",
+          description: "AI model that analyzes social media sentiment, news, and market data to identify alpha opportunities.",
+          category: "Alpha Generation",
+          creator: "SentimentAI Corp",
+          rating: 4.7,
+          price: 349.99,
+          matchScore: 92,
+          reasonsForRecommendation: [
+            "Complements your existing risk assessment tools",
+            "High correlation with your successful trading patterns",
+            "Recommended by users with similar portfolios",
+            "Strong performance in current market conditions"
+          ]
+        },
+        {
+          id: 4,
+          name: "Crypto Volatility Predictor",
+          description: "Specialized model for predicting cryptocurrency price movements using blockchain analytics and market data.",
+          category: "Cryptocurrency",
+          creator: "BlockChain Analytics",
+          rating: 4.5,
+          price: 249.99,
+          matchScore: 87,
+          reasonsForRecommendation: [
+            "Your portfolio has 15% crypto exposure",
+            "Pairs well with your risk prediction models",
+            "High demand among similar investors",
+            "Proven track record in volatile markets"
+          ]
+        },
+        {
+          id: 5,
+          name: "ESG Impact Analyzer",
+          description: "Evaluates environmental, social, and governance factors to optimize sustainable investment strategies.",
+          category: "ESG Analytics",
+          creator: "Green Finance AI",
+          rating: 4.4,
+          price: 179.99,
+          matchScore: 78,
+          reasonsForRecommendation: [
+            "Growing trend in sustainable investing",
+            "Complements your portfolio optimization strategy",
+            "High user satisfaction ratings",
+            "Regulatory compliance benefits"
+          ]
+        }
+      ];
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+      res.status(500).json({ message: "Failed to fetch recommendations" });
+    }
+  });
+
+  // Portfolio AI Models Management
+  app.post('/api/portfolio/ai-models/manage', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { action, subscriptionId } = req.body;
+      
+      // Mock management actions
+      const validActions = ['pause', 'resume', 'cancel'];
+      
+      if (!validActions.includes(action)) {
+        return res.status(400).json({ message: "Invalid action" });
+      }
+      
+      // In a real implementation, this would update the database
+      // For now, we'll just return success
+      res.json({ 
+        message: `Subscription ${action}d successfully`,
+        subscriptionId,
+        action,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error managing subscription:", error);
+      res.status(500).json({ message: "Failed to manage subscription" });
+    }
+  });
+
   // AI Model Categories routes
   app.get('/api/ai-model-categories', async (req, res) => {
     try {
