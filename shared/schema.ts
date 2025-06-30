@@ -1054,3 +1054,191 @@ export const insertNftHoldingSchema = createInsertSchema(nftHoldings).omit({
   id: true,
   createdAt: true,
 });
+
+// AI Marketplace Recommendation Engine Tables
+export const userPreferences = pgTable("user_preferences", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  riskTolerance: varchar("risk_tolerance").notNull(), // conservative, moderate, aggressive
+  investmentHorizon: varchar("investment_horizon").notNull(), // short, medium, long
+  preferredCategories: text("preferred_categories").array(), // Array of category IDs or names
+  excludedCategories: text("excluded_categories").array(),
+  maxMonthlySpend: decimal("max_monthly_spend", { precision: 10, scale: 2 }),
+  preferredCompliance: text("preferred_compliance").array(), // GDPR, SOX, MiFID II, etc.
+  financialGoals: text("financial_goals").array(), // retirement, wealth_building, income_generation
+  experienceLevel: varchar("experience_level").notNull(), // beginner, intermediate, advanced
+  preferredRegions: text("preferred_regions").array(),
+  autoSubscribe: boolean("auto_subscribe").default(false),
+  notificationPrefs: jsonb("notification_prefs"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const modelRecommendations = pgTable("model_recommendations", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  modelId: integer("model_id").references(() => aiModels.id).notNull(),
+  score: decimal("score", { precision: 5, scale: 4 }).notNull(), // 0.0000 to 1.0000
+  reasonCode: varchar("reason_code").notNull(), // portfolio_match, risk_alignment, performance_history, etc.
+  reasoning: text("reasoning").notNull(),
+  recommendationType: varchar("recommendation_type").notNull(), // personalized, trending, collaborative, content_based
+  priority: varchar("priority").notNull().default("medium"), // low, medium, high, urgent
+  isViewed: boolean("is_viewed").default(false),
+  isInteracted: boolean("is_interacted").default(false),
+  isDismissed: boolean("is_dismissed").default(false),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const userModelInteractions = pgTable("user_model_interactions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  modelId: integer("model_id").references(() => aiModels.id).notNull(),
+  interactionType: varchar("interaction_type").notNull(), // view, like, subscribe, trial, review, share
+  sessionDuration: integer("session_duration"), // in seconds
+  clickDepth: integer("click_depth"), // how many clicks into model details
+  rating: decimal("rating", { precision: 3, scale: 2 }), // User rating 1.00 to 5.00
+  review: text("review"),
+  metadata: jsonb("metadata"), // Additional interaction data
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const similarityScores = pgTable("similarity_scores", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  similarUserId: varchar("similar_user_id").references(() => users.id).notNull(),
+  score: decimal("score", { precision: 5, scale: 4 }).notNull(), // 0.0000 to 1.0000
+  sharedModels: integer("shared_models").default(0),
+  sharedCategories: integer("shared_categories").default(0),
+  similarityType: varchar("similarity_type").notNull(), // behavioral, demographic, portfolio_based
+  lastCalculated: timestamp("last_calculated").defaultNow(),
+});
+
+export const recommendationMetrics = pgTable("recommendation_metrics", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  modelId: integer("model_id").references(() => aiModels.id).notNull(),
+  recommendationId: integer("recommendation_id").references(() => modelRecommendations.id),
+  metricType: varchar("metric_type").notNull(), // ctr, conversion, satisfaction, retention
+  metricValue: decimal("metric_value", { precision: 8, scale: 6 }).notNull(),
+  timeFrame: varchar("time_frame").notNull(), // daily, weekly, monthly
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const trendingModels = pgTable("trending_models", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").references(() => aiModels.id).notNull(),
+  rank: integer("rank").notNull(),
+  category: varchar("category"),
+  trendScore: decimal("trend_score", { precision: 8, scale: 4 }).notNull(),
+  viewCount: integer("view_count").default(0),
+  subscriptionCount: integer("subscription_count").default(0),
+  ratingCount: integer("rating_count").default(0),
+  avgRating: decimal("avg_rating", { precision: 3, scale: 2 }),
+  timeFrame: varchar("time_frame").notNull(), // daily, weekly, monthly
+  calculatedAt: timestamp("calculated_at").defaultNow(),
+});
+
+export const personalizedFeed = pgTable("personalized_feed", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  contentType: varchar("content_type").notNull(), // model_recommendation, trending_model, educational_content
+  contentId: integer("content_id").notNull(), // References the actual content (model ID, article ID, etc.)
+  score: decimal("score", { precision: 5, scale: 4 }).notNull(),
+  position: integer("position").notNull(), // Order in feed
+  isViewed: boolean("is_viewed").default(false),
+  isInteracted: boolean("is_interacted").default(false),
+  feedType: varchar("feed_type").notNull(), // home, category, search
+  generatedAt: timestamp("generated_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+});
+
+// Recommendation Engine Relations
+export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [userPreferences.userId],
+    references: [users.id],
+  }),
+}));
+
+export const modelRecommendationsRelations = relations(modelRecommendations, ({ one, many }) => ({
+  user: one(users, {
+    fields: [modelRecommendations.userId],
+    references: [users.id],
+  }),
+  model: one(aiModels, {
+    fields: [modelRecommendations.modelId],
+    references: [aiModels.id],
+  }),
+  metrics: many(recommendationMetrics),
+}));
+
+export const userModelInteractionsRelations = relations(userModelInteractions, ({ one }) => ({
+  user: one(users, {
+    fields: [userModelInteractions.userId],
+    references: [users.id],
+  }),
+  model: one(aiModels, {
+    fields: [userModelInteractions.modelId],
+    references: [aiModels.id],
+  }),
+}));
+
+export const trendingModelsRelations = relations(trendingModels, ({ one }) => ({
+  model: one(aiModels, {
+    fields: [trendingModels.modelId],
+    references: [aiModels.id],
+  }),
+}));
+
+export const personalizedFeedRelations = relations(personalizedFeed, ({ one }) => ({
+  user: one(users, {
+    fields: [personalizedFeed.userId],
+    references: [users.id],
+  }),
+}));
+
+// Insert schemas for recommendation engine
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertModelRecommendationSchema = createInsertSchema(modelRecommendations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserModelInteractionSchema = createInsertSchema(userModelInteractions).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertTrendingModelSchema = createInsertSchema(trendingModels).omit({
+  id: true,
+  calculatedAt: true,
+});
+
+export const insertPersonalizedFeedSchema = createInsertSchema(personalizedFeed).omit({
+  id: true,
+  generatedAt: true,
+});
+
+// Type definitions
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+
+export type ModelRecommendation = typeof modelRecommendations.$inferSelect;
+export type InsertModelRecommendation = z.infer<typeof insertModelRecommendationSchema>;
+
+export type UserModelInteraction = typeof userModelInteractions.$inferSelect;
+export type InsertUserModelInteraction = z.infer<typeof insertUserModelInteractionSchema>;
+
+export type TrendingModel = typeof trendingModels.$inferSelect;
+export type InsertTrendingModel = z.infer<typeof insertTrendingModelSchema>;
+
+export type PersonalizedFeed = typeof personalizedFeed.$inferSelect;
+export type InsertPersonalizedFeed = z.infer<typeof insertPersonalizedFeedSchema>;

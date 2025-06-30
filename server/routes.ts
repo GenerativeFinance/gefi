@@ -9,7 +9,8 @@ import { PortfolioOptimizer, RiskAssessment, MarketAnalysis } from "./aiModels";
 import { marketDataService } from "./marketDataService";
 import { tradingService } from "./tradingService";
 import { web3Service } from "./web3Service";
-import { insertWeb3WalletSchema, insertCryptoHoldingSchema, insertDefiPositionSchema, insertDefiTransactionSchema, insertYieldFarmingPositionSchema, insertNftHoldingSchema } from "@shared/schema";
+import { RecommendationEngine } from "./recommendationEngine";
+import { insertWeb3WalletSchema, insertCryptoHoldingSchema, insertDefiPositionSchema, insertDefiTransactionSchema, insertYieldFarmingPositionSchema, insertNftHoldingSchema, insertUserPreferencesSchema, insertUserModelInteractionSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -2067,6 +2068,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching transaction history:", error);
       res.status(500).json({ message: "Failed to fetch transaction history" });
+    }
+  });
+
+  // AI Marketplace Recommendation Engine API endpoints
+  app.get('/api/recommendations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { context, categoryFilter, riskLevel, maxPrice, limit } = req.query;
+
+      const recommendations = await RecommendationEngine.generateRecommendations({
+        userId,
+        context: context || 'home',
+        categoryFilter: categoryFilter ? categoryFilter.split(',') : undefined,
+        riskLevel,
+        maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+        limit: limit ? parseInt(limit) : 10
+      });
+
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error generating recommendations:", error);
+      res.status(500).json({ message: "Failed to generate recommendations" });
+    }
+  });
+
+  app.post('/api/recommendations/interact', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { modelId, interactionType, metadata } = req.body;
+
+      if (!modelId || !interactionType) {
+        return res.status(400).json({ message: "Model ID and interaction type are required" });
+      }
+
+      await RecommendationEngine.trackInteraction(userId, modelId, interactionType, metadata);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error tracking interaction:", error);
+      res.status(500).json({ message: "Failed to track interaction" });
+    }
+  });
+
+  app.get('/api/recommendations/trending', async (req, res) => {
+    try {
+      const { timeFrame, category, limit } = req.query;
+      
+      // This would fetch from the trending models table
+      const trending = [];
+      
+      res.json(trending);
+    } catch (error) {
+      console.error("Error fetching trending models:", error);
+      res.status(500).json({ message: "Failed to fetch trending models" });
+    }
+  });
+
+  app.get('/api/user/preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // This would fetch user preferences
+      const preferences = {
+        riskTolerance: 'moderate',
+        investmentHorizon: 'medium',
+        preferredCategories: [],
+        excludedCategories: [],
+        maxMonthlySpend: 500,
+        experienceLevel: 'intermediate',
+        financialGoals: ['wealth_building'],
+        preferredRegions: ['US', 'EU']
+      };
+      
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error fetching user preferences:", error);
+      res.status(500).json({ message: "Failed to fetch user preferences" });
+    }
+  });
+
+  app.post('/api/user/preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const preferences = req.body;
+
+      // This would save user preferences and recalculate recommendations
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating user preferences:", error);
+      res.status(500).json({ message: "Failed to update user preferences" });
+    }
+  });
+
+  app.get('/api/recommendations/personalized-feed', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { feedType, limit } = req.query;
+
+      // This would fetch personalized feed items
+      const feed = [];
+      
+      res.json(feed);
+    } catch (error) {
+      console.error("Error fetching personalized feed:", error);
+      res.status(500).json({ message: "Failed to fetch personalized feed" });
     }
   });
 
