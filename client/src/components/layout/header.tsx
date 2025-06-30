@@ -122,6 +122,7 @@ export default function Header() {
     
     if (location.includes('funding')) {
       return [
+        { name: "Dashboard", href: "/", icon: BarChart3 },
         { name: "Bot Funding", href: "/bot-funding", icon: DollarSign },
         { name: "Model Funding", href: "/model-funding", icon: CircleDollarSign },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
@@ -132,6 +133,7 @@ export default function Header() {
     
     if (location.startsWith('/learning') || location.startsWith('/webinars')) {
       return [
+        { name: "Dashboard", href: "/", icon: BarChart3 },
         { name: "Tutorials", href: "/learning", icon: BookOpen },
         { name: "Webinars", href: "/webinars", icon: GraduationCap },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
@@ -157,7 +159,9 @@ export default function Header() {
       { name: "Portfolio", href: "/portfolio", icon: Wallet },
       { name: "AI Marketplace", href: "/marketplace", icon: Store },
       { name: "Trading", href: "/live-trading", icon: TrendingUp },
-      { name: "Reports", href: "/reports", icon: FileText }
+      { name: "Reports", href: "/reports", icon: FileText },
+      { name: "Funding", href: "/bot-funding", icon: DollarSign },
+      { name: "Learning", href: "/learning-center", icon: GraduationCap }
     ];
   };
 
