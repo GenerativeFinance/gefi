@@ -23,6 +23,7 @@ import {
   Sparkles
 } from "lucide-react";
 import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
 import { useToast } from "@/hooks/use-toast";
 import { format, addMonths, differenceInDays, isPast } from "date-fns";
 
@@ -467,6 +468,7 @@ export default function PortfolioAIModels() {
           </TabsContent>
         </Tabs>
       </div>
+      <Footer />
     </div>
   );
 }

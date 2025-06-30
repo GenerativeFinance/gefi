@@ -92,6 +92,7 @@ function Router() {
             <Route path="/portfolio/risk-distribution" component={RiskDistribution} />
             <Route path="/portfolio/rebalance" component={RebalanceActions} />
             <Route path="/risk-management/assessment" component={RiskAssessment} />
+            <Route path="/bot-funding" component={BotFunding} />
             <Route path="/reports" component={Reports} />
             <Route path="/reports/all" component={ReportsAll} />
             <Route path="/alerts/all" component={AlertsAll} />

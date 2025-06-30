@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
@@ -388,6 +389,7 @@ export default function RebalanceActions() {
           </Card>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
