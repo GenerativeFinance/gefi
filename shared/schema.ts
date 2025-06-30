@@ -116,8 +116,30 @@ export const userModelSubscriptions = pgTable("user_model_subscriptions", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   modelId: integer("model_id").references(() => aiModels.id).notNull(),
+  plan: varchar("plan").notNull().default("monthly"), // 'monthly', 'yearly'
+  status: varchar("status").notNull().default("active"), // 'active', 'cancelled', 'expired', 'paused'
+  price: decimal("price", { precision: 8, scale: 2 }).notNull(),
   subscribedAt: timestamp("subscribed_at").defaultNow(),
+  renewalDate: timestamp("renewal_date").notNull(),
+  lastPaymentDate: timestamp("last_payment_date"),
+  cancelledAt: timestamp("cancelled_at"),
+  pausedAt: timestamp("paused_at"),
+  totalUsageHours: decimal("total_usage_hours", { precision: 10, scale: 2 }).default("0"),
   isActive: boolean("is_active").default(true),
+});
+
+export const modelUsageHistory = pgTable("model_usage_history", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  modelId: integer("model_id").references(() => aiModels.id).notNull(),
+  subscriptionId: integer("subscription_id").references(() => userModelSubscriptions.id),
+  sessionDuration: decimal("session_duration", { precision: 10, scale: 2 }).notNull(), // in hours
+  performanceResult: decimal("performance_result", { precision: 8, scale: 4 }),
+  profitLoss: decimal("profit_loss", { precision: 12, scale: 2 }),
+  usageType: varchar("usage_type").notNull(), // 'backtesting', 'live_trading', 'analysis'
+  sessionStarted: timestamp("session_started").notNull(),
+  sessionEnded: timestamp("session_ended"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const portfolioAiModels = pgTable("portfolio_ai_models", {

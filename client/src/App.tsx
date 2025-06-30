@@ -51,6 +51,7 @@ import RiskDistribution from "@/pages/risk-distribution";
 import RebalanceActions from "@/pages/rebalance-actions";
 import CurrentRiskAssessment from "@/pages/current-risk-assessment";
 import OrderBook from "@/pages/order-book";
+import PortfolioAIModels from "@/pages/portfolio-ai-models";
 
 function Router() {
   const { isAuthenticated, isLoading, user, hasCompletedProfile } = useAuth();
@@ -86,6 +87,8 @@ function Router() {
             <Route path="/home" component={Home} />
             <Route path="/analytics" component={AnalyticsDashboard} />
             <Route path="/portfolio" component={Portfolio} />
+            <Route path="/portfolio/ai-models" component={PortfolioAIModels} />
+            <Route path="/portfolio/risk-distribution" component={RiskDistribution} />
             <Route path="/reports" component={Reports} />
             <Route path="/reports/all" component={ReportsAll} />
             <Route path="/alerts/all" component={AlertsAll} />
