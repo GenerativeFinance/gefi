@@ -130,10 +130,8 @@ export default function Header() {
       return [
         { name: "Dashboard", href: "/", icon: BarChart3 },
         { name: "Bot Funding", href: "/bot-funding", icon: DollarSign },
-        { name: "Model Funding", href: "/model-funding", icon: CircleDollarSign },
-        { name: "AI Marketplace", href: "/marketplace", icon: Store },
-        { name: "Bounty Funding", href: "/bounty-funding", icon: Target },
-        { name: "My Investments", href: "/my-investments", icon: Wallet }
+        { name: "AI Model Funding", href: "/model-funding", icon: CircleDollarSign },
+        { name: "Bounty Funding", href: "/bounty-funding", icon: Target }
       ];
     }
     
