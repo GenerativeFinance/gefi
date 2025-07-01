@@ -59,7 +59,7 @@ import RebalanceActions from "@/pages/rebalance-actions";
 import RiskAssessment from "@/pages/risk-assessment";
 import CurrentRiskAssessment from "@/pages/current-risk-assessment";
 import OrderBook from "@/pages/order-book";
-import PortfolioAIModels from "@/pages/portfolio-ai-models";
+
 
 function Router() {
   const { isAuthenticated, isLoading, user, hasCompletedProfile } = useAuth();
@@ -95,7 +95,7 @@ function Router() {
             <Route path="/home" component={Home} />
             <Route path="/analytics" component={AnalyticsDashboard} />
             <Route path="/portfolio" component={Portfolio} />
-            <Route path="/portfolio/ai-models" component={PortfolioAIModels} />
+            <Route path="/portfolio/ai-models" component={PortfolioAI} />
             <Route path="/portfolio/risk-distribution" component={RiskDistribution} />
             <Route path="/portfolio/rebalance" component={RebalanceActions} />
             <Route path="/risk-management/assessment" component={RiskAssessment} />
@@ -131,6 +131,11 @@ function Router() {
             <Route path="/rebalance-actions" component={RebalanceActions} />
             <Route path="/current-risk-assessment" component={CurrentRiskAssessment} />
             <Route path="/order-book" component={OrderBook} />
+            <Route path="/community" component={Community} />
+            <Route path="/docs" component={Docs} />
+            <Route path="/webinars" component={Webinars} />
+            <Route path="/strategies" component={Strategies} />
+            <Route path="/orders" component={Orders} />
           </>
         ) : (
           <>
