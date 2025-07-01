@@ -258,6 +258,13 @@ Changelog:
   * Added tabbed interface with dashboard overview showing combined funding statistics and quick access to specialized funding sections
   * Updated default navigation to point to unified funding page instead of individual funding pages
   * Maintained existing specialized funding pages accessible through the unified interface
+- July 1, 2025. Updated portfolio submenu and created comprehensive portfolio performance page
+  * Changed "Overview" to "Portfolio" in portfolio submenu navigation with Wallet icon
+  * Created comprehensive /portfolio-performance page with advanced analytics and visualizations
+  * Added tabbed interface with Overview, Returns, Allocation, and Risk Analysis sections
+  * Integrated Recharts library for portfolio value charts, monthly returns comparison, and asset allocation pie charts
+  * Built comprehensive performance metrics including Sharpe ratio, max drawdown, and top performers tracking
+  * Added export functionality and refresh capabilities for portfolio performance reports
 ```
 
 ## User Preferences

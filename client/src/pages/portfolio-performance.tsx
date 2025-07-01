@@ -249,7 +249,7 @@ export default function PortfolioPerformance() {
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
                     <RechartsPieChart>
-                      <pie
+                      <Pie
                         data={assetAllocation}
                         cx="50%"
                         cy="50%"
@@ -261,7 +261,7 @@ export default function PortfolioPerformance() {
                         {assetAllocation.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
-                      </pie>
+                      </Pie>
                       <Tooltip />
                     </RechartsPieChart>
                   </ResponsiveContainer>

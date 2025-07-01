@@ -74,7 +74,7 @@ export default function Header() {
   const getSubmenuItems = () => {
     if (location.startsWith('/market-insights') || location === '/market-sentiment') {
       return [
-        { name: "Dashboard", href: "/", icon: BarChart3 },
+        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Real-Time Data", href: "/live-trading", icon: TrendingUp },
         { name: "AI Insights", href: "/market-insights", icon: Brain },
         { name: "Market Sentiment", href: "/market-sentiment", icon: BarChart3 },
@@ -85,7 +85,7 @@ export default function Header() {
     
     if (location.startsWith('/portfolio')) {
       return [
-        { name: "Dashboard", href: "/", icon: BarChart3 },
+        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Portfolio", href: "/portfolio", icon: Wallet },
         { name: "AI Models", href: "/portfolio/ai-models", icon: Bot },
         { name: "Rebalancing", href: "/rebalance-actions", icon: Target },
@@ -96,7 +96,7 @@ export default function Header() {
     
     if (location.startsWith('/reports')) {
       return [
-        { name: "Dashboard", href: "/", icon: BarChart3 },
+        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Performance", href: "/reports", icon: FileText },
         { name: "Risk Analysis", href: "/risk-reports", icon: Shield },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
@@ -117,7 +117,7 @@ export default function Header() {
     
     if (location.startsWith('/trading') || location.startsWith('/live-trading')) {
       return [
-        { name: "Dashboard", href: "/", icon: BarChart3 },
+        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Live Trading", href: "/live-trading", icon: TrendingUp },
         { name: "Trading Bots", href: "/trading-bots", icon: Bot },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
@@ -128,7 +128,7 @@ export default function Header() {
     
     if (location.includes('funding')) {
       return [
-        { name: "Dashboard", href: "/", icon: BarChart3 },
+        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Bot Funding", href: "/bot-funding", icon: DollarSign },
         { name: "AI Model Funding", href: "/model-funding", icon: CircleDollarSign },
         { name: "Bounty Funding", href: "/bounty-funding", icon: Target }
