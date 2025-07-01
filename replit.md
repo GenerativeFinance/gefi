@@ -251,6 +251,13 @@ Changelog:
   * Fixed naming conflicts in App.tsx imports and resolved duplicate component references
   * Ensured all new pages are accessible through proper routing configuration
   * Completed comprehensive page structure with consistent Layout wrapper across all components
+- July 1, 2025. Fixed submenu structure and created unified funding page
+  * Confirmed Dashboard option is present in both /live-trading and /portfolio submenu structures
+  * Fixed portfolio submenu AI Models link to use correct route (/portfolio/ai-models)
+  * Created new unified funding page (/funding) with proper submenu structure: Dashboard, Bot Funding, AI Model Funding, Bounty Funding
+  * Added tabbed interface with dashboard overview showing combined funding statistics and quick access to specialized funding sections
+  * Updated default navigation to point to unified funding page instead of individual funding pages
+  * Maintained existing specialized funding pages accessible through the unified interface
 ```
 
 ## User Preferences

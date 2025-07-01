@@ -55,6 +55,7 @@ import PortfolioAI from "@/pages/portfolio-ai-models";
 import Strategies from "@/pages/strategies";
 import Orders from "@/pages/orders";
 import RiskDistribution from "@/pages/risk-distribution";
+import Funding from "@/pages/funding";
 import RebalanceActions from "@/pages/rebalance-actions";
 import RiskAssessment from "@/pages/risk-assessment";
 import CurrentRiskAssessment from "@/pages/current-risk-assessment";
@@ -136,6 +137,7 @@ function Router() {
             <Route path="/webinars" component={Webinars} />
             <Route path="/strategies" component={Strategies} />
             <Route path="/orders" component={Orders} />
+            <Route path="/funding" component={Funding} />
           </>
         ) : (
           <>

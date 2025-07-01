@@ -87,7 +87,7 @@ export default function Header() {
       return [
         { name: "Dashboard", href: "/", icon: BarChart3 },
         { name: "Overview", href: "/portfolio", icon: BarChart3 },
-        { name: "AI Models", href: "/portfolio-ai-models", icon: Bot },
+        { name: "AI Models", href: "/portfolio/ai-models", icon: Bot },
         { name: "Rebalancing", href: "/rebalance-actions", icon: Target },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
         { name: "Performance", href: "/portfolio-performance", icon: TrendingUp }
@@ -175,7 +175,7 @@ export default function Header() {
       { name: "AI Marketplace", href: "/marketplace", icon: Store },
       { name: "Trading", href: "/live-trading", icon: TrendingUp },
       { name: "Reports", href: "/reports", icon: FileText },
-      { name: "Funding", href: "/bot-funding", icon: DollarSign },
+      { name: "Funding", href: "/funding", icon: DollarSign },
       { name: "Learning", href: "/learning-center", icon: GraduationCap }
     ];
   };
