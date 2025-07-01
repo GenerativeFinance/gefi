@@ -137,7 +137,7 @@ export default function Header() {
     
     if (location.startsWith('/learning') || location.startsWith('/webinars')) {
       return [
-        { name: "Dashboard", href: "/", icon: BarChart3 },
+        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Tutorials", href: "/learning", icon: BookOpen },
         { name: "Webinars", href: "/webinars", icon: GraduationCap },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
@@ -148,7 +148,7 @@ export default function Header() {
     
     if (location.startsWith('/marketplace')) {
       return [
-        { name: "Dashboard", href: "/", icon: BarChart3 },
+        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
         { name: "AI Models", href: "/marketplace", icon: Store },
         { name: "Categories", href: "/marketplace?tab=categories", icon: Grid },
         { name: "My Subscriptions", href: "/my-subscriptions", icon: CreditCard },
@@ -170,7 +170,7 @@ export default function Header() {
 
     // Default submenu - includes main navigation items
     return [
-      { name: "Dashboard", href: "/", icon: BarChart3 },
+      { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
       { name: "Portfolio", href: "/portfolio", icon: Wallet },
       { name: "AI Marketplace", href: "/marketplace", icon: Store },
       { name: "Trading", href: "/live-trading", icon: TrendingUp },

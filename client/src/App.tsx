@@ -58,6 +58,7 @@ import RiskDistribution from "@/pages/risk-distribution";
 import Funding from "@/pages/funding";
 import RebalanceActions from "@/pages/rebalance-actions";
 import PortfolioPerformance from "@/pages/portfolio-performance";
+import InvestorDashboard from "@/pages/investor-dashboard";
 import RiskAssessment from "@/pages/risk-assessment";
 import CurrentRiskAssessment from "@/pages/current-risk-assessment";
 import OrderBook from "@/pages/order-book";
@@ -140,6 +141,7 @@ function Router() {
             <Route path="/orders" component={Orders} />
             <Route path="/funding" component={Funding} />
             <Route path="/portfolio-performance" component={PortfolioPerformance} />
+            <Route path="/investor-dashboard" component={InvestorDashboard} />
           </>
         ) : (
           <>
