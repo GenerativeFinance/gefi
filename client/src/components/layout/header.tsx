@@ -38,6 +38,8 @@ import {
   Activity,
   PieChart,
   TrendingDown,
+  Grid,
+  CreditCard,
   Building
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -72,6 +74,7 @@ export default function Header() {
   const getSubmenuItems = () => {
     if (location.startsWith('/market-insights') || location === '/market-sentiment') {
       return [
+        { name: "Dashboard", href: "/", icon: BarChart3 },
         { name: "Real-Time Data", href: "/live-trading", icon: TrendingUp },
         { name: "AI Insights", href: "/market-insights", icon: Brain },
         { name: "Market Sentiment", href: "/market-sentiment", icon: BarChart3 },
@@ -82,6 +85,7 @@ export default function Header() {
     
     if (location.startsWith('/portfolio')) {
       return [
+        { name: "Dashboard", href: "/", icon: BarChart3 },
         { name: "Overview", href: "/portfolio", icon: BarChart3 },
         { name: "AI Models", href: "/portfolio-ai-models", icon: Bot },
         { name: "Rebalancing", href: "/rebalance-actions", icon: Target },
@@ -92,6 +96,7 @@ export default function Header() {
     
     if (location.startsWith('/reports')) {
       return [
+        { name: "Dashboard", href: "/", icon: BarChart3 },
         { name: "Performance", href: "/reports", icon: FileText },
         { name: "Risk Analysis", href: "/risk-reports", icon: Shield },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
@@ -112,6 +117,7 @@ export default function Header() {
     
     if (location.startsWith('/trading') || location.startsWith('/live-trading')) {
       return [
+        { name: "Dashboard", href: "/", icon: BarChart3 },
         { name: "Live Trading", href: "/live-trading", icon: TrendingUp },
         { name: "Trading Bots", href: "/trading-bots", icon: Bot },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
@@ -139,6 +145,17 @@ export default function Header() {
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
         { name: "Documentation", href: "/docs", icon: FileText },
         { name: "Community", href: "/community", icon: Users }
+      ];
+    }
+    
+    if (location.startsWith('/marketplace')) {
+      return [
+        { name: "Dashboard", href: "/", icon: BarChart3 },
+        { name: "AI Models", href: "/marketplace", icon: Store },
+        { name: "Categories", href: "/marketplace?tab=categories", icon: Grid },
+        { name: "My Subscriptions", href: "/my-subscriptions", icon: CreditCard },
+        { name: "Trading Bots", href: "/trading-bots", icon: Bot },
+        { name: "Developers", href: "/developers", icon: Users }
       ];
     }
 
