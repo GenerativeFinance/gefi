@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import Layout from "@/components/layout/Layout";
 import {
   Search,
   Filter,
@@ -181,7 +182,8 @@ export default function AIMarketplace() {
   });
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <Layout>
+      <div className="container mx-auto px-4 py-8 space-y-8">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div>
@@ -677,6 +679,7 @@ export default function AIMarketplace() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </Layout>
   );
 }

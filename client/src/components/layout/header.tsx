@@ -173,17 +173,8 @@ export default function Header() {
         {/* Main Header */}
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold">GeFi</span>
-            </Link>
-
-            {/* Main Navigation - Desktop */}
-            <div className="hidden md:flex items-center space-x-1">
-              {/* Dashboard Mode Toggle */}
+            {/* Dashboard Mode Toggle - moved to left */}
+            <div className="hidden md:flex items-center space-x-3">
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-accent transition-colors">
                   <Bot className="h-4 w-4" />
@@ -194,19 +185,35 @@ export default function Header() {
                   <DropdownMenuItem asChild>
                     <Link href="/" className="flex items-center space-x-2">
                       <TrendingUp className="h-4 w-4" />
-                      <span>Switch to Investor</span>
+                      <span>Investor</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/developer" className="flex items-center space-x-2">
                       <Code className="h-4 w-4" />
-                      <span>Switch to Developer</span>
+                      <span>Developer</span>
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Main Menu Items - now empty since moved to submenu */}
+              {/* Logo */}
+              <Link href="/" className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <Brain className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <span className="text-xl font-bold">GeFi</span>
+              </Link>
+            </div>
+
+            {/* Mobile Logo */}
+            <div className="md:hidden">
+              <Link href="/" className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <Brain className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <span className="text-xl font-bold">GeFi</span>
+              </Link>
             </div>
 
             {/* Right Side Actions */}
