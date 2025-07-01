@@ -86,7 +86,7 @@ export default function Header() {
     if (location.startsWith('/portfolio')) {
       return [
         { name: "Dashboard", href: "/", icon: BarChart3 },
-        { name: "Overview", href: "/portfolio", icon: BarChart3 },
+        { name: "Portfolio", href: "/portfolio", icon: Wallet },
         { name: "AI Models", href: "/portfolio/ai-models", icon: Bot },
         { name: "Rebalancing", href: "/rebalance-actions", icon: Target },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
