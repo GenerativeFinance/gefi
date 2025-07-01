@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { TradingBot as TradingBotDB } from "@shared/schema";
 import { Link } from "wouter";
+import Layout from "@/components/layout/Layout";
 import { 
   Bot, 
   TrendingUp, 
@@ -234,7 +235,8 @@ export default function TradingBots() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <Layout>
+      <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Trading Bots</h1>
@@ -748,5 +750,6 @@ export default function TradingBots() {
         </Dialog>
       )}
     </div>
+    </Layout>
   );
 }
