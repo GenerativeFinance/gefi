@@ -96,7 +96,7 @@ export default function Header() {
     if (location.startsWith('/reports') || location.startsWith('/risk-reports') || location.startsWith('/compliance-reports')) {
       return [
         { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
-        { name: "Performance", href: "/reports", icon: FileText },
+        { name: "Reports", href: "/reports", icon: FileText },
         { name: "Risk Analysis", href: "/risk-reports", icon: Shield },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
         { name: "Compliance", href: "/compliance-reports", icon: Building },
