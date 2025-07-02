@@ -213,30 +213,26 @@ export default function Header() {
 
             {/* Right Side Actions */}
             <div className="flex items-center space-x-3">
-              {/* Dashboard Mode Toggle - moved to right */}
-              <div className="hidden md:flex">
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-accent transition-colors">
-                    <Bot className="h-4 w-4" />
-                    <span>{isDeveloperPage ? 'Developer' : 'Investor'}</span>
-                    <ChevronDown className="h-3 w-3" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href="/" className="flex items-center space-x-2">
-                        <TrendingUp className="h-4 w-4" />
-                        <span>Investor</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/developer" className="flex items-center space-x-2">
-                        <Code className="h-4 w-4" />
-                        <span>Developer</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              {/* Dashboard Mode Toggle - Icon Only */}
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center justify-center w-10 h-10 rounded-md text-foreground hover:bg-accent transition-colors">
+                  {isDeveloperPage ? <Code className="h-5 w-5" /> : <TrendingUp className="h-5 w-5" />}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link href="/" className="flex items-center space-x-2">
+                      <TrendingUp className="h-4 w-4" />
+                      <span>Investor Dashboard</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/developer" className="flex items-center space-x-2">
+                      <Code className="h-4 w-4" />
+                      <span>Developer Dashboard</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* Search */}
               <Button
@@ -398,11 +394,12 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Submenu */}
+        {/* Submenu - Responsive */}
         {submenuItems.length > 0 && (
           <div className="border-t border-border bg-muted/30">
             <div className="container mx-auto px-4">
-              <div className="flex items-center space-x-1 py-2 overflow-x-auto">
+              {/* Desktop Submenu */}
+              <div className="hidden md:flex items-center space-x-1 py-2 overflow-x-auto">
                 {submenuItems.map((item) => (
                   <Link
                     key={item.name}
@@ -415,6 +412,26 @@ export default function Header() {
                   >
                     <item.icon className="h-3.5 w-3.5" />
                     <span>{item.name}</span>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Mobile Submenu - Horizontal scroll with icons */}
+              <div className="md:hidden flex items-center space-x-2 py-2 overflow-x-auto scrollbar-hide">
+                {submenuItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`flex flex-col items-center justify-center min-w-[64px] p-2 rounded-md text-xs font-medium transition-colors ${
+                      location === item.href
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                    }`}
+                  >
+                    <item.icon className="h-4 w-4 mb-1" />
+                    <span className="text-[10px] leading-tight text-center max-w-[48px] truncate">
+                      {item.name}
+                    </span>
                   </Link>
                 ))}
               </div>
