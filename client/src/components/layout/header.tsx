@@ -40,7 +40,8 @@ import {
   TrendingDown,
   Grid,
   CreditCard,
-  Building
+  Building,
+  Video
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -129,18 +130,19 @@ export default function Header() {
     if (location.includes('funding')) {
       return [
         { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
+        { name: "Funding Hub", href: "/funding", icon: Building },
         { name: "Bot Funding", href: "/bot-funding", icon: DollarSign },
         { name: "AI Model Funding", href: "/model-funding", icon: CircleDollarSign },
         { name: "Bounty Funding", href: "/bounty-funding", icon: Target }
       ];
     }
     
-    if (location.startsWith('/learning') || location.startsWith('/webinars')) {
+    if (location.startsWith('/learning') || location.startsWith('/webinars') || location.startsWith('/docs') || location.startsWith('/community')) {
       return [
         { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
+        { name: "Learning", href: "/learning", icon: GraduationCap },
         { name: "Tutorials", href: "/learning", icon: BookOpen },
-        { name: "Webinars", href: "/webinars", icon: GraduationCap },
-        { name: "AI Marketplace", href: "/marketplace", icon: Store },
+        { name: "Webinars", href: "/webinars", icon: Video },
         { name: "Documentation", href: "/docs", icon: FileText },
         { name: "Community", href: "/community", icon: Users }
       ];
