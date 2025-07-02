@@ -283,25 +283,23 @@ export default function Header() {
                 {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
               </Button>
 
-              {/* Language Selector - Hidden on mobile */}
-              <div className="hidden md:block">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                      <Globe className="h-4 w-4 mr-1" />
-                      <span className="hidden sm:inline">Language</span>
-                      <ChevronDown className="h-3 w-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>🇺🇸 English</DropdownMenuItem>
-                    <DropdownMenuItem>🇪🇸 Spanish</DropdownMenuItem>
-                    <DropdownMenuItem>🇫🇷 French</DropdownMenuItem>
-                    <DropdownMenuItem>🇩🇪 German</DropdownMenuItem>
-                    <DropdownMenuItem>🇯🇵 Japanese</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              {/* Language Selector */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                    <Globe className="h-4 w-4 md:mr-1" />
+                    <span className="hidden md:inline">Language</span>
+                    <ChevronDown className="h-3 w-3 ml-1 hidden md:inline" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem>🇺🇸 English</DropdownMenuItem>
+                  <DropdownMenuItem>🇪🇸 Spanish</DropdownMenuItem>
+                  <DropdownMenuItem>🇫🇷 French</DropdownMenuItem>
+                  <DropdownMenuItem>🇩🇪 German</DropdownMenuItem>
+                  <DropdownMenuItem>🇯🇵 Japanese</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* User Menu */}
               {user ? (
