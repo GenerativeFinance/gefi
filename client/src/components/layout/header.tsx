@@ -58,7 +58,6 @@ export default function Header() {
   const isDeveloperPage = location.startsWith('/developer') || 
                          location.startsWith('/backtesting') || 
                          location.startsWith('/bounties') || 
-                         location.startsWith('/learning') || 
                          location.startsWith('/model-funding') ||
                          location.startsWith('/bounty-funding') ||
                          location.startsWith('/bot-funding');
