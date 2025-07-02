@@ -273,6 +273,8 @@ Changelog:
   * Added instructor profiles, learning objectives, and prerequisite management
   * Enhanced submenu navigation to properly highlight Categories in AI Models and Tutorials in Learning
   * Implemented grid/list view modes for flexible content browsing in both pages
+  * Renamed "AI Models" to "AI Marketplace" in navigation submenu
+  * Removed duplicate Learning pages - consolidated to single /learning route, eliminated confusing /learning-center duplication
 ```
 
 ## User Preferences

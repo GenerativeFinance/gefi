@@ -22,7 +22,7 @@ import Marketplace from "@/pages/marketplace";
 import Pricing from "@/pages/pricing";
 import Checkout from "@/pages/checkout";
 import PrivacyPolicy from "@/pages/privacy-policy";
-import LearningCenter from "@/pages/learning-center";
+
 import UserProfile from "@/pages/user-profile";
 import Settings from "@/pages/settings";
 import DeveloperDashboard from "@/pages/developer-dashboard";
@@ -114,7 +114,7 @@ function Router() {
             <Route path="/marketplace" component={Marketplace} />
             <Route path="/pricing" component={Pricing} />
             <Route path="/checkout" component={Checkout} />
-            <Route path="/learning-center" component={LearningCenter} />
+
             <Route path="/profile" component={UserProfile} />
             <Route path="/settings" component={Settings} />
             <Route path="/profile-setup" component={ProfileSetup} />
