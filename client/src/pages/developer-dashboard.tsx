@@ -30,7 +30,25 @@ import {
   TrendingUp,
   Bot,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Monitor,
+  BarChart3,
+  Zap,
+  Activity,
+  Database,
+  Target,
+  Clock,
+  Gauge,
+  LineChart,
+  PieChart,
+  ArrowRight,
+  Pause,
+  RefreshCw,
+  Calendar,
+  FileText,
+  Filter,
+  MoreHorizontal,
+  TrendingDown
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -49,29 +67,36 @@ const newModelSchema = z.object({
 
 type NewModelFormData = z.infer<typeof newModelSchema>;
 
-interface DeveloperModelWithStats extends DeveloperModel {
-  collaborators?: ModelCollaborator[];
-  funding?: ModelFunding[];
-  tests?: ModelTest[];
+interface AnalyticsData {
+  totalModels: number;
+  totalFunding: string;
+  totalCollaborators: number;
+  totalDeployments: number;
+}
+
+interface ModelWithExtraData extends DeveloperModel {
+  collaborators?: number;
+  tests?: number;
   fundingProgress?: number;
 }
 
 export default function DeveloperDashboard() {
-  const [selectedTab, setSelectedTab] = useState("overview");
+  const [selectedTab, setSelectedTab] = useState("configure");
   const [showNewModelDialog, setShowNewModelDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: models = [], isLoading: modelsLoading } = useQuery<DeveloperModelWithStats[]>({
-    queryKey: ["/api/developer/models"],
-    retry: false,
-  });
-
-  const { data: analytics } = useQuery({
+  // Fetch analytics data
+  const { data: analytics, isLoading: analyticsLoading } = useQuery<AnalyticsData>({
     queryKey: ["/api/developer/analytics"],
-    retry: false,
   });
 
+  // Fetch models
+  const { data: models = [], isLoading: modelsLoading } = useQuery<ModelWithExtraData[]>({
+    queryKey: ["/api/developer/models"],
+  });
+
+  // Form setup
   const form = useForm<NewModelFormData>({
     resolver: zodResolver(newModelSchema),
     defaultValues: {
@@ -83,16 +108,10 @@ export default function DeveloperDashboard() {
     },
   });
 
+  // Create model mutation
   const createModelMutation = useMutation({
     mutationFn: async (data: NewModelFormData) => {
-      const formData = new FormData();
-      formData.append('name', data.name);
-      formData.append('description', data.description);
-      formData.append('category', data.category);
-      formData.append('fundingGoal', data.fundingGoal);
-      formData.append('tags', data.tags);
-      
-      return apiRequest('POST', '/api/developer/models', formData);
+      return await apiRequest("POST", "/api/developer/models", data);
     },
     onSuccess: () => {
       toast({
@@ -151,400 +170,759 @@ export default function DeveloperDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+      
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Header Section */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Developer Dashboard</h1>
-            <p className="text-muted-foreground">Build, fund, and deploy AI financial models</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Developer Dashboard</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
+              Build, test, and deploy AI financial models with comprehensive workflow management
+            </p>
           </div>
-          <div className="flex space-x-2">
-            <Dialog open={showNewModelDialog} onOpenChange={setShowNewModelDialog}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Financial Model
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Create New AI Model</DialogTitle>
-                <DialogDescription>
-                  Submit your AI financial model for crowdfunding and collaboration
-                </DialogDescription>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit((data) => createModelMutation.mutate(data))} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Model Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Advanced Risk Predictor" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Describe your model's purpose and capabilities..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="risk_assessment">Risk Assessment</SelectItem>
-                            <SelectItem value="portfolio_optimization">Portfolio Optimization</SelectItem>
-                            <SelectItem value="market_prediction">Market Prediction</SelectItem>
-                            <SelectItem value="fraud_detection">Fraud Detection</SelectItem>
-                            <SelectItem value="trading_strategy">Trading Strategy</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="fundingGoal"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Funding Goal ($)</FormLabel>
-                        <FormControl>
-                          <Input type="number" placeholder="5000" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="tags"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tags (comma-separated)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="machine learning, neural networks, python" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setShowNewModelDialog(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={createModelMutation.isPending}>
-                      {createModelMutation.isPending ? "Creating..." : "Create Model"}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </DialogContent>
-            </Dialog>
-            <Button variant="outline">
-              <Bot className="h-4 w-4 mr-2" />
-              New Trade Bot
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => setShowNewModelDialog(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create Model
+            </Button>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              Export Data
             </Button>
           </div>
         </div>
 
-        {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Analytics Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Models</CardTitle>
-              <Code className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{models.length}</div>
-              <p className="text-xs text-muted-foreground">
-                +2 from last month
-              </p>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <Code className="h-8 w-8 text-blue-600" />
+                <div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {analytics?.totalModels || models.length}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Models</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Funding</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${models.reduce((sum, model) => sum + parseFloat(model.fundingRaised || "0"), 0).toLocaleString()}
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <DollarSign className="h-8 w-8 text-green-600" />
+                <div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    ${analytics?.totalFunding || "0"}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Funding</p>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                +15% from last month
-              </p>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Collaborators</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {models.reduce((sum, model) => sum + (model.collaborators?.length || 0), 0)}
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <Users className="h-8 w-8 text-purple-600" />
+                <div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {analytics?.totalCollaborators || "0"}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Collaborators</p>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                +3 this week
-              </p>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Deployed Models</CardTitle>
-              <Rocket className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {models.filter(model => model.status === "deployed").length}
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <Rocket className="h-8 w-8 text-orange-600" />
+                <div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {analytics?.totalDeployments || "0"}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Deployments</p>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {models.filter(model => model.status === "deployed").length > 0 ? "Active" : "None yet"}
-              </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content */}
+        {/* Main Content - Workflow Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="models">My Models</TabsTrigger>
-            <TabsTrigger value="funding">Funding</TabsTrigger>
-            <TabsTrigger value="collaboration">Collaboration</TabsTrigger>
-            <TabsTrigger value="deployment">Deployment</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="configure">Configure</TabsTrigger>
+            <TabsTrigger value="monitor">Live Monitor</TabsTrigger>
+            <TabsTrigger value="optimizer">Optimizer</TabsTrigger>
+            <TabsTrigger value="results">Results</TabsTrigger>
+            <TabsTrigger value="analysis">Analysis</TabsTrigger>
+            <TabsTrigger value="comparison">Comparison</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-4">
+          {/* Configure Tab */}
+          <TabsContent value="configure" className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>Latest updates on your models</CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Model Configuration
+                  </CardTitle>
+                  <CardDescription>Set up your AI model parameters and data sources</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {models.slice(0, 3).map((model) => (
-                      <div key={model.id} className="flex items-center space-x-4">
-                        <div className={`rounded-full p-2 ${getStatusColor(model.status)}`}>
-                          {getStatusIcon(model.status)}
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <p className="text-sm font-medium leading-none">{model.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Status: {model.status.charAt(0).toUpperCase() + model.status.slice(1)}
-                          </p>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(model.updatedAt!).toLocaleDateString()}
-                        </div>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium">Model Type</label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select model type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="risk-assessment">Risk Assessment</SelectItem>
+                          <SelectItem value="portfolio-optimization">Portfolio Optimization</SelectItem>
+                          <SelectItem value="trading-strategy">Trading Strategy</SelectItem>
+                          <SelectItem value="market-prediction">Market Prediction</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Data Sources</label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select data sources" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="stocks">Stock Data (US)</SelectItem>
+                          <SelectItem value="crypto">Crypto Data</SelectItem>
+                          <SelectItem value="forex">Forex Data</SelectItem>
+                          <SelectItem value="options">Options Data</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Training Period</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input placeholder="Start Date" />
+                        <Input placeholder="End Date" />
                       </div>
-                    ))}
-                    {models.length === 0 && (
-                      <p className="text-sm text-muted-foreground">No models yet. Create your first model to get started!</p>
-                    )}
+                    </div>
                   </div>
+                  <Button className="w-full">
+                    <Play className="h-4 w-4 mr-2" />
+                    Start Configuration
+                  </Button>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                  <CardDescription>Common tasks for model development</CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    Performance Targets
+                  </CardTitle>
+                  <CardDescription>Define success metrics and optimization goals</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" className="h-20 flex-col">
-                      <Upload className="h-6 w-6 mb-2" />
-                      Upload Model
-                    </Button>
-                    <Button variant="outline" className="h-20 flex-col">
-                      <TestTube className="h-6 w-6 mb-2" />
-                      Run Tests
-                    </Button>
-                    <Button variant="outline" className="h-20 flex-col">
-                      <Users className="h-6 w-6 mb-2" />
-                      Invite Collaborators
-                    </Button>
-                    <Button variant="outline" className="h-20 flex-col">
-                      <Rocket className="h-6 w-6 mb-2" />
-                      Deploy Model
-                    </Button>
+                    <div>
+                      <label className="text-sm font-medium">Target Accuracy</label>
+                      <Input placeholder="85%" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Max Drawdown</label>
+                      <Input placeholder="10%" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Sharpe Ratio</label>
+                      <Input placeholder="1.5" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Annual Return</label>
+                      <Input placeholder="15%" />
+                    </div>
                   </div>
+                  <Button variant="outline" className="w-full">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Save Targets
+                  </Button>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
-          <TabsContent value="models" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {models.map((model) => (
-                <Card key={model.id} className="relative">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{model.name}</CardTitle>
-                      <Badge variant="secondary" className={getStatusColor(model.status)}>
-                        {model.status.charAt(0).toUpperCase() + model.status.slice(1)}
-                      </Badge>
+          {/* Live Monitor Tab */}
+          <TabsContent value="monitor" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3">
+                    <Activity className="h-8 w-8 text-green-600" />
+                    <div>
+                      <p className="text-2xl font-bold text-green-600">94.2%</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Model Accuracy</p>
                     </div>
-                    <CardDescription className="line-clamp-2">{model.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Funding Progress</span>
-                        <span>${parseFloat(model.fundingRaised || "0").toLocaleString()} / ${parseFloat(model.fundingGoal).toLocaleString()}</span>
-                      </div>
-                      <Progress 
-                        value={((parseFloat(model.fundingRaised || "0") / parseFloat(model.fundingGoal)) * 100)} 
-                        className="h-2" 
-                      />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3">
+                    <Monitor className="h-8 w-8 text-blue-600" />
+                    <div>
+                      <p className="text-2xl font-bold text-blue-600">Live</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Status</p>
                     </div>
-                    
-                    <div className="flex justify-between items-center text-sm text-muted-foreground">
-                      <span>Collaborators: {model.collaborators?.length || 0}</span>
-                      <span>Tests: {model.tests?.filter(t => t.status === "passed").length || 0} passed</span>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-8 w-8 text-purple-600" />
+                    <div>
+                      <p className="text-2xl font-bold text-purple-600">2.1s</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Response Time</p>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Eye className="h-4 w-4 mr-2" />
-                        View
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Monitor className="h-5 w-5" />
+                  Real-Time Performance Monitor
+                </CardTitle>
+                <CardDescription>Live monitoring of your AI model's performance and predictions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-medium">Model Status: Active</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline">
+                        <Pause className="h-4 w-4 mr-2" />
+                        Pause
                       </Button>
                       <Button size="sm" variant="outline">
-                        <Settings className="h-4 w-4" />
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Refresh
                       </Button>
-                      {model.status === "approved" && (
-                        <Button size="sm" className="flex-1">
-                          <Play className="h-4 w-4 mr-2" />
-                          Test
-                        </Button>
-                      )}
-                      {model.status === "deployed" && (
-                        <Button size="sm" className="flex-1">
-                          <Download className="h-4 w-4 mr-2" />
-                          API
-                        </Button>
-                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-              
-              {models.length === 0 && (
-                <Card className="col-span-full">
-                  <CardContent className="flex flex-col items-center justify-center h-40">
-                    <Code className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-lg font-semibold mb-2">No models yet</p>
-                    <p className="text-muted-foreground text-center mb-4">
-                      Create your first AI financial model to start building, collaborating, and raising funds.
-                    </p>
-                    <Button onClick={() => setShowNewModelDialog(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Your First Financial Model
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="funding" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Funding Overview</CardTitle>
-                <CardDescription>Track funding progress across all your models</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {models.length > 0 ? (
-                  <div className="space-y-4">
-                    {models.map((model) => (
-                      <div key={model.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <h4 className="font-semibold">{model.name}</h4>
-                          <Badge variant="outline">{model.category}</Badge>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Goal: ${parseFloat(model.fundingGoal).toLocaleString()}</span>
-                            <span>Raised: ${parseFloat(model.fundingRaised || "0").toLocaleString()}</span>
-                          </div>
-                          <Progress 
-                            value={((parseFloat(model.fundingRaised || "0") / parseFloat(model.fundingGoal)) * 100)} 
-                            className="h-2" 
-                          />
-                          <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>{Math.round((parseFloat(model.fundingRaised || "0") / parseFloat(model.fundingGoal)) * 100)}% funded</span>
-                            <span>Investors: {model.funding?.length || 0}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
                   </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No models to display funding information for.
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Prediction Accuracy (Last 24h)</label>
+                      <Progress value={94} className="h-3" />
+                      <span className="text-xs text-gray-600">94.2% accuracy rate</span>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Data Processing Rate</label>
+                      <Progress value={78} className="h-3" />
+                      <span className="text-xs text-gray-600">1,250 data points/minute</span>
+                    </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="collaboration" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Team Collaboration</CardTitle>
-                <CardDescription>Manage collaborators and team communications</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Users className="h-12 w-12 mx-auto mb-4" />
-                  <p>Collaboration features coming soon!</p>
-                  <p className="text-sm">Real-time editing, version control, and team chat will be available here.</p>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="deployment" className="space-y-4">
+          {/* Optimizer Tab */}
+          <TabsContent value="optimizer" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Model Deployment</CardTitle>
-                <CardDescription>Deploy your models as APIs and monitor their performance</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5" />
+                  Model Optimizer
+                </CardTitle>
+                <CardDescription>Optimize your model parameters for better performance</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h4 className="font-semibold">Optimization Parameters</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium">Learning Rate</label>
+                        <Input defaultValue="0.001" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Batch Size</label>
+                        <Input defaultValue="32" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Epochs</label>
+                        <Input defaultValue="100" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Optimization Method</label>
+                        <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select method" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="adam">Adam</SelectItem>
+                            <SelectItem value="sgd">SGD</SelectItem>
+                            <SelectItem value="rmsprop">RMSprop</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="font-semibold">Current Performance</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Accuracy</span>
+                        <span className="font-medium">94.2%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Loss</span>
+                        <span className="font-medium">0.058</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Training Time</span>
+                        <span className="font-medium">45 minutes</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Memory Usage</span>
+                        <span className="font-medium">2.4 GB</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button>
+                    <Play className="h-4 w-4 mr-2" />
+                    Start Optimization
+                  </Button>
+                  <Button variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Settings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Results Tab */}
+          <TabsContent value="results" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="h-8 w-8 text-green-600" />
+                    <div>
+                      <p className="text-2xl font-bold text-green-600">18.7%</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Annual Return</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3">
+                    <Gauge className="h-8 w-8 text-blue-600" />
+                    <div>
+                      <p className="text-2xl font-bold text-blue-600">2.1</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Sharpe Ratio</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3">
+                    <TrendingDown className="h-8 w-8 text-red-600" />
+                    <div>
+                      <p className="text-2xl font-bold text-red-600">8.5%</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Max Drawdown</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3">
+                    <Target className="h-8 w-8 text-purple-600" />
+                    <div>
+                      <p className="text-2xl font-bold text-purple-600">94.2%</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Accuracy</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Performance Results
+                </CardTitle>
+                <CardDescription>Detailed results from your latest model runs</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Rocket className="h-12 w-12 mx-auto mb-4" />
-                  <p>Deployment features coming soon!</p>
-                  <p className="text-sm">One-click deployment, API management, and monitoring will be available here.</p>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Latest Test Results</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Test Date:</span>
+                          <span>{new Date().toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Data Points:</span>
+                          <span>10,000</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Duration:</span>
+                          <span>45 minutes</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Status:</span>
+                          <Badge variant="secondary">Completed</Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Performance Metrics</h4>
+                      <div className="space-y-2">
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span>Precision</span>
+                            <span>92.4%</span>
+                          </div>
+                          <Progress value={92.4} className="h-2" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span>Recall</span>
+                            <span>89.7%</span>
+                          </div>
+                          <Progress value={89.7} className="h-2" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span>F1 Score</span>
+                            <span>91.0%</span>
+                          </div>
+                          <Progress value={91.0} className="h-2" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-4">
+                    <Button variant="outline">
+                      <Download className="h-4 w-4 mr-2" />
+                      Export Results
+                    </Button>
+                    <Button variant="outline">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Generate Report
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Analysis Tab */}
+          <TabsContent value="analysis" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <LineChart className="h-5 w-5" />
+                  Performance Analysis
+                </CardTitle>
+                <CardDescription>Deep dive into your model's behavior and patterns</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h4 className="font-semibold">Feature Importance</h4>
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Market Volatility</span>
+                          <span>34.2%</span>
+                        </div>
+                        <Progress value={34.2} className="h-2" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Volume Indicators</span>
+                          <span>28.7%</span>
+                        </div>
+                        <Progress value={28.7} className="h-2" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Price Momentum</span>
+                          <span>23.5%</span>
+                        </div>
+                        <Progress value={23.5} className="h-2" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Technical Patterns</span>
+                          <span>13.6%</span>
+                        </div>
+                        <Progress value={13.6} className="h-2" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="font-semibold">Error Analysis</h4>
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>False Positives</span>
+                          <span>4.2%</span>
+                        </div>
+                        <Progress value={4.2} className="h-2 bg-red-100" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>False Negatives</span>
+                          <span>3.8%</span>
+                        </div>
+                        <Progress value={3.8} className="h-2 bg-orange-100" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Prediction Lag</span>
+                          <span>1.2s avg</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Run Analysis
+                  </Button>
+                  <Button variant="outline">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Schedule Analysis
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Comparison Tab */}
+          <TabsContent value="comparison" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5" />
+                  Model Comparison
+                </CardTitle>
+                <CardDescription>Compare performance across different models and versions</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="text-sm font-medium">Model A</label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select first model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="model1">Risk Predictor v1.0</SelectItem>
+                        <SelectItem value="model2">Portfolio Optimizer v2.1</SelectItem>
+                        <SelectItem value="model3">Trading Strategy v1.5</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Model B</label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select second model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="model1">Risk Predictor v1.0</SelectItem>
+                        <SelectItem value="model2">Portfolio Optimizer v2.1</SelectItem>
+                        <SelectItem value="model3">Trading Strategy v1.5</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-semibold mb-3">Performance Comparison</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2">Metric</th>
+                          <th className="text-center py-2">Model A</th>
+                          <th className="text-center py-2">Model B</th>
+                          <th className="text-center py-2">Difference</th>
+                        </tr>
+                      </thead>
+                      <tbody className="space-y-2">
+                        <tr className="border-b">
+                          <td className="py-2">Accuracy</td>
+                          <td className="text-center">94.2%</td>
+                          <td className="text-center">91.8%</td>
+                          <td className="text-center text-green-600">+2.4%</td>
+                        </tr>
+                        <tr className="border-b">
+                          <td className="py-2">Sharpe Ratio</td>
+                          <td className="text-center">2.1</td>
+                          <td className="text-center">1.8</td>
+                          <td className="text-center text-green-600">+0.3</td>
+                        </tr>
+                        <tr className="border-b">
+                          <td className="py-2">Max Drawdown</td>
+                          <td className="text-center">8.5%</td>
+                          <td className="text-center">12.3%</td>
+                          <td className="text-center text-green-600">-3.8%</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2">Response Time</td>
+                          <td className="text-center">2.1s</td>
+                          <td className="text-center">3.4s</td>
+                          <td className="text-center text-green-600">-1.3s</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button>
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Compare Models
+                  </Button>
+                  <Button variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Comparison
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Create Model Dialog */}
+        <Dialog open={showNewModelDialog} onOpenChange={setShowNewModelDialog}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Create New AI Model</DialogTitle>
+              <DialogDescription>
+                Set up a new AI financial model for development and testing.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit((data) => createModelMutation.mutate(data))} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Model Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Advanced Risk Predictor" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Describe your model's purpose and functionality" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="risk-assessment">Risk Assessment</SelectItem>
+                          <SelectItem value="portfolio-optimization">Portfolio Optimization</SelectItem>
+                          <SelectItem value="trading-strategy">Trading Strategy</SelectItem>
+                          <SelectItem value="market-prediction">Market Prediction</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="fundingGoal"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Funding Goal ($)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 50000" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="tags"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tags (optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., machine-learning, finance, risk" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowNewModelDialog(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createModelMutation.isPending}
+                  >
+                    {createModelMutation.isPending ? "Creating..." : "Create Model"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
       
       <Footer />
