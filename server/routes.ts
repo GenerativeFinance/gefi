@@ -661,8 +661,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/ai-model-subcategories', async (req, res) => {
     try {
-      const subcategories = await storage.getAiModelSubcategories();
-      res.json(subcategories);
+      const categoryName = req.query.category as string;
+      if (categoryName && categoryName !== 'all') {
+        // Get subcategories by category name
+        const subcategories = await storage.getAiModelSubcategoriesByCategoryName(categoryName);
+        res.json(subcategories);
+      } else {
+        const subcategories = await storage.getAiModelSubcategories();
+        res.json(subcategories);
+      }
     } catch (error) {
       console.error("Error fetching subcategories:", error);
       res.status(500).json({ message: "Failed to fetch subcategories" });

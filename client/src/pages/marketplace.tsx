@@ -58,6 +58,7 @@ interface UserPreferences {
 export default function AIMarketplace() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
   const [riskLevel, setRiskLevel] = useState<string>("all");
   const [maxPrice, setMaxPrice] = useState<number[]>([1000]);
   const [showPreferences, setShowPreferences] = useState(false);
@@ -85,6 +86,12 @@ export default function AIMarketplace() {
   // Fetch AI model categories
   const { data: categories = [] } = useQuery({
     queryKey: ["/api/ai-model-categories"],
+  });
+
+  // Fetch subcategories for selected category
+  const { data: subcategories = [] } = useQuery({
+    queryKey: ["/api/ai-model-subcategories", { category: selectedCategory }],
+    enabled: selectedCategory !== "all",
   });
 
   // Fetch AI models for general browsing
@@ -175,11 +182,18 @@ export default function AIMarketplace() {
       model.description?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = selectedCategory === "all" || model.category === selectedCategory;
+    const matchesSubcategory = selectedSubcategory === "all" || model.subcategory === selectedSubcategory;
     const matchesRisk = riskLevel === "all" || model.riskLevel === riskLevel;
     const matchesPrice = parseFloat(model.price) <= maxPrice[0];
     
-    return matchesSearch && matchesCategory && matchesRisk && matchesPrice;
+    return matchesSearch && matchesCategory && matchesSubcategory && matchesRisk && matchesPrice;
   });
+
+  // Reset subcategory when category changes
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value);
+    setSelectedSubcategory("all");
+  };
 
   return (
     <Layout>
@@ -279,7 +293,7 @@ export default function AIMarketplace() {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <Select value={selectedCategory} onValueChange={handleCategoryChange}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -292,6 +306,22 @@ export default function AIMarketplace() {
               ))}
             </SelectContent>
           </Select>
+
+          {selectedCategory !== "all" && subcategories.length > 0 && (
+            <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Subcategory" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Subcategories</SelectItem>
+                {subcategories.map((subcategory: any) => (
+                  <SelectItem key={subcategory.id} value={subcategory.name}>
+                    {subcategory.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           
           <Select value={riskLevel} onValueChange={setRiskLevel}>
             <SelectTrigger className="w-40">
