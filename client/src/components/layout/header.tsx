@@ -188,31 +188,8 @@ export default function Header() {
         {/* Main Header */}
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Dashboard Mode Toggle - moved to left */}
-            <div className="hidden md:flex items-center space-x-3">
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-accent transition-colors">
-                  <Bot className="h-4 w-4" />
-                  <span>{isDeveloperPage ? 'Developer' : 'Investor'}</span>
-                  <ChevronDown className="h-3 w-3" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem asChild>
-                    <Link href="/" className="flex items-center space-x-2">
-                      <TrendingUp className="h-4 w-4" />
-                      <span>Investor</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/developer" className="flex items-center space-x-2">
-                      <Code className="h-4 w-4" />
-                      <span>Developer</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Logo */}
+            {/* Logo - moved to left */}
+            <div className="hidden md:flex items-center">
               <Link href="/" className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                   <Brain className="h-5 w-5 text-primary-foreground" />
@@ -233,6 +210,31 @@ export default function Header() {
 
             {/* Right Side Actions */}
             <div className="flex items-center space-x-3">
+              {/* Dashboard Mode Toggle - moved to right */}
+              <div className="hidden md:flex">
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-accent transition-colors">
+                    <Bot className="h-4 w-4" />
+                    <span>{isDeveloperPage ? 'Developer' : 'Investor'}</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link href="/" className="flex items-center space-x-2">
+                        <TrendingUp className="h-4 w-4" />
+                        <span>Investor</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/developer" className="flex items-center space-x-2">
+                        <Code className="h-4 w-4" />
+                        <span>Developer</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
               {/* Search */}
               <Button
                 variant="ghost"
