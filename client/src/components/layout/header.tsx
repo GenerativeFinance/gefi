@@ -89,7 +89,6 @@ export default function Header() {
         { name: "Portfolio", href: "/portfolio", icon: Wallet },
         { name: "AI Models", href: "/portfolio/ai-models", icon: Bot },
         { name: "Rebalancing", href: "/rebalance-actions", icon: Target },
-        { name: "AI Marketplace", href: "/marketplace", icon: Store },
         { name: "Performance", href: "/portfolio-performance", icon: TrendingUp }
       ];
     }
@@ -120,7 +119,6 @@ export default function Header() {
         { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Live Trading", href: "/live-trading", icon: TrendingUp },
         { name: "Trading Bots", href: "/trading-bots", icon: Bot },
-        { name: "AI Marketplace", href: "/marketplace", icon: Store },
         { name: "Order History", href: "/orders", icon: FileText },
         { name: "Strategies", href: "/strategies", icon: Target }
       ];
