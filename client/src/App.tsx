@@ -62,6 +62,8 @@ import InvestorDashboard from "@/pages/investor-dashboard";
 import RiskAssessment from "@/pages/risk-assessment";
 import CurrentRiskAssessment from "@/pages/current-risk-assessment";
 import OrderBook from "@/pages/order-book";
+import MySubscriptions from "@/pages/my-subscriptions";
+import Developers from "@/pages/developers";
 
 
 function Router() {
@@ -142,6 +144,8 @@ function Router() {
             <Route path="/funding" component={Funding} />
             <Route path="/portfolio-performance" component={PortfolioPerformance} />
             <Route path="/investor-dashboard" component={InvestorDashboard} />
+            <Route path="/my-subscriptions" component={MySubscriptions} />
+            <Route path="/developers" component={Developers} />
           </>
         ) : (
           <>
