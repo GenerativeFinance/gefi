@@ -122,6 +122,7 @@ export interface IStorage {
   createAiModelCategory(category: InsertAiModelCategory): Promise<AiModelCategory>;
   getAiModelSubcategories(): Promise<AiModelSubcategory[]>;
   getAiModelSubcategoriesByCategory(categoryId: number): Promise<AiModelSubcategory[]>;
+  getAiModelSubcategoriesByCategoryName(categoryName: string): Promise<AiModelSubcategory[]>;
   createAiModelSubcategory(subcategory: InsertAiModelSubcategory): Promise<AiModelSubcategory>;
   getAiModelsByCategory(categoryId: number): Promise<AiModel[]>;
   getAiModelsBySubcategory(subcategoryId: number): Promise<AiModel[]>;
@@ -529,6 +530,16 @@ export class DatabaseStorage implements IStorage {
   async getAiModelSubcategoriesByCategory(categoryId: number): Promise<AiModelSubcategory[]> {
     return await db.select().from(aiModelSubcategories)
       .where(and(eq(aiModelSubcategories.categoryId, categoryId), eq(aiModelSubcategories.isActive, true)))
+      .orderBy(aiModelSubcategories.sortOrder);
+  }
+
+  async getAiModelSubcategoriesByCategoryName(categoryName: string): Promise<AiModelSubcategory[]> {
+    const [category] = await db.select().from(aiModelCategories).where(eq(aiModelCategories.name, categoryName));
+    if (!category) {
+      return [];
+    }
+    return await db.select().from(aiModelSubcategories)
+      .where(and(eq(aiModelSubcategories.categoryId, category.id), eq(aiModelSubcategories.isActive, true)))
       .orderBy(aiModelSubcategories.sortOrder);
   }
 
