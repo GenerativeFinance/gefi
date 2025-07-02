@@ -68,6 +68,7 @@ import Categories from "@/pages/categories";
 import Tutorials from "@/pages/tutorials";
 import ComplianceReports from "@/pages/compliance-reports";
 import RiskReports from "@/pages/risk-reports";
+import MarketData from "@/pages/market-data";
 
 
 function Router() {
@@ -154,6 +155,7 @@ function Router() {
             <Route path="/tutorials" component={Tutorials} />
             <Route path="/compliance-reports" component={ComplianceReports} />
             <Route path="/risk-reports" component={RiskReports} />
+            <Route path="/market-data" component={MarketData} />
           </>
         ) : (
           <>

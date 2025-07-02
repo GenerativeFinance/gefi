@@ -41,7 +41,8 @@ import {
   Grid,
   CreditCard,
   Building,
-  Video
+  Video,
+  Database
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -60,7 +61,9 @@ export default function Header() {
                          location.startsWith('/bounties') || 
                          location.startsWith('/model-funding') ||
                          location.startsWith('/bounty-funding') ||
-                         location.startsWith('/bot-funding');
+                         location.startsWith('/bot-funding') ||
+                         location.startsWith('/market-data') ||
+                         location.startsWith('/learning');
 
   // Fetch notifications
   const { data: notifications = [] } = useQuery({
@@ -162,6 +165,7 @@ export default function Header() {
         { name: "Dashboard", href: "/developer", icon: BarChart3 },
         { name: "Backtesting", href: "/backtesting", icon: TrendingUp },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
+        { name: "Market Data", href: "/market-data", icon: Database },
         { name: "Bounties", href: "/bounties", icon: Target },
         { name: "Learning", href: "/learning", icon: GraduationCap }
       ];
