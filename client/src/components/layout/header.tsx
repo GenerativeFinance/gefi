@@ -273,33 +273,35 @@ export default function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Theme Toggle */}
+              {/* Theme Toggle - Hidden on mobile */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                className="text-muted-foreground hover:text-foreground"
+                className="hidden md:flex text-muted-foreground hover:text-foreground"
               >
                 {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
               </Button>
 
-              {/* Language Selector */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                    <Globe className="h-4 w-4 mr-1" />
-                    <span className="hidden sm:inline">Language</span>
-                    <ChevronDown className="h-3 w-3 ml-1" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>🇺🇸 English</DropdownMenuItem>
-                  <DropdownMenuItem>🇪🇸 Spanish</DropdownMenuItem>
-                  <DropdownMenuItem>🇫🇷 French</DropdownMenuItem>
-                  <DropdownMenuItem>🇩🇪 German</DropdownMenuItem>
-                  <DropdownMenuItem>🇯🇵 Japanese</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Language Selector - Hidden on mobile */}
+              <div className="hidden md:block">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                      <Globe className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Language</span>
+                      <ChevronDown className="h-3 w-3 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem>🇺🇸 English</DropdownMenuItem>
+                    <DropdownMenuItem>🇪🇸 Spanish</DropdownMenuItem>
+                    <DropdownMenuItem>🇫🇷 French</DropdownMenuItem>
+                    <DropdownMenuItem>🇩🇪 German</DropdownMenuItem>
+                    <DropdownMenuItem>🇯🇵 Japanese</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
 
               {/* User Menu */}
               {user ? (
