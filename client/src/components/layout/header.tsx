@@ -84,7 +84,7 @@ export default function Header() {
       ];
     }
     
-    if (location.startsWith('/portfolio')) {
+    if (location.startsWith('/portfolio') || location.startsWith('/rebalance-actions')) {
       return [
         { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Portfolio", href: "/portfolio", icon: Wallet },
