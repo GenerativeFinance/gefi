@@ -175,7 +175,7 @@ export default function Header() {
       { name: "Trading", href: "/live-trading", icon: TrendingUp },
       { name: "Reports", href: "/reports", icon: FileText },
       { name: "Funding", href: "/funding", icon: DollarSign },
-      { name: "Learning", href: "/learning-center", icon: GraduationCap }
+      { name: "Learning", href: "/learning", icon: GraduationCap }
     ];
   };
 

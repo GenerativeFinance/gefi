@@ -230,7 +230,7 @@ const difficultyColors = {
   expert: "bg-red-100 text-red-800"
 };
 
-export default function Learning() {
+function Learning() {
   const [location] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -607,3 +607,5 @@ export default function Learning() {
     </div>
   );
 }
+
+export default Learning;
