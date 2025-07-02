@@ -148,7 +148,7 @@ export default function Header() {
     if (location.startsWith('/marketplace') || location.startsWith('/my-subscriptions') || location.startsWith('/developers') || location.startsWith('/trading-bots') || location.startsWith('/categories')) {
       return [
         { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
-        { name: "AI Models", href: "/marketplace", icon: Store },
+        { name: "AI Marketplace", href: "/marketplace", icon: Store },
         { name: "Categories", href: "/categories", icon: Grid },
         { name: "My Subscriptions", href: "/my-subscriptions", icon: CreditCard },
         { name: "Trading Bots", href: "/trading-bots", icon: Bot },
