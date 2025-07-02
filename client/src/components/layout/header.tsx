@@ -134,11 +134,11 @@ export default function Header() {
       ];
     }
     
-    if (location.startsWith('/learning') || location.startsWith('/webinars') || location.startsWith('/docs') || location.startsWith('/community')) {
+    if (location.startsWith('/learning') || location.startsWith('/tutorials') || location.startsWith('/webinars') || location.startsWith('/docs') || location.startsWith('/community')) {
       return [
         { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Learning", href: "/learning", icon: GraduationCap },
-        { name: "Tutorials", href: "/learning", icon: BookOpen },
+        { name: "Tutorials", href: "/tutorials", icon: BookOpen },
         { name: "Webinars", href: "/webinars", icon: Video },
         { name: "Documentation", href: "/docs", icon: FileText },
         { name: "Community", href: "/community", icon: Users }

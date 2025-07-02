@@ -65,6 +65,7 @@ import OrderBook from "@/pages/order-book";
 import MySubscriptions from "@/pages/my-subscriptions";
 import Developers from "@/pages/developers";
 import Categories from "@/pages/categories";
+import Tutorials from "@/pages/tutorials";
 
 
 function Router() {
@@ -148,6 +149,7 @@ function Router() {
             <Route path="/my-subscriptions" component={MySubscriptions} />
             <Route path="/developers" component={Developers} />
             <Route path="/categories" component={Categories} />
+            <Route path="/tutorials" component={Tutorials} />
           </>
         ) : (
           <>

@@ -265,6 +265,14 @@ Changelog:
   * Integrated Recharts library for portfolio value charts, monthly returns comparison, and asset allocation pie charts
   * Built comprehensive performance metrics including Sharpe ratio, max drawdown, and top performers tracking
   * Added export functionality and refresh capabilities for portfolio performance reports
+- July 2, 2025. Created comprehensive Categories and Tutorials pages for AI Models and Learning sections
+  * Built Categories page (/categories) with advanced search, filtering, and sorting capabilities
+  * Added category statistics dashboard with comprehensive metrics and visualization
+  * Created Tutorials page (/tutorials) with detailed tutorial management and progress tracking
+  * Integrated tutorial enrollment system with difficulty levels, ratings, and completion tracking
+  * Added instructor profiles, learning objectives, and prerequisite management
+  * Enhanced submenu navigation to properly highlight Categories in AI Models and Tutorials in Learning
+  * Implemented grid/list view modes for flexible content browsing in both pages
 ```
 
 ## User Preferences
