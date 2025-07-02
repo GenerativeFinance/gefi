@@ -323,11 +323,17 @@ export class DatabaseStorage implements IStorage {
 
   // AI Models operations
   async getAllAiModels(): Promise<AiModel[]> {
-    return await db
-      .select()
+    const models = await db
+      .select({
+        ...aiModels,
+        subcategory: aiModelSubcategories.name,
+      })
       .from(aiModels)
+      .leftJoin(aiModelSubcategories, eq(aiModels.subcategoryId, aiModelSubcategories.id))
       .where(eq(aiModels.isActive, true))
       .orderBy(desc(aiModels.rating));
+    
+    return models as AiModel[];
   }
 
   async getAiModel(id: number): Promise<AiModel | undefined> {
