@@ -275,6 +275,10 @@ Changelog:
   * Implemented grid/list view modes for flexible content browsing in both pages
   * Renamed "AI Models" to "AI Marketplace" in navigation submenu
   * Removed duplicate Learning pages - consolidated to single /learning route, eliminated confusing /learning-center duplication
+  * Created comprehensive Compliance Reports page (/compliance-reports) with regulatory compliance monitoring
+  * Built Risk Reports page (/risk-reports) with advanced risk analysis across market, credit, operational, liquidity, and concentration risks
+  * Integrated both reports pages into existing Reports submenu with proper navigation highlighting
+  * Added comprehensive statistics dashboards, filtering capabilities, and download functionality for both reports pages
 ```
 
 ## User Preferences
