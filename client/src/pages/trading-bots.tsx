@@ -168,6 +168,10 @@ export default function TradingBots() {
   const [activeTab, setActiveTab] = useState('running');
   const [createBotOpen, setCreateBotOpen] = useState(false);
   const [selectedBotType, setSelectedBotType] = useState('');
+  const [configureOpen, setConfigureOpen] = useState(false);
+  const [configureBotId, setConfigureBotId] = useState<number | null>(null);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [analyticsBotId, setAnalyticsBotId] = useState<number | null>(null);
 
   const { data: rawBots = [], isLoading } = useQuery<TradingBotDB[]>({
     queryKey: ['/api/trading-bots'],
@@ -217,9 +221,17 @@ export default function TradingBots() {
   const pausedBots = bots.filter(bot => bot.status === 'paused');
   const stoppedBots = bots.filter(bot => bot.status === 'stopped');
 
-  const handleBotAction = (botId: number, action: 'start' | 'pause' | 'stop' | 'copy') => {
+  const handleBotAction = (botId: number, action: 'start' | 'pause' | 'stop' | 'copy' | 'configure' | 'analytics') => {
     console.log(`${action} bot ${botId}`);
-    // Implement bot actions
+    
+    if (action === 'configure') {
+      setConfigureBotId(botId);
+      setConfigureOpen(true);
+    } else if (action === 'analytics') {
+      setAnalyticsBotId(botId);
+      setAnalyticsOpen(true);
+    }
+    // Implement other bot actions
   };
 
   const formatCurrency = (value: number) => {
@@ -559,9 +571,18 @@ export default function TradingBots() {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => handleBotAction(bot.id, 'configure')}
                   >
                     <Settings className="h-4 w-4 mr-1" />
-                    Settings
+                    Configure
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBotAction(bot.id, 'analytics')}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-1" />
+                    Analytics
                   </Button>
                 </div>
               </CardContent>
@@ -619,6 +640,19 @@ export default function TradingBots() {
         </TabsContent>
 
         <TabsContent value="marketplace" className="space-y-4">
+          {/* Browse Models Button */}
+          <div className="text-center mb-8">
+            <Link href="/marketplace">
+              <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-12 py-4 text-lg font-semibold">
+                <Grid3X3 className="h-6 w-6 mr-2" />
+                Browse Models
+              </Button>
+            </Link>
+            <p className="text-muted-foreground mt-3">
+              Explore our comprehensive AI model marketplace for advanced trading strategies
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {tradingBotTypes.map((botType) => {
               const IconComponent = botType.icon;
@@ -749,6 +783,189 @@ export default function TradingBots() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Configure Bot Modal */}
+      <Dialog open={configureOpen} onOpenChange={setConfigureOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Configure Bot {configureBotId ? `A${configureBotId}` : ''}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="config-trading-pair">Trading Pair</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select trading pair" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="BTC/USDT">BTC/USDT</SelectItem>
+                    <SelectItem value="ETH/USDT">ETH/USDT</SelectItem>
+                    <SelectItem value="SOL/FDUSD">SOL/FDUSD</SelectItem>
+                    <SelectItem value="ONDO/USDT">ONDO/USDT</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="config-investment">Investment Amount</Label>
+                <Input id="config-investment" placeholder="1000" type="number" />
+              </div>
+              <div>
+                <Label htmlFor="config-grid-count">Number of Grids</Label>
+                <Input id="config-grid-count" placeholder="20" type="number" />
+              </div>
+              <div>
+                <Label htmlFor="config-price-range">Price Range</Label>
+                <Input id="config-price-range" placeholder="100 - 200" />
+              </div>
+              <div>
+                <Label htmlFor="config-stop-loss">Stop Loss (%)</Label>
+                <Input id="config-stop-loss" placeholder="5" type="number" />
+              </div>
+              <div>
+                <Label htmlFor="config-take-profit">Take Profit (%)</Label>
+                <Input id="config-take-profit" placeholder="15" type="number" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="config-strategy">Risk Strategy</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select strategy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="conservative">Conservative</SelectItem>
+                    <SelectItem value="moderate">Moderate</SelectItem>
+                    <SelectItem value="aggressive">Aggressive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="config-notes">Configuration Notes</Label>
+                <Input id="config-notes" placeholder="Additional configuration notes..." />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setConfigureOpen(false)}>
+                Cancel
+              </Button>
+              <Button className="gradient-primary">
+                Save Configuration
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Analytics Modal */}
+      <Dialog open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Bot Analytics - A{analyticsBotId}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {/* Performance Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-5 w-5 text-green-500" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total PnL</p>
+                      <p className="text-xl font-bold text-green-500">$2,847.50</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <BarChart3 className="h-5 w-5 text-blue-500" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Win Rate</p>
+                      <p className="text-xl font-bold">94.2%</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-5 w-5 text-purple-500" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Avg Trade Time</p>
+                      <p className="text-xl font-bold">2h 15m</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <Target className="h-5 w-5 text-orange-500" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Trades</p>
+                      <p className="text-xl font-bold">156</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Performance Chart Placeholder */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance Over Time</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="text-center">
+                    <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-muted-foreground">Performance chart will be displayed here</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Trade History */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Trades</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-2 h-2 rounded-full ${i % 2 === 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+                        <div>
+                          <p className="font-medium">BTC/USDT</p>
+                          <p className="text-sm text-muted-foreground">{new Date().toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-semibold ${i % 2 === 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {i % 2 === 0 ? '+' : '-'}$45.{i}0
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {i % 2 === 0 ? '+' : '-'}2.{i}%
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={() => setAnalyticsOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
     </Layout>
   );

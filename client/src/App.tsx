@@ -39,6 +39,7 @@ import BugBountyProgram from "@/pages/bug-bounty-program";
 import EnterpriseSales from "@/pages/enterprise-sales";
 import ModelFunding from "@/pages/model-funding";
 import BountyFunding from "@/pages/bounty-funding";
+import BotFunding from "@/pages/bot-funding";
 
 
 import ProfileSetup from "@/pages/profile-setup";
@@ -127,6 +128,7 @@ function Router() {
             <Route path="/live-trading" component={LiveTradingPage} />
             <Route path="/model-funding" component={ModelFunding} />
             <Route path="/bounty-funding" component={BountyFunding} />
+            <Route path="/bot-funding" component={BotFunding} />
 
             <Route path="/bounties" component={Bounties} />
             <Route path="/bounties/leaderboard" component={BountyLeaderboard} />
