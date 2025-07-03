@@ -4,12 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
   Search, 
   Bell, 
-  Menu, 
   User, 
   Settings, 
   LogOut, 
@@ -53,7 +52,7 @@ export default function Header() {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
 
   // Check if we're on developer pages
   const isDeveloperPage = location.startsWith('/developer') || 
@@ -351,45 +350,7 @@ export default function Header() {
                 </Button>
               )}
 
-              {/* Mobile Menu */}
-              <div className="md:hidden">
-                <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <Menu className="h-5 w-5" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="right" className="w-80">
-                    <SheetHeader>
-                      <SheetTitle>Menu</SheetTitle>
-                    </SheetHeader>
-                    <div className="mt-6 space-y-4">
-                      <div className="space-y-2">
-                        <Link href="/" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-accent">
-                          <Home className="h-4 w-4" />
-                          <span>Home</span>
-                        </Link>
-                        <Link href="/portfolio" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-accent">
-                          <Wallet className="h-4 w-4" />
-                          <span>Portfolio</span>
-                        </Link>
-                        <Link href="/reports" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-accent">
-                          <FileText className="h-4 w-4" />
-                          <span>Reports</span>
-                        </Link>
-                        <Link href="/risk-dashboard" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-accent">
-                          <Shield className="h-4 w-4" />
-                          <span>Risk Management</span>
-                        </Link>
-                        <Link href="/marketplace" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-accent">
-                          <Store className="h-4 w-4" />
-                          <span>AI Marketplace</span>
-                        </Link>
-                      </div>
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              </div>
+
             </div>
           </div>
         </div>
