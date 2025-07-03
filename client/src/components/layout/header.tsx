@@ -200,22 +200,22 @@ export default function Header() {
               </Link>
             </div>
 
-            {/* Mobile Logo */}
+            {/* Mobile Logo - Compact */}
             <div className="md:hidden">
-              <Link href="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Brain className="h-5 w-5 text-primary-foreground" />
+              <Link href="/" className="flex items-center space-x-1.5">
+                <div className="w-7 h-7 bg-primary rounded-md flex items-center justify-center">
+                  <Brain className="h-4 w-4 text-primary-foreground" />
                 </div>
-                <span className="text-xl font-bold">GeFi</span>
+                <span className="text-lg font-bold">GeFi</span>
               </Link>
             </div>
 
             {/* Right Side Actions */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 md:space-x-3">
               {/* Dashboard Mode Toggle - Icon Only */}
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center justify-center w-10 h-10 rounded-md text-foreground hover:bg-accent transition-colors">
-                  {isDeveloperPage ? <Code className="h-5 w-5" /> : <TrendingUp className="h-5 w-5" />}
+                <DropdownMenuTrigger className="flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-md text-foreground hover:bg-accent transition-colors">
+                  {isDeveloperPage ? <Code className="h-4 w-4 md:h-5 md:w-5" /> : <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
@@ -238,16 +238,16 @@ export default function Header() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsSearchOpen(true)}
-                className="text-muted-foreground hover:text-foreground"
+                className="w-9 h-9 md:w-auto md:h-auto p-2 md:px-3 md:py-2 text-muted-foreground hover:text-foreground"
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
 
               {/* Notifications */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="relative text-muted-foreground hover:text-foreground">
-                    <Bell className="h-5 w-5" />
+                  <Button variant="ghost" size="sm" className="relative w-9 h-9 md:w-auto md:h-auto p-2 md:px-3 md:py-2 text-muted-foreground hover:text-foreground">
+                    <Bell className="h-4 w-4 md:h-5 md:w-5" />
                     {unreadCount > 0 && (
                       <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
                     )}
@@ -285,7 +285,7 @@ export default function Header() {
               {/* Language Selector */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" size="sm" className="w-9 h-9 md:w-auto md:h-auto p-2 md:px-3 md:py-2 text-muted-foreground hover:text-foreground">
                     <Globe className="h-4 w-4 md:mr-1" />
                     <span className="hidden md:inline">Language</span>
                     <ChevronDown className="h-3 w-3 ml-1 hidden md:inline" />
