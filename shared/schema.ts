@@ -249,6 +249,58 @@ export const riskLimits = pgTable("risk_limits", {
   alertThreshold: decimal("alert_threshold", { precision: 5, scale: 2 }).default("80.00"), // Alert at 80% utilization
 });
 
+// Custom Reports Tables
+export const customReports = pgTable("custom_reports", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  reportType: varchar("report_type").notNull(), // 'portfolio', 'risk', 'compliance', 'market', 'trading', 'ai-models', 'revenue', 'custom'
+  dateRange: varchar("date_range").notNull(), // 'last-7-days', 'last-30-days', 'last-90-days', 'last-year', 'ytd', 'custom'
+  customStartDate: timestamp("custom_start_date"),
+  customEndDate: timestamp("custom_end_date"),
+  metrics: text("metrics").array(), // Array of metric names
+  visualizations: text("visualizations").array(), // Array of visualization types
+  filters: text("filters"), // JSON string of filter configuration
+  schedule: varchar("schedule"), // 'daily', 'weekly', 'monthly', 'quarterly', null for manual
+  isPublic: boolean("is_public").default(false),
+  status: varchar("status").notNull().default("active"), // 'draft', 'active', 'archived'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  lastRunAt: timestamp("last_run_at"),
+  nextRunAt: timestamp("next_run_at"),
+});
+
+export const reportRuns = pgTable("report_runs", {
+  id: serial("id").primaryKey(),
+  reportId: integer("report_id").references(() => customReports.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull(),
+  status: varchar("status").notNull().default("running"), // 'running', 'completed', 'failed'
+  startedAt: timestamp("started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  error: text("error"),
+  resultData: text("result_data"), // JSON string of generated report data
+  filePath: varchar("file_path"), // Path to generated PDF/Excel file
+  downloadCount: integer("download_count").default(0),
+});
+
+export const reportTemplates = pgTable("report_templates", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  category: varchar("category").notNull(), // 'portfolio', 'risk', 'trading', etc.
+  reportType: varchar("report_type").notNull(),
+  defaultMetrics: text("default_metrics").array(),
+  defaultVisualizations: text("default_visualizations").array(),
+  defaultFilters: text("default_filters"), // JSON string
+  defaultSchedule: varchar("default_schedule"),
+  isPublic: boolean("is_public").default(true),
+  usageCount: integer("usage_count").default(0),
+  createdBy: varchar("created_by"), // User ID who created the template
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const complianceDocuments = pgTable("compliance_documents", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
@@ -859,6 +911,14 @@ export type BotFundingRequest = typeof botFundingRequests.$inferSelect;
 export type InsertBotFundingRequest = typeof botFundingRequests.$inferInsert;
 export type BotFundingContribution = typeof botFundingContributions.$inferSelect;
 export type InsertBotFundingContribution = typeof botFundingContributions.$inferInsert;
+
+// Custom Reports Types
+export type CustomReport = typeof customReports.$inferSelect;
+export type InsertCustomReport = typeof customReports.$inferInsert;
+export type ReportRun = typeof reportRuns.$inferSelect;
+export type InsertReportRun = typeof reportRuns.$inferInsert;
+export type ReportTemplate = typeof reportTemplates.$inferSelect;
+export type InsertReportTemplate = typeof reportTemplates.$inferInsert;
 
 export const insertPortfolioSchema = createInsertSchema(portfolios).omit({
   id: true,

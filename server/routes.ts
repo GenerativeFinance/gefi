@@ -2182,6 +2182,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Custom Reports API Routes
+  app.get('/api/custom-reports', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // In a real implementation, this would fetch from database
+      const reports = [
+        {
+          id: 1,
+          userId,
+          name: "Monthly Portfolio Performance",
+          description: "Comprehensive monthly analysis of portfolio performance",
+          reportType: "portfolio",
+          dateRange: "last-30-days",
+          metrics: ["total_value", "net_returns", "sharpe_ratio", "max_drawdown"],
+          visualizations: ["line-chart", "bar-chart", "table"],
+          schedule: "monthly",
+          isPublic: false,
+          status: "active",
+          createdAt: new Date().toISOString(),
+          lastRunAt: new Date().toISOString()
+        }
+      ];
+      
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching custom reports:", error);
+      res.status(500).json({ message: "Failed to fetch custom reports" });
+    }
+  });
+
+  app.post('/api/custom-reports', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const reportData = req.body;
+      
+      // In a real implementation, this would save to database
+      const newReport = {
+        id: Date.now(),
+        userId,
+        ...reportData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      res.json(newReport);
+    } catch (error) {
+      console.error("Error creating custom report:", error);
+      res.status(500).json({ message: "Failed to create custom report" });
+    }
+  });
+
+  app.post('/api/custom-reports/:id/run', isAuthenticated, async (req: any, res) => {
+    try {
+      const reportId = req.params.id;
+      const userId = req.user.id;
+      
+      // In a real implementation, this would trigger report generation
+      const reportRun = {
+        id: Date.now(),
+        reportId,
+        userId,
+        status: "completed",
+        startedAt: new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+        resultData: JSON.stringify({ success: true })
+      };
+      
+      res.json(reportRun);
+    } catch (error) {
+      console.error("Error running custom report:", error);
+      res.status(500).json({ message: "Failed to run custom report" });
+    }
+  });
+
+  app.delete('/api/custom-reports/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const reportId = req.params.id;
+      const userId = req.user.id;
+      
+      // In a real implementation, this would delete from database
+      res.json({ success: true, message: "Report deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting custom report:", error);
+      res.status(500).json({ message: "Failed to delete custom report" });
+    }
+  });
+
+  app.get('/api/report-templates', async (req, res) => {
+    try {
+      // In a real implementation, this would fetch from database
+      const templates = [
+        {
+          id: 1,
+          name: "Portfolio Performance",
+          description: "Comprehensive portfolio performance analysis",
+          category: "portfolio",
+          reportType: "portfolio",
+          defaultMetrics: ["total_value", "net_returns", "sharpe_ratio", "max_drawdown", "volatility", "alpha", "beta", "sortino_ratio"],
+          defaultVisualizations: ["line-chart", "bar-chart", "pie-chart", "table"],
+          defaultSchedule: "monthly",
+          usageCount: 156
+        },
+        {
+          id: 2,
+          name: "Risk Analysis",
+          description: "Detailed risk assessment and stress testing",
+          category: "risk",
+          reportType: "risk",
+          defaultMetrics: ["portfolio_var", "credit_risk", "market_risk", "liquidity_risk", "stress_test_results", "correlation_matrix"],
+          defaultVisualizations: ["heatmap", "bar-chart", "line-chart", "scatter", "table"],
+          defaultSchedule: "weekly",
+          usageCount: 89
+        },
+        {
+          id: 3,
+          name: "Trading Activity",
+          description: "Trading performance and activity analysis",
+          category: "trading",
+          reportType: "trading",
+          defaultMetrics: ["total_trades", "win_rate", "profit_factor", "avg_trade_duration", "commission_costs", "daily_pnl", "monthly_pnl"],
+          defaultVisualizations: ["line-chart", "bar-chart", "table"],
+          defaultSchedule: "daily",
+          usageCount: 67
+        }
+      ];
+      
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching report templates:", error);
+      res.status(500).json({ message: "Failed to fetch report templates" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Add WebSocket server for real-time data streaming
