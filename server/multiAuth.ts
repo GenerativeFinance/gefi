@@ -93,7 +93,7 @@ export async function setupMultiAuth(app: Express) {
       clientID: process.env.LINKEDIN_CLIENT_ID,
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
       callbackURL: `${baseUrl}/api/auth/linkedin/callback`,
-      scope: ['r_emailaddress', 'r_liteprofile']
+      scope: ['r_emailaddress', 'r_liteprofile', 'openid', 'profile', 'email']
     }, async (accessToken, refreshToken, profile, done) => {
       try {
         const user = await upsertUser(profile, 'linkedin');
@@ -123,7 +123,7 @@ export async function setupMultiAuth(app: Express) {
   );
   app.get('/api/auth/google/callback', 
     passport.authenticate('google', { 
-      failureRedirect: '/login-failed'
+      failureRedirect: '/login-failed?provider=google'
     }),
     (req, res) => {
       // Custom redirect logic to ensure single-window experience
@@ -158,7 +158,7 @@ export async function setupMultiAuth(app: Express) {
   );
   app.get('/api/auth/linkedin/callback',
     passport.authenticate('linkedin', {
-      failureRedirect: '/login-failed'
+      failureRedirect: '/login-failed?provider=linkedin'
     }),
     (req, res) => {
       // Custom redirect logic to ensure single-window experience
