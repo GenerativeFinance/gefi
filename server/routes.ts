@@ -754,86 +754,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Bot Funding Routes
-  app.get('/api/bot-funding/requests', async (req, res) => {
-    try {
-      const requests = await storage.getAllBotFundingRequests();
-      res.json(requests);
-    } catch (error) {
-      console.error("Error fetching bot funding requests:", error);
-      res.status(500).json({ message: "Failed to fetch funding requests" });
-    }
-  });
 
-  app.get('/api/bot-funding/my-requests', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-      const requests = await storage.getUserBotFundingRequests(userId);
-      res.json(requests);
-    } catch (error) {
-      console.error("Error fetching user funding requests:", error);
-      res.status(500).json({ message: "Failed to fetch user requests" });
-    }
-  });
-
-  app.get('/api/bot-funding/my-contributions', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-      const contributions = await storage.getUserBotFundingContributions(userId);
-      res.json(contributions);
-    } catch (error) {
-      console.error("Error fetching user contributions:", error);
-      res.status(500).json({ message: "Failed to fetch contributions" });
-    }
-  });
-
-  app.post('/api/bot-funding/requests', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const requestData = {
-        ...req.body,
-        developerId: userId,
-        fundingRaised: "0.00",
-        status: "open",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      
-      const request = await storage.createBotFundingRequest(requestData);
-      res.json(request);
-    } catch (error) {
-      console.error("Error creating funding request:", error);
-      res.status(500).json({ message: "Failed to create funding request" });
-    }
-  });
-
-  app.post('/api/bot-funding/contribute', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { requestId, amount, message } = req.body;
-      
-      const contributionData = {
-        requestId,
-        contributorId: userId,
-        amount: amount.toString(),
-        message,
-        status: "confirmed",
-        createdAt: new Date(),
-      };
-      
-      const contribution = await storage.createBotFundingContribution(contributionData);
-      res.json(contribution);
-    } catch (error) {
-      console.error("Error creating contribution:", error);
-      res.status(500).json({ message: "Failed to create contribution" });
-    }
-  });
 
   app.get('/api/ai-models/:id', async (req, res) => {
     try {
@@ -2317,6 +2238,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  // Initialize AI model categories and subcategories
+  app.post('/api/init-categories', async (req, res) => {
+    try {
+      // Financial AI Model Categories with comprehensive subcategories
+      const categoryData = [
+        {
+          name: "Risk Assessment",
+          description: "AI models for risk analysis and management",
+          icon: "Shield",
+          sortOrder: 1,
+          subcategories: [
+            { name: "Credit Risk", description: "Consumer credit scoring, corporate default prediction, loan approval", sortOrder: 1 },
+            { name: "Market Risk", description: "Portfolio VaR, stress testing, volatility forecasting", sortOrder: 2 },
+            { name: "Operational Risk", description: "Fraud detection, compliance monitoring, internal controls", sortOrder: 3 },
+            { name: "Liquidity Risk", description: "Cash flow forecasting, funding risk, liquidity stress testing", sortOrder: 4 },
+            { name: "Counterparty Risk", description: "CCP risk, settlement risk, exposure assessment", sortOrder: 5 }
+          ]
+        },
+        {
+          name: "Algorithmic Trading",
+          description: "Automated trading strategies and execution",
+          icon: "TrendingUp",
+          sortOrder: 2,
+          subcategories: [
+            { name: "High-Frequency Trading", description: "Ultra-low latency strategies, market making", sortOrder: 1 },
+            { name: "Statistical Arbitrage", description: "Pairs trading, mean reversion strategies", sortOrder: 2 },
+            { name: "Momentum Trading", description: "Trend following, breakout strategies", sortOrder: 3 },
+            { name: "Market Making", description: "Liquidity provision, bid-ask spread optimization", sortOrder: 4 },
+            { name: "Execution Algorithms", description: "TWAP, VWAP, implementation shortfall", sortOrder: 5 }
+          ]
+        },
+        {
+          name: "Portfolio Management",
+          description: "Investment portfolio optimization and analysis",
+          icon: "Target",
+          sortOrder: 3,
+          subcategories: [
+            { name: "Asset Allocation", description: "Strategic and tactical allocation models", sortOrder: 1 },
+            { name: "Risk Parity", description: "Risk-balanced portfolio construction", sortOrder: 2 },
+            { name: "Factor Investing", description: "Multi-factor models, style analysis", sortOrder: 3 },
+            { name: "ESG Integration", description: "Sustainable investing, ESG scoring", sortOrder: 4 },
+            { name: "Alternative Investments", description: "Private equity, hedge funds, real estate", sortOrder: 5 }
+          ]
+        },
+        {
+          name: "Market Prediction",
+          description: "Forecasting market movements and trends",
+          icon: "Brain",
+          sortOrder: 4,
+          subcategories: [
+            { name: "Price Forecasting", description: "Stock price prediction, commodity forecasting", sortOrder: 1 },
+            { name: "Volatility Modeling", description: "GARCH models, implied volatility", sortOrder: 2 },
+            { name: "Macroeconomic Indicators", description: "GDP growth, inflation, interest rates", sortOrder: 3 },
+            { name: "Sentiment Analysis", description: "News sentiment, social media analysis", sortOrder: 4 },
+            { name: "Technical Analysis", description: "Pattern recognition, indicator optimization", sortOrder: 5 }
+          ]
+        },
+        {
+          name: "Regulatory Compliance",
+          description: "Compliance monitoring and regulatory reporting",
+          icon: "ShieldCheck",
+          sortOrder: 5,
+          subcategories: [
+            { name: "Basel III", description: "Capital adequacy, liquidity ratios", sortOrder: 1 },
+            { name: "MiFID II", description: "Best execution, transaction reporting", sortOrder: 2 },
+            { name: "Dodd-Frank", description: "Volcker rule, swap reporting", sortOrder: 3 },
+            { name: "GDPR", description: "Data privacy, consent management", sortOrder: 4 },
+            { name: "AML/KYC", description: "Anti-money laundering, customer verification", sortOrder: 5 }
+          ]
+        },
+        {
+          name: "Alternative Data",
+          description: "Non-traditional data sources for financial insights",
+          icon: "Zap",
+          sortOrder: 6,
+          subcategories: [
+            { name: "Satellite Data", description: "Economic activity, crop yields, retail foot traffic", sortOrder: 1 },
+            { name: "Social Media", description: "Sentiment analysis, trend detection", sortOrder: 2 },
+            { name: "Web Scraping", description: "News analysis, competitor monitoring", sortOrder: 3 },
+            { name: "Transaction Data", description: "Credit card spending, retail analytics", sortOrder: 4 },
+            { name: "ESG Data", description: "Environmental metrics, governance scoring", sortOrder: 5 }
+          ]
+        }
+      ];
+
+      // Create categories and subcategories
+      for (const categoryInfo of categoryData) {
+        const { subcategories, ...categoryData } = categoryInfo;
+        
+        // Create or get category
+        let category;
+        try {
+          category = await storage.createAiModelCategory(categoryData);
+        } catch (error) {
+          // Category might already exist, try to get it
+          const existingCategories = await storage.getAiModelCategories();
+          category = existingCategories.find(c => c.name === categoryData.name);
+          if (!category) {
+            throw error;
+          }
+        }
+
+        // Create subcategories
+        for (const subcategoryData of subcategories) {
+          try {
+            await storage.createAiModelSubcategory({
+              ...subcategoryData,
+              categoryId: category.id
+            });
+          } catch (error) {
+            // Subcategory might already exist, continue
+            console.log(`Subcategory ${subcategoryData.name} might already exist`);
+          }
+        }
+      }
+
+      res.json({ message: "Categories and subcategories initialized successfully" });
+    } catch (error) {
+      console.error("Error initializing categories:", error);
+      res.status(500).json({ message: "Failed to initialize categories" });
+    }
+  });
   
   // Add WebSocket server for real-time data streaming
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });

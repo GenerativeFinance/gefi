@@ -10,7 +10,6 @@ import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/layout/Layout";
 import { Link } from "wouter";
 import { 
-  Bot, 
   TrendingUp, 
   DollarSign, 
   Target,
@@ -31,10 +30,7 @@ export default function Funding() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [sortBy, setSortBy] = useState("trending");
 
-  // Fetch funding data
-  const { data: botFundingRequests = [], isLoading: botLoading } = useQuery({
-    queryKey: ["/api/bot-funding/requests"],
-  });
+
 
   const { data: modelFundingRequests = [], isLoading: modelLoading } = useQuery({
     queryKey: ["/api/model-funding/requests"],
@@ -45,10 +41,6 @@ export default function Funding() {
   });
 
   // Calculate totals for dashboard
-  const totalBotFunding = Array.isArray(botFundingRequests) 
-    ? botFundingRequests.reduce((sum: number, req: any) => sum + parseFloat(req.fundingRaised || 0), 0)
-    : 0;
-
   const totalModelFunding = Array.isArray(modelFundingRequests) 
     ? modelFundingRequests.reduce((sum: number, req: any) => sum + parseFloat(req.fundingRaised || 0), 0)
     : 0;
@@ -57,10 +49,8 @@ export default function Funding() {
     ? bountyFundingRequests.reduce((sum: number, req: any) => sum + parseFloat(req.fundingRaised || 0), 0)
     : 0;
 
-  const totalFunding = totalBotFunding + totalModelFunding + totalBountyFunding;
+  const totalFunding = totalModelFunding + totalBountyFunding;
 
-  const activeBots = Array.isArray(botFundingRequests) 
-    ? botFundingRequests.filter((req: any) => req.status === "open").length : 0;
   const activeModels = Array.isArray(modelFundingRequests) 
     ? modelFundingRequests.filter((req: any) => req.status === "open").length : 0;
   const activeBounties = Array.isArray(bountyFundingRequests) 
@@ -86,14 +76,10 @@ export default function Funding() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="dashboard">
               <BarChart3 className="h-4 w-4 mr-2" />
               Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="bot-funding">
-              <Bot className="h-4 w-4 mr-2" />
-              Bot Funding
             </TabsTrigger>
             <TabsTrigger value="ai-model-funding">
               <Brain className="h-4 w-4 mr-2" />
@@ -127,9 +113,9 @@ export default function Funding() {
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{activeBots + activeModels + activeBounties}</div>
+                  <div className="text-2xl font-bold">{activeModels + activeBounties}</div>
                   <p className="text-xs text-muted-foreground">
-                    {activeBots} bots, {activeModels} models, {activeBounties} bounties
+                    {activeModels} models, {activeBounties} bounties
                   </p>
                 </CardContent>
               </Card>
@@ -161,31 +147,7 @@ export default function Funding() {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bot className="h-5 w-5" />
-                    Bot Funding
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Total Raised</span>
-                      <span className="font-medium">{formatCurrency(totalBotFunding)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Active Bots</span>
-                      <span className="font-medium">{activeBots}</span>
-                    </div>
-                    <Button asChild className="w-full">
-                      <Link href="/bot-funding">View Bot Funding</Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -236,33 +198,7 @@ export default function Funding() {
             </div>
           </TabsContent>
 
-          {/* Bot Funding Tab */}
-          <TabsContent value="bot-funding" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Trading Bot Funding</h2>
-              <Button asChild>
-                <Link href="/bot-funding">
-                  <Plus className="h-4 w-4 mr-2" />
-                  View Full Page
-                </Link>
-              </Button>
-            </div>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center py-8">
-                  <Bot className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Fund Trading Bots</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Support the development of automated trading bots and earn returns from their performance.
-                  </p>
-                  <Button asChild>
-                    <Link href="/bot-funding">Explore Bot Funding</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+
 
           {/* AI Model Funding Tab */}
           <TabsContent value="ai-model-funding" className="space-y-6">
