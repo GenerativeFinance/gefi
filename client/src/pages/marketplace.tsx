@@ -307,21 +307,19 @@ export default function AIMarketplace() {
             </SelectContent>
           </Select>
 
-          {selectedCategory !== "all" && subcategories.length > 0 && (
-            <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Subcategory" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Subcategories</SelectItem>
-                {subcategories.map((subcategory: any) => (
-                  <SelectItem key={subcategory.id} value={subcategory.name}>
-                    {subcategory.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="All Subcategories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Subcategories</SelectItem>
+              {selectedCategory !== "all" && subcategories.map((subcategory: any) => (
+                <SelectItem key={subcategory.id} value={subcategory.name}>
+                  {subcategory.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           
           <Select value={riskLevel} onValueChange={setRiskLevel}>
             <SelectTrigger className="w-40">
