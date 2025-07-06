@@ -257,22 +257,23 @@ export default function BotFunding() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Bot Funding</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
+            <h1 className="text-3xl font-bold">Bot Funding</h1>
+            <p className="text-muted-foreground">
               Fund innovative trading bot development and earn from successful deployments
             </p>
           </div>
-          <Dialog open={createRequestOpen} onOpenChange={setCreateRequestOpen}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Funding Request
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-3">
+            <Dialog open={createRequestOpen} onOpenChange={setCreateRequestOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Funding Request
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create Bot Funding Request</DialogTitle>
@@ -348,50 +349,51 @@ export default function BotFunding() {
                 </div>
               </form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-5 w-5 text-green-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Funded</p>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <DollarSign className="h-8 w-8 text-green-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-muted-foreground">Total Funded</p>
                   <p className="text-2xl font-bold">${totalFunded.toLocaleString()}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Bot className="h-5 w-5 text-blue-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Active Bots</p>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Bot className="h-8 w-8 text-blue-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-muted-foreground">Active Bots</p>
                   <p className="text-2xl font-bold">{activeBots}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Users className="h-5 w-5 text-purple-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Contributors</p>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Users className="h-8 w-8 text-purple-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-muted-foreground">Contributors</p>
                   <p className="text-2xl font-bold">{totalContributors}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <TrendingUp className="h-5 w-5 text-orange-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Success Rate</p>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <TrendingUp className="h-8 w-8 text-green-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-muted-foreground">Success Rate</p>
                   <p className="text-2xl font-bold">84%</p>
                 </div>
               </div>
@@ -407,11 +409,11 @@ export default function BotFunding() {
             <TabsTrigger value="my-requests">My Requests</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="browse" className="space-y-4">
+          <TabsContent value="browse" className="space-y-6">
             {/* Filters */}
-            <div className="flex space-x-4 items-center">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search bot funding requests..."
                   value={searchTerm}
@@ -420,8 +422,8 @@ export default function BotFunding() {
                 />
               </div>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map(cat => (
@@ -430,8 +432,8 @@ export default function BotFunding() {
                 </SelectContent>
               </Select>
               <Select value={selectedRiskLevel} onValueChange={setSelectedRiskLevel}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Risk Level" />
                 </SelectTrigger>
                 <SelectContent>
                   {riskLevels.map(risk => (
