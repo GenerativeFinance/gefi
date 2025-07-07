@@ -81,6 +81,42 @@ export interface Contribution {
   campaignId: string;
 }
 
+// ABI definitions for the smart contracts
+const REVENUE_SHARING_ABI = [
+  "function registerModel(string memory _modelId, address _developer, uint256 _developerShare, uint256 _platformShare)",
+  "function addInvestor(string memory _modelId, address _investor, uint256 _sharePercentage)",
+  "function distributeRevenue(string memory _modelId) payable",
+  "function withdraw()",
+  "function getPendingWithdrawal(address _user) view returns (uint256)",
+  "function getModelInfo(string memory _modelId) view returns (address, uint256, uint256, uint256, uint256, bool)",
+  "function getInvestorShare(string memory _modelId, address _investor) view returns (uint256)",
+  "function getModelInvestors(string memory _modelId) view returns (address[])",
+  "function getRevenueHistory(string memory _modelId) view returns (tuple(uint256,uint256,address,uint256,uint256,uint256)[])",
+  "function deactivateModel(string memory _modelId)",
+  "event ModelRegistered(string indexed modelId, address indexed developer)",
+  "event InvestorAdded(string indexed modelId, address indexed investor, uint256 share)",
+  "event RevenueDistributed(string indexed modelId, uint256 amount, uint256 timestamp)",
+  "event WithdrawalMade(address indexed user, uint256 amount)"
+];
+
+const CROWDFUNDING_ABI = [
+  "function createCampaign(string memory _campaignId, string memory _title, string memory _description, string memory _modelId, uint256 _goal, uint256 _durationInDays, uint256 _minContribution, uint256 _maxContribution, string memory _category)",
+  "function contribute(string memory _campaignId) payable",
+  "function withdrawFunds(string memory _campaignId)",
+  "function requestRefund(string memory _campaignId)",
+  "function cancelCampaign(string memory _campaignId)",
+  "function getCampaignInfo(string memory _campaignId) view returns (address, string, string, string, uint256, uint256, uint256, uint8, uint256, string)",
+  "function getUserContribution(string memory _campaignId, address _user) view returns (uint256)",
+  "function getCampaignContributors(string memory _campaignId) view returns (address[])",
+  "function getUserCampaigns(address _user) view returns (string[])",
+  "function getUserContributions(address _user) view returns (tuple(address,uint256,uint256,string)[])",
+  "function getPlatformStats() view returns (uint256, uint256, uint256)",
+  "event CampaignCreated(string indexed campaignId, address indexed creator, string title, uint256 goal, uint256 deadline)",
+  "event ContributionMade(string indexed campaignId, address indexed contributor, uint256 amount, uint256 timestamp)",
+  "event CampaignSuccessful(string indexed campaignId, uint256 totalRaised)",
+  "event FundsWithdrawn(string indexed campaignId, address indexed creator, uint256 amount)"
+];
+
 export class SmartContractService {
   private provider: ethers.BrowserProvider | null = null;
   private signer: ethers.JsonRpcSigner | null = null;
@@ -116,8 +152,16 @@ export class SmartContractService {
     }
     
     await window.ethereum.request({ method: 'eth_requestAccounts' });
+    await this.initializeProvider(); // Reinitialize with new signer
     const accounts = await this.provider.listAccounts();
-    return accounts;
+    return accounts.map(account => account.address);
+  }
+
+  async getCurrentAddress(): Promise<string> {
+    if (!this.signer) {
+      throw new Error('Wallet not connected');
+    }
+    return await this.signer.getAddress();
   }
 
   // Revenue Sharing Contract Methods
@@ -178,7 +222,7 @@ export class SmartContractService {
     }
     
     const amount = await this.revenueContract.getPendingWithdrawal(address);
-    return ethers.utils.formatEther(amount);
+    return ethers.formatEther(amount);
   }
 
   async getModelInfo(modelId: string): Promise<ModelInfo> {
@@ -189,10 +233,10 @@ export class SmartContractService {
     const info = await this.revenueContract.getModelInfo(modelId);
     return {
       developer: info[0],
-      totalRevenue: ethers.utils.formatEther(info[1]),
-      developerShare: info[2].toNumber(),
-      platformShare: info[3].toNumber(),
-      totalInvestorShares: info[4].toNumber(),
+      totalRevenue: ethers.formatEther(info[1]),
+      developerShare: Number(info[2]),
+      platformShare: Number(info[3]),
+      totalInvestorShares: Number(info[4]),
       isActive: info[5]
     };
   }
@@ -203,7 +247,7 @@ export class SmartContractService {
     }
     
     const share = await this.revenueContract.getInvestorShare(modelId, investor);
-    return share.toNumber();
+    return Number(share);
   }
 
   async getModelInvestors(modelId: string): Promise<string[]> {
@@ -221,12 +265,12 @@ export class SmartContractService {
     
     const history = await this.revenueContract.getRevenueHistory(modelId);
     return history.map((item: any) => ({
-      timestamp: item[0].toNumber(),
-      amount: ethers.utils.formatEther(item[1]),
+      timestamp: Number(item[0]),
+      amount: ethers.formatEther(item[1]),
       model: item[2],
-      developerAmount: ethers.utils.formatEther(item[3]),
-      platformAmount: ethers.utils.formatEther(item[4]),
-      investorAmount: ethers.utils.formatEther(item[5])
+      developerAmount: ethers.formatEther(item[3]),
+      platformAmount: ethers.formatEther(item[4]),
+      investorAmount: ethers.formatEther(item[5])
     }));
   }
 
@@ -234,6 +278,201 @@ export class SmartContractService {
   async createCampaign(
     campaignId: string,
     title: string,
+    description: string,
+    modelId: string,
+    goal: string,
+    durationInDays: number,
+    minContribution: string,
+    maxContribution: string,
+    category: string
+  ): Promise<ethers.ContractTransaction> {
+    if (!this.crowdfundingContract) {
+      throw new Error('Crowdfunding contract not initialized');
+    }
+    
+    return await this.crowdfundingContract.createCampaign(
+      campaignId,
+      title,
+      description,
+      modelId,
+      ethers.parseEther(goal),
+      durationInDays,
+      ethers.parseEther(minContribution),
+      ethers.parseEther(maxContribution),
+      category
+    );
+  }
+
+  async contributeToCampaign(
+    campaignId: string,
+    amount: string
+  ): Promise<ethers.ContractTransaction> {
+    if (!this.crowdfundingContract) {
+      throw new Error('Crowdfunding contract not initialized');
+    }
+    
+    return await this.crowdfundingContract.contribute(campaignId, {
+      value: ethers.parseEther(amount)
+    });
+  }
+
+  async withdrawCampaignFunds(campaignId: string): Promise<ethers.ContractTransaction> {
+    if (!this.crowdfundingContract) {
+      throw new Error('Crowdfunding contract not initialized');
+    }
+    
+    return await this.crowdfundingContract.withdrawFunds(campaignId);
+  }
+
+  async requestCampaignRefund(campaignId: string): Promise<ethers.ContractTransaction> {
+    if (!this.crowdfundingContract) {
+      throw new Error('Crowdfunding contract not initialized');
+    }
+    
+    return await this.crowdfundingContract.requestRefund(campaignId);
+  }
+
+  async cancelCampaign(campaignId: string): Promise<ethers.ContractTransaction> {
+    if (!this.crowdfundingContract) {
+      throw new Error('Crowdfunding contract not initialized');
+    }
+    
+    return await this.crowdfundingContract.cancelCampaign(campaignId);
+  }
+
+  async getCampaignInfo(campaignId: string): Promise<CampaignInfo> {
+    if (!this.crowdfundingContract) {
+      throw new Error('Crowdfunding contract not initialized');
+    }
+    
+    const info = await this.crowdfundingContract.getCampaignInfo(campaignId);
+    return {
+      creator: info[0],
+      title: info[1],
+      description: info[2],
+      modelId: info[3],
+      goal: ethers.formatEther(info[4]),
+      raised: ethers.formatEther(info[5]),
+      deadline: Number(info[6]),
+      status: Number(info[7]), // 0: Active, 1: Successful, 2: Failed, 3: Cancelled
+      contributorCount: Number(info[8]),
+      category: info[9]
+    };
+  }
+
+  async getUserContribution(campaignId: string, userAddress: string): Promise<string> {
+    if (!this.crowdfundingContract) {
+      throw new Error('Crowdfunding contract not initialized');
+    }
+    
+    const contribution = await this.crowdfundingContract.getUserContribution(campaignId, userAddress);
+    return ethers.formatEther(contribution);
+  }
+
+  async getCampaignContributors(campaignId: string): Promise<string[]> {
+    if (!this.crowdfundingContract) {
+      throw new Error('Crowdfunding contract not initialized');
+    }
+    
+    return await this.crowdfundingContract.getCampaignContributors(campaignId);
+  }
+
+  async getUserCampaigns(userAddress: string): Promise<string[]> {
+    if (!this.crowdfundingContract) {
+      throw new Error('Crowdfunding contract not initialized');
+    }
+    
+    return await this.crowdfundingContract.getUserCampaigns(userAddress);
+  }
+
+  async getUserContributions(userAddress: string): Promise<Contribution[]> {
+    if (!this.crowdfundingContract) {
+      throw new Error('Crowdfunding contract not initialized');
+    }
+    
+    const contributions = await this.crowdfundingContract.getUserContributions(userAddress);
+    return contributions.map((item: any) => ({
+      contributor: item[0],
+      amount: ethers.formatEther(item[1]),
+      timestamp: Number(item[2]),
+      campaignId: item[3]
+    }));
+  }
+
+  async getPlatformStats(): Promise<{ totalCampaigns: number; totalRaised: string; platformFee: number }> {
+    if (!this.crowdfundingContract) {
+      throw new Error('Crowdfunding contract not initialized');
+    }
+    
+    const stats = await this.crowdfundingContract.getPlatformStats();
+    return {
+      totalCampaigns: Number(stats[0]),
+      totalRaised: ethers.formatEther(stats[1]),
+      platformFee: Number(stats[2])
+    };
+  }
+
+  // Utility Methods
+  async getBalance(address?: string): Promise<string> {
+    if (!this.provider) {
+      throw new Error('Provider not initialized');
+    }
+    
+    const targetAddress = address || await this.getCurrentAddress();
+    const balance = await this.provider.getBalance(targetAddress);
+    return ethers.formatEther(balance);
+  }
+
+  async waitForTransaction(txHash: string): Promise<ethers.TransactionReceipt> {
+    if (!this.provider) {
+      throw new Error('Provider not initialized');
+    }
+    
+    const receipt = await this.provider.waitForTransaction(txHash);
+    if (!receipt) {
+      throw new Error('Transaction receipt not found');
+    }
+    return receipt;
+  }
+
+  // Event Listeners
+  onModelRegistered(callback: (modelId: string, developer: string) => void) {
+    if (!this.revenueContract) return;
+    
+    this.revenueContract.on('ModelRegistered', (modelId, developer) => {
+      callback(modelId, developer);
+    });
+  }
+
+  onRevenueDistributed(callback: (modelId: string, amount: string, timestamp: number) => void) {
+    if (!this.revenueContract) return;
+    
+    this.revenueContract.on('RevenueDistributed', (modelId, amount, timestamp) => {
+      callback(modelId, ethers.formatEther(amount), Number(timestamp));
+    });
+  }
+
+  onCampaignCreated(callback: (campaignId: string, creator: string, title: string, goal: string, deadline: number) => void) {
+    if (!this.crowdfundingContract) return;
+    
+    this.crowdfundingContract.on('CampaignCreated', (campaignId, creator, title, goal, deadline) => {
+      callback(campaignId, creator, title, ethers.formatEther(goal), Number(deadline));
+    });
+  }
+
+  onContributionMade(callback: (campaignId: string, contributor: string, amount: string, timestamp: number) => void) {
+    if (!this.crowdfundingContract) return;
+    
+    this.crowdfundingContract.on('ContributionMade', (campaignId, contributor, amount, timestamp) => {
+      callback(campaignId, contributor, ethers.formatEther(amount), Number(timestamp));
+    });
+  }
+
+  // Clean up event listeners
+  removeAllListeners() {
+    this.revenueContract?.removeAllListeners();
+    this.crowdfundingContract?.removeAllListeners();
+  }
     description: string,
     modelId: string,
     goal: string,

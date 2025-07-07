@@ -1,17 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useWeb3 } from '@/contexts/Web3Context';
 import { smartContractService, type ModelInfo, type CampaignInfo, type RevenueDistribution, type Contribution } from '@/lib/smartContractService';
-import { Wallet, DollarSign, TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Target, Clock, CheckCircle, XCircle, Zap, Shield } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { Shield, Wallet, AlertCircle, RefreshCw } from 'lucide-react';
+import ContractStats from '@/components/smart-contracts/ContractStats';
+import RevenueShareCard from '@/components/smart-contracts/RevenueShareCard';
+import CrowdfundingCard from '@/components/smart-contracts/CrowdfundingCard';
+import Layout from '@/components/layout/layout';
+import { Button } from '@/components/ui/button';
 
 export default function SmartContracts() {
   const { address, isConnected, connectWallet } = useWeb3();
@@ -63,11 +60,51 @@ export default function SmartContracts() {
     if (isConnected && address) {
       loadUserData();
       loadPlatformStats();
+      setupEventListeners();
     }
+    
+    return () => {
+      smartContractService.removeAllListeners();
+    };
   }, [isConnected, address]);
+
+  const setupEventListeners = () => {
+    // Listen for revenue distributions
+    smartContractService.onRevenueDistributed((modelId, amount, timestamp) => {
+      toast({
+        title: "Revenue Distributed",
+        description: `${amount} ETH distributed for model ${modelId}`,
+      });
+      loadUserData(); // Refresh data
+    });
+
+    // Listen for new contributions
+    smartContractService.onContributionMade((campaignId, contributor, amount, timestamp) => {
+      if (contributor === address) {
+        toast({
+          title: "Contribution Successful",
+          description: `Successfully contributed ${amount} ETH to campaign`,
+        });
+      }
+      loadUserData(); // Refresh data
+    });
+
+    // Listen for new campaigns
+    smartContractService.onCampaignCreated((campaignId, creator, title, goal, deadline) => {
+      if (creator === address) {
+        toast({
+          title: "Campaign Created",
+          description: `Campaign "${title}" created successfully`,
+        });
+      }
+      loadUserData(); // Refresh data
+    });
+  };
 
   const loadUserData = async () => {
     if (!address) return;
+
+    setLoading(prev => ({ ...prev, loadingData: true }));
 
     try {
       // Load pending withdrawal
@@ -81,11 +118,25 @@ export default function SmartContracts() {
       // Load user campaigns
       const userCampaigns = await smartContractService.getUserCampaigns(address);
       const campaignInfos = await Promise.all(
-        userCampaigns.map(id => smartContractService.getCampaignInfo(id))
+        userCampaigns.map(async (id) => {
+          try {
+            return await smartContractService.getCampaignInfo(id);
+          } catch (err) {
+            console.warn(`Failed to load campaign ${id}:`, err);
+            return null;
+          }
+        })
       );
-      setCampaigns(campaignInfos);
+      setCampaigns(campaignInfos.filter(Boolean) as CampaignInfo[]);
     } catch (error) {
       console.error('Error loading user data:', error);
+      toast({
+        title: "Error Loading Data",
+        description: "Failed to load smart contract data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(prev => ({ ...prev, loadingData: false }));
     }
   };
 
@@ -305,16 +356,42 @@ export default function SmartContracts() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Smart Contracts Dashboard</h1>
-          <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Transparent revenue sharing and crowdfunding powered by blockchain technology.
-            All transactions are immutable and verifiable on the blockchain.
-          </p>
-        </div>
+    <Layout>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Header */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Shield className="h-8 w-8 text-blue-500" />
+              <h1 className="text-4xl font-bold">Smart Contracts</h1>
+            </div>
+            <p className="text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
+              Transparent revenue sharing and crowdfunding powered by blockchain technology.
+              All transactions are immutable, verifiable, and automatically executed through smart contracts.
+            </p>
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <Button 
+                onClick={loadUserData} 
+                variant="outline" 
+                size="sm"
+                disabled={loading.loadingData}
+              >
+                {loading.loadingData ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                Refresh Data
+              </Button>
+            </div>
+          </div>
+
+          {/* Stats Overview */}
+          <ContractStats
+            platformStats={platformStats}
+            pendingWithdrawal={pendingWithdrawal}
+            userContributions={userContributions}
+            campaigns={campaigns}
+            onRefresh={loadUserData}
+            onWithdraw={handleWithdrawRevenue}
+            loading={loading.withdraw || false}
+          />
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
