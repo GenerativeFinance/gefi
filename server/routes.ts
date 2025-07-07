@@ -801,6 +801,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add new categories only
+  app.post('/api/add-new-categories', async (req, res) => {
+    try {
+      // New categories to add
+      const newCategories = [
+        {
+          name: "Credit Scoring",
+          description: "Advanced credit assessment and loan default prediction models",
+          icon: "CreditCard",
+          sortOrder: 10,
+          subcategories: [
+            { name: "Borrower Creditworthiness", description: "Comprehensive borrower assessment models", sortOrder: 1 },
+            { name: "Loan Default Prediction", description: "Predictive models for loan default risk", sortOrder: 2 },
+            { name: "Alternative Credit Data Models", description: "Non-traditional credit scoring using alternative data", sortOrder: 3 }
+          ]
+        },
+        {
+          name: "Insurance",
+          description: "AI models for insurance underwriting, claims processing, and risk modeling",
+          icon: "Shield",
+          sortOrder: 11,
+          subcategories: [
+            { name: "Underwriting Models", description: "Automated insurance underwriting and risk assessment", sortOrder: 1 },
+            { name: "Claims Processing", description: "Automated claims analysis and fraud detection", sortOrder: 2 },
+            { name: "Risk Modeling", description: "Actuarial and risk prediction models", sortOrder: 3 },
+            { name: "Premium Optimization", description: "Dynamic pricing and premium calculation models", sortOrder: 4 }
+          ]
+        },
+        {
+          name: "Personal Finance",
+          description: "AI-powered personal financial management and optimization tools",
+          icon: "Wallet",
+          sortOrder: 12,
+          subcategories: [
+            { name: "Budgeting Tools", description: "Intelligent budget planning and expense tracking", sortOrder: 1 },
+            { name: "Savings Optimization", description: "Automated savings strategies and goal planning", sortOrder: 2 },
+            { name: "Retirement Planning", description: "Long-term retirement and investment planning", sortOrder: 3 },
+            { name: "Debt Management", description: "Debt consolidation and repayment optimization", sortOrder: 4 }
+          ]
+        },
+        {
+          name: "Market Sentiment Analysis",
+          description: "Real-time market sentiment analysis and investor behavior prediction",
+          icon: "BarChart3",
+          sortOrder: 13,
+          subcategories: [
+            { name: "News Sentiment Analysis", description: "Real-time news sentiment extraction and market impact analysis", sortOrder: 1 },
+            { name: "Social Media Monitoring", description: "Social media sentiment tracking and trading signals", sortOrder: 2 },
+            { name: "Investor Behavior Models", description: "Predictive models for investor decision-making patterns", sortOrder: 3 },
+            { name: "Market Trend Analysis Models", description: "Advanced trend identification and momentum analysis", sortOrder: 4 }
+          ]
+        }
+      ];
+
+      let addedCategories = 0;
+      let addedSubcategories = 0;
+
+      for (const categoryInfo of newCategories) {
+        const { subcategories, ...categoryData } = categoryInfo;
+        
+        try {
+          // Try to create category
+          const category = await storage.createAiModelCategory(categoryData);
+          addedCategories++;
+          console.log(`Added new category: ${category.name}`);
+          
+          // Create subcategories
+          for (const subcategoryData of subcategories) {
+            try {
+              const subcategory = await storage.createAiModelSubcategory({
+                ...subcategoryData,
+                categoryId: category.id
+              });
+              addedSubcategories++;
+              console.log(`  Added subcategory: ${subcategory.name}`);
+            } catch (subError) {
+              console.log(`Subcategory ${subcategoryData.name} might already exist`);
+            }
+          }
+        } catch (error) {
+          console.log(`Category ${categoryData.name} might already exist`);
+        }
+      }
+      
+      res.json({ 
+        message: `Successfully added ${addedCategories} new categories and ${addedSubcategories} subcategories`,
+        addedCategories,
+        addedSubcategories
+      });
+    } catch (error) {
+      console.error("Error adding new categories:", error);
+      res.status(500).json({ message: "Failed to add new categories", error: error.message });
+    }
+  });
+
 
 
   app.get('/api/ai-models/:id', async (req, res) => {

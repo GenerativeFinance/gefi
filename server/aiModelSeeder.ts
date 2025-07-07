@@ -198,6 +198,53 @@ export const AI_MODEL_CATEGORIES = [
       { name: "Optimization", description: "Mathematical optimization techniques", sortOrder: 12 },
       { name: "Feature Selection", description: "Variable selection algorithms", sortOrder: 13 }
     ]
+  },
+  {
+    name: "Credit Scoring",
+    description: "Advanced credit assessment and loan default prediction models",
+    icon: "CreditCard",
+    sortOrder: 10,
+    subcategories: [
+      { name: "Borrower Creditworthiness", description: "Comprehensive borrower assessment models", sortOrder: 1 },
+      { name: "Loan Default Prediction", description: "Predictive models for loan default risk", sortOrder: 2 },
+      { name: "Alternative Credit Data Models", description: "Non-traditional credit scoring using alternative data", sortOrder: 3 }
+    ]
+  },
+  {
+    name: "Insurance",
+    description: "AI models for insurance underwriting, claims processing, and risk modeling",
+    icon: "Shield",
+    sortOrder: 11,
+    subcategories: [
+      { name: "Underwriting Models", description: "Automated insurance underwriting and risk assessment", sortOrder: 1 },
+      { name: "Claims Processing", description: "Automated claims analysis and fraud detection", sortOrder: 2 },
+      { name: "Risk Modeling", description: "Actuarial and risk prediction models", sortOrder: 3 },
+      { name: "Premium Optimization", description: "Dynamic pricing and premium calculation models", sortOrder: 4 }
+    ]
+  },
+  {
+    name: "Personal Finance",
+    description: "AI-powered personal financial management and optimization tools",
+    icon: "Wallet",
+    sortOrder: 12,
+    subcategories: [
+      { name: "Budgeting Tools", description: "Intelligent budget planning and expense tracking", sortOrder: 1 },
+      { name: "Savings Optimization", description: "Automated savings strategies and goal planning", sortOrder: 2 },
+      { name: "Retirement Planning", description: "Long-term retirement and investment planning", sortOrder: 3 },
+      { name: "Debt Management", description: "Debt consolidation and repayment optimization", sortOrder: 4 }
+    ]
+  },
+  {
+    name: "Market Sentiment Analysis",
+    description: "Real-time market sentiment analysis and investor behavior prediction",
+    icon: "BarChart3",
+    sortOrder: 13,
+    subcategories: [
+      { name: "News Sentiment Analysis", description: "Real-time news sentiment extraction and market impact analysis", sortOrder: 1 },
+      { name: "Social Media Monitoring", description: "Social media sentiment tracking and trading signals", sortOrder: 2 },
+      { name: "Investor Behavior Models", description: "Predictive models for investor decision-making patterns", sortOrder: 3 },
+      { name: "Market Trend Analysis Models", description: "Advanced trend identification and momentum analysis", sortOrder: 4 }
+    ]
   }
 ];
 

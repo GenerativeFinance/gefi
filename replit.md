@@ -304,6 +304,12 @@ Changelog:
   * Made developer names clickable in both Bot Funding and Model Funding pages linking to user profiles
   * Removed "Trading Bots" from AI Model Marketplace submenu navigation for cleaner organization
   * Removed "AI Marketplace" from Reports submenu navigation to reduce redundancy and improve user experience
+- July 7, 2025. Expanded AI model categories with comprehensive financial domain coverage
+  * Added four new major categories: Credit Scoring, Insurance, Personal Finance, and Market Sentiment Analysis
+  * Created 15 specialized subcategories covering credit assessment, insurance operations, personal finance tools, and sentiment analysis
+  * Enhanced AI model seeder with new category definitions and proper icon mappings (CreditCard, Shield, Wallet, BarChart3)
+  * Successfully integrated new categories into database with proper sort ordering and active status
+  * Expanded platform coverage to include comprehensive financial services beyond traditional trading and risk management
 ```
 
 ## User Preferences
