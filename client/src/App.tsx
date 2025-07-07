@@ -34,6 +34,11 @@ import UserDetail from "@/pages/user-detail";
 import RiskAssessmentModels from "@/pages/risk-assessment-models";
 import DataProviderDashboard from "@/pages/data-provider-dashboard";
 import RegulatorDashboard from "@/pages/regulator-dashboard";
+import RegulatorModelAudits from "@/pages/regulator-model-audits";
+import RegulatorDatasetAudits from "@/pages/regulator-dataset-audits";
+import RegulatorComplianceIssues from "@/pages/regulator-compliance-issues";
+import RegulatorCommunications from "@/pages/regulator-communications";
+import RegulatorStandards from "@/pages/regulator-standards";
 import Learning from "@/pages/learning";
 import TermsOfService from "@/pages/terms-of-service";
 import DataProcessingAgreement from "@/pages/data-processing-agreement";
@@ -166,6 +171,12 @@ function Router() {
             <Route path="/risk-reports" component={RiskReports} />
             <Route path="/custom-reports" component={CustomReports} />
             <Route path="/market-data" component={MarketData} />
+            <Route path="/regulator" component={RegulatorDashboard} />
+            <Route path="/regulator/model-audits" component={RegulatorModelAudits} />
+            <Route path="/regulator/dataset-audits" component={RegulatorDatasetAudits} />
+            <Route path="/regulator/compliance-issues" component={RegulatorComplianceIssues} />
+            <Route path="/regulator/communications" component={RegulatorCommunications} />
+            <Route path="/regulator/standards" component={RegulatorStandards} />
           </>
         ) : (
           <>
