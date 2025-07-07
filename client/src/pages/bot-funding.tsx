@@ -13,6 +13,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/layout/Layout";
+import { Link } from "wouter";
 import { 
   Bot, 
   DollarSign, 
@@ -508,7 +509,12 @@ export default function BotFunding() {
 
                       <div className="space-y-2">
                         <p className="text-sm">
-                          <span className="font-medium">Created by:</span> {request.createdBy}
+                          <span className="font-medium">Created by:</span>{" "}
+                          <Link href={`/user/${request.createdBy}`}>
+                            <span className="text-primary hover:underline cursor-pointer font-medium">
+                              {request.createdBy}
+                            </span>
+                          </Link>
                         </p>
                         <p className="text-sm">
                           <span className="font-medium">Min Contribution:</span> ${request.minContribution}

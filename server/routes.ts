@@ -38,6 +38,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Comprehensive User Profile API
+  app.get('/api/users/:userId/profile', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Get basic user information
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get comprehensive profile data
+      const [profile, education, experience, certifications, skills, publications, reviews, stats] = await Promise.all([
+        storage.getUserProfile(userId),
+        storage.getUserEducation(userId),
+        storage.getUserExperience(userId), 
+        storage.getUserCertifications(userId),
+        storage.getUserSkills(userId),
+        storage.getUserPublications(userId),
+        storage.getUserReviews(userId),
+        storage.getUserStats(userId)
+      ]);
+
+      // Create comprehensive user profile response
+      const userProfile = {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        profileImageUrl: user.profileImageUrl,
+        profile: profile || {},
+        education: education || [],
+        experience: experience || [],
+        certifications: certifications || [],
+        skills: skills || [],
+        publications: publications || [],
+        reviews: reviews || [],
+        stats: stats || {}
+      };
+
+      res.json(userProfile);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+
   // Profile setup route
   app.post('/api/profile/setup', isAuthenticated, async (req: any, res) => {
     try {

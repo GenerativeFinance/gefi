@@ -221,13 +221,13 @@ export default function Header() {
                   <DropdownMenuItem asChild>
                     <Link href="/" className="flex items-center space-x-2">
                       <TrendingUp className="h-4 w-4" />
-                      <span>Investor Dashboard</span>
+                      <span>Investor</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/developer" className="flex items-center space-x-2">
                       <Code className="h-4 w-4" />
-                      <span>Developer Dashboard</span>
+                      <span>Developer</span>
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

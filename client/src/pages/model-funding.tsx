@@ -12,6 +12,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
 import Layout from '@/components/layout/Layout';
+import { Link } from 'wouter';
 import {
   Dialog,
   DialogContent,
@@ -56,6 +57,7 @@ interface ModelFundingRequest {
   deadline: Date;
   status: 'active' | 'funded' | 'expired' | 'cancelled';
   developerId: string;
+  developerName?: string;
   requiredSkills: string[];
   expectedROI: number;
   riskLevel: 'low' | 'medium' | 'high';
@@ -553,6 +555,15 @@ function FundingRequestCard({
               +{request.tags.length - 3}
             </Badge>
           )}
+        </div>
+
+        <div className="flex items-center gap-2 pt-2 border-t">
+          <span className="text-sm text-muted-foreground">Created by:</span>
+          <Link href={`/user/${request.developerId}`}>
+            <span className="text-primary hover:underline cursor-pointer font-medium text-sm">
+              {request.developerName || request.developerId}
+            </span>
+          </Link>
         </div>
 
         <div className="flex gap-2 pt-2">

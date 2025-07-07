@@ -19,6 +19,13 @@ import {
   developerModels,
   modelFunding,
   userProfiles,
+  userEducation,
+  userExperience,
+  userCertifications,
+  userSkills,
+  userPublications,
+  userReviews,
+  userStats,
   type User,
   type UpsertUser,
   type UserProfile,
@@ -102,6 +109,13 @@ export interface IStorage {
   // User Profile operations
   getUserProfile(userId: string): Promise<UserProfile | undefined>;
   createOrUpdateUserProfile(userId: string, profile: Partial<InsertUserProfile>): Promise<UserProfile>;
+  getUserEducation(userId: string): Promise<any[]>;
+  getUserExperience(userId: string): Promise<any[]>;
+  getUserCertifications(userId: string): Promise<any[]>;
+  getUserSkills(userId: string): Promise<any[]>;
+  getUserPublications(userId: string): Promise<any[]>;
+  getUserReviews(userId: string): Promise<any[]>;
+  getUserStats(userId: string): Promise<any>;
   
   // Portfolio operations
   getUserPortfolio(userId: string): Promise<Portfolio | undefined>;
@@ -279,6 +293,119 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return userProfile;
+  }
+
+  async getUserEducation(userId: string): Promise<any[]> {
+    try {
+      const education = await db
+        .select()
+        .from(userEducation)
+        .where(eq(userEducation.userId, userId))
+        .orderBy(userEducation.endYear);
+      return education;
+    } catch (error) {
+      console.error("Error fetching user education:", error);
+      return [];
+    }
+  }
+
+  async getUserExperience(userId: string): Promise<any[]> {
+    try {
+      const experience = await db
+        .select()
+        .from(userExperience)
+        .where(eq(userExperience.userId, userId))
+        .orderBy(userExperience.endDate);
+      return experience;
+    } catch (error) {
+      console.error("Error fetching user experience:", error);
+      return [];
+    }
+  }
+
+  async getUserCertifications(userId: string): Promise<any[]> {
+    try {
+      const certifications = await db
+        .select()
+        .from(userCertifications)
+        .where(eq(userCertifications.userId, userId))
+        .orderBy(userCertifications.issueDate);
+      return certifications;
+    } catch (error) {
+      console.error("Error fetching user certifications:", error);
+      return [];
+    }
+  }
+
+  async getUserSkills(userId: string): Promise<any[]> {
+    try {
+      const skills = await db
+        .select()
+        .from(userSkills)
+        .where(eq(userSkills.userId, userId))
+        .orderBy(userSkills.category, userSkills.name);
+      return skills;
+    } catch (error) {
+      console.error("Error fetching user skills:", error);
+      return [];
+    }
+  }
+
+  async getUserPublications(userId: string): Promise<any[]> {
+    try {
+      const publications = await db
+        .select()
+        .from(userPublications)
+        .where(eq(userPublications.userId, userId))
+        .orderBy(userPublications.publicationDate);
+      return publications;
+    } catch (error) {
+      console.error("Error fetching user publications:", error);
+      return [];
+    }
+  }
+
+  async getUserReviews(userId: string): Promise<any[]> {
+    try {
+      const reviews = await db
+        .select({
+          id: userReviews.id,
+          rating: userReviews.rating,
+          reviewText: userReviews.reviewText,
+          projectTitle: userReviews.projectTitle,
+          projectCategory: userReviews.projectCategory,
+          deliveryRating: userReviews.deliveryRating,
+          communicationRating: userReviews.communicationRating,
+          qualityRating: userReviews.qualityRating,
+          createdAt: userReviews.createdAt,
+          reviewerUser: {
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+          }
+        })
+        .from(userReviews)
+        .leftJoin(users, eq(userReviews.reviewerUserId, users.id))
+        .where(eq(userReviews.reviewedUserId, userId))
+        .orderBy(userReviews.createdAt);
+      return reviews;
+    } catch (error) {
+      console.error("Error fetching user reviews:", error);
+      return [];
+    }
+  }
+
+  async getUserStats(userId: string): Promise<any> {
+    try {
+      const [stats] = await db
+        .select()
+        .from(userStats)
+        .where(eq(userStats.userId, userId));
+      return stats || {};
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      return {};
+    }
   }
 
   // Portfolio operations

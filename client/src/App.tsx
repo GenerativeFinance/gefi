@@ -132,7 +132,7 @@ function Router() {
 
             <Route path="/bounties" component={Bounties} />
             <Route path="/bounties/leaderboard" component={BountyLeaderboard} />
-            <Route path="/user/:userId" component={UserDetail} />
+            <Route path="/user/:userId" component={UserProfile} />
             <Route path="/learning" component={Learning} />
             <Route path="/model/:id" component={ModelProfile} />
             <Route path="/trading-bots" component={TradingBots} />

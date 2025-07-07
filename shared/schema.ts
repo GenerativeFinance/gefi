@@ -41,6 +41,125 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+
+
+// Education History
+export const userEducation = pgTable("user_education", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  degree: varchar("degree").notNull(),
+  fieldOfStudy: varchar("field_of_study").notNull(),
+  institution: varchar("institution").notNull(),
+  startYear: integer("start_year"),
+  endYear: integer("end_year"),
+  gpa: decimal("gpa", { precision: 3, scale: 2 }),
+  honors: text("honors"),
+  relevantCoursework: jsonb("relevant_coursework").$type<string[]>(),
+  isVisible: boolean("is_visible").default(true),
+  sortOrder: integer("sort_order").default(0),
+});
+
+// Work Experience
+export const userExperience = pgTable("user_experience", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  title: varchar("title").notNull(),
+  company: varchar("company").notNull(),
+  location: varchar("location"),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  isCurrent: boolean("is_current").default(false),
+  description: text("description"),
+  keyAchievements: jsonb("key_achievements").$type<string[]>(),
+  technologies: jsonb("technologies").$type<string[]>(),
+  isVisible: boolean("is_visible").default(true),
+  sortOrder: integer("sort_order").default(0),
+});
+
+// Certifications
+export const userCertifications = pgTable("user_certifications", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  name: varchar("name").notNull(),
+  issuingOrganization: varchar("issuing_organization").notNull(),
+  issueDate: date("issue_date"),
+  expirationDate: date("expiration_date"),
+  credentialId: varchar("credential_id"),
+  credentialUrl: varchar("credential_url"),
+  description: text("description"),
+  isVisible: boolean("is_visible").default(true),
+  sortOrder: integer("sort_order").default(0),
+});
+
+// Technical Skills
+export const userSkills = pgTable("user_skills", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  category: varchar("category").notNull(), // 'programming', 'frameworks', 'tools', 'domains'
+  name: varchar("name").notNull(),
+  proficiencyLevel: varchar("proficiency_level").notNull(), // 'beginner', 'intermediate', 'advanced', 'expert'
+  yearsOfExperience: integer("years_of_experience"),
+  lastUsed: date("last_used"),
+  isEndorsed: boolean("is_endorsed").default(false),
+  endorsementCount: integer("endorsement_count").default(0),
+  isVisible: boolean("is_visible").default(true),
+});
+
+// Published Papers/Research
+export const userPublications = pgTable("user_publications", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  title: varchar("title").notNull(),
+  journal: varchar("journal"),
+  publicationDate: date("publication_date"),
+  doi: varchar("doi"),
+  url: varchar("url"),
+  coAuthors: jsonb("co_authors").$type<string[]>(),
+  abstract: text("abstract"),
+  keywords: jsonb("keywords").$type<string[]>(),
+  citationCount: integer("citation_count").default(0),
+  isVisible: boolean("is_visible").default(true),
+  sortOrder: integer("sort_order").default(0),
+});
+
+// User Reviews and Ratings
+export const userReviews = pgTable("user_reviews", {
+  id: serial("id").primaryKey(),
+  reviewedUserId: varchar("reviewed_user_id").references(() => users.id).notNull(),
+  reviewerUserId: varchar("reviewer_user_id").references(() => users.id).notNull(),
+  rating: integer("rating").notNull(), // 1-5 stars
+  reviewText: text("review_text"),
+  projectTitle: varchar("project_title"),
+  projectCategory: varchar("project_category"),
+  deliveryRating: integer("delivery_rating"), // 1-5 for timely delivery
+  communicationRating: integer("communication_rating"), // 1-5 for communication
+  qualityRating: integer("quality_rating"), // 1-5 for work quality
+  isVerified: boolean("is_verified").default(false),
+  isVisible: boolean("is_visible").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User Statistics and Achievements
+export const userStats = pgTable("user_stats", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull().unique(),
+  totalEarnings: decimal("total_earnings", { precision: 12, scale: 2 }).default("0"),
+  totalProjects: integer("total_projects").default(0),
+  successfulProjects: integer("successful_projects").default(0),
+  averageDeliveryTime: integer("average_delivery_time"), // in days
+  repeatClientRate: decimal("repeat_client_rate", { precision: 5, scale: 2 }).default("0"),
+  onTimeDeliveryRate: decimal("on_time_delivery_rate", { precision: 5, scale: 2 }).default("100"),
+  totalModelsSold: integer("total_models_sold").default(0),
+  totalRevenue: decimal("total_revenue", { precision: 12, scale: 2 }).default("0"),
+  topCategory: varchar("top_category"),
+  rankInCategory: integer("rank_in_category"),
+  overallRank: integer("overall_rank"),
+  badgesEarned: jsonb("badges_earned").$type<string[]>(),
+  streakDays: integer("streak_days").default(0),
+  lastActiveDate: timestamp("last_active_date").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const portfolios = pgTable("portfolios", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").references(() => users.id).notNull(),
@@ -502,9 +621,25 @@ export const userProfiles = pgTable("user_profiles", {
   website: varchar("website", { length: 500 }),
   githubUsername: varchar("github_username", { length: 255 }),
   linkedinUrl: varchar("linkedin_url", { length: 500 }),
+  twitterUrl: varchar("twitter_url", { length: 500 }),
   skills: text("skills").array().default([]),
   specializations: text("specializations").array().default([]),
   yearsExperience: integer("years_experience"),
+  
+  // Professional details
+  professionalAlias: varchar("professional_alias"),
+  hourlyRate: decimal("hourly_rate", { precision: 8, scale: 2 }),
+  projectFee: decimal("project_fee", { precision: 10, scale: 2 }),
+  methodology: text("methodology"),
+  collaborationStyle: text("collaboration_style"),
+  overallRating: decimal("overall_rating", { precision: 3, scale: 2 }).default("0"),
+  totalReviews: integer("total_reviews").default(0),
+  completedProjects: integer("completed_projects").default(0),
+  responseTime: varchar("response_time"),
+  languages: jsonb("languages").$type<string[]>(),
+  timezone: varchar("timezone"),
+  profileViews: integer("profile_views").default(0),
+  isAvailableForProjects: boolean("is_available_for_projects").default(true),
   
   // Profile setup fields
   company: varchar("company"),
@@ -1302,3 +1437,136 @@ export type InsertTrendingModel = z.infer<typeof insertTrendingModelSchema>;
 
 export type PersonalizedFeed = typeof personalizedFeed.$inferSelect;
 export type InsertPersonalizedFeed = z.infer<typeof insertPersonalizedFeedSchema>;
+
+// User Profile Relations
+export const userProfilesRelations = relations(userProfiles, ({ one, many }) => ({
+  user: one(users, {
+    fields: [userProfiles.userId],
+    references: [users.id],
+  }),
+  education: many(userEducation),
+  experience: many(userExperience),
+  certifications: many(userCertifications),
+  skills: many(userSkills),
+  publications: many(userPublications),
+  reviewsReceived: many(userReviews, { relationName: "reviewedUser" }),
+  reviewsGiven: many(userReviews, { relationName: "reviewerUser" }),
+  stats: one(userStats),
+}));
+
+export const userEducationRelations = relations(userEducation, ({ one }) => ({
+  user: one(users, {
+    fields: [userEducation.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userExperienceRelations = relations(userExperience, ({ one }) => ({
+  user: one(users, {
+    fields: [userExperience.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userCertificationsRelations = relations(userCertifications, ({ one }) => ({
+  user: one(users, {
+    fields: [userCertifications.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userSkillsRelations = relations(userSkills, ({ one }) => ({
+  user: one(users, {
+    fields: [userSkills.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userPublicationsRelations = relations(userPublications, ({ one }) => ({
+  user: one(users, {
+    fields: [userPublications.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userReviewsRelations = relations(userReviews, ({ one }) => ({
+  reviewedUser: one(users, {
+    fields: [userReviews.reviewedUserId],
+    references: [users.id],
+    relationName: "reviewedUser",
+  }),
+  reviewerUser: one(users, {
+    fields: [userReviews.reviewerUserId],
+    references: [users.id],
+    relationName: "reviewerUser",
+  }),
+}));
+
+export const userStatsRelations = relations(userStats, ({ one }) => ({
+  user: one(users, {
+    fields: [userStats.userId],
+    references: [users.id],
+  }),
+}));
+
+// User Profile Insert Schemas
+export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserEducationSchema = createInsertSchema(userEducation).omit({
+  id: true,
+});
+
+export const insertUserExperienceSchema = createInsertSchema(userExperience).omit({
+  id: true,
+});
+
+export const insertUserCertificationSchema = createInsertSchema(userCertifications).omit({
+  id: true,
+});
+
+export const insertUserSkillSchema = createInsertSchema(userSkills).omit({
+  id: true,
+});
+
+export const insertUserPublicationSchema = createInsertSchema(userPublications).omit({
+  id: true,
+});
+
+export const insertUserReviewSchema = createInsertSchema(userReviews).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserStatsSchema = createInsertSchema(userStats).omit({
+  id: true,
+  updatedAt: true,
+});
+
+// User Profile Type Definitions
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
+
+export type UserEducation = typeof userEducation.$inferSelect;
+export type InsertUserEducation = z.infer<typeof insertUserEducationSchema>;
+
+export type UserExperience = typeof userExperience.$inferSelect;
+export type InsertUserExperience = z.infer<typeof insertUserExperienceSchema>;
+
+export type UserCertification = typeof userCertifications.$inferSelect;
+export type InsertUserCertification = z.infer<typeof insertUserCertificationSchema>;
+
+export type UserSkill = typeof userSkills.$inferSelect;
+export type InsertUserSkill = z.infer<typeof insertUserSkillSchema>;
+
+export type UserPublication = typeof userPublications.$inferSelect;
+export type InsertUserPublication = z.infer<typeof insertUserPublicationSchema>;
+
+export type UserReview = typeof userReviews.$inferSelect;
+export type InsertUserReview = z.infer<typeof insertUserReviewSchema>;
+
+export type UserStats = typeof userStats.$inferSelect;
+export type InsertUserStats = z.infer<typeof insertUserStatsSchema>;
