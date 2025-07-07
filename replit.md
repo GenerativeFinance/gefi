@@ -344,6 +344,13 @@ Changelog:
   * Added Target User Types (Banks, Hedge Funds, Asset Managers, Insurance Companies, FinTech Startups)
   * Added AI Techniques Enhanced (Machine Learning, Deep Learning, NLP, Reinforcement Learning, Time Series Analysis)
   * Enhanced Market Sentiment Analysis with comprehensive subcategories for news, social media, investor behavior analysis
+  * Successfully added 35 missing subcategories via admin API endpoint
+- July 7, 2025. Created specialized Risk Assessment AI Models UI page
+  * Built card-based layout with dark theme matching provided design specifications
+  * Implemented subscribed model cards with performance metrics, P&L, portfolio allocation, and Configure/Analytics buttons
+  * Created unsubscribed model cards with ratings, accuracy, subscriber counts, and Subscribe/Details buttons
+  * Added responsive design with filtering options (All Models, My Subscriptions, Available Models)
+  * Integrated proper routing and Layout component for consistent site navigation
 ```
 
 ## User Preferences
