@@ -10,17 +10,18 @@ export const AI_MODEL_CATEGORIES = [
     sortOrder: 1,
     subcategories: [
       { name: "Credit Risk", description: "Assess creditworthiness and default probability", sortOrder: 1 },
-      { name: "Consumer Credit", description: "Personal credit scoring and risk assessment", sortOrder: 2 },
-      { name: "Corporate Credit", description: "Business credit evaluation and rating", sortOrder: 3 },
-      { name: "Market Risk", description: "Market volatility and price risk analysis", sortOrder: 4 },
-      { name: "Value at Risk (VaR)", description: "Portfolio loss estimation models", sortOrder: 5 },
-      { name: "Stress Testing", description: "Scenario-based risk evaluation", sortOrder: 6 },
-      { name: "Operational Risk", description: "Business process and operational failure risks", sortOrder: 7 },
-      { name: "Cybersecurity", description: "Digital threat assessment and risk modeling", sortOrder: 8 },
-      { name: "Business Continuity", description: "Operational resilience and continuity planning", sortOrder: 9 },
-      { name: "Liquidity Risk", description: "Cash flow and funding availability risks", sortOrder: 10 },
-      { name: "Cash Flow Forecasting", description: "Predictive cash flow modeling", sortOrder: 11 },
-      { name: "Funding Risk", description: "Capital availability and funding cost analysis", sortOrder: 12 }
+      { name: "Market Risk", description: "Market volatility and price risk analysis", sortOrder: 2 },
+      { name: "Operational Risk", description: "Business process and operational failure risks", sortOrder: 3 },
+      { name: "Liquidity Risk", description: "Cash flow and funding availability risks", sortOrder: 4 },
+      { name: "Stress Testing", description: "Scenario-based risk evaluation", sortOrder: 5 },
+      { name: "Risk Prediction Models", description: "Predictive risk assessment and forecasting", sortOrder: 6 },
+      { name: "Consumer Credit", description: "Personal credit scoring and risk assessment", sortOrder: 7 },
+      { name: "Corporate Credit", description: "Business credit evaluation and rating", sortOrder: 8 },
+      { name: "Value at Risk (VaR)", description: "Portfolio loss estimation models", sortOrder: 9 },
+      { name: "Cybersecurity", description: "Digital threat assessment and risk modeling", sortOrder: 10 },
+      { name: "Business Continuity", description: "Operational resilience and continuity planning", sortOrder: 11 },
+      { name: "Cash Flow Forecasting", description: "Predictive cash flow modeling", sortOrder: 12 },
+      { name: "Funding Risk", description: "Capital availability and funding cost analysis", sortOrder: 13 }
     ]
   },
   {
@@ -30,17 +31,20 @@ export const AI_MODEL_CATEGORIES = [
     sortOrder: 2,
     subcategories: [
       { name: "Algorithmic Trading", description: "Automated trading system algorithms", sortOrder: 1 },
-      { name: "Statistical Arbitrage", description: "Price discrepancy identification and exploitation", sortOrder: 2 },
-      { name: "Market Making", description: "Liquidity provision and spread optimization", sortOrder: 3 },
-      { name: "High-Frequency Trading", description: "Ultra-fast execution strategies", sortOrder: 4 },
-      { name: "Latency Arbitrage", description: "Speed-based trading opportunities", sortOrder: 5 },
-      { name: "Order Book Dynamics", description: "Market microstructure analysis", sortOrder: 6 },
-      { name: "Quantitative Strategies", description: "Mathematical model-based trading", sortOrder: 7 },
-      { name: "Momentum", description: "Trend-following trading strategies", sortOrder: 8 },
-      { name: "Mean Reversion", description: "Price normalization trading models", sortOrder: 9 },
-      { name: "Sentiment Analysis", description: "Market sentiment-driven trading", sortOrder: 10 },
-      { name: "News Analytics", description: "News-based trading signal generation", sortOrder: 11 },
-      { name: "Social Media Analytics", description: "Social sentiment trading strategies", sortOrder: 12 }
+      { name: "High-Frequency Trading", description: "Ultra-fast execution strategies", sortOrder: 2 },
+      { name: "Arbitrage Strategies", description: "Price discrepancy identification and exploitation", sortOrder: 3 },
+      { name: "Trend Following", description: "Trend-following trading strategies", sortOrder: 4 },
+      { name: "Mean Reversion", description: "Price normalization trading models", sortOrder: 5 },
+      { name: "Trading Bots", description: "Automated trading systems and bots", sortOrder: 6 },
+      { name: "Statistical Arbitrage", description: "Statistical price discrepancy trading", sortOrder: 7 },
+      { name: "Market Making", description: "Liquidity provision and spread optimization", sortOrder: 8 },
+      { name: "Latency Arbitrage", description: "Speed-based trading opportunities", sortOrder: 9 },
+      { name: "Order Book Dynamics", description: "Market microstructure analysis", sortOrder: 10 },
+      { name: "Quantitative Strategies", description: "Mathematical model-based trading", sortOrder: 11 },
+      { name: "Momentum", description: "Momentum-based trading strategies", sortOrder: 12 },
+      { name: "Sentiment Analysis", description: "Market sentiment-driven trading", sortOrder: 13 },
+      { name: "News Analytics", description: "News-based trading signal generation", sortOrder: 14 },
+      { name: "Social Media Analytics", description: "Social sentiment trading strategies", sortOrder: 15 }
     ]
   },
   {
@@ -50,18 +54,23 @@ export const AI_MODEL_CATEGORIES = [
     sortOrder: 3,
     subcategories: [
       { name: "Asset Allocation", description: "Optimal asset distribution strategies", sortOrder: 1 },
-      { name: "Strategic Asset Allocation", description: "Long-term allocation frameworks", sortOrder: 2 },
-      { name: "Tactical Asset Allocation", description: "Short-term allocation adjustments", sortOrder: 3 },
-      { name: "Risk Parity", description: "Equal risk contribution strategies", sortOrder: 4 },
-      { name: "Equal Risk Contribution", description: "Balanced risk distribution models", sortOrder: 5 },
-      { name: "Leveraged Risk Parity", description: "Enhanced risk parity with leverage", sortOrder: 6 },
-      { name: "Factor Investing", description: "Factor-based investment strategies", sortOrder: 7 },
-      { name: "Value", description: "Value-oriented investment models", sortOrder: 8 },
-      { name: "Growth", description: "Growth-focused investment strategies", sortOrder: 9 },
-      { name: "Quality", description: "Quality-based investment selection", sortOrder: 10 },
-      { name: "Robo-Advisory", description: "Automated investment advisory services", sortOrder: 11 },
-      { name: "Goal-Based Investing", description: "Objective-driven investment strategies", sortOrder: 12 },
-      { name: "Tax-Loss Harvesting", description: "Tax optimization strategies", sortOrder: 13 }
+      { name: "Risk-Adjusted Returns", description: "Return optimization adjusted for risk", sortOrder: 2 },
+      { name: "Rebalancing Strategies", description: "Portfolio rebalancing and optimization", sortOrder: 3 },
+      { name: "ESG Investing", description: "Environmental, social, and governance investing", sortOrder: 4 },
+      { name: "Multi-Asset Portfolios", description: "Diversified multi-asset portfolio management", sortOrder: 5 },
+      { name: "Portfolio Optimization", description: "Mathematical portfolio optimization models", sortOrder: 6 },
+      { name: "Strategic Asset Allocation", description: "Long-term allocation frameworks", sortOrder: 7 },
+      { name: "Tactical Asset Allocation", description: "Short-term allocation adjustments", sortOrder: 8 },
+      { name: "Risk Parity", description: "Equal risk contribution strategies", sortOrder: 9 },
+      { name: "Equal Risk Contribution", description: "Balanced risk distribution models", sortOrder: 10 },
+      { name: "Leveraged Risk Parity", description: "Enhanced risk parity with leverage", sortOrder: 11 },
+      { name: "Factor Investing", description: "Factor-based investment strategies", sortOrder: 12 },
+      { name: "Value", description: "Value-oriented investment models", sortOrder: 13 },
+      { name: "Growth", description: "Growth-focused investment strategies", sortOrder: 14 },
+      { name: "Quality", description: "Quality-based investment selection", sortOrder: 15 },
+      { name: "Robo-Advisory", description: "Automated investment advisory services", sortOrder: 16 },
+      { name: "Goal-Based Investing", description: "Objective-driven investment strategies", sortOrder: 17 },
+      { name: "Tax-Loss Harvesting", description: "Tax optimization strategies", sortOrder: 18 }
     ]
   },
   {
@@ -70,15 +79,19 @@ export const AI_MODEL_CATEGORIES = [
     icon: "Shield",
     sortOrder: 4,
     subcategories: [
-      { name: "Transaction Monitoring", description: "Real-time transaction fraud detection", sortOrder: 1 },
-      { name: "Real-Time Monitoring", description: "Live fraud detection systems", sortOrder: 2 },
-      { name: "Batch Processing", description: "Batch-based fraud analysis", sortOrder: 3 },
-      { name: "Identity Verification", description: "User identity authentication", sortOrder: 4 },
-      { name: "Biometric Authentication", description: "Biometric-based identity verification", sortOrder: 5 },
-      { name: "Document Verification", description: "Document authenticity validation", sortOrder: 6 },
-      { name: "Anomaly Detection", description: "Unusual pattern identification", sortOrder: 7 },
-      { name: "Unsupervised Learning", description: "Pattern discovery without labeled data", sortOrder: 8 },
-      { name: "Supervised Learning", description: "Known fraud pattern recognition", sortOrder: 9 }
+      { name: "Transaction Fraud", description: "Transaction-based fraud detection and prevention", sortOrder: 1 },
+      { name: "Identity Theft", description: "Identity theft detection and prevention", sortOrder: 2 },
+      { name: "Money Laundering Detection", description: "Anti-money laundering detection systems", sortOrder: 3 },
+      { name: "Anomaly Detection", description: "Unusual pattern identification", sortOrder: 4 },
+      { name: "Synthetic Fraud", description: "Synthetic identity fraud detection", sortOrder: 5 },
+      { name: "Transaction Monitoring", description: "Real-time transaction fraud detection", sortOrder: 6 },
+      { name: "Real-Time Monitoring", description: "Live fraud detection systems", sortOrder: 7 },
+      { name: "Batch Processing", description: "Batch-based fraud analysis", sortOrder: 8 },
+      { name: "Identity Verification", description: "User identity authentication", sortOrder: 9 },
+      { name: "Biometric Authentication", description: "Biometric-based identity verification", sortOrder: 10 },
+      { name: "Document Verification", description: "Document authenticity validation", sortOrder: 11 },
+      { name: "Unsupervised Learning", description: "Pattern discovery without labeled data", sortOrder: 12 },
+      { name: "Supervised Learning", description: "Known fraud pattern recognition", sortOrder: 13 }
     ]
   },
   {
@@ -87,15 +100,18 @@ export const AI_MODEL_CATEGORIES = [
     icon: "MessageCircle",
     sortOrder: 5,
     subcategories: [
-      { name: "Chatbots", description: "Automated customer conversation systems", sortOrder: 1 },
-      { name: "Rule-Based Chatbots", description: "Logic-driven conversation systems", sortOrder: 2 },
-      { name: "AI-Powered Chatbots", description: "Machine learning-driven chat systems", sortOrder: 3 },
-      { name: "Virtual Assistants", description: "Comprehensive AI assistance systems", sortOrder: 4 },
-      { name: "Voice Assistants", description: "Speech-based interaction systems", sortOrder: 5 },
-      { name: "Text-Based Assistants", description: "Text-driven assistance platforms", sortOrder: 6 },
-      { name: "Personalized Recommendations", description: "Customized product and service suggestions", sortOrder: 7 },
-      { name: "Product Recommendations", description: "Financial product suggestion engines", sortOrder: 8 },
-      { name: "Service Recommendations", description: "Service optimization suggestions", sortOrder: 9 }
+      { name: "Sentiment Analysis", description: "Customer sentiment analysis and tracking", sortOrder: 1 },
+      { name: "Customer Segmentation", description: "Customer categorization and analysis", sortOrder: 2 },
+      { name: "Personalized Recommendations", description: "Customized product and service suggestions", sortOrder: 3 },
+      { name: "Complaint Resolution", description: "Automated complaint handling and resolution", sortOrder: 4 },
+      { name: "Chatbots", description: "Automated customer conversation systems", sortOrder: 5 },
+      { name: "Rule-Based Chatbots", description: "Logic-driven conversation systems", sortOrder: 6 },
+      { name: "AI-Powered Chatbots", description: "Machine learning-driven chat systems", sortOrder: 7 },
+      { name: "Virtual Assistants", description: "Comprehensive AI assistance systems", sortOrder: 8 },
+      { name: "Voice Assistants", description: "Speech-based interaction systems", sortOrder: 9 },
+      { name: "Text-Based Assistants", description: "Text-driven assistance platforms", sortOrder: 10 },
+      { name: "Product Recommendations", description: "Financial product suggestion engines", sortOrder: 11 },
+      { name: "Service Recommendations", description: "Service optimization suggestions", sortOrder: 12 }
     ]
   },
   {
@@ -235,15 +251,68 @@ export const AI_MODEL_CATEGORIES = [
     ]
   },
   {
+    name: "Compliance & Regulatory",
+    description: "AI models for regulatory compliance, reporting, and audit automation",
+    icon: "Building",
+    sortOrder: 6,
+    subcategories: [
+      { name: "KYC (Know Your Customer)", description: "Customer identification and verification", sortOrder: 1 },
+      { name: "AML (Anti-Money Laundering)", description: "Anti-money laundering detection and prevention", sortOrder: 2 },
+      { name: "GDPR Compliance", description: "Data protection and privacy compliance", sortOrder: 3 },
+      { name: "SEC/FINRA Reporting", description: "Securities and financial regulatory reporting", sortOrder: 4 },
+      { name: "Audit Automation", description: "Automated audit processes and compliance checking", sortOrder: 5 }
+    ]
+  },
+  {
+    name: "Financial Forecasting",
+    description: "Predictive models for financial planning and forecasting",
+    icon: "TrendingUp",
+    sortOrder: 7,
+    subcategories: [
+      { name: "Revenue Forecasting", description: "Revenue prediction and growth modeling", sortOrder: 1 },
+      { name: "Expense Forecasting", description: "Cost prediction and budget planning", sortOrder: 2 },
+      { name: "Market Trend Prediction", description: "Market trend analysis and forecasting", sortOrder: 3 },
+      { name: "Economic Indicators", description: "Economic indicator analysis and prediction", sortOrder: 4 },
+      { name: "Cash Flow Projections", description: "Cash flow forecasting and planning", sortOrder: 5 },
+      { name: "Return Forecasting", description: "Investment return prediction models", sortOrder: 6 }
+    ]
+  },
+  {
+    name: "Target User Types",
+    description: "Models categorized by target financial institution types",
+    icon: "Users",
+    sortOrder: 8,
+    subcategories: [
+      { name: "Banks", description: "Banking-specific AI models and solutions", sortOrder: 1 },
+      { name: "Hedge Funds", description: "Hedge fund specialized trading and risk models", sortOrder: 2 },
+      { name: "Asset Managers", description: "Asset management optimization models", sortOrder: 3 },
+      { name: "Insurance Companies", description: "Insurance industry risk and pricing models", sortOrder: 4 },
+      { name: "FinTech Startups", description: "Financial technology innovation models", sortOrder: 5 }
+    ]
+  },
+  {
+    name: "AI Techniques Enhanced",
+    description: "Models categorized by underlying AI and machine learning techniques",
+    icon: "Brain",
+    sortOrder: 11,
+    subcategories: [
+      { name: "Machine Learning", description: "Traditional machine learning models", sortOrder: 1 },
+      { name: "Deep Learning", description: "Neural network and deep learning models", sortOrder: 2 },
+      { name: "Natural Language Processing (NLP)", description: "Text analysis and language processing", sortOrder: 3 },
+      { name: "Reinforcement Learning", description: "Reinforcement learning and adaptive models", sortOrder: 4 },
+      { name: "Time Series Analysis", description: "Time series forecasting and analysis", sortOrder: 5 }
+    ]
+  },
+  {
     name: "Market Sentiment Analysis",
     description: "Real-time market sentiment analysis and investor behavior prediction",
     icon: "BarChart3",
-    sortOrder: 13,
+    sortOrder: 14,
     subcategories: [
-      { name: "News Sentiment Analysis", description: "Real-time news sentiment extraction and market impact analysis", sortOrder: 1 },
-      { name: "Social Media Monitoring", description: "Social media sentiment tracking and trading signals", sortOrder: 2 },
-      { name: "Investor Behavior Models", description: "Predictive models for investor decision-making patterns", sortOrder: 3 },
-      { name: "Market Trend Analysis Models", description: "Advanced trend identification and momentum analysis", sortOrder: 4 }
+      { name: "News Sentiment Analysis", description: "Financial news sentiment analysis and impact", sortOrder: 1 },
+      { name: "Social Media Monitoring", description: "Social media sentiment tracking and analysis", sortOrder: 2 },
+      { name: "Investor Behavior", description: "Investor sentiment and behavior pattern analysis", sortOrder: 3 },
+      { name: "Market Trend Analysis", description: "Market trend sentiment and momentum analysis", sortOrder: 4 }
     ]
   }
 ];

@@ -329,6 +329,21 @@ Changelog:
   * Updated header navigation logic to include /custom-reports path in Reports submenu detection
   * Ensured consistent submenu visibility across all Reports-related pages
   * Fixed navigation highlighting to properly show Reports submenu when on Custom Reports page
+- July 7, 2025. Made Browse Models button clickable and linked to AI Model Marketplace
+  * Added Link import from wouter for navigation functionality in Portfolio AI Models page
+  * Connected Browse Models button to AI Model Marketplace (/marketplace)
+  * Used proper Button asChild pattern to maintain styling while enabling navigation
+- July 7, 2025. Added comprehensive subcategories to AI Marketplace
+  * Enhanced Risk Assessment with Credit Risk, Market Risk, Operational Risk, Liquidity Risk, Stress Testing, Risk Prediction Models
+  * Expanded Trading Strategies with Algorithmic Trading, High-Frequency Trading, Arbitrage Strategies, Trend Following, Mean Reversion, Trading Bots
+  * Improved Portfolio Management with Asset Allocation, Risk-Adjusted Returns, Rebalancing Strategies, ESG Investing, Multi-Asset Portfolios, Portfolio Optimization
+  * Enhanced Fraud Detection with Transaction Fraud, Identity Theft, Money Laundering Detection, Anomaly Detection, Synthetic Fraud
+  * Updated Customer Service with Sentiment Analysis, Customer Segmentation, Personalized Recommendations, Complaint Resolution
+  * Added new major categories: Compliance & Regulatory (KYC, AML, GDPR, SEC/FINRA Reporting, Audit Automation)
+  * Added Financial Forecasting (Revenue/Expense Forecasting, Market Trend Prediction, Economic Indicators, Cash Flow Projections, Return Forecasting)
+  * Added Target User Types (Banks, Hedge Funds, Asset Managers, Insurance Companies, FinTech Startups)
+  * Added AI Techniques Enhanced (Machine Learning, Deep Learning, NLP, Reinforcement Learning, Time Series Analysis)
+  * Enhanced Market Sentiment Analysis with comprehensive subcategories for news, social media, investor behavior analysis
 ```
 
 ## User Preferences

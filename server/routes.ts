@@ -2659,6 +2659,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       tradingService.removeListener('portfolioUpdate', handlePortfolioUpdate);
     });
   });
+
+  // Admin endpoint to refresh AI model categories
+  app.post('/api/admin/seed-categories', async (req, res) => {
+    try {
+      const { AiModelSeeder } = await import('./aiModelSeeder.js');
+      await AiModelSeeder.seedCategories();
+      res.json({ success: true, message: "Categories seeded successfully" });
+    } catch (error) {
+      console.error("Error seeding categories:", error);
+      res.status(500).json({ success: false, message: "Failed to seed categories", error: error.message });
+    }
+  });
   
   return httpServer;
 }
