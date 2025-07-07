@@ -1570,3 +1570,265 @@ export type InsertUserReview = z.infer<typeof insertUserReviewSchema>;
 
 export type UserStats = typeof userStats.$inferSelect;
 export type InsertUserStats = z.infer<typeof insertUserStatsSchema>;
+
+// Data Provider Dashboard Schema
+export const dataProviders = pgTable("data_providers", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  companyName: varchar("company_name"),
+  description: text("description"),
+  specialization: varchar("specialization").notNull(), // market_data, transaction_data, alternative_data, etc.
+  complianceCertifications: text("compliance_certifications").array(),
+  dataQualityRating: decimal("data_quality_rating", { precision: 3, scale: 2 }).default("0.00"),
+  totalRevenue: decimal("total_revenue", { precision: 15, scale: 2 }).default("0.00"),
+  totalDatasets: integer("total_datasets").default(0),
+  activeSubscriptions: integer("active_subscriptions").default(0),
+  isVerified: boolean("is_verified").default(false),
+  status: varchar("status").default("active"), // active, suspended, under_review
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const datasets = pgTable("datasets", {
+  id: serial("id").primaryKey(),
+  providerId: integer("provider_id").references(() => dataProviders.id).notNull(),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  category: varchar("category").notNull(), // market_data, transaction_data, news_sentiment, etc.
+  subcategory: varchar("subcategory"),
+  dataType: varchar("data_type").notNull(), // csv, json, parquet, api, stream
+  fileSize: integer("file_size"), // in bytes
+  recordCount: integer("record_count"),
+  updateFrequency: varchar("update_frequency"), // real_time, daily, weekly, monthly
+  dateRange: jsonb("date_range"), // {start: date, end: date}
+  schema: jsonb("schema"), // data structure definition
+  sampleData: jsonb("sample_data"),
+  qualityScore: decimal("quality_score", { precision: 3, scale: 2 }).default("0.00"),
+  pricePerRecord: decimal("price_per_record", { precision: 10, scale: 6 }),
+  monthlySubscriptionFee: decimal("monthly_subscription_fee", { precision: 10, scale: 2 }),
+  oneTimePurchasePrice: decimal("one_time_purchase_price", { precision: 10, scale: 2 }),
+  licenseType: varchar("license_type").notNull(), // exclusive, non_exclusive, commercial, research
+  usageRestrictions: text("usage_restrictions"),
+  tags: text("tags").array(),
+  downloadCount: integer("download_count").default(0),
+  subscriptionCount: integer("subscription_count").default(0),
+  revenue: decimal("revenue", { precision: 15, scale: 2 }).default("0.00"),
+  isActive: boolean("is_active").default(true),
+  isPublic: boolean("is_public").default(false),
+  complianceStatus: varchar("compliance_status").default("pending"), // pending, approved, rejected
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const datasetUsage = pgTable("dataset_usage", {
+  id: serial("id").primaryKey(),
+  datasetId: integer("dataset_id").references(() => datasets.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  usageType: varchar("usage_type").notNull(), // download, api_call, subscription
+  recordsAccessed: integer("records_accessed"),
+  bytesTransferred: integer("bytes_transferred"),
+  cost: decimal("cost", { precision: 10, scale: 2 }),
+  timestamp: timestamp("timestamp").defaultNow(),
+  metadata: jsonb("metadata"),
+});
+
+export const datasetSubscriptions = pgTable("dataset_subscriptions", {
+  id: serial("id").primaryKey(),
+  datasetId: integer("dataset_id").references(() => datasets.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  subscriptionType: varchar("subscription_type").notNull(), // monthly, annual, lifetime
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"),
+  isActive: boolean("is_active").default(true),
+  totalPaid: decimal("total_paid", { precision: 10, scale: 2 }).default("0.00"),
+  usageLimit: integer("usage_limit"), // records per month
+  currentUsage: integer("current_usage").default(0),
+  autoRenew: boolean("auto_renew").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const dataQualityMetrics = pgTable("data_quality_metrics", {
+  id: serial("id").primaryKey(),
+  datasetId: integer("dataset_id").references(() => datasets.id).notNull(),
+  completeness: decimal("completeness", { precision: 5, scale: 2 }), // percentage
+  accuracy: decimal("accuracy", { precision: 5, scale: 2 }), // percentage
+  consistency: decimal("consistency", { precision: 5, scale: 2 }), // percentage
+  timeliness: decimal("timeliness", { precision: 5, scale: 2 }), // percentage
+  validity: decimal("validity", { precision: 5, scale: 2 }), // percentage
+  uniqueness: decimal("uniqueness", { precision: 5, scale: 2 }), // percentage
+  overallScore: decimal("overall_score", { precision: 5, scale: 2 }),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  validationDetails: jsonb("validation_details"),
+});
+
+export const dataCollaborations = pgTable("data_collaborations", {
+  id: serial("id").primaryKey(),
+  datasetId: integer("dataset_id").references(() => datasets.id).notNull(),
+  modelDeveloperId: varchar("model_developer_id").references(() => users.id).notNull(),
+  providerId: integer("provider_id").references(() => dataProviders.id).notNull(),
+  collaborationType: varchar("collaboration_type").notNull(), // training, validation, testing, custom
+  accessLevel: varchar("access_level").notNull(), // read_only, read_write, full_access
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"),
+  revenueShare: decimal("revenue_share", { precision: 5, scale: 2 }), // percentage
+  status: varchar("status").default("active"), // active, completed, cancelled
+  agreementTerms: text("agreement_terms"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const datasetReviews = pgTable("dataset_reviews", {
+  id: serial("id").primaryKey(),
+  datasetId: integer("dataset_id").references(() => datasets.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  rating: integer("rating").notNull(), // 1-5
+  review: text("review"),
+  useCaseDescription: text("use_case_description"),
+  qualityRating: integer("quality_rating"), // 1-5
+  valueRating: integer("value_rating"), // 1-5
+  supportRating: integer("support_rating"), // 1-5
+  wouldRecommend: boolean("would_recommend"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Relations for Data Provider Dashboard
+export const dataProvidersRelations = relations(dataProviders, ({ one, many }) => ({
+  user: one(users, {
+    fields: [dataProviders.userId],
+    references: [users.id],
+  }),
+  datasets: many(datasets),
+  collaborations: many(dataCollaborations),
+}));
+
+export const datasetsRelations = relations(datasets, ({ one, many }) => ({
+  provider: one(dataProviders, {
+    fields: [datasets.providerId],
+    references: [dataProviders.id],
+  }),
+  usage: many(datasetUsage),
+  subscriptions: many(datasetSubscriptions),
+  qualityMetrics: one(dataQualityMetrics),
+  collaborations: many(dataCollaborations),
+  reviews: many(datasetReviews),
+}));
+
+export const datasetUsageRelations = relations(datasetUsage, ({ one }) => ({
+  dataset: one(datasets, {
+    fields: [datasetUsage.datasetId],
+    references: [datasets.id],
+  }),
+  user: one(users, {
+    fields: [datasetUsage.userId],
+    references: [users.id],
+  }),
+}));
+
+export const datasetSubscriptionsRelations = relations(datasetSubscriptions, ({ one }) => ({
+  dataset: one(datasets, {
+    fields: [datasetSubscriptions.datasetId],
+    references: [datasets.id],
+  }),
+  user: one(users, {
+    fields: [datasetSubscriptions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const dataQualityMetricsRelations = relations(dataQualityMetrics, ({ one }) => ({
+  dataset: one(datasets, {
+    fields: [dataQualityMetrics.datasetId],
+    references: [datasets.id],
+  }),
+}));
+
+export const dataCollaborationsRelations = relations(dataCollaborations, ({ one }) => ({
+  dataset: one(datasets, {
+    fields: [dataCollaborations.datasetId],
+    references: [datasets.id],
+  }),
+  modelDeveloper: one(users, {
+    fields: [dataCollaborations.modelDeveloperId],
+    references: [users.id],
+  }),
+  provider: one(dataProviders, {
+    fields: [dataCollaborations.providerId],
+    references: [dataProviders.id],
+  }),
+}));
+
+export const datasetReviewsRelations = relations(datasetReviews, ({ one }) => ({
+  dataset: one(datasets, {
+    fields: [datasetReviews.datasetId],
+    references: [datasets.id],
+  }),
+  user: one(users, {
+    fields: [datasetReviews.userId],
+    references: [users.id],
+  }),
+}));
+
+// Schema validation
+export const insertDataProviderSchema = createInsertSchema(dataProviders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDatasetSchema = createInsertSchema(datasets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDatasetUsageSchema = createInsertSchema(datasetUsage).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertDatasetSubscriptionSchema = createInsertSchema(datasetSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDataQualityMetricsSchema = createInsertSchema(dataQualityMetrics).omit({
+  id: true,
+  lastUpdated: true,
+});
+
+export const insertDataCollaborationSchema = createInsertSchema(dataCollaborations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDatasetReviewSchema = createInsertSchema(datasetReviews).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Types for Data Provider Dashboard
+export type DataProvider = typeof dataProviders.$inferSelect;
+export type InsertDataProvider = z.infer<typeof insertDataProviderSchema>;
+
+export type Dataset = typeof datasets.$inferSelect;
+export type InsertDataset = z.infer<typeof insertDatasetSchema>;
+
+export type DatasetUsage = typeof datasetUsage.$inferSelect;
+export type InsertDatasetUsage = z.infer<typeof insertDatasetUsageSchema>;
+
+export type DatasetSubscription = typeof datasetSubscriptions.$inferSelect;
+export type InsertDatasetSubscription = z.infer<typeof insertDatasetSubscriptionSchema>;
+
+export type DataQualityMetrics = typeof dataQualityMetrics.$inferSelect;
+export type InsertDataQualityMetrics = z.infer<typeof insertDataQualityMetricsSchema>;
+
+export type DataCollaboration = typeof dataCollaborations.$inferSelect;
+export type InsertDataCollaboration = z.infer<typeof insertDataCollaborationSchema>;
+
+export type DatasetReview = typeof datasetReviews.$inferSelect;
+export type InsertDatasetReview = z.infer<typeof insertDatasetReviewSchema>;

@@ -26,6 +26,13 @@ import {
   userPublications,
   userReviews,
   userStats,
+  dataProviders,
+  datasets,
+  datasetUsage,
+  datasetSubscriptions,
+  dataQualityMetrics,
+  dataCollaborations,
+  datasetReviews,
   type User,
   type UpsertUser,
   type UserProfile,
@@ -96,6 +103,20 @@ import {
   type InsertBotFundingRequest,
   type BotFundingContribution,
   type InsertBotFundingContribution,
+  type DataProvider,
+  type InsertDataProvider,
+  type Dataset,
+  type InsertDataset,
+  type DatasetUsage,
+  type InsertDatasetUsage,
+  type DatasetSubscription,
+  type InsertDatasetSubscription,
+  type DataQualityMetrics,
+  type InsertDataQualityMetrics,
+  type DataCollaboration,
+  type InsertDataCollaboration,
+  type DatasetReview,
+  type InsertDatasetReview,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, lte, inArray } from "drizzle-orm";
@@ -1086,6 +1107,160 @@ export class DatabaseStorage implements IStorage {
       ...request,
       contributions
     };
+  }
+
+  // Data Provider operations
+  async createDataProvider(provider: InsertDataProvider): Promise<DataProvider> {
+    const [newProvider] = await db.insert(dataProviders).values(provider).returning();
+    return newProvider;
+  }
+
+  async getDataProvider(userId: string): Promise<DataProvider | undefined> {
+    const [provider] = await db.select().from(dataProviders).where(eq(dataProviders.userId, userId));
+    return provider;
+  }
+
+  async updateDataProvider(id: number, updates: Partial<InsertDataProvider>): Promise<DataProvider> {
+    const [provider] = await db
+      .update(dataProviders)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(dataProviders.id, id))
+      .returning();
+    return provider;
+  }
+
+  // Dataset operations
+  async createDataset(dataset: InsertDataset): Promise<Dataset> {
+    const [newDataset] = await db.insert(datasets).values(dataset).returning();
+    return newDataset;
+  }
+
+  async getDatasets(providerId?: number, category?: string): Promise<Dataset[]> {
+    let query = db.select().from(datasets);
+    
+    if (providerId) {
+      query = query.where(eq(datasets.providerId, providerId));
+    }
+    
+    if (category) {
+      query = query.where(eq(datasets.category, category));
+    }
+    
+    return await query.orderBy(desc(datasets.createdAt));
+  }
+
+  async getDatasetById(id: number): Promise<Dataset | undefined> {
+    const [dataset] = await db.select().from(datasets).where(eq(datasets.id, id));
+    return dataset;
+  }
+
+  async updateDataset(id: number, updates: Partial<InsertDataset>): Promise<Dataset> {
+    const [dataset] = await db
+      .update(datasets)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(datasets.id, id))
+      .returning();
+    return dataset;
+  }
+
+  async deleteDataset(id: number): Promise<void> {
+    await db.delete(datasets).where(eq(datasets.id, id));
+  }
+
+  // Dataset usage operations
+  async recordDatasetUsage(usage: InsertDatasetUsage): Promise<DatasetUsage> {
+    const [newUsage] = await db.insert(datasetUsage).values(usage).returning();
+    return newUsage;
+  }
+
+  async getDatasetUsage(datasetId: number, userId?: string): Promise<DatasetUsage[]> {
+    let query = db.select().from(datasetUsage).where(eq(datasetUsage.datasetId, datasetId));
+    
+    if (userId) {
+      query = query.where(eq(datasetUsage.userId, userId));
+    }
+    
+    return await query.orderBy(desc(datasetUsage.timestamp));
+  }
+
+  // Dataset subscription operations
+  async createDatasetSubscription(subscription: InsertDatasetSubscription): Promise<DatasetSubscription> {
+    const [newSubscription] = await db.insert(datasetSubscriptions).values(subscription).returning();
+    return newSubscription;
+  }
+
+  async getDatasetSubscriptions(userId: string): Promise<DatasetSubscription[]> {
+    return await db.select().from(datasetSubscriptions)
+      .where(eq(datasetSubscriptions.userId, userId))
+      .orderBy(desc(datasetSubscriptions.createdAt));
+  }
+
+  async updateDatasetSubscription(id: number, updates: Partial<InsertDatasetSubscription>): Promise<DatasetSubscription> {
+    const [subscription] = await db
+      .update(datasetSubscriptions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(datasetSubscriptions.id, id))
+      .returning();
+    return subscription;
+  }
+
+  // Data quality operations
+  async updateDataQualityMetrics(metrics: InsertDataQualityMetrics): Promise<DataQualityMetrics> {
+    const [qualityMetrics] = await db
+      .insert(dataQualityMetrics)
+      .values(metrics)
+      .onConflictDoUpdate({
+        target: dataQualityMetrics.datasetId,
+        set: { ...metrics, lastUpdated: new Date() },
+      })
+      .returning();
+    return qualityMetrics;
+  }
+
+  async getDataQualityMetrics(datasetId: number): Promise<DataQualityMetrics | undefined> {
+    const [metrics] = await db.select().from(dataQualityMetrics).where(eq(dataQualityMetrics.datasetId, datasetId));
+    return metrics;
+  }
+
+  // Data collaboration operations
+  async createDataCollaboration(collaboration: InsertDataCollaboration): Promise<DataCollaboration> {
+    const [newCollaboration] = await db.insert(dataCollaborations).values(collaboration).returning();
+    return newCollaboration;
+  }
+
+  async getDataCollaborations(providerId?: number, developerId?: string): Promise<DataCollaboration[]> {
+    let query = db.select().from(dataCollaborations);
+    
+    if (providerId) {
+      query = query.where(eq(dataCollaborations.providerId, providerId));
+    }
+    
+    if (developerId) {
+      query = query.where(eq(dataCollaborations.modelDeveloperId, developerId));
+    }
+    
+    return await query.orderBy(desc(dataCollaborations.createdAt));
+  }
+
+  async updateDataCollaboration(id: number, updates: Partial<InsertDataCollaboration>): Promise<DataCollaboration> {
+    const [collaboration] = await db
+      .update(dataCollaborations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(dataCollaborations.id, id))
+      .returning();
+    return collaboration;
+  }
+
+  // Dataset review operations
+  async createDatasetReview(review: InsertDatasetReview): Promise<DatasetReview> {
+    const [newReview] = await db.insert(datasetReviews).values(review).returning();
+    return newReview;
+  }
+
+  async getDatasetReviews(datasetId: number): Promise<DatasetReview[]> {
+    return await db.select().from(datasetReviews)
+      .where(eq(datasetReviews.datasetId, datasetId))
+      .orderBy(desc(datasetReviews.createdAt));
   }
 }
 

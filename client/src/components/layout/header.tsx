@@ -228,6 +228,12 @@ export default function Header() {
                       <span>Developer</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/data-provider" className="flex items-center space-x-2">
+                      <Database className="h-4 w-4" />
+                      <span>Data Provider</span>
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 

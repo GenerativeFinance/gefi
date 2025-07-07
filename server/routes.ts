@@ -2778,6 +2778,233 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ success: false, message: "Failed to add subcategories", error: error.message });
     }
   });
+
+  // Data Provider Dashboard routes
+  app.post("/api/data-provider", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const providerData = { ...req.body, userId };
+      const provider = await storage.createDataProvider(providerData);
+      res.json(provider);
+    } catch (error) {
+      console.error("Error creating data provider:", error);
+      res.status(500).json({ message: "Failed to create data provider" });
+    }
+  });
+
+  app.get("/api/data-provider", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const provider = await storage.getDataProvider(userId);
+      res.json(provider);
+    } catch (error) {
+      console.error("Error fetching data provider:", error);
+      res.status(500).json({ message: "Failed to fetch data provider" });
+    }
+  });
+
+  app.put("/api/data-provider/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const provider = await storage.updateDataProvider(parseInt(id), req.body);
+      res.json(provider);
+    } catch (error) {
+      console.error("Error updating data provider:", error);
+      res.status(500).json({ message: "Failed to update data provider" });
+    }
+  });
+
+  // Dataset routes
+  app.post("/api/datasets", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const provider = await storage.getDataProvider(userId);
+      if (!provider) {
+        return res.status(400).json({ message: "Data provider profile required" });
+      }
+      
+      const datasetData = { ...req.body, providerId: provider.id };
+      const dataset = await storage.createDataset(datasetData);
+      res.json(dataset);
+    } catch (error) {
+      console.error("Error creating dataset:", error);
+      res.status(500).json({ message: "Failed to create dataset" });
+    }
+  });
+
+  app.get("/api/datasets", async (req, res) => {
+    try {
+      const { providerId, category } = req.query;
+      const datasets = await storage.getDatasets(
+        providerId ? parseInt(providerId as string) : undefined,
+        category as string
+      );
+      res.json(datasets);
+    } catch (error) {
+      console.error("Error fetching datasets:", error);
+      res.status(500).json({ message: "Failed to fetch datasets" });
+    }
+  });
+
+  app.get("/api/datasets/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const dataset = await storage.getDatasetById(parseInt(id));
+      if (!dataset) {
+        return res.status(404).json({ message: "Dataset not found" });
+      }
+      res.json(dataset);
+    } catch (error) {
+      console.error("Error fetching dataset:", error);
+      res.status(500).json({ message: "Failed to fetch dataset" });
+    }
+  });
+
+  app.put("/api/datasets/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const dataset = await storage.updateDataset(parseInt(id), req.body);
+      res.json(dataset);
+    } catch (error) {
+      console.error("Error updating dataset:", error);
+      res.status(500).json({ message: "Failed to update dataset" });
+    }
+  });
+
+  app.delete("/api/datasets/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteDataset(parseInt(id));
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting dataset:", error);
+      res.status(500).json({ message: "Failed to delete dataset" });
+    }
+  });
+
+  // Dataset usage tracking
+  app.post("/api/datasets/:id/usage", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.claims.sub;
+      const usageData = { ...req.body, datasetId: parseInt(id), userId };
+      const usage = await storage.recordDatasetUsage(usageData);
+      res.json(usage);
+    } catch (error) {
+      console.error("Error recording dataset usage:", error);
+      res.status(500).json({ message: "Failed to record usage" });
+    }
+  });
+
+  app.get("/api/datasets/:id/usage", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { userId } = req.query;
+      const usage = await storage.getDatasetUsage(parseInt(id), userId as string);
+      res.json(usage);
+    } catch (error) {
+      console.error("Error fetching dataset usage:", error);
+      res.status(500).json({ message: "Failed to fetch usage" });
+    }
+  });
+
+  // Dataset subscriptions
+  app.post("/api/dataset-subscriptions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const subscriptionData = { ...req.body, userId };
+      const subscription = await storage.createDatasetSubscription(subscriptionData);
+      res.json(subscription);
+    } catch (error) {
+      console.error("Error creating dataset subscription:", error);
+      res.status(500).json({ message: "Failed to create subscription" });
+    }
+  });
+
+  app.get("/api/dataset-subscriptions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const subscriptions = await storage.getDatasetSubscriptions(userId);
+      res.json(subscriptions);
+    } catch (error) {
+      console.error("Error fetching subscriptions:", error);
+      res.status(500).json({ message: "Failed to fetch subscriptions" });
+    }
+  });
+
+  // Data quality metrics
+  app.post("/api/datasets/:id/quality", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const metricsData = { ...req.body, datasetId: parseInt(id) };
+      const metrics = await storage.updateDataQualityMetrics(metricsData);
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error updating quality metrics:", error);
+      res.status(500).json({ message: "Failed to update quality metrics" });
+    }
+  });
+
+  app.get("/api/datasets/:id/quality", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const metrics = await storage.getDataQualityMetrics(parseInt(id));
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching quality metrics:", error);
+      res.status(500).json({ message: "Failed to fetch quality metrics" });
+    }
+  });
+
+  // Data collaborations
+  app.post("/api/data-collaborations", isAuthenticated, async (req: any, res) => {
+    try {
+      const collaboration = await storage.createDataCollaboration(req.body);
+      res.json(collaboration);
+    } catch (error) {
+      console.error("Error creating collaboration:", error);
+      res.status(500).json({ message: "Failed to create collaboration" });
+    }
+  });
+
+  app.get("/api/data-collaborations", async (req, res) => {
+    try {
+      const { providerId, developerId } = req.query;
+      const collaborations = await storage.getDataCollaborations(
+        providerId ? parseInt(providerId as string) : undefined,
+        developerId as string
+      );
+      res.json(collaborations);
+    } catch (error) {
+      console.error("Error fetching collaborations:", error);
+      res.status(500).json({ message: "Failed to fetch collaborations" });
+    }
+  });
+
+  // Dataset reviews
+  app.post("/api/datasets/:id/reviews", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.claims.sub;
+      const reviewData = { ...req.body, datasetId: parseInt(id), userId };
+      const review = await storage.createDatasetReview(reviewData);
+      res.json(review);
+    } catch (error) {
+      console.error("Error creating review:", error);
+      res.status(500).json({ message: "Failed to create review" });
+    }
+  });
+
+  app.get("/api/datasets/:id/reviews", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const reviews = await storage.getDatasetReviews(parseInt(id));
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
   
   return httpServer;
 }

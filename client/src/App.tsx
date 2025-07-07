@@ -32,6 +32,7 @@ import Bounties from "@/pages/bounties";
 import BountyLeaderboard from "@/pages/bounty-leaderboard";
 import UserDetail from "@/pages/user-detail";
 import RiskAssessmentModels from "@/pages/risk-assessment-models";
+import DataProviderDashboard from "@/pages/data-provider-dashboard";
 import Learning from "@/pages/learning";
 import TermsOfService from "@/pages/terms-of-service";
 import DataProcessingAgreement from "@/pages/data-processing-agreement";
@@ -119,6 +120,7 @@ function Router() {
             <Route path="/risk-dashboard" component={RiskManagement} />
             <Route path="/marketplace" component={Marketplace} />
             <Route path="/risk-assessment-models" component={RiskAssessmentModels} />
+            <Route path="/data-provider" component={DataProviderDashboard} />
             <Route path="/pricing" component={Pricing} />
             <Route path="/checkout" component={Checkout} />
 
