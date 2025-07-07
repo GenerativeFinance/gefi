@@ -100,7 +100,6 @@ export default function Header() {
         { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Reports", href: "/reports", icon: FileText },
         { name: "Risk Analysis", href: "/risk-reports", icon: Shield },
-        { name: "AI Marketplace", href: "/marketplace", icon: Store },
         { name: "Compliance", href: "/compliance-reports", icon: Building },
         { name: "Custom Reports", href: "/custom-reports", icon: FileText }
       ];
@@ -153,7 +152,6 @@ export default function Header() {
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
         { name: "Categories", href: "/categories", icon: Grid },
         { name: "My Subscriptions", href: "/my-subscriptions", icon: CreditCard },
-        { name: "Trading Bots", href: "/trading-bots", icon: Bot },
         { name: "Developers", href: "/developers", icon: Users }
       ];
     }

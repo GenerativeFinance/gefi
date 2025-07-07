@@ -298,6 +298,12 @@ Changelog:
   * Added support for multiple report types: portfolio, risk, compliance, market, trading, AI models, revenue, and custom metrics
   * Enhanced Reports navigation submenu to include Custom Reports alongside Risk Reports and Compliance Reports
   * Implemented comprehensive report generation with status tracking, error handling, and download capabilities
+- July 7, 2025. Enhanced user profiles and cleaned up navigation structure
+  * Implemented comprehensive user profile system with clickable developer names in funding pages
+  * Added detailed user profile storage methods for education, experience, certifications, skills, publications, and reviews
+  * Made developer names clickable in both Bot Funding and Model Funding pages linking to user profiles
+  * Removed "Trading Bots" from AI Model Marketplace submenu navigation for cleaner organization
+  * Removed "AI Marketplace" from Reports submenu navigation to reduce redundancy and improve user experience
 ```
 
 ## User Preferences
