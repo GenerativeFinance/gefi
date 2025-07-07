@@ -91,10 +91,174 @@ interface Dataset {
   updatedAt: string;
 }
 
+// Sample data to populate the dashboard
+const sampleProvider: DataProvider = {
+  id: 1,
+  userId: "github_55703540",
+  companyName: "Advanced Financial Data Solutions",
+  description: "Leading provider of real-time market data and analytics",
+  specialization: "Market Data, Risk Analytics, ESG Data",
+  complianceCertifications: ["SOC 2", "ISO 27001", "GDPR"],
+  dataQualityRating: "9.2",
+  totalRevenue: "2847500.00",
+  totalDatasets: 24,
+  activeSubscriptions: 1847,
+  isVerified: true,
+  status: "active",
+  createdAt: "2024-03-15T10:30:00Z",
+  updatedAt: "2025-01-07T14:20:00Z"
+};
+
+const sampleDatasets: Dataset[] = [
+  {
+    id: 1,
+    providerId: 1,
+    name: "S&P 500 Real-time Market Data",
+    description: "Real-time stock prices, volumes, and market depth data for all S&P 500 companies",
+    category: "Market Data",
+    subcategory: "Equity Data",
+    dataType: "Real-time Stream",
+    fileSize: 2621440, // 2.5 TB in KB
+    recordCount: 15000000,
+    updateFrequency: "Real-time",
+    qualityScore: "9.8",
+    pricePerRecord: "0.002",
+    monthlySubscriptionFee: "2500.00",
+    oneTimePurchasePrice: "50000.00",
+    licenseType: "Commercial",
+    downloadCount: 5670,
+    subscriptionCount: 245,
+    revenue: "612500.00",
+    isActive: true,
+    isPublic: true,
+    complianceStatus: "compliant",
+    createdAt: "2024-03-20T09:15:00Z",
+    updatedAt: "2025-01-07T14:00:00Z"
+  },
+  {
+    id: 2,
+    providerId: 1,
+    name: "Cryptocurrency Market Depth",
+    description: "Order book data for top 100 cryptocurrencies across major exchanges",
+    category: "Market Data",
+    subcategory: "Crypto Data",
+    dataType: "Real-time Stream",
+    fileSize: 1835008, // 1.8 TB in KB
+    recordCount: 8500000,
+    updateFrequency: "Real-time",
+    qualityScore: "9.5",
+    pricePerRecord: "0.003",
+    monthlySubscriptionFee: "1800.00",
+    oneTimePurchasePrice: "35000.00",
+    licenseType: "Commercial",
+    downloadCount: 3420,
+    subscriptionCount: 189,
+    revenue: "340200.00",
+    isActive: true,
+    isPublic: true,
+    complianceStatus: "compliant",
+    createdAt: "2024-04-10T11:30:00Z",
+    updatedAt: "2025-01-07T13:45:00Z"
+  },
+  {
+    id: 3,
+    providerId: 1,
+    name: "Economic Indicators Dataset",
+    description: "Global economic indicators including GDP, inflation, unemployment rates",
+    category: "Economic Data",
+    subcategory: "Macroeconomic",
+    dataType: "Historical + Live",
+    fileSize: 512000, // 500 GB in KB
+    recordCount: 2500000,
+    updateFrequency: "Daily",
+    qualityScore: "9.3",
+    pricePerRecord: "0.005",
+    monthlySubscriptionFee: "950.00",
+    oneTimePurchasePrice: "18000.00",
+    licenseType: "Academic/Commercial",
+    downloadCount: 2890,
+    subscriptionCount: 156,
+    revenue: "148200.00",
+    isActive: true,
+    isPublic: true,
+    complianceStatus: "compliant",
+    createdAt: "2024-05-05T14:20:00Z",
+    updatedAt: "2025-01-07T12:30:00Z"
+  },
+  {
+    id: 4,
+    providerId: 1,
+    name: "ESG Risk Scores",
+    description: "Environmental, Social, and Governance risk scores for public companies",
+    category: "Risk Data",
+    subcategory: "ESG Analytics",
+    dataType: "Processed Analytics",
+    fileSize: 256000, // 250 GB in KB
+    recordCount: 1200000,
+    updateFrequency: "Weekly",
+    qualityScore: "9.0",
+    pricePerRecord: "0.008",
+    monthlySubscriptionFee: "1200.00",
+    oneTimePurchasePrice: "22000.00",
+    licenseType: "Commercial",
+    downloadCount: 1560,
+    subscriptionCount: 134,
+    revenue: "160800.00",
+    isActive: true,
+    isPublic: true,
+    complianceStatus: "compliant",
+    createdAt: "2024-06-12T16:45:00Z",
+    updatedAt: "2025-01-07T11:15:00Z"
+  }
+];
+
+const recentActivity = [
+  {
+    id: 1,
+    type: "subscription",
+    description: "New subscription to S&P 500 Real-time Market Data",
+    user: "QuantTech Analytics",
+    timestamp: "2 hours ago",
+    icon: Users,
+    revenue: 2500
+  },
+  {
+    id: 2,
+    type: "upload",
+    description: "Updated Cryptocurrency Market Depth dataset",
+    user: "System",
+    timestamp: "4 hours ago",
+    icon: Upload,
+    revenue: 0
+  },
+  {
+    id: 3,
+    type: "compliance",
+    description: "ESG Risk Scores passed compliance audit",
+    user: "Compliance Team",
+    timestamp: "1 day ago",
+    icon: CheckCircle,
+    revenue: 0
+  },
+  {
+    id: 4,
+    type: "collaboration",
+    description: "New collaboration request from AI Research Lab",
+    user: "AI Research Lab",
+    timestamp: "2 days ago",
+    icon: Handshake,
+    revenue: 0
+  }
+];
+
 const OverviewTab = ({ provider, datasets }: { provider: DataProvider | null, datasets: Dataset[] }) => {
-  const totalRevenue = provider ? parseFloat(provider.totalRevenue) : 0;
-  const averageQuality = datasets.length > 0 
-    ? datasets.reduce((sum, d) => sum + parseFloat(d.qualityScore), 0) / datasets.length 
+  // Use sample data if provider data is not available
+  const displayProvider = provider || sampleProvider;
+  const displayDatasets = datasets.length > 0 ? datasets : sampleDatasets;
+  
+  const totalRevenue = parseFloat(displayProvider.totalRevenue);
+  const averageQuality = displayDatasets.length > 0 
+    ? displayDatasets.reduce((sum, d) => sum + parseFloat(d.qualityScore), 0) / displayDatasets.length 
     : 0;
 
   return (
