@@ -70,7 +70,7 @@ const issueFormSchema = z.object({
 export default function RegulatorDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedTab, setSelectedTab] = useState("audits");
+  const [selectedTab, setSelectedTab] = useState("overview");
   const [auditDialogOpen, setAuditDialogOpen] = useState(false);
   const [communicationDialogOpen, setCommunicationDialogOpen] = useState(false);
   const [issueDialogOpen, setIssueDialogOpen] = useState(false);
@@ -220,13 +220,484 @@ export default function RegulatorDashboard() {
         </div>
 
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="audits">Model Audits</TabsTrigger>
             <TabsTrigger value="datasets">Dataset Audits</TabsTrigger>
             <TabsTrigger value="issues">Compliance Issues</TabsTrigger>
             <TabsTrigger value="communications">Communications</TabsTrigger>
             <TabsTrigger value="standards">Standards</TabsTrigger>
           </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Stats Cards */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Audits</CardTitle>
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{dashboardStats.totalAudits}</div>
+                  <p className="text-xs text-muted-foreground">
+                    +12% from last month
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Pending Audits</CardTitle>
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{dashboardStats.pendingAudits}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Requires immediate attention
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Compliance Rate</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{dashboardStats.complianceRate}%</div>
+                  <p className="text-xs text-muted-foreground">
+                    +2.1% improvement
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Flagged Issues</CardTitle>
+                  <Flag className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{dashboardStats.flaggedIssues}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {dashboardStats.criticalIssues} critical issues
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Resolved Issues</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{dashboardStats.resolvedIssues}</div>
+                  <p className="text-xs text-muted-foreground">
+                    76% resolution rate
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Standards</CardTitle>
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{regulatoryStandards.length || 8}</div>
+                  <p className="text-xs text-muted-foreground">
+                    2 updated this month
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+                <CardDescription>Common regulatory tasks and operations</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Dialog open={auditDialogOpen} onOpenChange={setAuditDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full">
+                      <Shield className="mr-2 h-4 w-4" />
+                      Start New Audit
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Create New Audit</DialogTitle>
+                      <DialogDescription>
+                        Initiate a new compliance audit for a model or dataset
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Form {...auditForm}>
+                      <form onSubmit={auditForm.handleSubmit((data) => auditMutation.mutate(data))} className="space-y-4">
+                        <FormField
+                          control={auditForm.control}
+                          name="entityType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Entity Type</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select entity type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="model">AI Model</SelectItem>
+                                  <SelectItem value="dataset">Dataset</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={auditForm.control}
+                          name="entityId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Entity ID</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter entity ID" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={auditForm.control}
+                          name="auditorName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Auditor Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter auditor name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={auditForm.control}
+                          name="complianceFramework"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Compliance Framework</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select framework" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="SEC">SEC</SelectItem>
+                                  <SelectItem value="GDPR">GDPR</SelectItem>
+                                  <SelectItem value="SOX">SOX</SelectItem>
+                                  <SelectItem value="MiFID">MiFID</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <Button type="submit" className="w-full" disabled={auditMutation.isPending}>
+                          {auditMutation.isPending ? "Creating..." : "Create Audit"}
+                        </Button>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog open={issueDialogOpen} onOpenChange={setIssueDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      <Flag className="mr-2 h-4 w-4" />
+                      Report Issue
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Report Compliance Issue</DialogTitle>
+                      <DialogDescription>
+                        Flag a compliance concern or violation
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Form {...issueForm}>
+                      <form onSubmit={issueForm.handleSubmit((data) => issueMutation.mutate(data))} className="space-y-4">
+                        <FormField
+                          control={issueForm.control}
+                          name="entityType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Entity Type</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select entity type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="model">AI Model</SelectItem>
+                                  <SelectItem value="dataset">Dataset</SelectItem>
+                                  <SelectItem value="platform">Platform</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={issueForm.control}
+                          name="entityId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Entity ID</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter entity ID" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={issueForm.control}
+                          name="issueType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Issue Type</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select issue type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="data_privacy">Data Privacy</SelectItem>
+                                  <SelectItem value="bias">Algorithmic Bias</SelectItem>
+                                  <SelectItem value="transparency">Lack of Transparency</SelectItem>
+                                  <SelectItem value="security">Security Vulnerability</SelectItem>
+                                  <SelectItem value="accuracy">Accuracy Concerns</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={issueForm.control}
+                          name="severity"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Severity</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select severity" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="low">Low</SelectItem>
+                                  <SelectItem value="medium">Medium</SelectItem>
+                                  <SelectItem value="high">High</SelectItem>
+                                  <SelectItem value="critical">Critical</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={issueForm.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Description</FormLabel>
+                              <FormControl>
+                                <textarea 
+                                  className="w-full min-h-[80px] px-3 py-2 text-sm border border-input bg-background rounded-md" 
+                                  placeholder="Describe the compliance issue in detail..."
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <Button type="submit" className="w-full" disabled={issueMutation.isPending}>
+                          {issueMutation.isPending ? "Reporting..." : "Report Issue"}
+                        </Button>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog open={communicationDialogOpen} onOpenChange={setCommunicationDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Send Communication
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Send Communication</DialogTitle>
+                      <DialogDescription>
+                        Send a regulatory communication or notification
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Form {...communicationForm}>
+                      <form onSubmit={communicationForm.handleSubmit((data) => communicationMutation.mutate(data))} className="space-y-4">
+                        <FormField
+                          control={communicationForm.control}
+                          name="recipientType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Recipient Type</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select recipient type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="developer">Developer</SelectItem>
+                                  <SelectItem value="data_provider">Data Provider</SelectItem>
+                                  <SelectItem value="platform_admin">Platform Admin</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={communicationForm.control}
+                          name="recipientId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Recipient ID</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter recipient ID" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={communicationForm.control}
+                          name="messageType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Message Type</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select message type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="warning">Warning</SelectItem>
+                                  <SelectItem value="violation">Violation Notice</SelectItem>
+                                  <SelectItem value="compliance_update">Compliance Update</SelectItem>
+                                  <SelectItem value="audit_request">Audit Request</SelectItem>
+                                  <SelectItem value="policy_change">Policy Change</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={communicationForm.control}
+                          name="subject"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Subject</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter subject" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={communicationForm.control}
+                          name="message"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Message</FormLabel>
+                              <FormControl>
+                                <textarea 
+                                  className="w-full min-h-[80px] px-3 py-2 text-sm border border-input bg-background rounded-md" 
+                                  placeholder="Enter your message..."
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <Button type="submit" className="w-full" disabled={communicationMutation.isPending}>
+                          {communicationMutation.isPending ? "Sending..." : "Send Communication"}
+                        </Button>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>
+                  Latest regulatory actions and updates
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[
+                    { type: "audit", message: "New audit completed for AI Trading Model #1001", time: "2 hours ago" },
+                    { type: "issue", message: "Compliance issue flagged for Dataset #2001", time: "4 hours ago" },
+                    { type: "communication", message: "Sent notification to data provider about policy update", time: "1 day ago" },
+                    { type: "standard", message: "Updated SEC compliance standard v2.1", time: "2 days ago" }
+                  ].map((activity, index) => (
+                    <div key={index} className="flex items-center space-x-4 p-3 border rounded-lg">
+                      <div className={`w-2 h-2 rounded-full ${
+                        activity.type === "audit" ? "bg-blue-500" :
+                        activity.type === "issue" ? "bg-red-500" :
+                        activity.type === "communication" ? "bg-green-500" :
+                        "bg-purple-500"
+                      }`} />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{activity.message}</p>
+                        <p className="text-xs text-muted-foreground">{activity.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Model Audits Tab */}
           <TabsContent value="audits" className="space-y-6">

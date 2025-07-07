@@ -168,6 +168,18 @@ export default function Header() {
       ];
     }
 
+    // Regulator submenu
+    if (location.startsWith('/regulator')) {
+      return [
+        { name: "Dashboard", href: "/regulator", icon: BarChart3 },
+        { name: "Model Audits", href: "/regulator", icon: Shield },
+        { name: "Dataset Audits", href: "/regulator", icon: Database },
+        { name: "Compliance Issues", href: "/regulator", icon: AlertTriangle },
+        { name: "Communications", href: "/regulator", icon: Globe },
+        { name: "Standards", href: "/regulator", icon: BookOpen }
+      ];
+    }
+
     // Default submenu - includes main navigation items
     return [
       { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
@@ -213,7 +225,9 @@ export default function Header() {
               {/* Dashboard Mode Toggle - Icon Only */}
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-md text-foreground hover:bg-accent transition-colors">
-                  {isDeveloperPage ? <Code className="h-4 w-4 md:h-5 md:w-5" /> : <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />}
+                  {isDeveloperPage ? <Code className="h-4 w-4 md:h-5 md:w-5" /> : 
+                   location.startsWith('/regulator') ? <Shield className="h-4 w-4 md:h-5 md:w-5" /> :
+                   <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
@@ -232,6 +246,12 @@ export default function Header() {
                     <Link href="/data-provider" className="flex items-center space-x-2">
                       <Database className="h-4 w-4" />
                       <span>Data Provider</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/regulator" className="flex items-center space-x-2">
+                      <Shield className="h-4 w-4" />
+                      <span>Regulator</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

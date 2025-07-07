@@ -372,6 +372,13 @@ Changelog:
   * Added User Access tab with role-based permissions, access control, and recent activity monitoring
   * Implemented Billing tab with revenue summaries, subscription management, and payment history
   * Enhanced platform to support complete data provider workflow from dataset management to revenue optimization
+- July 7, 2025. Configured Regulator Dashboard with distinct submenu structure and restored Overview tab
+  * Added Regulator option to header dashboard mode dropdown with Shield icon
+  * Created dedicated submenu for Regulator dashboard with 6 tabs: Overview, Model Audits, Dataset Audits, Compliance Issues, Communications, Standards
+  * Restored Overview tab as the main Dashboard page containing statistics overview, quick actions, and recent activity
+  * Enhanced header navigation logic to properly detect /regulator route and display appropriate submenu
+  * Differentiated Regulator submenu from Investor dashboard submenu for specialized regulatory workflow
+  * Overview tab now serves as the central dashboard with comprehensive stats cards, audit creation forms, and activity tracking
 ```
 
 ## User Preferences
