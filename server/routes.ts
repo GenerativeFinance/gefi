@@ -3005,6 +3005,258 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch reviews" });
     }
   });
+
+  // Regulator Dashboard Endpoints
+  app.get("/api/regulator/stats", async (req, res) => {
+    try {
+      // Mock data for regulator dashboard statistics
+      const stats = {
+        totalAudits: 45,
+        pendingAudits: 12,
+        flaggedIssues: 7,
+        resolvedIssues: 23,
+        complianceRate: 87.2,
+        criticalIssues: 3
+      };
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching regulator stats:", error);
+      res.status(500).json({ message: "Failed to fetch regulator statistics" });
+    }
+  });
+
+  app.get("/api/regulator/model-audits", async (req, res) => {
+    try {
+      // Mock data for model audits
+      const audits = [
+        {
+          id: 1,
+          modelId: 1001,
+          auditorId: "reg_001",
+          auditType: "compliance",
+          status: "in_progress",
+          complianceScore: 85.5,
+          riskLevel: "medium",
+          regulatoryFramework: "SEC",
+          auditDate: new Date(),
+          findings: "Model documentation needs improvement",
+          recommendations: "Add detailed risk disclosures"
+        },
+        {
+          id: 2,
+          modelId: 1002,
+          auditorId: "reg_002",
+          auditType: "technical",
+          status: "completed",
+          complianceScore: 92.0,
+          riskLevel: "low",
+          regulatoryFramework: "GDPR",
+          auditDate: new Date(),
+          findings: "All technical requirements met",
+          recommendations: "Continue current practices"
+        }
+      ];
+      res.json(audits);
+    } catch (error) {
+      console.error("Error fetching model audits:", error);
+      res.status(500).json({ message: "Failed to fetch model audits" });
+    }
+  });
+
+  app.get("/api/regulator/dataset-audits", async (req, res) => {
+    try {
+      // Mock data for dataset audits
+      const audits = [
+        {
+          id: 1,
+          datasetId: 2001,
+          auditorId: "reg_003",
+          auditType: "privacy",
+          status: "completed",
+          complianceScore: 88.0,
+          regulatoryFramework: "GDPR",
+          auditDate: new Date(),
+          privacyAssessment: { piiDetected: false, anonymization: "adequate" },
+          recommendations: "Implement additional access controls"
+        }
+      ];
+      res.json(audits);
+    } catch (error) {
+      console.error("Error fetching dataset audits:", error);
+      res.status(500).json({ message: "Failed to fetch dataset audits" });
+    }
+  });
+
+  app.get("/api/regulator/compliance-issues", async (req, res) => {
+    try {
+      // Mock data for compliance issues
+      const issues = [
+        {
+          id: 1,
+          entityId: 1001,
+          entityType: "model",
+          reporterId: "user_001",
+          issueType: "privacy_violation",
+          severity: "high",
+          title: "Data Privacy Violation",
+          description: "Model accessing unauthorized personal data",
+          status: "open",
+          reportDate: new Date(),
+          regulatoryFramework: "GDPR"
+        },
+        {
+          id: 2,
+          entityId: 2001,
+          entityType: "dataset",
+          reporterId: "user_002",
+          issueType: "bias",
+          severity: "medium",
+          title: "Algorithmic Bias Detected",
+          description: "Model shows bias against certain demographics",
+          status: "investigating",
+          reportDate: new Date(),
+          regulatoryFramework: "SEC"
+        }
+      ];
+      res.json(issues);
+    } catch (error) {
+      console.error("Error fetching compliance issues:", error);
+      res.status(500).json({ message: "Failed to fetch compliance issues" });
+    }
+  });
+
+  app.get("/api/regulator/communications", async (req, res) => {
+    try {
+      // Mock data for regulator communications
+      const communications = [
+        {
+          id: 1,
+          regulatorId: "reg_001",
+          recipientId: "dev_001",
+          recipientType: "developer",
+          subject: "Model Documentation Required",
+          message: "Please provide additional documentation for compliance review",
+          priority: "high",
+          status: "sent",
+          createdAt: new Date()
+        },
+        {
+          id: 2,
+          regulatorId: "reg_002",
+          recipientId: "provider_001",
+          recipientType: "data_provider",
+          subject: "Dataset Compliance Review",
+          message: "Your dataset requires privacy assessment",
+          priority: "normal",
+          status: "read",
+          createdAt: new Date()
+        }
+      ];
+      res.json(communications);
+    } catch (error) {
+      console.error("Error fetching communications:", error);
+      res.status(500).json({ message: "Failed to fetch communications" });
+    }
+  });
+
+  app.get("/api/regulator/standards", async (req, res) => {
+    try {
+      // Mock data for regulatory standards
+      const standards = [
+        {
+          id: 1,
+          name: "SEC Rule 15c3-3",
+          framework: "SEC",
+          version: "2024.1",
+          effectiveDate: new Date(),
+          description: "Customer Protection Rule",
+          requirements: { documentation: true, testing: true, reporting: true },
+          isActive: true
+        },
+        {
+          id: 2,
+          name: "GDPR Article 22",
+          framework: "GDPR",
+          version: "2023.2",
+          effectiveDate: new Date(),
+          description: "Automated decision-making and profiling",
+          requirements: { consent: true, transparency: true, appeals: true },
+          isActive: true
+        }
+      ];
+      res.json(standards);
+    } catch (error) {
+      console.error("Error fetching standards:", error);
+      res.status(500).json({ message: "Failed to fetch regulatory standards" });
+    }
+  });
+
+  app.post("/api/regulator/audits", async (req, res) => {
+    try {
+      const auditData = req.body;
+      
+      // Mock audit creation
+      const newAudit = {
+        id: Date.now(),
+        ...auditData,
+        auditorId: "current_user", // Should be from req.user in real implementation
+        auditDate: new Date(),
+        status: "in_progress",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      console.log("Created new audit:", newAudit);
+      res.status(201).json(newAudit);
+    } catch (error) {
+      console.error("Error creating audit:", error);
+      res.status(500).json({ message: "Failed to create audit" });
+    }
+  });
+
+  app.post("/api/regulator/communications", async (req, res) => {
+    try {
+      const communicationData = req.body;
+      
+      // Mock communication creation
+      const newCommunication = {
+        id: Date.now(),
+        ...communicationData,
+        regulatorId: "current_user", // Should be from req.user in real implementation
+        status: "sent",
+        createdAt: new Date()
+      };
+
+      console.log("Created new communication:", newCommunication);
+      res.status(201).json(newCommunication);
+    } catch (error) {
+      console.error("Error creating communication:", error);
+      res.status(500).json({ message: "Failed to send communication" });
+    }
+  });
+
+  app.post("/api/regulator/issues", async (req, res) => {
+    try {
+      const issueData = req.body;
+      
+      // Mock issue creation
+      const newIssue = {
+        id: Date.now(),
+        ...issueData,
+        reporterId: "current_user", // Should be from req.user in real implementation
+        status: "open",
+        reportDate: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      console.log("Created new compliance issue:", newIssue);
+      res.status(201).json(newIssue);
+    } catch (error) {
+      console.error("Error creating issue:", error);
+      res.status(500).json({ message: "Failed to report issue" });
+    }
+  });
   
   return httpServer;
 }

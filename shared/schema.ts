@@ -1832,3 +1832,169 @@ export type InsertDataCollaboration = z.infer<typeof insertDataCollaborationSche
 
 export type DatasetReview = typeof datasetReviews.$inferSelect;
 export type InsertDatasetReview = z.infer<typeof insertDatasetReviewSchema>;
+
+// Regulator Profile Table
+export const regulatorProfiles = pgTable("regulator_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull().unique(),
+  organizationName: varchar("organization_name").notNull(),
+  regulatoryBody: varchar("regulatory_body").notNull(), // SEC, FINRA, GDPR, etc.
+  jurisdiction: varchar("jurisdiction").notNull(), // US, EU, UK, etc.
+  certificationLevel: varchar("certification_level").notNull(), // junior, senior, lead
+  specializations: text("specializations").array().notNull().default([]), // areas of expertise
+  yearsExperience: integer("years_experience"),
+  contactInfo: jsonb("contact_info"),
+  isActive: boolean("is_active").default(true),
+  verificationStatus: varchar("verification_status").default("pending"), // pending, verified, rejected
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Model Audit Table
+export const modelAudits = pgTable("model_audits", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").notNull(),
+  auditorId: varchar("auditor_id").references(() => users.id).notNull(),
+  auditType: varchar("audit_type").notNull(), // compliance, technical, ethical
+  status: varchar("status").default("in_progress"), // in_progress, completed, flagged
+  complianceScore: decimal("compliance_score", { precision: 5, scale: 2 }),
+  findings: jsonb("findings"),
+  recommendations: text("recommendations"),
+  riskLevel: varchar("risk_level"), // low, medium, high, critical
+  regulatoryFramework: varchar("regulatory_framework").notNull(), // SEC, GDPR, MiFID, etc.
+  documentationReview: jsonb("documentation_review"),
+  validationResults: jsonb("validation_results"),
+  flaggedIssues: text("flagged_issues").array().default([]),
+  approvalStatus: varchar("approval_status").default("under_review"), // approved, rejected, conditional
+  auditDate: timestamp("audit_date").defaultNow(),
+  completionDate: timestamp("completion_date"),
+  nextReviewDate: timestamp("next_review_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Dataset Audit Table
+export const datasetAudits = pgTable("dataset_audits", {
+  id: serial("id").primaryKey(),
+  datasetId: integer("dataset_id").references(() => datasets.id).notNull(),
+  auditorId: varchar("auditor_id").references(() => users.id).notNull(),
+  auditType: varchar("audit_type").notNull(), // privacy, quality, compliance
+  status: varchar("status").default("in_progress"),
+  complianceScore: decimal("compliance_score", { precision: 5, scale: 2 }),
+  privacyAssessment: jsonb("privacy_assessment"),
+  dataQualityReview: jsonb("data_quality_review"),
+  gdprCompliance: jsonb("gdpr_compliance"),
+  retentionPolicy: jsonb("retention_policy"),
+  accessControls: jsonb("access_controls"),
+  flaggedConcerns: text("flagged_concerns").array().default([]),
+  recommendations: text("recommendations"),
+  approvalStatus: varchar("approval_status").default("under_review"),
+  auditDate: timestamp("audit_date").defaultNow(),
+  completionDate: timestamp("completion_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Regulatory Standards Table
+export const regulatoryStandards = pgTable("regulatory_standards", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(),
+  framework: varchar("framework").notNull(), // SEC, GDPR, MiFID, etc.
+  version: varchar("version").notNull(),
+  effectiveDate: timestamp("effective_date").notNull(),
+  description: text("description"),
+  requirements: jsonb("requirements"),
+  applicableRegions: text("applicable_regions").array().default([]),
+  complianceGuidelines: jsonb("compliance_guidelines"),
+  updateFrequency: varchar("update_frequency"), // annual, quarterly, as_needed
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Compliance Issues Table
+export const complianceIssues = pgTable("compliance_issues", {
+  id: serial("id").primaryKey(),
+  entityId: integer("entity_id").notNull(), // model or dataset ID
+  entityType: varchar("entity_type").notNull(), // model, dataset
+  reporterId: varchar("reporter_id").references(() => users.id).notNull(),
+  assignedRegulatorId: varchar("assigned_regulator_id").references(() => users.id),
+  issueType: varchar("issue_type").notNull(), // privacy_violation, bias, documentation, etc.
+  severity: varchar("severity").notNull(), // low, medium, high, critical
+  title: varchar("title").notNull(),
+  description: text("description").notNull(),
+  evidenceFiles: text("evidence_files").array().default([]),
+  regulatoryFramework: varchar("regulatory_framework"),
+  status: varchar("status").default("open"), // open, investigating, resolved, dismissed
+  resolution: text("resolution"),
+  actionsTaken: jsonb("actions_taken"),
+  communicationLog: jsonb("communication_log"),
+  reportDate: timestamp("report_date").defaultNow(),
+  resolutionDate: timestamp("resolution_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Regulator Communications Table
+export const regulatorCommunications = pgTable("regulator_communications", {
+  id: serial("id").primaryKey(),
+  regulatorId: varchar("regulator_id").references(() => users.id).notNull(),
+  recipientId: varchar("recipient_id").references(() => users.id).notNull(),
+  recipientType: varchar("recipient_type").notNull(), // developer, data_provider
+  entityId: integer("entity_id"), // related model or dataset ID
+  entityType: varchar("entity_type"), // model, dataset
+  communicationType: varchar("communication_type").notNull(), // clarification, violation_notice, approval, etc.
+  subject: varchar("subject").notNull(),
+  message: text("message").notNull(),
+  priority: varchar("priority").default("normal"), // low, normal, high, urgent
+  status: varchar("status").default("sent"), // sent, delivered, read, responded
+  responseRequired: boolean("response_required").default(false),
+  responseDeadline: timestamp("response_deadline"),
+  attachments: text("attachments").array().default([]),
+  readAt: timestamp("read_at"),
+  respondedAt: timestamp("responded_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Regulatory Compliance Reports Table
+export const regulatoryComplianceReports = pgTable("regulatory_compliance_reports", {
+  id: serial("id").primaryKey(),
+  generatedBy: varchar("generated_by").references(() => users.id).notNull(),
+  reportType: varchar("report_type").notNull(), // monthly, quarterly, annual, incident
+  period: varchar("period").notNull(), // 2024-Q1, 2024-01, etc.
+  framework: varchar("framework").notNull(), // SEC, GDPR, etc.
+  totalEntitiesReviewed: integer("total_entities_reviewed"),
+  compliantEntities: integer("compliant_entities"),
+  nonCompliantEntities: integer("non_compliant_entities"),
+  flaggedIssues: integer("flagged_issues"),
+  resolvedIssues: integer("resolved_issues"),
+  reportData: jsonb("report_data"),
+  summary: text("summary"),
+  recommendations: text("recommendations"),
+  status: varchar("status").default("draft"), // draft, finalized, submitted
+  submissionDate: timestamp("submission_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Export types for Regulator features
+export type RegulatorProfile = typeof regulatorProfiles.$inferSelect;
+export type InsertRegulatorProfile = typeof regulatorProfiles.$inferInsert;
+
+export type ModelAudit = typeof modelAudits.$inferSelect;
+export type InsertModelAudit = typeof modelAudits.$inferInsert;
+
+export type DatasetAudit = typeof datasetAudits.$inferSelect;
+export type InsertDatasetAudit = typeof datasetAudits.$inferInsert;
+
+export type RegulatoryStandard = typeof regulatoryStandards.$inferSelect;
+export type InsertRegulatoryStandard = typeof regulatoryStandards.$inferInsert;
+
+export type ComplianceIssue = typeof complianceIssues.$inferSelect;
+export type InsertComplianceIssue = typeof complianceIssues.$inferInsert;
+
+export type RegulatorCommunication = typeof regulatorCommunications.$inferSelect;
+export type InsertRegulatorCommunication = typeof regulatorCommunications.$inferInsert;
+
+export type RegulatoryComplianceReport = typeof regulatoryComplianceReports.$inferSelect;
+export type InsertRegulatoryComplianceReport = typeof regulatoryComplianceReports.$inferInsert;

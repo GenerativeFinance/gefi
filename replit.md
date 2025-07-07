@@ -351,6 +351,14 @@ Changelog:
   * Created unsubscribed model cards with ratings, accuracy, subscriber counts, and Subscribe/Details buttons
   * Added responsive design with filtering options (All Models, My Subscriptions, Available Models)
   * Integrated proper routing and Layout component for consistent site navigation
+- July 7, 2025. Implemented comprehensive Regulator dashboard for compliance oversight
+  * Created complete database schema with 7 new tables: regulator profiles, model audits, dataset audits, regulatory standards, compliance issues, regulator communications, and compliance reports
+  * Built comprehensive Regulator dashboard UI with 6 main tabs: Overview, Model Audits, Dataset Audits, Compliance Issues, Communications, and Standards
+  * Added complete API endpoints for all regulator operations including audit creation, issue reporting, and communication management
+  * Integrated Regulator option into header navigation dropdown with Shield icon for easy dashboard switching
+  * Enhanced regulator functionality with audit forms, communication dialogs, issue reporting, and standards management
+  * Added comprehensive compliance oversight capabilities including model validation, dataset privacy assessment, and regulatory framework monitoring
+  * Established complete regulatory workflow for flagging non-compliant models, communicating with developers/data providers, and maintaining compliance standards
 ```
 
 ## User Preferences
