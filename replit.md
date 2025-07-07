@@ -318,6 +318,13 @@ Changelog:
   * Integrated Web3 wallet connectivity with multi-chain support and automatic contract initialization
   * Added real-time event monitoring for revenue distributions, campaign contributions, and model registrations
   * Implemented comprehensive error handling, loading states, and user feedback for all blockchain interactions
+- July 7, 2025. Fixed profile setup "Complete Setup" and "Skip for now" button functionality
+  * Resolved database schema mismatch by adding missing twitter_url column to user_profiles table
+  * Enhanced error handling in getUserProfile and createOrUpdateUserProfile methods for better debugging
+  * Fixed profile setup API route with comprehensive error handling and fallback mechanisms
+  * Made "Skip for now" button more visible and accessible with outline variant and proper event handling
+  * Added robust skip functionality with user feedback and query invalidation
+  * Improved profile setup robustness with safe field handling and detailed logging
 ```
 
 ## User Preferences

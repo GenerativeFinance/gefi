@@ -98,6 +98,7 @@ export default function ProfileSetup() {
       }, 100);
     },
     onError: (error) => {
+      console.error("Profile setup error:", error);
       toast({
         title: "Setup Failed",
         description: "There was an error setting up your profile. Please try again.",
@@ -105,6 +106,17 @@ export default function ProfileSetup() {
       });
     }
   });
+
+  const handleSkip = async () => {
+    toast({
+      title: "Profile Setup Skipped",
+      description: "You can complete your profile anytime from settings.",
+    });
+    
+    // Invalidate queries to refresh user data
+    await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+    navigate('/');
+  };
 
   const assetTypes = [
     { id: 'stocks', label: 'Stocks', icon: TrendingUp },
@@ -520,9 +532,10 @@ export default function ProfileSetup() {
         {/* Skip Option */}
         <div className="text-center mt-6">
           <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="text-muted-foreground hover:text-foreground"
+            variant="outline"
+            onClick={handleSkip}
+            className="text-foreground border-border hover:bg-muted/50 transition-colors"
+            type="button"
           >
             Skip for now - I'll complete this later
           </Button>
