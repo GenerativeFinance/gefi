@@ -49,7 +49,6 @@ import Web3DeFi from "@/pages/web3-defi";
 import BlockchainContracts from "@/pages/blockchain-contracts";
 import MarketSentiment from "@/pages/market-sentiment";
 import AIModels from "@/pages/ai-models";
-import RiskAssessmentDashboard from "@/pages/risk-assessment";
 import Community from "@/pages/community";
 import Docs from "@/pages/docs";
 import Webinars from "@/pages/webinars";
@@ -61,6 +60,7 @@ import Funding from "@/pages/funding";
 import RebalanceActions from "@/pages/rebalance-actions";
 import PortfolioPerformance from "@/pages/portfolio-performance";
 import InvestorDashboard from "@/pages/investor-dashboard";
+import RiskAssessment from "@/pages/risk-assessment";
 import CurrentRiskAssessment from "@/pages/current-risk-assessment";
 import OrderBook from "@/pages/order-book";
 import MySubscriptions from "@/pages/my-subscriptions";
@@ -160,7 +160,6 @@ function Router() {
             <Route path="/risk-reports" component={RiskReports} />
             <Route path="/custom-reports" component={CustomReports} />
             <Route path="/market-data" component={MarketData} />
-            <Route path="/risk-assessment" component={RiskAssessmentDashboard} />
           </>
         ) : (
           <>
