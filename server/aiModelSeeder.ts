@@ -323,20 +323,46 @@ export class AiModelSeeder {
       console.log("Starting AI model categories seeding...");
       
       for (const categoryData of AI_MODEL_CATEGORIES) {
-        // Create main category
+        // Create or get existing main category
         const { subcategories, ...categoryInfo } = categoryData;
-        const category = await storage.createAiModelCategory(categoryInfo as InsertAiModelCategory);
+        let category;
         
-        console.log(`Created category: ${category.name}`);
+        try {
+          category = await storage.createAiModelCategory(categoryInfo as InsertAiModelCategory);
+          console.log(`Created category: ${category.name}`);
+        } catch (error: any) {
+          if (error.code === '23505') { // Unique constraint violation
+            // Category already exists, get it
+            const categories = await storage.getAiModelCategories();
+            category = categories.find(c => c.name === categoryInfo.name);
+            console.log(`Category already exists: ${category.name}`);
+          } else {
+            console.error(`Error creating category ${categoryInfo.name}:`, error);
+            continue;
+          }
+        }
+        
+        if (!category) {
+          console.error(`Could not find or create category: ${categoryInfo.name}`);
+          continue;
+        }
         
         // Create subcategories
         for (const subcategoryData of subcategories) {
-          const subcategory = await storage.createAiModelSubcategory({
-            ...subcategoryData,
-            categoryId: category.id
-          } as InsertAiModelSubcategory);
-          
-          console.log(`  Created subcategory: ${subcategory.name}`);
+          try {
+            const subcategory = await storage.createAiModelSubcategory({
+              ...subcategoryData,
+              categoryId: category.id
+            } as InsertAiModelSubcategory);
+            
+            console.log(`  Created subcategory: ${subcategory.name}`);
+          } catch (subError: any) {
+            if (subError.code === '23505') {
+              console.log(`  Subcategory already exists: ${subcategoryData.name}`);
+            } else {
+              console.error(`  Error creating subcategory ${subcategoryData.name}:`, subError);
+            }
+          }
         }
       }
       

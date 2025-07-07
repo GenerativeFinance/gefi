@@ -2671,6 +2671,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ success: false, message: "Failed to seed categories", error: error.message });
     }
   });
+
+  // Admin endpoint to add missing subcategories
+  app.post('/api/admin/add-missing-subcategories', async (req, res) => {
+    try {
+      const categories = await storage.getAiModelCategories();
+      const missingSubcategories = [
+        // Risk Assessment missing
+        { categoryName: 'Risk Assessment', name: 'Risk Prediction Models', description: 'AI models for predictive risk analysis', sortOrder: 6 },
+        
+        // Trading Strategies missing
+        { categoryName: 'Trading Strategies', name: 'Arbitrage Strategies', description: 'Statistical and risk arbitrage models', sortOrder: 3 },
+        { categoryName: 'Trading Strategies', name: 'Trend Following', description: 'Momentum and trend identification models', sortOrder: 4 },
+        { categoryName: 'Trading Strategies', name: 'Trading Bots', description: 'Automated trading execution systems', sortOrder: 6 },
+        
+        // Portfolio Management missing
+        { categoryName: 'Portfolio Management', name: 'Risk-Adjusted Returns', description: 'Sharpe ratio and risk-return optimization', sortOrder: 2 },
+        { categoryName: 'Portfolio Management', name: 'Rebalancing Strategies', description: 'Dynamic portfolio rebalancing models', sortOrder: 3 },
+        { categoryName: 'Portfolio Management', name: 'ESG Investing', description: 'Environmental, Social, and Governance factors', sortOrder: 4 },
+        { categoryName: 'Portfolio Management', name: 'Multi-Asset Portfolios', description: 'Cross-asset allocation strategies', sortOrder: 5 },
+        { categoryName: 'Portfolio Management', name: 'Portfolio Optimization', description: 'Mathematical optimization techniques', sortOrder: 6 },
+        
+        // Fraud Detection missing
+        { categoryName: 'Fraud Detection', name: 'Transaction Fraud', description: 'Real-time transaction monitoring', sortOrder: 1 },
+        { categoryName: 'Fraud Detection', name: 'Identity Theft', description: 'Identity verification and protection', sortOrder: 2 },
+        { categoryName: 'Fraud Detection', name: 'Money Laundering Detection', description: 'AML compliance and suspicious activity', sortOrder: 3 },
+        { categoryName: 'Fraud Detection', name: 'Synthetic Fraud', description: 'Synthetic identity detection', sortOrder: 5 },
+        
+        // Customer Service missing  
+        { categoryName: 'Customer Service', name: 'Customer Segmentation', description: 'Behavioral and demographic segmentation', sortOrder: 2 },
+        { categoryName: 'Customer Service', name: 'Complaint Resolution', description: 'Automated complaint handling', sortOrder: 4 },
+        
+        // Regulatory Compliance missing
+        { categoryName: 'Regulatory Compliance', name: 'KYC (Know Your Customer)', description: 'Customer identity verification', sortOrder: 1 },
+        { categoryName: 'Regulatory Compliance', name: 'GDPR Compliance', description: 'Data privacy compliance monitoring', sortOrder: 3 },
+        { categoryName: 'Regulatory Compliance', name: 'SEC/FINRA Reporting', description: 'Regulatory reporting automation', sortOrder: 4 },
+        { categoryName: 'Regulatory Compliance', name: 'Audit Automation', description: 'Automated compliance auditing', sortOrder: 5 },
+        
+        // Financial Forecasting missing
+        { categoryName: 'Financial Forecasting', name: 'Revenue Forecasting', description: 'Revenue prediction models', sortOrder: 1 },
+        { categoryName: 'Financial Forecasting', name: 'Expense Forecasting', description: 'Cost and expense prediction', sortOrder: 2 },
+        { categoryName: 'Financial Forecasting', name: 'Market Trend Prediction', description: 'Market direction forecasting', sortOrder: 3 },
+        { categoryName: 'Financial Forecasting', name: 'Cash Flow Projections', description: 'Cash flow forecasting models', sortOrder: 5 },
+        { categoryName: 'Financial Forecasting', name: 'Return Forecasting', description: 'Investment return predictions', sortOrder: 6 },
+        
+        // Institution Type missing
+        { categoryName: 'Institution Type', name: 'Banks', description: 'Banking-specific AI models', sortOrder: 1 },
+        { categoryName: 'Institution Type', name: 'Hedge Funds', description: 'Hedge fund trading models', sortOrder: 2 },
+        { categoryName: 'Institution Type', name: 'Asset Managers', description: 'Asset management solutions', sortOrder: 3 },
+        { categoryName: 'Institution Type', name: 'Insurance Companies', description: 'Insurance industry models', sortOrder: 4 },
+        { categoryName: 'Institution Type', name: 'FinTech Startups', description: 'FinTech innovation models', sortOrder: 5 },
+        
+        // Financial Instruments missing
+        { categoryName: 'Financial Instruments', name: 'Cryptocurrencies', description: 'Digital asset trading models', sortOrder: 5 },
+        { categoryName: 'Financial Instruments', name: 'Forex', description: 'Foreign exchange trading', sortOrder: 6 },
+        
+        // AI Techniques missing
+        { categoryName: 'AI Techniques', name: 'Natural Language Processing (NLP)', description: 'Text and language analysis', sortOrder: 3 },
+        
+        // Credit Scoring missing
+        { categoryName: 'Credit Scoring', name: 'Alternative Credit Data', description: 'Non-traditional credit assessment', sortOrder: 3 },
+        
+        // Market Sentiment Analysis missing
+        { categoryName: 'Market Sentiment Analysis', name: 'Investor Behavior', description: 'Behavioral finance analysis', sortOrder: 3 },
+        { categoryName: 'Market Sentiment Analysis', name: 'Market Trend Analysis', description: 'Technical and fundamental analysis', sortOrder: 4 }
+      ];
+
+      let addedCount = 0;
+      let skippedCount = 0;
+
+      for (const subcatData of missingSubcategories) {
+        const category = categories.find(c => c.name === subcatData.categoryName);
+        if (!category) {
+          console.log(`Category not found: ${subcatData.categoryName}`);
+          continue;
+        }
+
+        try {
+          await storage.createAiModelSubcategory({
+            categoryId: category.id,
+            name: subcatData.name,
+            description: subcatData.description,
+            sortOrder: subcatData.sortOrder,
+            isActive: true
+          });
+          console.log(`Added subcategory: ${subcatData.name}`);
+          addedCount++;
+        } catch (error: any) {
+          if (error.code === '23505') {
+            console.log(`Subcategory already exists: ${subcatData.name}`);
+            skippedCount++;
+          } else {
+            console.error(`Error adding subcategory ${subcatData.name}:`, error);
+          }
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        message: `Added ${addedCount} subcategories, skipped ${skippedCount} existing ones`,
+        addedCount,
+        skippedCount
+      });
+    } catch (error) {
+      console.error("Error adding missing subcategories:", error);
+      res.status(500).json({ success: false, message: "Failed to add subcategories", error: error.message });
+    }
+  });
   
   return httpServer;
 }
