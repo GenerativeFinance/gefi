@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import Layout from "@/components/layout/Layout";
 import { 
   Shield, 
   AlertTriangle, 
@@ -208,6 +209,7 @@ export default function RegulatorDashboard() {
   };
 
   return (
+    <Layout>
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto p-6">
         <div className="mb-8">
@@ -967,5 +969,6 @@ export default function RegulatorDashboard() {
         </Tabs>
       </div>
     </div>
+    </Layout>
   );
 }
