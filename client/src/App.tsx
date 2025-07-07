@@ -39,6 +39,12 @@ import RegulatorDatasetAudits from "@/pages/regulator-dataset-audits";
 import RegulatorComplianceIssues from "@/pages/regulator-compliance-issues";
 import RegulatorCommunications from "@/pages/regulator-communications";
 import RegulatorStandards from "@/pages/regulator-standards";
+import DataProviderPortfolio from "@/pages/data-provider-portfolio";
+import DataProviderPortfolioDatasets from "@/pages/data-provider-portfolio-datasets";
+import DataProviderPortfolioPerformance from "@/pages/data-provider-portfolio-performance";
+import DataProviderCollaboration from "@/pages/data-provider-collaboration";
+import DataProviderCollaborationCompliance from "@/pages/data-provider-collaboration-compliance";
+import DataProviderCollaborationAudit from "@/pages/data-provider-collaboration-audit";
 import Learning from "@/pages/learning";
 import TermsOfService from "@/pages/terms-of-service";
 import DataProcessingAgreement from "@/pages/data-processing-agreement";
@@ -177,6 +183,12 @@ function Router() {
             <Route path="/regulator/compliance-issues" component={RegulatorComplianceIssues} />
             <Route path="/regulator/communications" component={RegulatorCommunications} />
             <Route path="/regulator/standards" component={RegulatorStandards} />
+            <Route path="/data-provider/portfolio" component={DataProviderPortfolio} />
+            <Route path="/data-provider/portfolio/datasets" component={DataProviderPortfolioDatasets} />
+            <Route path="/data-provider/portfolio/performance" component={DataProviderPortfolioPerformance} />
+            <Route path="/data-provider/collaboration" component={DataProviderCollaboration} />
+            <Route path="/data-provider/collaboration/compliance" component={DataProviderCollaborationCompliance} />
+            <Route path="/data-provider/collaboration/audit" component={DataProviderCollaborationAudit} />
           </>
         ) : (
           <>

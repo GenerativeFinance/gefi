@@ -379,6 +379,15 @@ Changelog:
   * Enhanced header navigation logic to properly detect /regulator route and display appropriate submenu
   * Differentiated Regulator submenu from Investor dashboard submenu for specialized regulatory workflow
   * Overview tab now serves as the central dashboard with comprehensive stats cards, audit creation forms, and activity tracking
+- July 7, 2025. Restructured Data Provider Dashboard submenu with hierarchical navigation structure
+  * Created main Data Provider submenu with Dashboard, Portfolio, AI Marketplace, and Collaboration sections
+  * Implemented Portfolio submenu with Datasets and Performance subsections when clicking on Portfolio
+  * Created Collaboration submenu with Compliance and Audit subsections when clicking on Collaboration
+  * Built 6 comprehensive new pages: Portfolio overview, Datasets management, Performance analytics, Collaboration management, Compliance tracking, and Audit logs
+  * Enhanced header navigation logic to properly handle hierarchical submenu structure with specific path checking
+  * Replaced existing Portfolio option with new Portfolio section containing dataset management and performance metrics
+  * Replaced Trading section with Collaboration section for partnership and compliance management
+  * Added proper routing for all new Data Provider pages and ensured submenu navigation works correctly
 ```
 
 ## User Preferences

@@ -180,6 +180,36 @@ export default function Header() {
       ];
     }
 
+    // Data Provider Portfolio submenu - check more specific paths first
+    if (location.startsWith('/data-provider/portfolio')) {
+      return [
+        { name: "Dashboard", href: "/data-provider", icon: BarChart3 },
+        { name: "Portfolio", href: "/data-provider/portfolio", icon: Wallet },
+        { name: "Datasets", href: "/data-provider/portfolio/datasets", icon: Database },
+        { name: "Performance", href: "/data-provider/portfolio/performance", icon: TrendingUp }
+      ];
+    }
+
+    // Data Provider Collaboration submenu - check more specific paths first
+    if (location.startsWith('/data-provider/collaboration')) {
+      return [
+        { name: "Dashboard", href: "/data-provider", icon: BarChart3 },
+        { name: "Collaboration", href: "/data-provider/collaboration", icon: Users },
+        { name: "Compliance", href: "/data-provider/collaboration/compliance", icon: Shield },
+        { name: "Audit", href: "/data-provider/collaboration/audit", icon: FileText }
+      ];
+    }
+
+    // Data Provider submenu - main data provider dashboard
+    if (location.startsWith('/data-provider')) {
+      return [
+        { name: "Dashboard", href: "/data-provider", icon: BarChart3 },
+        { name: "Portfolio", href: "/data-provider/portfolio", icon: Wallet },
+        { name: "AI Marketplace", href: "/marketplace", icon: Store },
+        { name: "Collaboration", href: "/data-provider/collaboration", icon: Users }
+      ];
+    }
+
     // Default submenu - includes main navigation items
     return [
       { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
