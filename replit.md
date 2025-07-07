@@ -325,6 +325,10 @@ Changelog:
   * Made "Skip for now" button more visible and accessible with outline variant and proper event handling
   * Added robust skip functionality with user feedback and query invalidation
   * Improved profile setup robustness with safe field handling and detailed logging
+- July 7, 2025. Fixed Reports submenu navigation to persist on Custom Reports page
+  * Updated header navigation logic to include /custom-reports path in Reports submenu detection
+  * Ensured consistent submenu visibility across all Reports-related pages
+  * Fixed navigation highlighting to properly show Reports submenu when on Custom Reports page
 ```
 
 ## User Preferences

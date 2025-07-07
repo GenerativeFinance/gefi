@@ -95,7 +95,7 @@ export default function Header() {
       ];
     }
     
-    if (location.startsWith('/reports') || location.startsWith('/risk-reports') || location.startsWith('/compliance-reports')) {
+    if (location.startsWith('/reports') || location.startsWith('/risk-reports') || location.startsWith('/compliance-reports') || location.startsWith('/custom-reports')) {
       return [
         { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Reports", href: "/reports", icon: FileText },
