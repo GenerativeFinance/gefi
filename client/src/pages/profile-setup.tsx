@@ -94,7 +94,7 @@ export default function ProfileSetup() {
       
       // Small delay to ensure cache invalidation completes before navigation
       setTimeout(() => {
-        navigate('/');
+        navigate('/portfolio');
       }, 100);
     },
     onError: (error) => {
@@ -115,7 +115,9 @@ export default function ProfileSetup() {
     
     // Invalidate queries to refresh user data
     await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-    navigate('/');
+    
+    // Navigate directly to the investor dashboard
+    navigate('/portfolio');
   };
 
   const assetTypes = [
