@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Layout from "@/components/layout/Layout";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { 
   Bot, 
   TrendingUp, 
@@ -150,9 +151,11 @@ export default function PortfolioAIModels() {
                   Manage and optimize your AI-powered investment models
                 </p>
               </div>
-              <Button className="gap-2">
-                <Bot className="h-5 w-5" />
-                Browse Models
+              <Button asChild className="gap-2">
+                <Link href="/marketplace">
+                  <Bot className="h-5 w-5" />
+                  Browse Models
+                </Link>
               </Button>
             </div>
           </div>
