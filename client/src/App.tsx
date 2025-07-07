@@ -54,6 +54,10 @@ import EnterpriseSales from "@/pages/enterprise-sales";
 import ModelFunding from "@/pages/model-funding";
 import BountyFunding from "@/pages/bounty-funding";
 import BotFunding from "@/pages/bot-funding";
+import UserAccess from "@/pages/user-access";
+import Billing from "@/pages/billing";
+import Storage from "@/pages/storage";
+import ApiAccess from "@/pages/api-access";
 
 
 import ProfileSetup from "@/pages/profile-setup";
@@ -140,6 +144,10 @@ function Router() {
             <Route path="/profile" component={UserProfile} />
             <Route path="/settings" component={Settings} />
             <Route path="/profile-setup" component={ProfileSetup} />
+            <Route path="/user-access" component={UserAccess} />
+            <Route path="/billing" component={Billing} />
+            <Route path="/storage" component={Storage} />
+            <Route path="/api-access" component={ApiAccess} />
             <Route path="/developer" component={DeveloperDashboard} />
             <Route path="/backtesting" component={BacktestingEnvironment} />
             <Route path="/live-trading" component={LiveTradingPage} />

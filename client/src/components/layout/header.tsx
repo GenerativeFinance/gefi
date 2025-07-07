@@ -41,7 +41,9 @@ import {
   CreditCard,
   Building,
   Video,
-  Database
+  Database,
+  Key,
+  HardDrive
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -387,6 +389,31 @@ export default function Header() {
                       <Link href="/settings" className="flex items-center">
                         <Settings className="mr-2 h-4 w-4" />
                         Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/user-access" className="flex items-center">
+                        <Users className="mr-2 h-4 w-4" />
+                        User Access
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/billing" className="flex items-center">
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Billing
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/storage" className="flex items-center">
+                        <HardDrive className="mr-2 h-4 w-4" />
+                        Storage
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/api-access" className="flex items-center">
+                        <Key className="mr-2 h-4 w-4" />
+                        API Access
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
