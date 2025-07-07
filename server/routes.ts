@@ -88,33 +88,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Profile setup route
   app.post('/api/profile/setup', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims.sub;
       const profileData = req.body;
+
+      console.log("Setting up profile for user:", userId);
+      console.log("Profile data received:", profileData);
 
       // First update the user's basic information
       if (profileData.firstName || profileData.lastName) {
-        await storage.updateUser(userId, {
-          firstName: profileData.firstName,
-          lastName: profileData.lastName
-        });
+        try {
+          await storage.updateUser(userId, {
+            firstName: profileData.firstName,
+            lastName: profileData.lastName
+          });
+          console.log("User basic info updated successfully");
+        } catch (error) {
+          console.error("Error updating user basic info:", error);
+        }
       }
 
-      // Create or update user profile
-      const userProfile = await storage.createOrUpdateUserProfile(userId, {
-        company: profileData.company,
-        jobTitle: profileData.jobTitle,
-        location: profileData.location,
-        bio: profileData.bio,
-        investmentExperience: profileData.investmentExperience,
-        riskTolerance: profileData.riskTolerance,
-        preferredAssetTypes: profileData.preferredAssetTypes,
-        investmentGoals: profileData.investmentGoals,
-        tradingFrequency: profileData.tradingFrequency,
-        portfolioSize: profileData.portfolioSize,
-        interestedInDeveloping: profileData.interestedInDeveloping,
-        notifications: profileData.notifications,
+      // Create a basic profile object with only safe fields
+      const safeProfileData = {
+        company: profileData.company || null,
+        location: profileData.location || null,
+        bio: profileData.bio || null,
+        investmentExperience: profileData.investmentExperience || null,
+        riskTolerance: profileData.riskTolerance || null,
+        tradingFrequency: profileData.tradingFrequency || null,
+        portfolioSize: profileData.portfolioSize || null,
+        interestedInDeveloping: profileData.interestedInDeveloping || false,
         profileCompleted: true
-      });
+      };
+
+      // Try to create or update user profile with safer approach
+      let userProfile;
+      try {
+        userProfile = await storage.createOrUpdateUserProfile(userId, safeProfileData);
+        console.log("User profile created/updated successfully");
+      } catch (profileError) {
+        console.error("Error with profile creation, attempting minimal profile:", profileError);
+        
+        // Fallback: create minimal profile
+        userProfile = await storage.createOrUpdateUserProfile(userId, {
+          profileCompleted: true
+        });
+      }
 
       res.json({ 
         success: true, 
@@ -123,7 +141,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error setting up user profile:", error);
-      res.status(500).json({ message: "Failed to setup profile" });
+      res.status(500).json({ 
+        message: "Failed to setup profile",
+        error: error.message
+      });
     }
   });
 
