@@ -88,9 +88,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Profile setup route
   app.post('/api/profile/setup', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || req.user?.id;
+      console.log("Full req.user object:", req.user);
+      
+      // Try multiple ways to get user ID depending on auth system used
+      let userId = null;
+      if (req.user?.claims?.sub) {
+        userId = req.user.claims.sub;
+      } else if (req.user?.id) {
+        userId = req.user.id;
+      } else if (req.user?.sub) {
+        userId = req.user.sub;
+      } else if (typeof req.user === 'string') {
+        userId = req.user;
+      }
+      
+      console.log("Extracted userId:", userId);
+      
       if (!userId) {
-        return res.status(401).json({ message: "User not authenticated" });
+        console.error("Could not extract user ID from req.user:", req.user);
+        return res.status(401).json({ message: "User not authenticated - no user ID found" });
       }
       
       const profileData = req.body;

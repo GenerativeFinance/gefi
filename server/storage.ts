@@ -287,8 +287,23 @@ export class DatabaseStorage implements IStorage {
       console.log("Attempting to create/update profile for user:", userId);
       console.log("Profile data:", profile);
       
-      // Try to insert first (simpler approach)
-      try {
+      // First check if profile already exists
+      const existingProfile = await this.getUserProfile(userId);
+      
+      if (existingProfile) {
+        console.log("Profile exists, updating...");
+        const [userProfile] = await db
+          .update(userProfiles)
+          .set({
+            ...profile,
+            updatedAt: new Date(),
+          })
+          .where(eq(userProfiles.userId, userId))
+          .returning();
+        console.log("Profile updated successfully");
+        return userProfile;
+      } else {
+        console.log("Profile doesn't exist, creating...");
         const [userProfile] = await db
           .insert(userProfiles)
           .values({
@@ -300,37 +315,10 @@ export class DatabaseStorage implements IStorage {
           .returning();
         console.log("Profile created successfully");
         return userProfile;
-      } catch (insertError: any) {
-        console.log("Insert failed, trying update:", insertError.message);
-        
-        // If insert fails due to unique constraint, try update
-        if (insertError.message?.includes('duplicate key') || insertError.code === '23505') {
-          const [userProfile] = await db
-            .update(userProfiles)
-            .set({
-              ...profile,
-              updatedAt: new Date(),
-            })
-            .where(eq(userProfiles.userId, userId))
-            .returning();
-          console.log("Profile updated successfully");
-          return userProfile;
-        } else {
-          throw insertError;
-        }
       }
     } catch (error) {
       console.error("Error creating/updating user profile:", error);
-      
-      // Return a minimal profile object if database operations fail
-      return {
-        id: 0,
-        userId,
-        profileCompleted: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        ...profile
-      } as UserProfile;
+      throw new Error(`Failed to create/update profile: ${error.message}`);
     }
   }
 
