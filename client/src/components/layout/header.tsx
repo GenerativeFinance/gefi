@@ -171,7 +171,12 @@ export default function Header() {
     // Regulator submenu
     if (location.startsWith('/regulator')) {
       return [
-        { name: "Dashboard", href: "/regulator", icon: BarChart3 }
+        { name: "Dashboard", href: "/regulator", icon: BarChart3 },
+        { name: "Model Audits", href: "/regulator", icon: Shield },
+        { name: "Dataset Audits", href: "/regulator", icon: Database },
+        { name: "Compliance Issues", href: "/regulator", icon: AlertTriangle },
+        { name: "Communications", href: "/regulator", icon: Globe },
+        { name: "Standards", href: "/regulator", icon: BookOpen }
       ];
     }
 
