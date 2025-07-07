@@ -32,7 +32,20 @@ import {
   Clock,
   FileText,
   Handshake,
-  MessageSquare
+  MessageSquare,
+  Key,
+  Code,
+  Target,
+  Globe,
+  PieChart,
+  Lock,
+  CreditCard,
+  BookOpen,
+  Zap,
+  Building,
+  AlertCircle,
+  UserCheck,
+  Search
 } from "lucide-react";
 
 interface DataProvider {
@@ -478,6 +491,599 @@ const RevenueMonitoringTab = ({ datasets }: { datasets: Dataset[] }) => {
   );
 };
 
+const APIAccessTab = () => {
+  const { data: apiKeys = [] } = useQuery({
+    queryKey: ["/api/api-keys"],
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">API Access & Integration</h3>
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Generate API Key
+        </Button>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              API Keys
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[1, 2].map((key) => (
+                <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Production Key {key}</p>
+                    <p className="text-sm text-muted-foreground">sk_prod_***************</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">Active</Badge>
+                    <Button variant="ghost" size="sm">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Code className="h-5 w-5" />
+              API Documentation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="p-3 border rounded-lg">
+                <h4 className="font-medium">Dataset Access API</h4>
+                <p className="text-sm text-muted-foreground mb-2">RESTful API for dataset access</p>
+                <Button variant="outline" size="sm">View Docs</Button>
+              </div>
+              <div className="p-3 border rounded-lg">
+                <h4 className="font-medium">Real-time Streaming</h4>
+                <p className="text-sm text-muted-foreground mb-2">WebSocket API for live data</p>
+                <Button variant="outline" size="sm">View Docs</Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Usage Analytics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold">12.5K</p>
+              <p className="text-sm text-muted-foreground">API Calls Today</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">45</p>
+              <p className="text-sm text-muted-foreground">Active Integrations</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">99.9%</p>
+              <p className="text-sm text-muted-foreground">Uptime</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">8ms</p>
+              <p className="text-sm text-muted-foreground">Avg Response Time</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const PerformanceTab = () => {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Model Performance & Validation</h3>
+        <Button className="flex items-center gap-2">
+          <Target className="h-4 w-4" />
+          Run Validation
+        </Button>
+      </div>
+
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Performance Metrics</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 border rounded-lg">
+                <p className="text-2xl font-bold text-green-600">94.2%</p>
+                <p className="text-sm text-muted-foreground">Average Accuracy</p>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <p className="text-2xl font-bold text-blue-600">89.7%</p>
+                <p className="text-sm text-muted-foreground">Precision</p>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <p className="text-2xl font-bold text-purple-600">91.3%</p>
+                <p className="text-sm text-muted-foreground">Recall</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Validation Reports</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[1, 2, 3].map((report) => (
+                <div key={report} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Validation Report #{report}</p>
+                    <p className="text-sm text-muted-foreground">Generated 2 days ago</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="default">Passed</Badge>
+                    <Button variant="ghost" size="sm">
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+const MarketInsightsTab = () => {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Market Insights & Trends</h3>
+        <Button className="flex items-center gap-2">
+          <TrendingUp className="h-4 w-4" />
+          Generate Report
+        </Button>
+      </div>
+
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Market Performance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span>Dataset Adoption Rate</span>
+                  <span className="font-semibold">+15.3%</span>
+                </div>
+                <Progress value={73} className="w-full" />
+                
+                <div className="flex items-center justify-between">
+                  <span>Market Impact Score</span>
+                  <span className="font-semibold">8.7/10</span>
+                </div>
+                <Progress value={87} className="w-full" />
+              </div>
+              
+              <div className="space-y-4">
+                <div className="text-center p-4 border rounded-lg">
+                  <p className="text-2xl font-bold text-green-600">$2.3M</p>
+                  <p className="text-sm text-muted-foreground">Market Impact Value</p>
+                </div>
+                <div className="text-center p-4 border rounded-lg">
+                  <p className="text-2xl font-bold text-blue-600">156</p>
+                  <p className="text-sm text-muted-foreground">Models Using Data</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Trend Analysis</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { trend: "Algorithmic Trading", impact: "High", growth: "+23%" },
+                { trend: "Risk Assessment", impact: "Medium", growth: "+12%" },
+                { trend: "Market Sentiment", impact: "High", growth: "+34%" }
+              ].map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{item.trend}</p>
+                    <Badge variant={item.impact === "High" ? "default" : "secondary"}>
+                      {item.impact} Impact
+                    </Badge>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-green-600">{item.growth}</p>
+                    <p className="text-sm text-muted-foreground">Growth</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+const PortfolioManagementTab = () => {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Portfolio Management</h3>
+        <Button className="flex items-center gap-2">
+          <PieChart className="h-4 w-4" />
+          Optimize Portfolio
+        </Button>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Dataset Allocation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { category: "Market Data", allocation: 45, value: "$450K" },
+                { category: "Risk Data", allocation: 30, value: "$300K" },
+                { category: "Alternative Data", allocation: 25, value: "$250K" }
+              ].map((item, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{item.category}</span>
+                    <span className="text-sm">{item.value} ({item.allocation}%)</span>
+                  </div>
+                  <Progress value={item.allocation} className="w-full" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Risk Assessment</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 border rounded-lg">
+                  <p className="text-lg font-bold text-green-600">Low</p>
+                  <p className="text-sm text-muted-foreground">Portfolio Risk</p>
+                </div>
+                <div className="text-center p-3 border rounded-lg">
+                  <p className="text-lg font-bold text-blue-600">0.87</p>
+                  <p className="text-sm text-muted-foreground">Sharpe Ratio</p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span>Diversification Score</span>
+                  <span className="font-semibold">8.2/10</span>
+                </div>
+                <Progress value={82} className="w-full" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+const ComplianceTab = () => {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Data Compliance & Governance</h3>
+        <Button className="flex items-center gap-2">
+          <Shield className="h-4 w-4" />
+          Run Compliance Check
+        </Button>
+      </div>
+
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Compliance Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 border rounded-lg">
+                <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                <p className="font-semibold">GDPR</p>
+                <Badge variant="default">Compliant</Badge>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                <p className="font-semibold">SEC</p>
+                <Badge variant="default">Compliant</Badge>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <AlertTriangle className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
+                <p className="font-semibold">MiFID II</p>
+                <Badge variant="secondary">Pending</Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Governance Policies</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { policy: "Data Retention Policy", status: "Active", updated: "2 days ago" },
+                { policy: "Privacy Protection", status: "Active", updated: "1 week ago" },
+                { policy: "Access Control", status: "Active", updated: "3 days ago" }
+              ].map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{item.policy}</p>
+                    <p className="text-sm text-muted-foreground">Updated {item.updated}</p>
+                  </div>
+                  <Badge variant="default">{item.status}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+const AuditTab = () => {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Audit & Reporting</h3>
+        <Button className="flex items-center gap-2">
+          <FileText className="h-4 w-4" />
+          Generate Audit Report
+        </Button>
+      </div>
+
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Audit Logs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { action: "Dataset Access", user: "model_dev_123", time: "2 hours ago", status: "Success" },
+                { action: "Data Export", user: "analyst_456", time: "4 hours ago", status: "Success" },
+                { action: "API Access", user: "integration_789", time: "6 hours ago", status: "Failed" },
+                { action: "Compliance Check", user: "system", time: "1 day ago", status: "Success" }
+              ].map((log, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{log.action}</p>
+                    <p className="text-sm text-muted-foreground">by {log.user} • {log.time}</p>
+                  </div>
+                  <Badge variant={log.status === "Success" ? "default" : "destructive"}>
+                    {log.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Reports</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { name: "Monthly Compliance Report", date: "Jan 2025", type: "Compliance" },
+                { name: "Data Quality Assessment", date: "Dec 2024", type: "Quality" },
+                { name: "Security Audit Report", date: "Dec 2024", type: "Security" }
+              ].map((report, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{report.name}</p>
+                    <p className="text-sm text-muted-foreground">{report.date} • {report.type}</p>
+                  </div>
+                  <Button variant="ghost" size="sm">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+const UserAccessTab = () => {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">User Access & Permissions</h3>
+        <Button className="flex items-center gap-2">
+          <UserCheck className="h-4 w-4" />
+          Add User
+        </Button>
+      </div>
+
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Access Control</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { role: "Admin", users: 2, permissions: ["Full Access", "User Management", "Billing"] },
+                { role: "Data Scientist", users: 15, permissions: ["Dataset Access", "API Usage", "Reports"] },
+                { role: "Viewer", users: 23, permissions: ["Read Only", "Basic Reports"] }
+              ].map((role, index) => (
+                <div key={index} className="p-4 border rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold">{role.role}</h4>
+                    <Badge variant="outline">{role.users} users</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {role.permissions.map((permission, idx) => (
+                      <Badge key={idx} variant="secondary" className="text-xs">
+                        {permission}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Access</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { user: "alice@company.com", dataset: "Market Data Q1", time: "2 hours ago" },
+                { user: "bob@hedge.fund", dataset: "Risk Metrics", time: "4 hours ago" },
+                { user: "carol@fintech.co", dataset: "Alternative Data", time: "1 day ago" }
+              ].map((access, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{access.user}</p>
+                    <p className="text-sm text-muted-foreground">Accessed {access.dataset}</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{access.time}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+const BillingTab = () => {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Billing & Cost Management</h3>
+        <Button className="flex items-center gap-2">
+          <CreditCard className="h-4 w-4" />
+          Manage Billing
+        </Button>
+      </div>
+
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Revenue Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 border rounded-lg">
+                <p className="text-2xl font-bold text-green-600">$45,230</p>
+                <p className="text-sm text-muted-foreground">This Month</p>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <p className="text-2xl font-bold text-blue-600">$523,450</p>
+                <p className="text-sm text-muted-foreground">Total Revenue</p>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <p className="text-2xl font-bold text-purple-600">234</p>
+                <p className="text-sm text-muted-foreground">Active Subscriptions</p>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <p className="text-2xl font-bold text-orange-600">15.3%</p>
+                <p className="text-sm text-muted-foreground">Growth Rate</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Subscription Management</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { plan: "Enterprise", customers: 12, revenue: "$18,000", growth: "+23%" },
+                { plan: "Professional", customers: 45, revenue: "$22,500", growth: "+15%" },
+                { plan: "Basic", customers: 177, revenue: "$4,730", growth: "+8%" }
+              ].map((plan, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{plan.plan} Plan</p>
+                    <p className="text-sm text-muted-foreground">{plan.customers} customers</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">{plan.revenue}</p>
+                    <p className="text-sm text-green-600">{plan.growth}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Payment History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { date: "Jan 15, 2025", amount: "$45,230", status: "Received", method: "Bank Transfer" },
+                { date: "Dec 15, 2024", amount: "$42,180", status: "Received", method: "Wire Transfer" },
+                { date: "Nov 15, 2024", amount: "$38,950", status: "Received", method: "Bank Transfer" }
+              ].map((payment, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{payment.amount}</p>
+                    <p className="text-sm text-muted-foreground">{payment.date} • {payment.method}</p>
+                  </div>
+                  <Badge variant="default">{payment.status}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
 const CollaborationTab = () => {
   const { data: collaborations = [] } = useQuery({
     queryKey: ["/api/data-collaborations"],
@@ -579,12 +1185,22 @@ export default function DataProviderDashboard() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="datasets">Dataset Management</TabsTrigger>
-            <TabsTrigger value="revenue">Revenue Monitoring</TabsTrigger>
-            <TabsTrigger value="collaboration">Collaboration</TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto">
+            <TabsList className="grid w-full grid-cols-6 lg:grid-cols-12 min-w-max">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="datasets">Datasets</TabsTrigger>
+              <TabsTrigger value="api">API Access</TabsTrigger>
+              <TabsTrigger value="performance">Performance</TabsTrigger>
+              <TabsTrigger value="insights">Market Insights</TabsTrigger>
+              <TabsTrigger value="revenue">Revenue</TabsTrigger>
+              <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+              <TabsTrigger value="compliance">Compliance</TabsTrigger>
+              <TabsTrigger value="audit">Audit</TabsTrigger>
+              <TabsTrigger value="collaboration">Collaboration</TabsTrigger>
+              <TabsTrigger value="access">User Access</TabsTrigger>
+              <TabsTrigger value="billing">Billing</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview">
             <OverviewTab provider={provider || null} datasets={datasets} />
@@ -598,8 +1214,40 @@ export default function DataProviderDashboard() {
             <RevenueMonitoringTab datasets={datasets} />
           </TabsContent>
 
+          <TabsContent value="api">
+            <APIAccessTab />
+          </TabsContent>
+
+          <TabsContent value="performance">
+            <PerformanceTab />
+          </TabsContent>
+
+          <TabsContent value="insights">
+            <MarketInsightsTab />
+          </TabsContent>
+
+          <TabsContent value="portfolio">
+            <PortfolioManagementTab />
+          </TabsContent>
+
+          <TabsContent value="compliance">
+            <ComplianceTab />
+          </TabsContent>
+
+          <TabsContent value="audit">
+            <AuditTab />
+          </TabsContent>
+
           <TabsContent value="collaboration">
             <CollaborationTab />
+          </TabsContent>
+
+          <TabsContent value="access">
+            <UserAccessTab />
+          </TabsContent>
+
+          <TabsContent value="billing">
+            <BillingTab />
           </TabsContent>
         </Tabs>
       </div>
