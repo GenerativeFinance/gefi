@@ -286,18 +286,18 @@ export default function RegulatorDashboard() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 md:py-8">
         {/* Header with User Profile and Controls */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0 mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Regulatory Oversight Dashboard</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl md:text-3xl font-bold">Regulatory Oversight Dashboard</h1>
+            <p className="text-muted-foreground text-sm md:text-base">
               Comprehensive compliance monitoring and AI model governance
             </p>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col space-y-2 md:flex-row md:items-center md:space-y-0 md:space-x-4">
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full md:w-32">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -317,19 +317,21 @@ export default function RegulatorDashboard() {
         </div>
 
         {/* Search and Filter Bar */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex space-x-2">
-            <Input
-              placeholder="Search audits, models, or datasets..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-80"
-            />
-            <Button variant="outline" size="icon">
-              <Search className="h-4 w-4" />
-            </Button>
+        <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0 mb-6">
+          <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
+            <div className="flex space-x-2">
+              <Input
+                placeholder="Search audits, models, or datasets..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1 md:w-80"
+              />
+              <Button variant="outline" size="icon" className="shrink-0">
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
             <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full md:w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -341,159 +343,160 @@ export default function RegulatorDashboard() {
               </SelectContent>
             </Select>
           </div>
-          <Button>
+          <Button className="w-full md:w-auto">
             <Download className="mr-2 h-4 w-4" />
-            Export Dashboard
+            <span className="hidden sm:inline">Export Dashboard</span>
+            <span className="sm:hidden">Export</span>
           </Button>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="activity">Recent Activity</TabsTrigger>
-            <TabsTrigger value="insights">Insights</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+            <TabsTrigger value="overview" className="text-xs md:text-sm">Regulator Overview</TabsTrigger>
+            <TabsTrigger value="analytics" className="text-xs md:text-sm">Analytics</TabsTrigger>
+            <TabsTrigger value="activity" className="text-xs md:text-sm">Recent Activity</TabsTrigger>
+            <TabsTrigger value="insights" className="text-xs md:text-sm">Insights</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
             {/* Enhanced Key Metrics Grid (3x3) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 md:pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">
                         Total Audits ({selectedPeriod})
                       </p>
-                      <p className="text-2xl font-bold">{dashboardData.overview.totalAudits}</p>
+                      <p className="text-xl md:text-2xl font-bold">{dashboardData.overview.totalAudits}</p>
                       <p className="text-xs text-green-600 mt-1">+12% from last period</p>
                     </div>
-                    <BarChart3 className="h-8 w-8 text-blue-600" />
+                    <BarChart3 className="h-6 w-6 md:h-8 md:w-8 text-blue-600 shrink-0" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 md:pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Pending Audits</p>
-                      <p className="text-2xl font-bold">{dashboardData.overview.pendingAudits}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Pending Audits</p>
+                      <p className="text-xl md:text-2xl font-bold">{dashboardData.overview.pendingAudits}</p>
                       <p className="text-xs text-yellow-600 mt-1">3 due this week</p>
                     </div>
-                    <Clock className="h-8 w-8 text-yellow-600" />
+                    <Clock className="h-6 w-6 md:h-8 md:w-8 text-yellow-600 shrink-0" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 md:pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Compliance Rate</p>
-                      <p className={`text-2xl font-bold ${getMetricColor("complianceRate", dashboardData.overview.complianceRate)}`}>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Compliance Rate</p>
+                      <p className={`text-xl md:text-2xl font-bold ${getMetricColor("complianceRate", dashboardData.overview.complianceRate)}`}>
                         {dashboardData.overview.complianceRate}%
                       </p>
                       <p className="text-xs text-green-600 mt-1">+2.1% improvement</p>
                     </div>
-                    <Shield className="h-8 w-8 text-green-600" />
+                    <Shield className="h-6 w-6 md:h-8 md:w-8 text-green-600 shrink-0" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 md:pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Flagged Issues</p>
-                      <p className="text-2xl font-bold text-red-600">{dashboardData.overview.flaggedIssues}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Flagged Issues</p>
+                      <p className="text-xl md:text-2xl font-bold text-red-600">{dashboardData.overview.flaggedIssues}</p>
                       <p className="text-xs text-red-600 mt-1">{dashboardData.overview.criticalIssueCount} critical</p>
                     </div>
-                    <Flag className="h-8 w-8 text-red-600" />
+                    <Flag className="h-6 w-6 md:h-8 md:w-8 text-red-600 shrink-0" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 md:pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Resolved Issues</p>
-                      <p className="text-2xl font-bold text-green-600">{dashboardData.overview.resolvedIssues}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Resolved Issues</p>
+                      <p className="text-xl md:text-2xl font-bold text-green-600">{dashboardData.overview.resolvedIssues}</p>
                       <p className="text-xs text-green-600 mt-1">87% resolution rate</p>
                     </div>
-                    <CheckCircle className="h-8 w-8 text-green-600" />
+                    <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-green-600 shrink-0" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 md:pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Active Standards</p>
-                      <p className="text-2xl font-bold">{dashboardData.overview.activeStandards}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Active Standards</p>
+                      <p className="text-xl md:text-2xl font-bold">{dashboardData.overview.activeStandards}</p>
                       <p className="text-xs text-blue-600 mt-1">2 updates pending</p>
                     </div>
-                    <BookOpen className="h-8 w-8 text-blue-600" />
+                    <BookOpen className="h-6 w-6 md:h-8 md:w-8 text-blue-600 shrink-0" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 md:pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Audit Completion Rate</p>
-                      <p className={`text-2xl font-bold ${getMetricColor("auditCompletionRate", dashboardData.overview.auditCompletionRate)}`}>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Audit Completion Rate</p>
+                      <p className={`text-xl md:text-2xl font-bold ${getMetricColor("auditCompletionRate", dashboardData.overview.auditCompletionRate)}`}>
                         {dashboardData.overview.auditCompletionRate}%
                       </p>
                       <p className="text-xs text-green-600 mt-1">On target</p>
                     </div>
-                    <Target className="h-8 w-8 text-purple-600" />
+                    <Target className="h-6 w-6 md:h-8 md:w-8 text-purple-600 shrink-0" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 md:pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Avg Resolution Time</p>
-                      <p className={`text-2xl font-bold ${getMetricColor("averageResolutionTime", dashboardData.overview.averageResolutionTime)}`}>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Avg Resolution Time</p>
+                      <p className={`text-xl md:text-2xl font-bold ${getMetricColor("averageResolutionTime", dashboardData.overview.averageResolutionTime)}`}>
                         {dashboardData.overview.averageResolutionTime} days
                       </p>
                       <p className="text-xs text-green-600 mt-1">-1.2 days improvement</p>
                     </div>
-                    <TrendingUp className="h-8 w-8 text-green-600" />
+                    <TrendingUp className="h-6 w-6 md:h-8 md:w-8 text-green-600 shrink-0" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 md:pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Critical Issues</p>
-                      <p className="text-2xl font-bold text-red-600">{dashboardData.overview.criticalIssueCount}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Critical Issues</p>
+                      <p className="text-xl md:text-2xl font-bold text-red-600">{dashboardData.overview.criticalIssueCount}</p>
                       <p className="text-xs text-yellow-600 mt-1">Requires attention</p>
                     </div>
-                    <AlertTriangle className="h-8 w-8 text-red-600" />
+                    <AlertTriangle className="h-6 w-6 md:h-8 md:w-8 text-red-600 shrink-0" />
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Enhanced Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
               <Dialog>
                 <DialogTrigger asChild>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-dashed border-primary/20">
-                    <CardContent className="pt-6">
+                    <CardContent className="pt-4 md:pt-6">
                       <div className="flex flex-col items-center text-center space-y-2">
-                        <Plus className="h-8 w-8 text-primary" />
-                        <h3 className="font-semibold">Start New Audit</h3>
-                        <p className="text-sm text-muted-foreground">Initiate compliance review</p>
+                        <Plus className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                        <h3 className="text-sm md:text-base font-semibold">Start New Audit</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground">Initiate compliance review</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -610,11 +613,11 @@ export default function RegulatorDashboard() {
               <Dialog>
                 <DialogTrigger asChild>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-dashed border-red-200">
-                    <CardContent className="pt-6">
+                    <CardContent className="pt-4 md:pt-6">
                       <div className="flex flex-col items-center text-center space-y-2">
-                        <Flag className="h-8 w-8 text-red-600" />
-                        <h3 className="font-semibold">Report Issue</h3>
-                        <p className="text-sm text-muted-foreground">Flag compliance concern</p>
+                        <Flag className="h-6 w-6 md:h-8 md:w-8 text-red-600" />
+                        <h3 className="text-sm md:text-base font-semibold">Report Issue</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground">Flag compliance concern</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -727,11 +730,11 @@ export default function RegulatorDashboard() {
               <Dialog>
                 <DialogTrigger asChild>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-dashed border-blue-200">
-                    <CardContent className="pt-6">
+                    <CardContent className="pt-4 md:pt-6">
                       <div className="flex flex-col items-center text-center space-y-2">
-                        <MessageSquare className="h-8 w-8 text-blue-600" />
-                        <h3 className="font-semibold">Send Communication</h3>
-                        <p className="text-sm text-muted-foreground">Contact stakeholders</p>
+                        <MessageSquare className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+                        <h3 className="text-sm md:text-base font-semibold">Send Communication</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground">Contact stakeholders</p>
                       </div>
                     </CardContent>
                   </Card>
