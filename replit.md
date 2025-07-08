@@ -417,6 +417,10 @@ Changelog:
   * Updated Regulator submenu to use "Overview" instead of "Regulator Overview"
   * Ensured consistent navigation terminology across all user types and dashboard modes
   * Completed full standardization of navigation language for improved user experience
+- July 8, 2025. Fixed submenu consistency for trading-related pages
+  * Updated navigation logic to ensure Order History and Strategies pages show the same submenu as Trading and Live Trading pages
+  * Added /orders and /strategies routes to trading submenu condition for consistent navigation experience
+  * Maintains uniform submenu structure: Overview, Live Trading, Trading Bots, Order History, Strategies
 ```
 
 ## User Preferences

@@ -117,7 +117,7 @@ export default function Header() {
       ];
     }
     
-    if (location.startsWith('/trading') || location.startsWith('/live-trading')) {
+    if (location.startsWith('/trading') || location.startsWith('/live-trading') || location.startsWith('/orders') || location.startsWith('/strategies')) {
       return [
         { name: "Overview", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Live Trading", href: "/live-trading", icon: TrendingUp },
