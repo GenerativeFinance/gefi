@@ -290,7 +290,7 @@ export default function RegulatorDashboard() {
         {/* Header with User Profile and Controls */}
         <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0 mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold">Regulatory Oversight Dashboard</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Regulator Overview</h1>
             <p className="text-muted-foreground text-sm md:text-base">
               Comprehensive compliance monitoring and AI model governance
             </p>

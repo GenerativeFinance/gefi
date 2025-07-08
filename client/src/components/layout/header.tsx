@@ -161,7 +161,7 @@ export default function Header() {
     // Developer submenu
     if (isDeveloperPage) {
       return [
-        { name: "Dashboard", href: "/developer", icon: BarChart3 },
+        { name: "Overview", href: "/developer", icon: BarChart3 },
         { name: "Backtesting", href: "/backtesting", icon: TrendingUp },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
         { name: "Market Data", href: "/market-data", icon: Database },
@@ -173,7 +173,7 @@ export default function Header() {
     // Regulator submenu
     if (location.startsWith('/regulator')) {
       return [
-        { name: "Overview", href: "/regulator", icon: BarChart3 },
+        { name: "Regulator Overview", href: "/regulator", icon: BarChart3 },
         { name: "Model Audits", href: "/regulator/model-audits", icon: Shield },
         { name: "Dataset Audits", href: "/regulator/dataset-audits", icon: Database },
         { name: "Compliance Issues", href: "/regulator/compliance-issues", icon: AlertTriangle },
@@ -185,7 +185,7 @@ export default function Header() {
     // Data Provider Portfolio submenu - check more specific paths first
     if (location.startsWith('/data-provider/portfolio')) {
       return [
-        { name: "Dashboard", href: "/data-provider", icon: BarChart3 },
+        { name: "Overview", href: "/data-provider", icon: BarChart3 },
         { name: "Portfolio", href: "/data-provider/portfolio", icon: Wallet },
         { name: "Datasets", href: "/data-provider/portfolio/datasets", icon: Database },
         { name: "Performance", href: "/data-provider/portfolio/performance", icon: TrendingUp }
@@ -195,7 +195,7 @@ export default function Header() {
     // Data Provider Collaboration submenu - check more specific paths first
     if (location.startsWith('/data-provider/collaboration')) {
       return [
-        { name: "Dashboard", href: "/data-provider", icon: BarChart3 },
+        { name: "Overview", href: "/data-provider", icon: BarChart3 },
         { name: "Collaboration", href: "/data-provider/collaboration", icon: Users },
         { name: "Compliance", href: "/data-provider/collaboration/compliance", icon: Shield },
         { name: "Audit", href: "/data-provider/collaboration/audit", icon: FileText }
@@ -205,7 +205,7 @@ export default function Header() {
     // Data Provider submenu - main data provider dashboard
     if (location.startsWith('/data-provider')) {
       return [
-        { name: "Dashboard", href: "/data-provider", icon: BarChart3 },
+        { name: "Overview", href: "/data-provider", icon: BarChart3 },
         { name: "Portfolio", href: "/data-provider/portfolio", icon: Wallet },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
         { name: "Collaboration", href: "/data-provider/collaboration", icon: Users }
@@ -214,7 +214,7 @@ export default function Header() {
 
     // Default submenu - includes main navigation items
     return [
-      { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
+      { name: "Overview", href: "/investor-dashboard", icon: BarChart3 },
       { name: "Portfolio", href: "/portfolio", icon: Wallet },
       { name: "AI Marketplace", href: "/marketplace", icon: Store },
       { name: "Trading", href: "/live-trading", icon: TrendingUp },

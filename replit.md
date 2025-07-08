@@ -399,6 +399,13 @@ Changelog:
   * Added upcoming audits section, performance analytics, issue distribution analysis, and regulatory insights
   * Integrated user profile controls, notification system, settings access, and comprehensive export functionality
   * Built interactive dashboard with progress bars, trend indicators, priority badges, and activity icons for enhanced usability
+- July 8, 2025. Standardized dashboard naming conventions for consistent user experience
+  * Changed all dashboard main titles from "Dashboard" to "Overview" for consistency
+  * Updated Developer Dashboard title from "Developer Dashboard" to "Developer Overview"
+  * Updated Data Provider Dashboard title from "Data Provider Dashboard" to "Data Provider Overview"
+  * Updated Regulator Dashboard title from "Regulatory Oversight" to "Regulator Overview"
+  * Updated all navigation submenu items to use "Overview" instead of "Dashboard" for main navigation options
+  * Maintained consistency across header navigation for all user types (Investor, Developer, Data Provider, Regulator)
 ```
 
 ## User Preferences

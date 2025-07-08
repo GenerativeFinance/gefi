@@ -1335,7 +1335,7 @@ export default function DataProviderDashboard() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Data Provider Dashboard</h1>
+            <h1 className="text-3xl font-bold">Data Provider Overview</h1>
             <p className="text-muted-foreground">
               Manage your datasets, monitor revenue, and collaborate with developers
             </p>

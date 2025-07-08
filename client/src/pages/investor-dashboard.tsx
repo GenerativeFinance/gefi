@@ -157,7 +157,7 @@ export default function InvestorDashboard() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Investor Dashboard</h1>
+            <h1 className="text-3xl font-bold">Investor Overview</h1>
             <p className="text-muted-foreground">Your investment overview and performance metrics</p>
           </div>
           <Badge variant="outline" className="text-sm">
