@@ -411,6 +411,12 @@ Changelog:
   * Streamlined to 4 core tabs: Overview, Datasets, Market Insights, and Revenue
   * Updated grid layout from 12 columns to 4 columns for better mobile responsiveness
   * Focused on essential data provider functions for improved user experience
+- July 8, 2025. Completed comprehensive "Dashboard" to "Overview" terminology standardization
+  * Updated all submenu navigation items across the entire application to use "Overview" instead of "Dashboard"
+  * Fixed Market Insights, Portfolio, Reports, Risk Management, Trading, Funding, Learning, and AI Marketplace submenus
+  * Updated Regulator submenu to use "Overview" instead of "Regulator Overview"
+  * Ensured consistent navigation terminology across all user types and dashboard modes
+  * Completed full standardization of navigation language for improved user experience
 ```
 
 ## User Preferences

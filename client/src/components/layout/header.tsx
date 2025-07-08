@@ -78,7 +78,7 @@ export default function Header() {
   const getSubmenuItems = () => {
     if (location.startsWith('/market-insights') || location === '/market-sentiment') {
       return [
-        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
+        { name: "Overview", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Real-Time Data", href: "/live-trading", icon: TrendingUp },
         { name: "AI Insights", href: "/market-insights", icon: Brain },
         { name: "Market Sentiment", href: "/market-sentiment", icon: BarChart3 },
@@ -89,7 +89,7 @@ export default function Header() {
     
     if (location.startsWith('/portfolio') || location.startsWith('/rebalance-actions')) {
       return [
-        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
+        { name: "Overview", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Portfolio", href: "/portfolio", icon: Wallet },
         { name: "AI Models", href: "/portfolio/ai-models", icon: Bot },
         { name: "Rebalancing", href: "/rebalance-actions", icon: Target },
@@ -99,7 +99,7 @@ export default function Header() {
     
     if (location.startsWith('/reports') || location.startsWith('/risk-reports') || location.startsWith('/compliance-reports') || location.startsWith('/custom-reports')) {
       return [
-        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
+        { name: "Overview", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Reports", href: "/reports", icon: FileText },
         { name: "Risk Analysis", href: "/risk-reports", icon: Shield },
         { name: "Compliance", href: "/compliance-reports", icon: Building },
@@ -109,7 +109,7 @@ export default function Header() {
     
     if (location.startsWith('/risk')) {
       return [
-        { name: "Dashboard", href: "/risk-dashboard", icon: Shield },
+        { name: "Overview", href: "/risk-dashboard", icon: Shield },
         { name: "Assessment", href: "/risk-assessment", icon: Target },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
         { name: "Alerts", href: "/risk-alerts", icon: Bell },
@@ -119,7 +119,7 @@ export default function Header() {
     
     if (location.startsWith('/trading') || location.startsWith('/live-trading')) {
       return [
-        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
+        { name: "Overview", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Live Trading", href: "/live-trading", icon: TrendingUp },
         { name: "Trading Bots", href: "/trading-bots", icon: Bot },
         { name: "Order History", href: "/orders", icon: FileText },
@@ -129,7 +129,7 @@ export default function Header() {
     
     if (location.includes('funding')) {
       return [
-        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
+        { name: "Overview", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Funding Hub", href: "/funding", icon: Building },
         { name: "Bot Funding", href: "/bot-funding", icon: DollarSign },
         { name: "AI Model Funding", href: "/model-funding", icon: CircleDollarSign },
@@ -139,7 +139,7 @@ export default function Header() {
     
     if (location.startsWith('/learning') || location.startsWith('/tutorials') || location.startsWith('/webinars') || location.startsWith('/docs') || location.startsWith('/community')) {
       return [
-        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
+        { name: "Overview", href: "/investor-dashboard", icon: BarChart3 },
         { name: "Learning", href: "/learning", icon: GraduationCap },
         { name: "Tutorials", href: "/tutorials", icon: BookOpen },
         { name: "Webinars", href: "/webinars", icon: Video },
@@ -150,7 +150,7 @@ export default function Header() {
     
     if (location.startsWith('/marketplace') || location.startsWith('/my-subscriptions') || location.startsWith('/developers') || location.startsWith('/trading-bots') || location.startsWith('/categories')) {
       return [
-        { name: "Dashboard", href: "/investor-dashboard", icon: BarChart3 },
+        { name: "Overview", href: "/investor-dashboard", icon: BarChart3 },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
         { name: "Categories", href: "/categories", icon: Grid },
         { name: "My Subscriptions", href: "/my-subscriptions", icon: CreditCard },
@@ -173,7 +173,7 @@ export default function Header() {
     // Regulator submenu
     if (location.startsWith('/regulator')) {
       return [
-        { name: "Regulator Overview", href: "/regulator", icon: BarChart3 },
+        { name: "Overview", href: "/regulator", icon: BarChart3 },
         { name: "Model Audits", href: "/regulator/model-audits", icon: Shield },
         { name: "Dataset Audits", href: "/regulator/dataset-audits", icon: Database },
         { name: "Compliance Issues", href: "/regulator/compliance-issues", icon: AlertTriangle },
