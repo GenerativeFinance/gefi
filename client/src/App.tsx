@@ -89,6 +89,9 @@ import ComplianceReports from "@/pages/compliance-reports";
 import RiskReports from "@/pages/risk-reports";
 import MarketData from "@/pages/market-data";
 import CustomReports from "@/pages/custom-reports";
+import DeveloperProfile from "@/pages/developer-profile";
+import DataProviderProfile from "@/pages/data-provider-profile";
+import RegulatorProfile from "@/pages/regulator-profile";
 
 
 function Router() {
@@ -158,6 +161,9 @@ function Router() {
             <Route path="/bounties" component={Bounties} />
             <Route path="/bounties/leaderboard" component={BountyLeaderboard} />
             <Route path="/user/:userId" component={UserProfile} />
+            <Route path="/developer/:developerId" component={DeveloperProfile} />
+            <Route path="/data-provider/:providerId" component={DataProviderProfile} />
+            <Route path="/regulator/:regulatorId" component={RegulatorProfile} />
             <Route path="/learning" component={Learning} />
             <Route path="/model/:id" component={ModelProfile} />
             <Route path="/trading-bots" component={TradingBots} />
