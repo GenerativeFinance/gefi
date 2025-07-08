@@ -421,6 +421,19 @@ Changelog:
   * Updated navigation logic to ensure Order History and Strategies pages show the same submenu as Trading and Live Trading pages
   * Added /orders and /strategies routes to trading submenu condition for consistent navigation experience
   * Maintains uniform submenu structure: Overview, Live Trading, Trading Bots, Order History, Strategies
+- July 8, 2025. Implemented comprehensive Investor Dashboard enhancements based on user analysis
+  * Built comprehensive tabbed interface with 7 tabs: Overview, Holdings, Analytics, Transactions, Watchlist, AI Models, Insights
+  * Added detailed asset allocation visualization with interactive pie charts showing distribution across stocks, crypto, AI models, bonds, and cash
+  * Integrated real-time portfolio performance charts with benchmark comparison using Chart.js and Recharts
+  * Enhanced portfolio overview with cash balance, buying power, and margin information
+  * Created comprehensive holdings view with top 5 holdings showing allocation percentages and performance
+  * Built analytics tab with advanced metrics: Sharpe ratio, max drawdown, beta, alpha, volatility, VaR, and risk assessment
+  * Implemented complete transaction history with detailed buy/sell records, dates, prices, and quantities
+  * Added interactive watchlist feature with real-time price tracking and percentage changes for monitored assets
+  * Enhanced AI model performance tracking with detailed metrics: accuracy, trades count, P&L, subscription costs, and status
+  * Created AI-driven market insights section with sentiment analysis, confidence scoring, and impact assessment
+  * Added export functionality, settings access, and comprehensive visual charts throughout dashboard
+  * Addressed all major missing elements identified in user analysis: diversification, market data integration, transaction history, watchlist, visualizations, and AI-specific enhancements
 ```
 
 ## User Preferences
