@@ -1350,19 +1350,11 @@ export default function DataProviderDashboard() {
 
         <Tabs defaultValue="overview" className="space-y-6">
           <div className="w-full overflow-x-auto">
-            <TabsList className="grid w-full grid-cols-6 lg:grid-cols-12 min-w-max">
+            <TabsList className="grid w-full grid-cols-4 min-w-max">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="datasets">Datasets</TabsTrigger>
-              <TabsTrigger value="api">API Access</TabsTrigger>
-              <TabsTrigger value="performance">Performance</TabsTrigger>
               <TabsTrigger value="insights">Market Insights</TabsTrigger>
               <TabsTrigger value="revenue">Revenue</TabsTrigger>
-              <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-              <TabsTrigger value="compliance">Compliance</TabsTrigger>
-              <TabsTrigger value="audit">Audit</TabsTrigger>
-              <TabsTrigger value="collaboration">Collaboration</TabsTrigger>
-              <TabsTrigger value="access">User Access</TabsTrigger>
-              <TabsTrigger value="billing">Billing</TabsTrigger>
             </TabsList>
           </div>
 
@@ -1378,40 +1370,8 @@ export default function DataProviderDashboard() {
             <RevenueMonitoringTab datasets={datasets} />
           </TabsContent>
 
-          <TabsContent value="api">
-            <APIAccessTab />
-          </TabsContent>
-
-          <TabsContent value="performance">
-            <PerformanceTab />
-          </TabsContent>
-
           <TabsContent value="insights">
             <MarketInsightsTab />
-          </TabsContent>
-
-          <TabsContent value="portfolio">
-            <PortfolioManagementTab />
-          </TabsContent>
-
-          <TabsContent value="compliance">
-            <ComplianceTab />
-          </TabsContent>
-
-          <TabsContent value="audit">
-            <AuditTab />
-          </TabsContent>
-
-          <TabsContent value="collaboration">
-            <CollaborationTab />
-          </TabsContent>
-
-          <TabsContent value="access">
-            <UserAccessTab />
-          </TabsContent>
-
-          <TabsContent value="billing">
-            <BillingTab />
           </TabsContent>
         </Tabs>
       </div>

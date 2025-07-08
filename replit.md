@@ -406,6 +406,11 @@ Changelog:
   * Updated Regulator Dashboard title from "Regulatory Oversight" to "Regulator Overview"
   * Updated all navigation submenu items to use "Overview" instead of "Dashboard" for main navigation options
   * Maintained consistency across header navigation for all user types (Investor, Developer, Data Provider, Regulator)
+- July 8, 2025. Simplified Data Provider Dashboard by removing unnecessary tabs
+  * Removed 8 tabs: API Access, Performance, Portfolio, Compliance, Audit, Collaboration, User Access, and Billing
+  * Streamlined to 4 core tabs: Overview, Datasets, Market Insights, and Revenue
+  * Updated grid layout from 12 columns to 4 columns for better mobile responsiveness
+  * Focused on essential data provider functions for improved user experience
 ```
 
 ## User Preferences
