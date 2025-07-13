@@ -25,6 +25,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Debug route to show OAuth callback URLs
+  app.get('/api/debug/oauth-urls', (req, res) => {
+    const baseUrl = process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` : 'http://localhost:5000';
+    res.json({
+      baseUrl,
+      callbacks: {
+        google: `${baseUrl}/api/auth/google/callback`,
+        github: `${baseUrl}/api/auth/github/callback`,
+        linkedin: `${baseUrl}/api/auth/linkedin/callback`
+      },
+      instructions: {
+        github: {
+          step1: "Go to https://github.com/settings/developers",
+          step2: "Click on OAuth Apps",
+          step3: "Find your GeFi application",
+          step4: `Set Authorization callback URL to: ${baseUrl}/api/auth/github/callback`,
+          step5: `Set Homepage URL to: ${baseUrl}`
+        }
+      }
+    });
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
