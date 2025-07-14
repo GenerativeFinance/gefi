@@ -416,46 +416,51 @@ export default function Header() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <div className="px-2 py-1">
-                      <p className="text-sm font-medium text-muted-foreground">Dashboard Mode</p>
-                    </div>
-                    <DropdownMenuItem asChild>
-                      <Link href="/investor-dashboard" className="flex items-center">
-                        <BarChart3 className="mr-2 h-4 w-4" />
-                        Investor
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/developer" className="flex items-center">
-                        <Code className="mr-2 h-4 w-4" />
-                        Developer
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/data-provider" className="flex items-center">
-                        <Database className="mr-2 h-4 w-4" />
-                        Data Provider
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/regulator" className="flex items-center">
-                        <Shield className="mr-2 h-4 w-4" />
-                        Regulator
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin" className="flex items-center">
-                        <Users className="mr-2 h-4 w-4" />
-                        Admin
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/moderator" className="flex items-center">
-                        <Flag className="mr-2 h-4 w-4" />
-                        Moderator
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    {/* Dashboard Mode - Only for Admin and Moderator users */}
+                    {(user.role === 'admin' || user.role === 'moderator') && (
+                      <>
+                        <div className="px-2 py-1">
+                          <p className="text-sm font-medium text-muted-foreground">Dashboard Mode</p>
+                        </div>
+                        <DropdownMenuItem asChild>
+                          <Link href="/investor-dashboard" className="flex items-center">
+                            <BarChart3 className="mr-2 h-4 w-4" />
+                            Investor
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/developer" className="flex items-center">
+                            <Code className="mr-2 h-4 w-4" />
+                            Developer
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/data-provider" className="flex items-center">
+                            <Database className="mr-2 h-4 w-4" />
+                            Data Provider
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/regulator" className="flex items-center">
+                            <Shield className="mr-2 h-4 w-4" />
+                            Regulator
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin" className="flex items-center">
+                            <Users className="mr-2 h-4 w-4" />
+                            Admin
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/moderator" className="flex items-center">
+                            <Flag className="mr-2 h-4 w-4" />
+                            Moderator
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
                     <DropdownMenuItem asChild>
                       <Link href="/user-access" className="flex items-center">
                         <Users className="mr-2 h-4 w-4" />
