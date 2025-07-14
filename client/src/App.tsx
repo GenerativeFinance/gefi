@@ -104,6 +104,7 @@ import CustomReports from "@/pages/custom-reports";
 import DeveloperProfile from "@/pages/developer-profile";
 import DataProviderProfile from "@/pages/data-provider-profile";
 import RegulatorProfile from "@/pages/regulator-profile";
+import InvestmentInsights from "@/pages/investment-insights";
 
 
 function Router() {
@@ -204,6 +205,7 @@ function Router() {
             <Route path="/risk-reports" component={RiskReports} />
             <Route path="/custom-reports" component={CustomReports} />
             <Route path="/market-data" component={MarketData} />
+            <Route path="/investment-insights" component={InvestmentInsights} />
             <Route path="/regulator" component={RegulatorDashboard} />
             <Route path="/regulator/model-audits" component={RegulatorModelAudits} />
             <Route path="/regulator/dataset-audits" component={RegulatorDatasetAudits} />

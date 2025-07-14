@@ -55,7 +55,7 @@ ChartJS.register(
   ArcElement
 );
 
-// Dashboard overview data
+// Dashboard overview data with enhanced metrics
 const portfolioOverview = {
   totalValue: 142500,
   dailyChange: 2850,
@@ -65,7 +65,16 @@ const portfolioOverview = {
   benchmark: 18.1,
   cashBalance: 12750,
   marginUsed: 5200,
-  buyingPower: 45300
+  buyingPower: 45300,
+  // Enhanced risk-adjusted metrics
+  sharpeRatio: 1.42,
+  benchmarkSharpe: 1.18,
+  maxDrawdown: -8.5,
+  benchmarkDrawdown: -12.3,
+  beta: 0.94,
+  alpha: 6.2,
+  volatility: 14.8,
+  var95: -3.2  // 95% VaR
 };
 
 const quickStats = [
@@ -565,28 +574,44 @@ export default function InvestorDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle>Performance Analysis</CardTitle>
+                  <CardDescription>Risk-adjusted returns and benchmark comparisons</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span>Sharpe Ratio</span>
-                      <span className="font-bold">1.24</span>
+                      <div className="text-right">
+                        <span className="font-bold text-green-600">{portfolioOverview.sharpeRatio}</span>
+                        <div className="text-xs text-muted-foreground">vs {portfolioOverview.benchmarkSharpe} benchmark</div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span>Max Drawdown</span>
-                      <span className="font-bold text-red-600">-8.3%</span>
+                      <div className="text-right">
+                        <span className="font-bold text-green-600">{portfolioOverview.maxDrawdown}%</span>
+                        <div className="text-xs text-muted-foreground">vs {portfolioOverview.benchmarkDrawdown}% benchmark</div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span>Beta</span>
-                      <span className="font-bold">0.87</span>
+                      <div className="text-right">
+                        <span className="font-bold">{portfolioOverview.beta}</span>
+                        <div className="text-xs text-muted-foreground">Market correlation</div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span>Alpha</span>
-                      <span className="font-bold text-green-600">+3.2%</span>
+                      <div className="text-right">
+                        <span className="font-bold text-green-600">+{portfolioOverview.alpha}%</span>
+                        <div className="text-xs text-muted-foreground">Excess return</div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span>Volatility</span>
-                      <span className="font-bold">14.6%</span>
+                      <div className="text-right">
+                        <span className="font-bold">{portfolioOverview.volatility}%</span>
+                        <div className="text-xs text-muted-foreground">Annualized</div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -595,29 +620,66 @@ export default function InvestorDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle>Risk Metrics</CardTitle>
+                  <CardDescription>Value at Risk and diversification analysis</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span>Value at Risk (95%)</span>
-                      <span className="font-bold">-{formatCurrency(7125)}</span>
+                      <div className="text-right">
+                        <span className="font-bold text-red-600">{portfolioOverview.var95}%</span>
+                        <div className="text-xs text-muted-foreground">Daily VaR</div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span>Concentration Risk</span>
-                      <span className="font-bold text-orange-600">Medium</span>
+                      <div className="text-right">
+                        <span className="font-bold text-orange-600">Medium</span>
+                        <div className="text-xs text-muted-foreground">Top 5 holdings: 67%</div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span>Sector Diversification</span>
-                      <span className="font-bold">7 sectors</span>
+                      <div className="text-right">
+                        <span className="font-bold">7 sectors</span>
+                        <div className="text-xs text-muted-foreground">Well diversified</div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span>Geographic Exposure</span>
-                      <span className="font-bold">4 regions</span>
+                      <div className="text-right">
+                        <span className="font-bold">4 regions</span>
+                        <div className="text-xs text-muted-foreground">Global exposure</div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
+            
+            {/* Benchmark Comparison */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Benchmark Comparison</CardTitle>
+                <CardDescription>Performance vs S&P 500 and sector indices</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">+{portfolioOverview.ytdReturn}%</div>
+                    <div className="text-sm text-muted-foreground">Your Portfolio YTD</div>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-2xl font-bold text-gray-600">+{portfolioOverview.benchmark}%</div>
+                    <div className="text-sm text-muted-foreground">S&P 500 YTD</div>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">+{(portfolioOverview.ytdReturn - portfolioOverview.benchmark).toFixed(1)}%</div>
+                    <div className="text-sm text-muted-foreground">Outperformance</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Transactions Tab */}

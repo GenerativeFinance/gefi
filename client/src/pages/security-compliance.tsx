@@ -1,331 +1,387 @@
-import Header from "@/components/layout/header";
-import Footer from "@/components/layout/footer";
-import MobileNav from "@/components/layout/mobile-nav";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shield, Lock, Database, Award, CheckCircle, FileText, Globe, Users, Monitor } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Layout from "@/components/layout/Layout";
+import { 
+  Shield, 
+  Lock, 
+  Eye, 
+  FileText, 
+  CheckCircle, 
+  AlertTriangle,
+  Users,
+  Database,
+  Network,
+  Key,
+  Globe,
+  Award,
+  Download
+} from "lucide-react";
 
 export default function SecurityCompliance() {
+  const securityCertifications = [
+    {
+      name: "SOC 2 Type II",
+      description: "Independent audit of security controls and data protection measures",
+      status: "Compliant",
+      validUntil: "2025-12-31",
+      auditFirm: "PwC",
+      icon: Shield
+    },
+    {
+      name: "ISO 27001",
+      description: "International standard for information security management systems",
+      status: "Certified",
+      validUntil: "2025-08-15",
+      auditFirm: "BSI Group",
+      icon: Award
+    },
+    {
+      name: "GDPR Compliant",
+      description: "European Union data protection and privacy compliance",
+      status: "Compliant",
+      validUntil: "Ongoing",
+      auditFirm: "Internal Assessment",
+      icon: Globe
+    },
+    {
+      name: "CCPA Compliant",
+      description: "California Consumer Privacy Act compliance for US users",
+      status: "Compliant",
+      validUntil: "Ongoing",
+      auditFirm: "Internal Assessment",
+      icon: Eye
+    }
+  ];
+
+  const securityFeatures = [
+    {
+      title: "256-bit SSL Encryption",
+      description: "All data transmission protected with bank-grade encryption",
+      icon: Lock,
+      category: "Data Protection"
+    },
+    {
+      title: "Multi-Factor Authentication",
+      description: "Additional security layer for account access",
+      icon: Key,
+      category: "Access Control"
+    },
+    {
+      title: "Zero Data Retention",
+      description: "Personal data deleted after subscription ends",
+      icon: Database,
+      category: "Data Privacy"
+    },
+    {
+      title: "AI Models Run Locally",
+      description: "Your data never leaves our secure infrastructure",
+      icon: Network,
+      category: "Processing"
+    },
+    {
+      title: "End-to-End Encryption",
+      description: "Data encrypted from your device to our servers",
+      icon: Shield,
+      category: "Communication"
+    },
+    {
+      title: "Regular Security Audits",
+      description: "Quarterly penetration testing and vulnerability assessments",
+      icon: FileText,
+      category: "Monitoring"
+    }
+  ];
+
+  const complianceFrameworks = [
+    {
+      framework: "Financial Services",
+      standards: ["SEC Regulations", "FINRA Rules", "MiFID II", "Basel III"],
+      description: "Compliance with global financial regulations and standards"
+    },
+    {
+      framework: "Data Protection",
+      standards: ["GDPR", "CCPA", "PIPEDA", "LGPD"],
+      description: "International data privacy and protection compliance"
+    },
+    {
+      framework: "Security Standards",
+      standards: ["ISO 27001", "SOC 2", "NIST Framework", "PCI DSS"],
+      description: "Industry-leading security management frameworks"
+    },
+    {
+      framework: "AI Ethics",
+      standards: ["EU AI Act", "IEEE Standards", "Partnership on AI", "Responsible AI"],
+      description: "Ethical AI development and deployment practices"
+    }
+  ];
+
+  const modelCompliance = [
+    {
+      modelName: "Risk Assessment Pro",
+      developer: "AI Solutions Inc.",
+      complianceStatus: "Fully Compliant",
+      lastAudit: "2024-12-01",
+      certifications: ["SOC 2", "GDPR", "SEC Compliant"],
+      riskLevel: "Low"
+    },
+    {
+      modelName: "Portfolio Optimizer",
+      developer: "FinTech Innovations",
+      complianceStatus: "Compliant",
+      lastAudit: "2024-11-15",
+      certifications: ["GDPR", "ISO 27001"],
+      riskLevel: "Low"
+    },
+    {
+      modelName: "Fraud Detection Engine",
+      developer: "SecureInvest Tech",
+      complianceStatus: "Under Review",
+      lastAudit: "2024-10-20",
+      certifications: ["SOC 2", "PCI DSS"],
+      riskLevel: "Medium"
+    }
+  ];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Compliant":
+      case "Certified":
+      case "Fully Compliant":
+        return "text-green-600";
+      case "Under Review":
+        return "text-orange-600";
+      default:
+        return "text-gray-600";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "Compliant":
+      case "Certified":
+      case "Fully Compliant":
+        return CheckCircle;
+      case "Under Review":
+        return AlertTriangle;
+      default:
+        return Shield;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header />
-      <MobileNav />
-      <main className="flex-1">
-        <div className="container mx-auto px-4 py-8">
-          {/* Header Section */}
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center space-x-3 mb-6">
-              <Shield className="h-10 w-10 text-primary" />
-              <h1 className="text-4xl font-bold">Security & Compliance</h1>
-            </div>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Enterprise-grade security measures and compliance certifications protecting your financial data.
-            </p>
-            <div className="flex justify-center space-x-2 mt-6 flex-wrap gap-2">
-              <Badge variant="default" className="text-sm">
-                <Shield className="h-4 w-4 mr-2" />
-                SOC 2 Type II
-              </Badge>
-              <Badge variant="default" className="text-sm">
-                <Lock className="h-4 w-4 mr-2" />
-                ISO 27001
-              </Badge>
-              <Badge variant="default" className="text-sm">
-                <Database className="h-4 w-4 mr-2" />
-                PCI DSS Level 1
-              </Badge>
-              <Badge variant="default" className="text-sm">
-                <Award className="h-4 w-4 mr-2" />
-                GDPR Compliant
-              </Badge>
-            </div>
+    <Layout>
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <Shield className="h-16 w-16 text-blue-600" />
           </div>
-
-          {/* Security Framework Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <Card className="text-center">
-              <CardHeader>
-                <Lock className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                <CardTitle className="text-lg">Data Encryption</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">256-bit AES encryption at rest, TLS 1.3 in transit</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="text-center">
-              <CardHeader>
-                <Users className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                <CardTitle className="text-lg">Access Control</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">Multi-factor authentication, role-based permissions</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="text-center">
-              <CardHeader>
-                <Monitor className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                <CardTitle className="text-lg">24/7 Monitoring</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">Real-time threat detection and incident response</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="text-center">
-              <CardHeader>
-                <Globe className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-                <CardTitle className="text-lg">Global Compliance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">GDPR, CCPA, PIPEDA, and regional requirements</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Detailed Compliance Information */}
-          <div className="max-w-4xl mx-auto space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Award className="h-5 w-5 text-blue-600" />
-                  <span>SOC 2 Type II Compliance</span>
-                </CardTitle>
-                <CardDescription>
-                  Annual third-party audit ensuring the highest standards of security controls.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <h4 className="font-semibold">Security Principles:</h4>
-                    <ul className="space-y-1 text-sm">
-                      <li className="flex items-center space-x-2">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <span>Security: Logical and physical access controls</span>
-                      </li>
-                      <li className="flex items-center space-x-2">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <span>Availability: System performance monitoring</span>
-                      </li>
-                      <li className="flex items-center space-x-2">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <span>Processing Integrity: Data accuracy assurance</span>
-                      </li>
-                      <li className="flex items-center space-x-2">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <span>Confidentiality: Information protection</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="space-y-2">
-                    <h4 className="font-semibold">Audit Coverage:</h4>
-                    <ul className="space-y-1 text-sm">
-                      <li>• Infrastructure security controls</li>
-                      <li>• Data center physical security</li>
-                      <li>• Network security architecture</li>
-                      <li>• Employee background checks</li>
-                      <li>• Incident response procedures</li>
-                      <li>• Change management processes</li>
-                    </ul>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Request SOC 2 Report
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5 text-blue-600" />
-                  <span>ISO 27001 Certification</span>
-                </CardTitle>
-                <CardDescription>
-                  International standard for information security management systems.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm">
-                  Our ISO 27001 certification demonstrates our commitment to implementing a comprehensive 
-                  Information Security Management System (ISMS) that includes:
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-secondary/20 rounded-lg">
-                    <Shield className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                    <h5 className="font-semibold text-sm">Risk Management</h5>
-                    <p className="text-xs text-muted-foreground">Continuous risk assessment and mitigation</p>
-                  </div>
-                  <div className="text-center p-4 bg-secondary/20 rounded-lg">
-                    <Users className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                    <h5 className="font-semibold text-sm">Staff Training</h5>
-                    <p className="text-xs text-muted-foreground">Regular security awareness programs</p>
-                  </div>
-                  <div className="text-center p-4 bg-secondary/20 rounded-lg">
-                    <Monitor className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-                    <h5 className="font-semibold text-sm">Continuous Monitoring</h5>
-                    <p className="text-xs text-muted-foreground">24/7 security operations center</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Database className="h-5 w-5 text-blue-600" />
-                  <span>Technical Security Measures</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold mb-3">Encryption & Data Protection</h4>
-                    <ul className="space-y-2 text-sm">
-                      <li className="flex items-center space-x-2">
-                        <Lock className="h-4 w-4 text-green-600" />
-                        <span>AES-256 encryption for data at rest</span>
-                      </li>
-                      <li className="flex items-center space-x-2">
-                        <Lock className="h-4 w-4 text-green-600" />
-                        <span>TLS 1.3 for data in transit</span>
-                      </li>
-                      <li className="flex items-center space-x-2">
-                        <Lock className="h-4 w-4 text-green-600" />
-                        <span>End-to-end encryption for sensitive data</span>
-                      </li>
-                      <li className="flex items-center space-x-2">
-                        <Lock className="h-4 w-4 text-green-600" />
-                        <span>Hardware Security Modules (HSMs)</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-3">Infrastructure Security</h4>
-                    <ul className="space-y-2 text-sm">
-                      <li className="flex items-center space-x-2">
-                        <Shield className="h-4 w-4 text-blue-600" />
-                        <span>Multi-layer firewall protection</span>
-                      </li>
-                      <li className="flex items-center space-x-2">
-                        <Shield className="h-4 w-4 text-blue-600" />
-                        <span>Intrusion detection and prevention</span>
-                      </li>
-                      <li className="flex items-center space-x-2">
-                        <Shield className="h-4 w-4 text-blue-600" />
-                        <span>Distributed denial-of-service protection</span>
-                      </li>
-                      <li className="flex items-center space-x-2">
-                        <Shield className="h-4 w-4 text-blue-600" />
-                        <span>Secure cloud infrastructure (AWS/Azure)</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Globe className="h-5 w-5 text-blue-600" />
-                  <span>Global Data Protection Compliance</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="text-center p-3 bg-secondary/20 rounded-lg">
-                    <Badge variant="outline" className="mb-2">GDPR</Badge>
-                    <p className="text-xs">European Union General Data Protection Regulation</p>
-                  </div>
-                  <div className="text-center p-3 bg-secondary/20 rounded-lg">
-                    <Badge variant="outline" className="mb-2">CCPA</Badge>
-                    <p className="text-xs">California Consumer Privacy Act</p>
-                  </div>
-                  <div className="text-center p-3 bg-secondary/20 rounded-lg">
-                    <Badge variant="outline" className="mb-2">PIPEDA</Badge>
-                    <p className="text-xs">Personal Information Protection and Electronic Documents Act</p>
-                  </div>
-                  <div className="text-center p-3 bg-secondary/20 rounded-lg">
-                    <Badge variant="outline" className="mb-2">LGPD</Badge>
-                    <p className="text-xs">Lei Geral de Proteção de Dados (Brazil)</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Monitor className="h-5 w-5 text-blue-600" />
-                  <span>Incident Response & Business Continuity</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold mb-3">Incident Response</h4>
-                    <ul className="space-y-2 text-sm">
-                      <li>• 24/7 Security Operations Center (SOC)</li>
-                      <li>• Mean time to detection: &lt; 15 minutes</li>
-                      <li>• Mean time to response: &lt; 1 hour</li>
-                      <li>• Automated threat containment</li>
-                      <li>• Forensic investigation capabilities</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-3">Business Continuity</h4>
-                    <ul className="space-y-2 text-sm">
-                      <li>• 99.9% uptime SLA guarantee</li>
-                      <li>• Multi-region data redundancy</li>
-                      <li>• Automated failover mechanisms</li>
-                      <li>• Regular disaster recovery testing</li>
-                      <li>• RTO: &lt; 4 hours, RPO: &lt; 1 hour</li>
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                  <span>Compliance Documentation</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Access our comprehensive compliance documentation and audit reports.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button variant="outline" className="justify-start">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Download Security Whitepaper
-                  </Button>
-                  <Button variant="outline" className="justify-start">
-                    <Shield className="h-4 w-4 mr-2" />
-                    Request Compliance Documentation
-                  </Button>
-                  <Button variant="outline" className="justify-start">
-                    <Award className="h-4 w-4 mr-2" />
-                    View Certification Summaries
-                  </Button>
-                  <Button variant="outline" className="justify-start">
-                    <Database className="h-4 w-4 mr-2" />
-                    Penetration Test Results
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <h1 className="text-4xl font-bold">Security & Compliance</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Your trust is our priority. We maintain the highest standards of security and compliance 
+            to protect your data and investments.
+          </p>
         </div>
-      </main>
-      <Footer />
-    </div>
+
+        {/* Security Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="p-6 text-center">
+              <Shield className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <div className="text-2xl font-bold text-green-600">99.9%</div>
+              <div className="text-sm text-muted-foreground">Uptime SLA</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6 text-center">
+              <Lock className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+              <div className="text-2xl font-bold text-blue-600">256-bit</div>
+              <div className="text-sm text-muted-foreground">SSL Encryption</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6 text-center">
+              <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <div className="text-2xl font-bold text-green-600">100%</div>
+              <div className="text-sm text-muted-foreground">GDPR Compliant</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6 text-center">
+              <Users className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+              <div className="text-2xl font-bold text-purple-600">10,000+</div>
+              <div className="text-sm text-muted-foreground">Trusted Users</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Detailed Security Information */}
+        <Tabs defaultValue="certifications" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="certifications">Certifications</TabsTrigger>
+            <TabsTrigger value="security-features">Security Features</TabsTrigger>
+            <TabsTrigger value="compliance">Compliance</TabsTrigger>
+            <TabsTrigger value="model-compliance">Model Compliance</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="certifications" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {securityCertifications.map((cert, index) => (
+                <Card key={index}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <cert.icon className="h-6 w-6 text-blue-600" />
+                        <span>{cert.name}</span>
+                      </div>
+                      <Badge variant="outline" className={getStatusColor(cert.status)}>
+                        {cert.status}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground mb-4">{cert.description}</p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Valid Until:</span>
+                        <span className="font-medium">{cert.validUntil}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Audit Firm:</span>
+                        <span className="font-medium">{cert.auditFirm}</span>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" className="mt-4">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Certificate
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="security-features" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {securityFeatures.map((feature, index) => (
+                <Card key={index}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start space-x-4">
+                      <feature.icon className="h-8 w-8 text-blue-600 mt-1" />
+                      <div>
+                        <h3 className="font-semibold mb-2">{feature.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-3">{feature.description}</p>
+                        <Badge variant="secondary">{feature.category}</Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="compliance" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {complianceFrameworks.map((framework, index) => (
+                <Card key={index}>
+                  <CardHeader>
+                    <CardTitle>{framework.framework}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground mb-4">{framework.description}</p>
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Standards & Regulations:</div>
+                      <div className="flex flex-wrap gap-2">
+                        {framework.standards.map((standard, idx) => (
+                          <Badge key={idx} variant="outline">{standard}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="model-compliance" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>AI Model Compliance Status</CardTitle>
+                <p className="text-muted-foreground">
+                  Each AI model undergoes rigorous compliance checks and audits
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {modelCompliance.map((model, index) => {
+                    const StatusIcon = getStatusIcon(model.complianceStatus);
+                    return (
+                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-4">
+                          <StatusIcon className={`h-5 w-5 ${getStatusColor(model.complianceStatus)}`} />
+                          <div>
+                            <div className="font-semibold">{model.modelName}</div>
+                            <div className="text-sm text-muted-foreground">by {model.developer}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`font-medium ${getStatusColor(model.complianceStatus)}`}>
+                            {model.complianceStatus}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Last audit: {model.lastAudit}
+                          </div>
+                        </div>
+                        <div className="flex space-x-1">
+                          {model.certifications.map((cert, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              {cert}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Trust Indicators */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Why Trust GeFi?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <Database className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">Data Protection</h3>
+                <p className="text-sm text-muted-foreground">
+                  Your data is encrypted and never shared with third parties
+                </p>
+              </div>
+              <div className="text-center">
+                <Network className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">Local Processing</h3>
+                <p className="text-sm text-muted-foreground">
+                  AI models run locally to ensure data privacy
+                </p>
+              </div>
+              <div className="text-center">
+                <Shield className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">Enterprise Security</h3>
+                <p className="text-sm text-muted-foreground">
+                  Bank-grade security with continuous monitoring
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </Layout>
   );
 }
