@@ -187,10 +187,10 @@ export default function Header() {
     if (location.startsWith('/moderator')) {
       return [
         { name: "Overview", href: "/moderator", icon: BarChart3 },
-        { name: "Content Review", href: "/moderator#content", icon: Shield },
-        { name: "Support Tickets", href: "/moderator#support", icon: FileText },
-        { name: "User Monitoring", href: "/moderator#users", icon: Users },
-        { name: "Analytics", href: "/moderator#analytics", icon: Activity }
+        { name: "Content Review", href: "/moderator/content-review", icon: Shield },
+        { name: "Support Tickets", href: "/moderator/support-tickets", icon: FileText },
+        { name: "User Monitoring", href: "/moderator/user-monitoring", icon: Users },
+        { name: "Analytics", href: "/moderator/analytics", icon: Activity }
       ];
     }
 

@@ -80,6 +80,10 @@ import AdminContentModeration from "@/pages/admin-content-moderation";
 import AdminSecurity from "@/pages/admin-security";
 import AdminSupport from "@/pages/admin-support";
 import AdminAnalytics from "@/pages/admin-analytics";
+import ModeratorContentReview from "@/pages/moderator-content-review";
+import ModeratorSupportTickets from "@/pages/moderator-support-tickets";
+import ModeratorUserMonitoring from "@/pages/moderator-user-monitoring";
+import ModeratorAnalytics from "@/pages/moderator-analytics";
 import RiskDistribution from "@/pages/risk-distribution";
 import Funding from "@/pages/funding";
 import RebalanceActions from "@/pages/rebalance-actions";
@@ -217,6 +221,10 @@ function Router() {
             <Route path="/admin/support" component={AdminSupport} />
             <Route path="/admin/analytics" component={AdminAnalytics} />
             <Route path="/moderator" component={ModeratorDashboard} />
+            <Route path="/moderator/content-review" component={ModeratorContentReview} />
+            <Route path="/moderator/support-tickets" component={ModeratorSupportTickets} />
+            <Route path="/moderator/user-monitoring" component={ModeratorUserMonitoring} />
+            <Route path="/moderator/analytics" component={ModeratorAnalytics} />
           </>
         ) : (
           <>
