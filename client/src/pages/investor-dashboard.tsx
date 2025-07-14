@@ -73,8 +73,12 @@ const portfolioOverview = {
   benchmarkDrawdown: -12.3,
   beta: 0.94,
   alpha: 6.2,
-  volatility: 14.8,
-  var95: -3.2  // 95% VaR
+  volatility: 14.2,
+  var95: -3.2,
+  activeModels: 8,
+  tradingBots: 3,
+  riskScore: 6.2,
+  alerts: 2
 };
 
 const quickStats = [
