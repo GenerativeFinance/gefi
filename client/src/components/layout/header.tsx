@@ -284,6 +284,9 @@ export default function Header() {
                   <DropdownMenuTrigger className="flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-md text-foreground hover:bg-accent transition-colors">
                     {isDeveloperPage ? <Code className="h-4 w-4 md:h-5 md:w-5" /> : 
                      location.startsWith('/regulator') ? <Shield className="h-4 w-4 md:h-5 md:w-5" /> :
+                     location.startsWith('/data-provider') ? <Database className="h-4 w-4 md:h-5 md:w-5" /> :
+                     location.startsWith('/admin') ? <Settings className="h-4 w-4 md:h-5 md:w-5" /> :
+                     location.startsWith('/moderator') ? <Flag className="h-4 w-4 md:h-5 md:w-5" /> :
                      <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />}
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -309,6 +312,18 @@ export default function Header() {
                       <Link href="/regulator" className="flex items-center space-x-2">
                         <Shield className="h-4 w-4" />
                         <span>Regulator</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="flex items-center space-x-2">
+                        <Settings className="h-4 w-4" />
+                        <span>Admin</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/moderator" className="flex items-center space-x-2">
+                        <Flag className="h-4 w-4" />
+                        <span>Moderator</span>
                       </Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
