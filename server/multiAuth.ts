@@ -76,7 +76,8 @@ export async function setupMultiAuth(app: Express) {
     passport.use(new GitHubStrategy({
       clientID: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL: `${baseUrl}/api/auth/github/callback`
+      callbackURL: `${baseUrl}/api/auth/github/callback`,
+      scope: ['user:email'] // Request email scope
     }, async (accessToken, refreshToken, profile, done) => {
       try {
         const user = await upsertUser(profile, 'github');

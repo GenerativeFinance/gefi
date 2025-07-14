@@ -400,7 +400,7 @@ export default function Header() {
                       <div className="flex flex-col space-y-1 leading-none">
                         <p className="font-medium">{user.firstName} {user.lastName}</p>
                         <p className="w-[200px] truncate text-sm text-muted-foreground">
-                          {user.email}
+                          {user.email || 'No email provided'}
                         </p>
                       </div>
                     </div>
