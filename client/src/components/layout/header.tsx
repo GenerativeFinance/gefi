@@ -278,40 +278,42 @@ export default function Header() {
 
             {/* Right Side Actions */}
             <div className="flex items-center space-x-2 md:space-x-3">
-              {/* Dashboard Mode Toggle - Icon Only */}
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-md text-foreground hover:bg-accent transition-colors">
-                  {isDeveloperPage ? <Code className="h-4 w-4 md:h-5 md:w-5" /> : 
-                   location.startsWith('/regulator') ? <Shield className="h-4 w-4 md:h-5 md:w-5" /> :
-                   <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link href="/" className="flex items-center space-x-2">
-                      <TrendingUp className="h-4 w-4" />
-                      <span>Investor</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/developer" className="flex items-center space-x-2">
-                      <Code className="h-4 w-4" />
-                      <span>Developer</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/data-provider" className="flex items-center space-x-2">
-                      <Database className="h-4 w-4" />
-                      <span>Data Provider</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/regulator" className="flex items-center space-x-2">
-                      <Shield className="h-4 w-4" />
-                      <span>Regulator</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Dashboard Mode Toggle - Icon Only - Only for Admin/Moderator */}
+              {(user?.role === 'admin' || user?.role === 'moderator') && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-md text-foreground hover:bg-accent transition-colors">
+                    {isDeveloperPage ? <Code className="h-4 w-4 md:h-5 md:w-5" /> : 
+                     location.startsWith('/regulator') ? <Shield className="h-4 w-4 md:h-5 md:w-5" /> :
+                     <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link href="/" className="flex items-center space-x-2">
+                        <TrendingUp className="h-4 w-4" />
+                        <span>Investor</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/developer" className="flex items-center space-x-2">
+                        <Code className="h-4 w-4" />
+                        <span>Developer</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/data-provider" className="flex items-center space-x-2">
+                        <Database className="h-4 w-4" />
+                        <span>Data Provider</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/regulator" className="flex items-center space-x-2">
+                        <Shield className="h-4 w-4" />
+                        <span>Regulator</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
               {/* Search */}
               <Button
@@ -417,7 +419,7 @@ export default function Header() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {/* Dashboard Mode - Only for Admin and Moderator users */}
-                    {(user.role === 'admin' || user.role === 'moderator') && (
+                    {(user?.role === 'admin' || user?.role === 'moderator') && (
                       <>
                         <div className="px-2 py-1">
                           <p className="text-sm font-medium text-muted-foreground">Dashboard Mode</p>

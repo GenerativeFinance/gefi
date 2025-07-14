@@ -440,6 +440,13 @@ Changelog:
   * Added Moderator Analytics page with performance metrics, efficiency tracking, and behavior analysis
   * Updated routing system and navigation to support all new moderator pages with proper submenu structure
   * Enhanced header submenu to provide direct links to each moderator function area
+- July 14, 2025. Implemented role-based access control for Dashboard Mode dropdown
+  * Added role field to users table with default value "user" and supported roles: user, admin, moderator
+  * Restricted "Dashboard Mode" dropdown (both icon and user menu sections) to only display for Admin and Moderator users
+  * Enhanced header component with conditional rendering based on user role permissions
+  * Created test admin user for demonstration and testing purposes
+  * Successfully implemented comprehensive role-based access control preventing unauthorized dashboard access
+  * All administrative and moderator features now properly restricted to authorized personnel only
 - July 8, 2025. Completed comprehensive "Dashboard" to "Overview" terminology standardization
   * Updated all submenu navigation items across the entire application to use "Overview" instead of "Dashboard"
   * Fixed Market Insights, Portfolio, Reports, Risk Management, Trading, Funding, Learning, and AI Marketplace submenus
