@@ -175,11 +175,11 @@ export default function Header() {
     if (location.startsWith('/admin')) {
       return [
         { name: "Overview", href: "/admin", icon: BarChart3 },
-        { name: "User Management", href: "/admin#users", icon: Users },
-        { name: "Content Moderation", href: "/admin#content", icon: Shield },
-        { name: "Security", href: "/admin#security", icon: AlertTriangle },
-        { name: "Support", href: "/admin#support", icon: FileText },
-        { name: "Analytics", href: "/admin#analytics", icon: Activity }
+        { name: "User Management", href: "/admin/users", icon: Users },
+        { name: "Content Moderation", href: "/admin/content", icon: Shield },
+        { name: "Security", href: "/admin/security", icon: AlertTriangle },
+        { name: "Support", href: "/admin/support", icon: FileText },
+        { name: "Analytics", href: "/admin/analytics", icon: Activity }
       ];
     }
 

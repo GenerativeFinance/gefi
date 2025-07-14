@@ -75,6 +75,11 @@ import Strategies from "@/pages/strategies";
 import Orders from "@/pages/orders";
 import AdminDashboard from "@/pages/admin-dashboard";
 import ModeratorDashboard from "@/pages/moderator-dashboard";
+import AdminUserManagement from "@/pages/admin-user-management";
+import AdminContentModeration from "@/pages/admin-content-moderation";
+import AdminSecurity from "@/pages/admin-security";
+import AdminSupport from "@/pages/admin-support";
+import AdminAnalytics from "@/pages/admin-analytics";
 import RiskDistribution from "@/pages/risk-distribution";
 import Funding from "@/pages/funding";
 import RebalanceActions from "@/pages/rebalance-actions";
@@ -206,6 +211,11 @@ function Router() {
             <Route path="/data-provider/collaboration/compliance" component={DataProviderCollaborationCompliance} />
             <Route path="/data-provider/collaboration/audit" component={DataProviderCollaborationAudit} />
             <Route path="/admin" component={AdminDashboard} />
+            <Route path="/admin/users" component={AdminUserManagement} />
+            <Route path="/admin/content" component={AdminContentModeration} />
+            <Route path="/admin/security" component={AdminSecurity} />
+            <Route path="/admin/support" component={AdminSupport} />
+            <Route path="/admin/analytics" component={AdminAnalytics} />
             <Route path="/moderator" component={ModeratorDashboard} />
           </>
         ) : (
