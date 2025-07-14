@@ -151,6 +151,7 @@ export interface IStorage {
   createAiModel(model: InsertAiModel): Promise<AiModel>;
   getUserModelSubscriptions(userId: string): Promise<UserModelSubscription[]>;
   subscribeToModel(subscription: InsertUserModelSubscription): Promise<UserModelSubscription>;
+  getUserAiModels(userId: string): Promise<AiModel[]>;
   
   // AI Model Categories operations
   getAiModelCategories(): Promise<AiModelCategory[]>;
@@ -543,6 +544,42 @@ export class DatabaseStorage implements IStorage {
       .values(subscription)
       .returning();
     return newSubscription;
+  }
+
+  async getUserAiModels(userId: string): Promise<AiModel[]> {
+    const subscriptions = await db
+      .select({
+        modelId: userModelSubscriptions.modelId,
+        status: userModelSubscriptions.status,
+        subscriptionDate: userModelSubscriptions.subscriptionDate,
+        isActive: userModelSubscriptions.isActive,
+      })
+      .from(userModelSubscriptions)
+      .where(and(
+        eq(userModelSubscriptions.userId, userId),
+        eq(userModelSubscriptions.isActive, true)
+      ));
+
+    if (subscriptions.length === 0) {
+      return [];
+    }
+
+    const modelIds = subscriptions.map(s => s.modelId);
+    
+    const models = await db
+      .select({
+        ...aiModels,
+        subcategory: aiModelSubcategories.name,
+      })
+      .from(aiModels)
+      .leftJoin(aiModelSubcategories, eq(aiModels.subcategoryId, aiModelSubcategories.id))
+      .where(and(
+        inArray(aiModels.id, modelIds),
+        eq(aiModels.isActive, true)
+      ))
+      .orderBy(desc(aiModels.rating));
+
+    return models as AiModel[];
   }
 
   // Market insights operations
