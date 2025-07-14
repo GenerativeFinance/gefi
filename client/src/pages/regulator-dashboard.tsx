@@ -68,18 +68,24 @@ export default function RegulatorDashboard() {
   const [filterCategory, setFilterCategory] = useState("all");
   const { toast } = useToast();
 
-  // Enhanced sample data with realistic metrics
+  // Enhanced sample data with realistic metrics based on analysis
   const dashboardData = {
     overview: {
       totalAudits: 142,
+      auditGrowth: 12, // +12% from last period
       pendingAudits: 18,
+      dueSoon: 3, // 3 due this week
       complianceRate: 87.3,
+      complianceImprovement: 2.1, // +2.1% improvement
       flaggedIssues: 23,
+      criticalIssues: 3,
       resolvedIssues: 156,
+      resolutionRate: 87, // 87% resolution rate
       activeStandards: 15,
+      pendingUpdates: 2,
       auditCompletionRate: 94.2,
-      averageResolutionTime: 4.8, // days
-      criticalIssueCount: 3
+      avgResolutionTime: 4.8, // days
+      resolutionImprovement: -1.2 // -1.2 days improvement
     },
     trends: {
       complianceRateHistory: [
@@ -143,6 +149,32 @@ export default function RegulatorDashboard() {
         timestamp: "2 days ago",
         priority: "high",
         entity: "RegTech Compliance Ltd"
+      }
+    ],
+    insights: [
+      {
+        type: "improvement",
+        title: "Compliance Improvement Detected",
+        description: "Overall compliance rate has improved by 2.1% this month, primarily driven by better data retention policy adherence across AI Trading Solutions models.",
+        icon: "trending-up"
+      },
+      {
+        type: "attention",
+        title: "Attention Required", 
+        description: "3 critical issues remain unresolved beyond the 7-day SLA. Consider escalating to senior management for Dataset #DS-8834 and Model #ML-3456.",
+        icon: "alert-triangle"
+      },
+      {
+        type: "best-practice",
+        title: "Best Practice Identified",
+        description: "RegTech Compliance Ltd demonstrates excellent audit preparation, with 98% documentation completeness. Consider sharing their practices as a model.",
+        icon: "check-circle"
+      },
+      {
+        type: "trend",
+        title: "Trend Analysis",
+        description: "Privacy compliance audits are increasing 15% month-over-month. Consider allocating additional resources to handle the growing workload.",
+        icon: "bar-chart"
       }
     ],
     upcomingAudits: [
@@ -352,10 +384,10 @@ export default function RegulatorDashboard() {
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-            <TabsTrigger value="overview" className="text-xs md:text-sm">Regulator Overview</TabsTrigger>
+            <TabsTrigger value="overview" className="text-xs md:text-sm">Overview</TabsTrigger>
             <TabsTrigger value="analytics" className="text-xs md:text-sm">Analytics</TabsTrigger>
             <TabsTrigger value="activity" className="text-xs md:text-sm">Recent Activity</TabsTrigger>
-            <TabsTrigger value="insights" className="text-xs md:text-sm">Insights</TabsTrigger>
+            <TabsTrigger value="insights" className="text-xs md:text-sm">AI Insights</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">

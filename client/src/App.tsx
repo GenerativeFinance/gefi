@@ -39,6 +39,7 @@ import RegulatorDatasetAudits from "@/pages/regulator-dataset-audits";
 import RegulatorComplianceIssues from "@/pages/regulator-compliance-issues";
 import RegulatorCommunications from "@/pages/regulator-communications";
 import RegulatorStandards from "@/pages/regulator-standards";
+import RegulatorExperienceEnhanced from "@/pages/regulator-experience-enhanced";
 import DataProviderPortfolio from "@/pages/data-provider-portfolio";
 import DataProviderPortfolioDatasets from "@/pages/data-provider-portfolio-datasets";
 import DataProviderPortfolioPerformance from "@/pages/data-provider-portfolio-performance";
@@ -212,6 +213,7 @@ function Router() {
             <Route path="/regulator/compliance-issues" component={RegulatorComplianceIssues} />
             <Route path="/regulator/communications" component={RegulatorCommunications} />
             <Route path="/regulator/standards" component={RegulatorStandards} />
+            <Route path="/regulator/experience-enhanced" component={RegulatorExperienceEnhanced} />
             <Route path="/data-provider/portfolio" component={DataProviderPortfolio} />
             <Route path="/data-provider/portfolio/datasets" component={DataProviderPortfolioDatasets} />
             <Route path="/data-provider/portfolio/performance" component={DataProviderPortfolioPerformance} />
