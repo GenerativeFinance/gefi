@@ -46,6 +46,7 @@ import DataProviderCollaboration from "@/pages/data-provider-collaboration";
 import DataProviderCollaborationCompliance from "@/pages/data-provider-collaboration-compliance";
 import DataProviderCollaborationAudit from "@/pages/data-provider-collaboration-audit";
 import Learning from "@/pages/learning";
+import InvestorLearning from "@/pages/investor-learning";
 import TermsOfService from "@/pages/terms-of-service";
 import DataProcessingAgreement from "@/pages/data-processing-agreement";
 import SecurityCompliance from "@/pages/security-compliance";
@@ -176,6 +177,7 @@ function Router() {
             <Route path="/data-provider/:providerId" component={DataProviderProfile} />
             <Route path="/regulator/:regulatorId" component={RegulatorProfile} />
             <Route path="/learning" component={Learning} />
+            <Route path="/investor-learning" component={InvestorLearning} />
             <Route path="/model/:id" component={ModelProfile} />
             <Route path="/trading-bots" component={TradingBots} />
             <Route path="/web3-defi" component={Web3DeFi} />

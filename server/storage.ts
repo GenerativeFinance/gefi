@@ -567,19 +567,15 @@ export class DatabaseStorage implements IStorage {
     const modelIds = subscriptions.map(s => s.modelId);
     
     const models = await db
-      .select({
-        ...aiModels,
-        subcategory: aiModelSubcategories.name,
-      })
+      .select()
       .from(aiModels)
-      .leftJoin(aiModelSubcategories, eq(aiModels.subcategoryId, aiModelSubcategories.id))
       .where(and(
         inArray(aiModels.id, modelIds),
         eq(aiModels.isActive, true)
       ))
       .orderBy(desc(aiModels.rating));
 
-    return models as AiModel[];
+    return models;
   }
 
   // Market insights operations

@@ -65,7 +65,7 @@ export default function Header() {
                          location.startsWith('/bounty-funding') ||
                          location.startsWith('/bot-funding') ||
                          location.startsWith('/market-data') ||
-                         location.startsWith('/learning');
+                         location === '/learning';
 
   // Fetch notifications
   const { data: notifications = [] } = useQuery({
@@ -138,10 +138,10 @@ export default function Header() {
       ];
     }
     
-    if (location.startsWith('/learning') || location.startsWith('/tutorials') || location.startsWith('/webinars') || location.startsWith('/docs') || location.startsWith('/community')) {
+    if (location.startsWith('/investor-learning') || location.startsWith('/tutorials') || location.startsWith('/webinars') || location.startsWith('/docs') || location.startsWith('/community')) {
       return [
         { name: "Overview", href: "/investor-dashboard", icon: BarChart3 },
-        { name: "Learning", href: "/learning", icon: GraduationCap },
+        { name: "Learning", href: "/investor-learning", icon: GraduationCap },
         { name: "Tutorials", href: "/tutorials", icon: BookOpen },
         { name: "Webinars", href: "/webinars", icon: Video },
         { name: "Documentation", href: "/docs", icon: FileText },
@@ -244,7 +244,7 @@ export default function Header() {
       { name: "Trading", href: "/live-trading", icon: TrendingUp },
       { name: "Reports", href: "/reports", icon: FileText },
       { name: "Funding", href: "/funding", icon: DollarSign },
-      { name: "Learning", href: "/learning", icon: GraduationCap }
+      { name: "Learning", href: "/investor-learning", icon: GraduationCap }
     ];
   };
 
