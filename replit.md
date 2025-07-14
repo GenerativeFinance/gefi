@@ -109,6 +109,15 @@ GeFi is a comprehensive AI-powered financial platform that enables developers to
 
 ```
 Changelog:
+- July 14, 2025. Fixed dashboard mode icon detection and navigation routing issues
+  * Fixed Data Provider dashboard mode icon to show Database icon instead of incorrect Investor (TrendingUp) icon
+  * Enhanced dashboard detection logic to properly identify all user dashboard types: Investor, Developer, Data Provider, Regulator, Admin, Moderator
+  * Added comprehensive dashboard mode dropdown with all available dashboard options for admin/moderator users
+  * Fixed all Overview button routing across dashboards that were causing blank pages by redirecting to proper home page (/)
+  * Updated header navigation logic to display correct icons for each dashboard mode in dropdown trigger
+  * Created dedicated Developer AI Marketplace (/developer-marketplace) to differentiate from investor marketplace
+  * Fixed Developer Dashboard AI Marketplace routing to point to developer-specific marketplace instead of investor-focused version
+  * Completed comprehensive navigation improvements ensuring consistent user experience across all dashboard types
 - July 14, 2025. Completed comprehensive API separation and modular backend restructuring
   * Separated 3000+ line routes.ts into 5 organized modules: gefiRoutes.ts, tokenomicRoutes.ts, marketDataRoutes.ts, developerRoutes.ts, utilityRoutes.ts
   * Created centralized route management system with index.ts for better code organization and maintainability
