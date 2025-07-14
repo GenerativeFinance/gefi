@@ -26,6 +26,7 @@ import PrivacyPolicy from "@/pages/privacy-policy";
 import UserProfile from "@/pages/user-profile";
 import Settings from "@/pages/settings";
 import DeveloperDashboard from "@/pages/developer-dashboard";
+import DeveloperMarketplace from "@/pages/developer-marketplace";
 import BacktestingEnvironment from "@/pages/backtesting";
 import LiveTradingPage from "@/pages/live-trading";
 import Bounties from "@/pages/bounties";
@@ -167,6 +168,7 @@ function Router() {
             <Route path="/storage" component={Storage} />
             <Route path="/api-access" component={ApiAccess} />
             <Route path="/developer" component={DeveloperDashboard} />
+            <Route path="/developer-marketplace" component={DeveloperMarketplace} />
             <Route path="/backtesting" component={BacktestingEnvironment} />
             <Route path="/live-trading" component={LiveTradingPage} />
             <Route path="/model-funding" component={ModelFunding} />

@@ -164,7 +164,7 @@ export default function Header() {
       return [
         { name: "Overview", href: "/developer", icon: BarChart3 },
         { name: "Backtesting", href: "/backtesting", icon: TrendingUp },
-        { name: "AI Marketplace", href: "/marketplace", icon: Store },
+        { name: "AI Marketplace", href: "/developer-marketplace", icon: Store },
         { name: "Market Data", href: "/market-data", icon: Database },
         { name: "Bounties", href: "/bounties", icon: Target },
         { name: "Learning", href: "/learning", icon: GraduationCap }
