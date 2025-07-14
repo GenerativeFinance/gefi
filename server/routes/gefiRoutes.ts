@@ -210,7 +210,20 @@ export function registerGeFiRoutes(app: Express) {
   app.get('/api/portfolio/assets', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const assets = await storage.getPortfolioAssets(userId);
+      // First get the user's portfolio
+      const portfolio = await storage.getUserPortfolio(userId);
+      if (!portfolio) {
+        // Create a default portfolio if none exists
+        const newPortfolio = await storage.createPortfolio({
+          userId,
+          totalInvestment: "0",
+          livePnL: "0",
+          annualReturns: "0",
+          sharpeRatio: "0"
+        });
+        return res.json([]);
+      }
+      const assets = await storage.getPortfolioAssets(portfolio.id);
       res.json(assets);
     } catch (error) {
       console.error("Error fetching portfolio assets:", error);

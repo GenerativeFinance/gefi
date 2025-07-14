@@ -43,7 +43,8 @@ import {
   Video,
   Database,
   Key,
-  HardDrive
+  HardDrive,
+  Flag
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -167,6 +168,29 @@ export default function Header() {
         { name: "Market Data", href: "/market-data", icon: Database },
         { name: "Bounties", href: "/bounties", icon: Target },
         { name: "Learning", href: "/learning", icon: GraduationCap }
+      ];
+    }
+
+    // Admin submenu
+    if (location.startsWith('/admin')) {
+      return [
+        { name: "Overview", href: "/admin", icon: BarChart3 },
+        { name: "User Management", href: "/admin#users", icon: Users },
+        { name: "Content Moderation", href: "/admin#content", icon: Shield },
+        { name: "Security", href: "/admin#security", icon: AlertTriangle },
+        { name: "Support", href: "/admin#support", icon: FileText },
+        { name: "Analytics", href: "/admin#analytics", icon: Activity }
+      ];
+    }
+
+    // Moderator submenu
+    if (location.startsWith('/moderator')) {
+      return [
+        { name: "Overview", href: "/moderator", icon: BarChart3 },
+        { name: "Content Review", href: "/moderator#content", icon: Shield },
+        { name: "Support Tickets", href: "/moderator#support", icon: FileText },
+        { name: "User Monitoring", href: "/moderator#users", icon: Users },
+        { name: "Analytics", href: "/moderator#analytics", icon: Activity }
       ];
     }
 
@@ -389,6 +413,46 @@ export default function Header() {
                       <Link href="/settings" className="flex items-center">
                         <Settings className="mr-2 h-4 w-4" />
                         Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <div className="px-2 py-1">
+                      <p className="text-sm font-medium text-muted-foreground">Dashboard Mode</p>
+                    </div>
+                    <DropdownMenuItem asChild>
+                      <Link href="/investor-dashboard" className="flex items-center">
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        Investor
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/developer" className="flex items-center">
+                        <Code className="mr-2 h-4 w-4" />
+                        Developer
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/data-provider" className="flex items-center">
+                        <Database className="mr-2 h-4 w-4" />
+                        Data Provider
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/regulator" className="flex items-center">
+                        <Shield className="mr-2 h-4 w-4" />
+                        Regulator
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="flex items-center">
+                        <Users className="mr-2 h-4 w-4" />
+                        Admin
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/moderator" className="flex items-center">
+                        <Flag className="mr-2 h-4 w-4" />
+                        Moderator
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />

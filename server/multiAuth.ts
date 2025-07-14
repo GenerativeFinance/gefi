@@ -110,8 +110,18 @@ export async function setupMultiAuth(app: Express) {
     done(null, user);
   });
 
-  passport.deserializeUser((user: any, done) => {
-    done(null, user);
+  passport.deserializeUser(async (user: any, done) => {
+    try {
+      // Verify user still exists in database
+      const dbUser = await storage.getUser(user.id);
+      if (dbUser) {
+        done(null, user);
+      } else {
+        done(null, false);
+      }
+    } catch (error) {
+      done(error, null);
+    }
   });
 
   // OAuth Routes

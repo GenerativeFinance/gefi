@@ -73,6 +73,8 @@ import Webinars from "@/pages/webinars";
 import PortfolioAI from "@/pages/portfolio-ai-models";
 import Strategies from "@/pages/strategies";
 import Orders from "@/pages/orders";
+import AdminDashboard from "@/pages/admin-dashboard";
+import ModeratorDashboard from "@/pages/moderator-dashboard";
 import RiskDistribution from "@/pages/risk-distribution";
 import Funding from "@/pages/funding";
 import RebalanceActions from "@/pages/rebalance-actions";
@@ -203,6 +205,8 @@ function Router() {
             <Route path="/data-provider/collaboration" component={DataProviderCollaboration} />
             <Route path="/data-provider/collaboration/compliance" component={DataProviderCollaborationCompliance} />
             <Route path="/data-provider/collaboration/audit" component={DataProviderCollaborationAudit} />
+            <Route path="/admin" component={AdminDashboard} />
+            <Route path="/moderator" component={ModeratorDashboard} />
           </>
         ) : (
           <>
