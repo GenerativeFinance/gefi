@@ -46,6 +46,7 @@ import DataProviderPortfolioPerformance from "@/pages/data-provider-portfolio-pe
 import DataProviderCollaboration from "@/pages/data-provider-collaboration";
 import DataProviderCollaborationCompliance from "@/pages/data-provider-collaboration-compliance";
 import DataProviderCollaborationAudit from "@/pages/data-provider-collaboration-audit";
+import DataProviderEnhanced from "@/pages/data-provider-enhanced";
 import Learning from "@/pages/learning";
 import InvestorLearning from "@/pages/investor-learning";
 import TermsOfService from "@/pages/terms-of-service";
@@ -220,6 +221,7 @@ function Router() {
             <Route path="/data-provider/collaboration" component={DataProviderCollaboration} />
             <Route path="/data-provider/collaboration/compliance" component={DataProviderCollaborationCompliance} />
             <Route path="/data-provider/collaboration/audit" component={DataProviderCollaborationAudit} />
+            <Route path="/data-provider/enhanced" component={DataProviderEnhanced} />
             <Route path="/admin" component={AdminDashboard} />
             <Route path="/admin/users" component={AdminUserManagement} />
             <Route path="/admin/content" component={AdminContentModeration} />
