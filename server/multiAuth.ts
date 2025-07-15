@@ -182,16 +182,21 @@ export async function setupMultiAuth(app: Express) {
   // Development login for testing
   app.get('/api/auth/dev', async (req, res) => {
     try {
-      // Create a development user
-      const devProfile = {
-        id: 'dev_user_' + Date.now(),
-        displayName: 'Development User',
-        emails: [{ value: 'dev@gefi.local' }],
-        photos: [{ value: 'https://via.placeholder.com/40x40?text=DEV' }],
-        username: 'devuser'
-      };
+      // Check if dev user already exists
+      let user = await storage.getUserByEmail('dev@gefi.local');
       
-      const user = await upsertUser(devProfile, 'dev');
+      if (!user) {
+        // Create a development user only if it doesn't exist
+        const devProfile = {
+          id: 'dev_user_123',
+          displayName: 'Development User',
+          emails: [{ value: 'dev@gefi.local' }],
+          photos: [{ value: 'https://via.placeholder.com/40x40?text=DEV' }],
+          username: 'devuser'
+        };
+        
+        user = await upsertUser(devProfile, 'dev');
+      }
       
       // Manually log in the user
       req.login({ ...user, provider: 'dev' }, (err) => {
