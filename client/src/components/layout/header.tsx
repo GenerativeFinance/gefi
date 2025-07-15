@@ -249,6 +249,7 @@ export default function Header() {
       // Portfolio subsections
       if (location.includes('/data-provider/portfolio/')) {
         return [
+          { name: "Overview", href: "/data-provider", icon: BarChart3 },
           { name: "Usage", href: "/data-provider/portfolio/usage", icon: Activity },
           { name: "Quality", href: "/data-provider/portfolio/quality", icon: CheckCircle },
           { name: "Revenue", href: "/data-provider/portfolio/revenue", icon: DollarSign },
@@ -262,6 +263,7 @@ export default function Header() {
       // Data subsections  
       if (location.includes('/data-provider/data/')) {
         return [
+          { name: "Overview", href: "/data-provider", icon: BarChart3 },
           { name: "Dataset Catalogs", href: "/data-provider/data/catalogs", icon: Database },
           { name: "Metadata Management", href: "/data-provider/data/metadata", icon: FileText },
           { name: "Data Versioning", href: "/data-provider/data/versioning", icon: GitBranch }
