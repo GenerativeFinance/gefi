@@ -289,34 +289,35 @@ export default function Categories() {
         {/* Categories Grid/List */}
         <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
           {filteredCategories.map((category) => (
-            <Card key={category.id} className="hover:shadow-lg transition-shadow cursor-pointer group">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      {getIconComponent(category.icon)}
+            <Link key={category.id} href={`/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`}>
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        {getIconComponent(category.icon)}
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          {category.name}
+                          {category.trending && (
+                            <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+                              <TrendingUp className="h-3 w-3 mr-1" />
+                              Trending
+                            </Badge>
+                          )}
+                          {category.featured && (
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                              Featured
+                            </Badge>
+                          )}
+                        </CardTitle>
+                        <CardDescription>{category.description}</CardDescription>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        {category.name}
-                        {category.trending && (
-                          <Badge variant="secondary" className="bg-orange-100 text-orange-700">
-                            <TrendingUp className="h-3 w-3 mr-1" />
-                            Trending
-                          </Badge>
-                        )}
-                        {category.featured && (
-                          <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                            Featured
-                          </Badge>
-                        )}
-                      </CardTitle>
-                      <CardDescription>{category.description}</CardDescription>
-                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </div>
-              </CardHeader>
+                </CardHeader>
 
               <CardContent>
                 <div className="space-y-4">
@@ -359,14 +360,13 @@ export default function Categories() {
                   </div>
 
                   {/* Action Button */}
-                  <Button asChild className="w-full">
-                    <Link href={`/marketplace?category=${category.name}`}>
-                      Browse Models
-                    </Link>
+                  <Button className="w-full" onClick={(e) => e.preventDefault()}>
+                    Browse Models
                   </Button>
                 </div>
               </CardContent>
             </Card>
+            </Link>
           ))}
         </div>
 

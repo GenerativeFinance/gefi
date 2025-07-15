@@ -145,6 +145,7 @@ import DataProviderMarketplace from "@/pages/data-provider-marketplace";
 import DeveloperCollaborationMain from "@/pages/developer/collaboration";
 import MyProfile from "@/pages/my-profile";
 import ModelDetail from "@/pages/model-detail";
+import CategoryPage from "@/pages/category/[categoryName]";
 
 
 function Router() {
@@ -240,6 +241,7 @@ function Router() {
             <Route path="/my-subscriptions" component={MySubscriptions} />
             <Route path="/developers" component={Developers} />
             <Route path="/categories" component={Categories} />
+            <Route path="/category/:categoryName" component={CategoryPage} />
             <Route path="/tutorials" component={Tutorials} />
             <Route path="/compliance-reports" component={ComplianceReports} />
             <Route path="/risk-reports" component={RiskReports} />
