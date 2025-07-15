@@ -207,13 +207,25 @@ export default function Header() {
       ];
     }
 
-    // Data Provider submenu - comprehensive AI marketplace specific navigation
+    // Data Provider submenu - hierarchical Portfolio structure
     if (location.startsWith('/data-provider')) {
+      // Portfolio subsections
+      if (location.includes('/data-provider/portfolio/')) {
+        return [
+          { name: "Dataset Overview", href: "/data-provider/portfolio/dataset-overview", icon: Database },
+          { name: "Usage Statistics", href: "/data-provider/portfolio/usage-statistics", icon: BarChart3 },
+          { name: "Quality Metrics", href: "/data-provider/portfolio/quality-metrics", icon: CheckCircle },
+          { name: "Revenue Tracking", href: "/data-provider/portfolio/revenue-tracking", icon: DollarSign },
+          { name: "Compliance Status", href: "/data-provider/portfolio/compliance-status", icon: Shield },
+          { name: "Reviews & Feedback", href: "/data-provider/portfolio/reviews-feedback", icon: Star }
+        ];
+      }
+      
+      // Main Data Provider menu
       return [
         { name: "Overview", href: "/data-provider", icon: BarChart3 },
-        { name: "Datasets", href: "/data-provider/datasets", icon: Database },
+        { name: "Portfolio", href: "/data-provider/portfolio/dataset-overview", icon: Wallet },
         { name: "Market Insights", href: "/data-provider/market-insights", icon: TrendingUp },
-        { name: "Portfolio", href: "/data-provider/portfolio", icon: Wallet },
         { name: "AI Marketplace", href: "/data-provider/ai-marketplace", icon: Store },
         { name: "Collaboration", href: "/data-provider/collaboration", icon: Users }
       ];
