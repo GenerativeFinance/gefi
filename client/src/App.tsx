@@ -117,6 +117,12 @@ import DataProviderComplianceStatus from "@/pages/data-provider/portfolio/compli
 import DataProviderReviewsFeedback from "@/pages/data-provider/portfolio/reviews-feedback";
 import DataProviderCollaborationHistory from "@/pages/data-provider/portfolio/collaboration-history";
 import DataProviderPortfolioScore from "@/pages/data-provider/portfolio/portfolio-score";
+import DeveloperPortfolioAIModels from "@/pages/developer/portfolio/ai-models";
+import DeveloperPortfolioPerformance from "@/pages/developer/portfolio/performance";
+import DeveloperPortfolioActivity from "@/pages/developer/portfolio/activity";
+import DeveloperPortfolioFunding from "@/pages/developer/portfolio/funding";
+import DeveloperPortfolioFeedback from "@/pages/developer/portfolio/feedback";
+import DeveloperPortfolioCompliance from "@/pages/developer/portfolio/compliance";
 
 
 function Router() {
@@ -237,6 +243,12 @@ function Router() {
             <Route path="/data-provider/portfolio/reviews-feedback" component={DataProviderReviewsFeedback} />
             <Route path="/data-provider/portfolio/collaboration-history" component={DataProviderCollaborationHistory} />
             <Route path="/data-provider/portfolio/portfolio-score" component={DataProviderPortfolioScore} />
+            <Route path="/developer/portfolio/ai-models" component={DeveloperPortfolioAIModels} />
+            <Route path="/developer/portfolio/performance" component={DeveloperPortfolioPerformance} />
+            <Route path="/developer/portfolio/activity" component={DeveloperPortfolioActivity} />
+            <Route path="/developer/portfolio/funding" component={DeveloperPortfolioFunding} />
+            <Route path="/developer/portfolio/feedback" component={DeveloperPortfolioFeedback} />
+            <Route path="/developer/portfolio/compliance" component={DeveloperPortfolioCompliance} />
             <Route path="/collaboration" component={InvestorCollaboration} />
             <Route path="/developer/collaboration" component={DeveloperCollaboration} />
             <Route path="/admin" component={AdminDashboard} />

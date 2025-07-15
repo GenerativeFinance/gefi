@@ -47,7 +47,8 @@ import {
   Flag,
   CheckCircle,
   Star,
-  Award
+  Award,
+  MessageCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -162,10 +163,23 @@ export default function Header() {
       ];
     }
 
+    // Developer Portfolio submenu
+    if (location.startsWith('/developer/portfolio')) {
+      return [
+        { name: "AI Models", href: "/developer/portfolio/ai-models", icon: Brain },
+        { name: "Performance", href: "/developer/portfolio/performance", icon: TrendingUp },
+        { name: "Activity", href: "/developer/portfolio/activity", icon: Activity },
+        { name: "Funding", href: "/developer/portfolio/funding", icon: DollarSign },
+        { name: "Feedback", href: "/developer/portfolio/feedback", icon: MessageCircle },
+        { name: "Compliance", href: "/developer/portfolio/compliance", icon: Shield }
+      ];
+    }
+
     // Developer submenu
     if (isDeveloperPage) {
       return [
         { name: "Overview", href: "/developer", icon: BarChart3 },
+        { name: "Portfolio", href: "/developer/portfolio/ai-models", icon: Wallet },
         { name: "Backtesting", href: "/backtesting", icon: TrendingUp },
         { name: "AI Marketplace", href: "/developer-marketplace", icon: Store },
         { name: "Market Data", href: "/market-data", icon: Database },
@@ -212,27 +226,32 @@ export default function Header() {
 
     // Data Provider submenu - hierarchical Portfolio structure
     if (location.startsWith('/data-provider')) {
-      // Portfolio subsections
-      if (location.includes('/data-provider/portfolio/')) {
+      // Portfolio submenu based on user requirements
+      if (location.includes('/data-provider/portfolio') || location.includes('/usage') || location.includes('/quality') || location.includes('/revenue') || location.includes('/compliance') || location.includes('/reviews') || location.includes('/collaboration') || location.includes('/score')) {
         return [
-          { name: "Dataset Overview", href: "/data-provider/portfolio/dataset-overview", icon: Database },
-          { name: "Usage Statistics", href: "/data-provider/portfolio/usage-statistics", icon: BarChart3 },
-          { name: "Quality Metrics", href: "/data-provider/portfolio/quality-metrics", icon: CheckCircle },
-          { name: "Revenue Tracking", href: "/data-provider/portfolio/revenue-tracking", icon: DollarSign },
-          { name: "Compliance Status", href: "/data-provider/portfolio/compliance-status", icon: Shield },
-          { name: "Reviews & Feedback", href: "/data-provider/portfolio/reviews-feedback", icon: Star },
-          { name: "Collaboration History", href: "/data-provider/portfolio/collaboration-history", icon: Users },
-          { name: "Portfolio Score", href: "/data-provider/portfolio/portfolio-score", icon: Award }
+          { name: "Overview", href: "/data-provider", icon: BarChart3 },
+          { name: "Portfolio", href: "/data-provider/portfolio/dataset-overview", icon: Database },
+          { name: "Usage", href: "/data-provider/usage", icon: Activity },
+          { name: "Quality", href: "/data-provider/quality", icon: CheckCircle },
+          { name: "Revenue", href: "/data-provider/revenue", icon: DollarSign },
+          { name: "Compliance", href: "/data-provider/compliance", icon: Shield },
+          { name: "Reviews & Feedback", href: "/data-provider/reviews", icon: Star },
+          { name: "Collaboration", href: "/data-provider/collaboration", icon: Users },
+          { name: "Score", href: "/data-provider/score", icon: Award }
         ];
       }
       
       // Main Data Provider menu
       return [
         { name: "Overview", href: "/data-provider", icon: BarChart3 },
-        { name: "Portfolio", href: "/data-provider/portfolio/dataset-overview", icon: Wallet },
-        { name: "Market Insights", href: "/data-provider/market-insights", icon: TrendingUp },
-        { name: "AI Marketplace", href: "/data-provider/ai-marketplace", icon: Store },
-        { name: "Collaboration", href: "/data-provider/collaboration", icon: Users }
+        { name: "Portfolio", href: "/data-provider/portfolio/dataset-overview", icon: Database },
+        { name: "Usage", href: "/data-provider/usage", icon: Activity },
+        { name: "Quality", href: "/data-provider/quality", icon: CheckCircle },
+        { name: "Revenue", href: "/data-provider/revenue", icon: DollarSign },
+        { name: "Compliance", href: "/data-provider/compliance", icon: Shield },
+        { name: "Reviews & Feedback", href: "/data-provider/reviews", icon: Star },
+        { name: "Collaboration", href: "/data-provider/collaboration", icon: Users },
+        { name: "Score", href: "/data-provider/score", icon: Award }
       ];
     }
 
