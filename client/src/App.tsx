@@ -144,6 +144,7 @@ import DeveloperPortfolioCollaborationHistory from "@/pages/developer/portfolio/
 import DataProviderMarketplace from "@/pages/data-provider-marketplace";
 import DeveloperCollaborationMain from "@/pages/developer/collaboration";
 import MyProfile from "@/pages/my-profile";
+import ModelDetail from "@/pages/model-detail";
 
 
 function Router() {
@@ -187,6 +188,7 @@ function Router() {
             <Route path="/risk-management" component={RiskManagement} />
             <Route path="/risk-dashboard" component={RiskManagement} />
             <Route path="/marketplace" component={Marketplace} />
+            <Route path="/model/:id" component={ModelDetail} />
             <Route path="/risk-assessment-models" component={RiskAssessmentModels} />
             <Route path="/data-provider" component={DataProviderDashboard} />
             <Route path="/data-provider-marketplace" component={DataProviderMarketplace} />

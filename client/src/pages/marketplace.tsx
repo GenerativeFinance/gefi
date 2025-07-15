@@ -33,6 +33,7 @@ import {
   ThumbsUp,
   ArrowRight
 } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface Recommendation {
   modelId: number;
@@ -66,6 +67,7 @@ export default function AIMarketplace() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   // Fetch recommendations
   const { data: recommendations = [], isLoading: isLoadingRecs } = useQuery({
@@ -136,6 +138,7 @@ export default function AIMarketplace() {
       sessionDuration: Math.floor(Math.random() * 120) + 30,
       clickDepth: 1 
     });
+    setLocation(`/model/${model.id}`);
   };
 
   const handleLike = (model: any) => {

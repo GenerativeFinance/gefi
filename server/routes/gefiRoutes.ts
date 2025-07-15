@@ -788,4 +788,693 @@ export function registerGeFiRoutes(app: Express) {
     }
   });
 
+  // AI Models Marketplace
+  app.get('/api/ai-models', async (req, res) => {
+    try {
+      // Comprehensive AI models with realistic examples
+      const sampleAiModels = [
+        {
+          id: 1,
+          name: "QuantRisk Pro",
+          description: "Advanced portfolio risk assessment using Monte Carlo simulations, VaR calculations, and stress testing. Provides real-time risk metrics and alerts for institutional portfolios.",
+          category: "Risk Assessment",
+          subcategory: "Market Risk",
+          creator: "QuantAI Labs",
+          rating: 4.8,
+          totalRatings: 342,
+          price: "299.99",
+          monthlySubscribers: 2847,
+          accuracy: 94.2,
+          riskLevel: "Low",
+          aiTechnique: "Machine Learning",
+          targetUserType: "Asset Managers",
+          financialInstrument: "Multi-Asset",
+          tags: ["Risk Assessment", "VaR", "Monte Carlo", "Portfolio Management"],
+          features: {
+            realTimeAnalysis: true,
+            backtesting: true,
+            alertSystem: true,
+            apiAccess: true,
+            customDashboard: true
+          },
+          performance: {
+            accuracy: 94.2,
+            sharpeRatio: 2.1,
+            maxDrawdown: 8.5,
+            annualReturn: 18.7,
+            calmarRatio: 2.2
+          },
+          dataRequirements: ["Historical Market Data", "Economic Indicators", "Volatility Data"],
+          supportedRegions: ["US", "EU", "Asia-Pacific"],
+          complianceFrameworks: ["BASEL III", "MiFID II", "GDPR"],
+          minInvestment: "10000.00",
+          isFeatured: true,
+          isActive: true,
+          createdAt: "2024-03-15T10:30:00Z",
+          lastUpdated: "2025-07-10T16:45:00Z"
+        },
+        {
+          id: 2,
+          name: "CryptoSentiment AI",
+          description: "Deep learning model analyzing social media sentiment, news sentiment, and on-chain metrics to predict cryptocurrency price movements with high accuracy.",
+          category: "Trading Strategies", 
+          subcategory: "Cryptocurrency",
+          creator: "BlockChain Analytics",
+          rating: 4.6,
+          totalRatings: 189,
+          price: "449.99",
+          monthlySubscribers: 1203,
+          accuracy: 87.8,
+          riskLevel: "High",
+          aiTechnique: "Deep Learning",
+          targetUserType: "Crypto Traders",
+          financialInstrument: "Cryptocurrency",
+          tags: ["Cryptocurrency", "Sentiment Analysis", "Social Media", "Price Prediction"],
+          features: {
+            realTimeAnalysis: true,
+            backtesting: true,
+            alertSystem: true,
+            apiAccess: true,
+            socialMediaIntegration: true
+          },
+          performance: {
+            accuracy: 87.8,
+            sharpeRatio: 1.8,
+            maxDrawdown: 15.2,
+            annualReturn: 35.4,
+            winRate: 68.5
+          },
+          dataRequirements: ["Social Media Data", "News Data", "On-Chain Metrics", "Market Data"],
+          supportedRegions: ["Global"],
+          complianceFrameworks: ["AML", "KYC"],
+          minInvestment: "1000.00",
+          isFeatured: true,
+          isActive: true,
+          createdAt: "2024-05-20T14:15:00Z",
+          lastUpdated: "2025-07-12T09:30:00Z"
+        },
+        {
+          id: 3,
+          name: "ESG Alpha Generator",
+          description: "AI-powered ESG scoring and sustainable investment screener that identifies alpha opportunities in ESG-compliant securities while maintaining competitive returns.",
+          category: "Portfolio Management",
+          subcategory: "ESG Investing", 
+          creator: "Green Finance AI",
+          rating: 4.4,
+          totalRatings: 156,
+          price: "179.99",
+          monthlySubscribers: 834,
+          accuracy: 91.3,
+          riskLevel: "Medium",
+          aiTechnique: "Machine Learning",
+          targetUserType: "Sustainable Investors",
+          financialInstrument: "Equities",
+          tags: ["ESG", "Sustainability", "Alpha Generation", "Screening"],
+          features: {
+            esgScoring: true,
+            sustainabilityMetrics: true,
+            backtesting: true,
+            portfolioOptimization: true,
+            impactReporting: true
+          },
+          performance: {
+            accuracy: 91.3,
+            sharpeRatio: 1.9,
+            maxDrawdown: 12.1,
+            annualReturn: 16.8,
+            esgScore: 8.7
+          },
+          dataRequirements: ["ESG Data", "Financial Data", "Impact Metrics"],
+          supportedRegions: ["US", "EU", "UK"],
+          complianceFrameworks: ["SFDR", "TCFD", "SASB"],
+          minInvestment: "5000.00",
+          isFeatured: false,
+          isActive: true,
+          createdAt: "2024-08-10T11:20:00Z",
+          lastUpdated: "2025-07-08T14:15:00Z"
+        },
+        {
+          id: 4,
+          name: "Credit Default Predictor",
+          description: "Machine learning model for predicting corporate credit defaults using financial ratios, market indicators, and alternative data sources with 95% accuracy.",
+          category: "Risk Assessment",
+          subcategory: "Credit Risk",
+          creator: "CreditAI Solutions",
+          rating: 4.7,
+          totalRatings: 278,
+          price: "399.99",
+          monthlySubscribers: 567,
+          accuracy: 95.1,
+          riskLevel: "Low",
+          aiTechnique: "Machine Learning",
+          targetUserType: "Banks",
+          financialInstrument: "Fixed Income",
+          tags: ["Credit Risk", "Default Prediction", "Financial Ratios", "Alternative Data"],
+          features: {
+            defaultPrediction: true,
+            creditScoring: true,
+            earlyWarning: true,
+            portfolioAnalysis: true,
+            regulatoryReporting: true
+          },
+          performance: {
+            accuracy: 95.1,
+            precision: 92.8,
+            recall: 89.4,
+            f1Score: 91.1,
+            auc: 0.947
+          },
+          dataRequirements: ["Financial Statements", "Market Data", "Alternative Data"],
+          supportedRegions: ["US", "EU", "Asia"],
+          complianceFrameworks: ["BASEL III", "IFRS 9", "CECL"],
+          minInvestment: "25000.00",
+          isFeatured: true,
+          isActive: true,
+          createdAt: "2024-01-12T08:45:00Z",
+          lastUpdated: "2025-07-05T13:20:00Z"
+        },
+        {
+          id: 5,
+          name: "HFT Arbitrage Engine",
+          description: "High-frequency trading algorithm for cross-exchange arbitrage opportunities using ultra-low latency execution and advanced order management.",
+          category: "Trading Strategies",
+          subcategory: "High-Frequency Trading",
+          creator: "Velocity Trading Systems",
+          rating: 4.9,
+          totalRatings: 89,
+          price: "2999.99",
+          monthlySubscribers: 234,
+          accuracy: 96.7,
+          riskLevel: "Medium",
+          aiTechnique: "Reinforcement Learning",
+          targetUserType: "Hedge Funds",
+          financialInstrument: "Multi-Asset",
+          tags: ["HFT", "Arbitrage", "Low Latency", "Cross-Exchange"],
+          features: {
+            ultraLowLatency: true,
+            crossExchange: true,
+            smartRouting: true,
+            riskControls: true,
+            realTimeMonitoring: true
+          },
+          performance: {
+            accuracy: 96.7,
+            averageLatency: 0.5, // microseconds
+            dailyTrades: 15420,
+            profitFactor: 3.2,
+            maxDrawdown: 2.1
+          },
+          dataRequirements: ["Real-Time Market Data", "Order Book Data", "Exchange APIs"],
+          supportedRegions: ["US", "EU"],
+          complianceFrameworks: ["MiFID II", "Reg NMS"],
+          minInvestment: "100000.00",
+          isFeatured: true,
+          isActive: true,
+          createdAt: "2024-09-05T15:30:00Z",
+          lastUpdated: "2025-07-14T10:45:00Z"
+        },
+        {
+          id: 6,
+          name: "Fraud Detection Shield",
+          description: "Advanced AI system for real-time fraud detection in financial transactions using behavioral analytics, pattern recognition, and anomaly detection.",
+          category: "Risk Assessment",
+          subcategory: "Fraud Detection",
+          creator: "SecureAI Technologies",
+          rating: 4.5,
+          totalRatings: 445,
+          price: "599.99",
+          monthlySubscribers: 1156,
+          accuracy: 98.3,
+          riskLevel: "Low",
+          aiTechnique: "Deep Learning",
+          targetUserType: "Banks",
+          financialInstrument: "Payments",
+          tags: ["Fraud Detection", "Behavioral Analytics", "Real-Time", "Anomaly Detection"],
+          features: {
+            realTimeScoring: true,
+            behavioralAnalytics: true,
+            ruleEngine: true,
+            investigationTools: true,
+            reportingDashboard: true
+          },
+          performance: {
+            accuracy: 98.3,
+            falsePositiveRate: 0.8,
+            detectionRate: 97.1,
+            responseTime: 15, // milliseconds
+            savingsRatio: 8.4
+          },
+          dataRequirements: ["Transaction Data", "Behavioral Data", "Device Information"],
+          supportedRegions: ["Global"],
+          complianceFrameworks: ["PCI DSS", "AML", "KYC", "GDPR"],
+          minInvestment: "15000.00",
+          isFeatured: false,
+          isActive: true,
+          createdAt: "2024-02-28T12:15:00Z",
+          lastUpdated: "2025-07-11T16:30:00Z"
+        }
+      ];
+
+      // Apply filtering based on query parameters
+      const { 
+        category, 
+        subcategory, 
+        riskLevel, 
+        priceMin, 
+        priceMax,
+        search,
+        featured,
+        sortBy = 'rating',
+        sortOrder = 'desc'
+      } = req.query;
+
+      let filteredModels = sampleAiModels;
+
+      // Apply filters
+      if (category && category !== 'all') {
+        filteredModels = filteredModels.filter(model => 
+          model.category.toLowerCase().includes(category.toLowerCase())
+        );
+      }
+
+      if (subcategory && subcategory !== 'all') {
+        filteredModels = filteredModels.filter(model => 
+          model.subcategory.toLowerCase().includes(subcategory.toLowerCase())
+        );
+      }
+
+      if (riskLevel && riskLevel !== 'all') {
+        filteredModels = filteredModels.filter(model => 
+          model.riskLevel.toLowerCase() === riskLevel.toLowerCase()
+        );
+      }
+
+      if (priceMin) {
+        filteredModels = filteredModels.filter(model => 
+          parseFloat(model.price) >= parseFloat(priceMin)
+        );
+      }
+
+      if (priceMax) {
+        filteredModels = filteredModels.filter(model => 
+          parseFloat(model.price) <= parseFloat(priceMax)
+        );
+      }
+
+      if (search) {
+        const searchTerm = search.toLowerCase();
+        filteredModels = filteredModels.filter(model => 
+          model.name.toLowerCase().includes(searchTerm) ||
+          model.description.toLowerCase().includes(searchTerm) ||
+          model.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+        );
+      }
+
+      if (featured === 'true') {
+        filteredModels = filteredModels.filter(model => model.isFeatured);
+      }
+
+      // Apply sorting
+      filteredModels.sort((a, b) => {
+        let comparison = 0;
+        switch (sortBy) {
+          case 'rating':
+            comparison = a.rating - b.rating;
+            break;
+          case 'price':
+            comparison = parseFloat(a.price) - parseFloat(b.price);
+            break;
+          case 'subscribers':
+            comparison = a.monthlySubscribers - b.monthlySubscribers;
+            break;
+          case 'name':
+            comparison = a.name.localeCompare(b.name);
+            break;
+          default:
+            comparison = a.rating - b.rating;
+        }
+        return sortOrder === 'desc' ? -comparison : comparison;
+      });
+
+      res.json(filteredModels);
+    } catch (error) {
+      console.error("Error fetching AI models:", error);
+      res.status(500).json({ message: "Failed to fetch AI models" });
+    }
+  });
+
+  // Individual AI Model Details
+  app.get('/api/ai-models/:id', async (req, res) => {
+    try {
+      const modelId = parseInt(req.params.id);
+      
+      // Get all models from the same source as above
+      const sampleAiModels = [
+        {
+          id: 1,
+          name: "QuantRisk Pro",
+          description: "Advanced portfolio risk assessment using Monte Carlo simulations, VaR calculations, and stress testing. Provides real-time risk metrics and alerts for institutional portfolios.",
+          category: "Risk Assessment",
+          subcategory: "Market Risk",
+          creator: "QuantAI Labs",
+          rating: 4.8,
+          totalRatings: 342,
+          price: "299.99",
+          monthlySubscribers: 2847,
+          accuracy: 94.2,
+          riskLevel: "Low",
+          aiTechnique: "Machine Learning",
+          targetUserType: "Asset Managers",
+          financialInstrument: "Multi-Asset",
+          tags: ["Risk Assessment", "VaR", "Monte Carlo", "Portfolio Management"],
+          features: {
+            realTimeAnalysis: true,
+            backtesting: true,
+            alertSystem: true,
+            apiAccess: true,
+            customDashboard: true
+          },
+          performance: {
+            accuracy: 94.2,
+            sharpeRatio: 2.1,
+            maxDrawdown: 8.5,
+            annualReturn: 18.7,
+            calmarRatio: 2.2
+          },
+          dataRequirements: ["Historical Market Data", "Economic Indicators", "Volatility Data"],
+          supportedRegions: ["US", "EU", "Asia-Pacific"],
+          complianceFrameworks: ["BASEL III", "MiFID II", "GDPR"],
+          minInvestment: "10000.00",
+          isFeatured: true,
+          isActive: true,
+          createdAt: "2024-03-15T10:30:00Z",
+          lastUpdated: "2025-07-10T16:45:00Z"
+        },
+        {
+          id: 2,
+          name: "CryptoSentiment AI",
+          description: "Deep learning model analyzing social media sentiment, news sentiment, and on-chain metrics to predict cryptocurrency price movements with high accuracy.",
+          category: "Trading Strategies", 
+          subcategory: "Cryptocurrency",
+          creator: "BlockChain Analytics",
+          rating: 4.6,
+          totalRatings: 189,
+          price: "449.99",
+          monthlySubscribers: 1203,
+          accuracy: 87.8,
+          riskLevel: "High",
+          aiTechnique: "Deep Learning",
+          targetUserType: "Crypto Traders",
+          financialInstrument: "Cryptocurrency",
+          tags: ["Cryptocurrency", "Sentiment Analysis", "Social Media", "Price Prediction"],
+          features: {
+            realTimeAnalysis: true,
+            backtesting: true,
+            alertSystem: true,
+            apiAccess: true,
+            socialMediaIntegration: true
+          },
+          performance: {
+            accuracy: 87.8,
+            sharpeRatio: 1.8,
+            maxDrawdown: 15.2,
+            annualReturn: 35.4,
+            winRate: 68.5
+          },
+          dataRequirements: ["Social Media Data", "News Data", "On-Chain Metrics", "Market Data"],
+          supportedRegions: ["Global"],
+          complianceFrameworks: ["AML", "KYC"],
+          minInvestment: "1000.00",
+          isFeatured: true,
+          isActive: true,
+          createdAt: "2024-05-20T14:15:00Z",
+          lastUpdated: "2025-07-12T09:30:00Z"
+        },
+        {
+          id: 3,
+          name: "ESG Alpha Generator",
+          description: "AI-powered ESG scoring and sustainable investment screener that identifies alpha opportunities in ESG-compliant securities while maintaining competitive returns.",
+          category: "Portfolio Management",
+          subcategory: "ESG Investing", 
+          creator: "Green Finance AI",
+          rating: 4.4,
+          totalRatings: 156,
+          price: "179.99",
+          monthlySubscribers: 834,
+          accuracy: 91.3,
+          riskLevel: "Medium",
+          aiTechnique: "Machine Learning",
+          targetUserType: "Sustainable Investors",
+          financialInstrument: "Equities",
+          tags: ["ESG", "Sustainability", "Alpha Generation", "Screening"],
+          features: {
+            esgScoring: true,
+            sustainabilityMetrics: true,
+            backtesting: true,
+            portfolioOptimization: true,
+            impactReporting: true
+          },
+          performance: {
+            accuracy: 91.3,
+            sharpeRatio: 1.9,
+            maxDrawdown: 12.1,
+            annualReturn: 16.8,
+            esgScore: 8.7
+          },
+          dataRequirements: ["ESG Data", "Financial Data", "Impact Metrics"],
+          supportedRegions: ["US", "EU", "UK"],
+          complianceFrameworks: ["SFDR", "TCFD", "SASB"],
+          minInvestment: "5000.00",
+          isFeatured: false,
+          isActive: true,
+          createdAt: "2024-08-10T11:20:00Z",
+          lastUpdated: "2025-07-08T14:15:00Z"
+        },
+        {
+          id: 4,
+          name: "Credit Default Predictor",
+          description: "Machine learning model for predicting corporate credit defaults using financial ratios, market indicators, and alternative data sources with 95% accuracy.",
+          category: "Risk Assessment",
+          subcategory: "Credit Risk",
+          creator: "CreditAI Solutions",
+          rating: 4.7,
+          totalRatings: 278,
+          price: "399.99",
+          monthlySubscribers: 567,
+          accuracy: 95.1,
+          riskLevel: "Low",
+          aiTechnique: "Machine Learning",
+          targetUserType: "Banks",
+          financialInstrument: "Fixed Income",
+          tags: ["Credit Risk", "Default Prediction", "Financial Ratios", "Alternative Data"],
+          features: {
+            defaultPrediction: true,
+            creditScoring: true,
+            earlyWarning: true,
+            portfolioAnalysis: true,
+            regulatoryReporting: true
+          },
+          performance: {
+            accuracy: 95.1,
+            precision: 92.8,
+            recall: 89.4,
+            f1Score: 91.1,
+            auc: 0.947
+          },
+          dataRequirements: ["Financial Statements", "Market Data", "Alternative Data"],
+          supportedRegions: ["US", "EU", "Asia"],
+          complianceFrameworks: ["BASEL III", "IFRS 9", "CECL"],
+          minInvestment: "25000.00",
+          isFeatured: true,
+          isActive: true,
+          createdAt: "2024-01-12T08:45:00Z",
+          lastUpdated: "2025-07-05T13:20:00Z"
+        },
+        {
+          id: 5,
+          name: "HFT Arbitrage Engine",
+          description: "High-frequency trading algorithm for cross-exchange arbitrage opportunities using ultra-low latency execution and advanced order management.",
+          category: "Trading Strategies",
+          subcategory: "High-Frequency Trading",
+          creator: "Velocity Trading Systems",
+          rating: 4.9,
+          totalRatings: 89,
+          price: "2999.99",
+          monthlySubscribers: 234,
+          accuracy: 96.7,
+          riskLevel: "Medium",
+          aiTechnique: "Reinforcement Learning",
+          targetUserType: "Hedge Funds",
+          financialInstrument: "Multi-Asset",
+          tags: ["HFT", "Arbitrage", "Low Latency", "Cross-Exchange"],
+          features: {
+            ultraLowLatency: true,
+            crossExchange: true,
+            smartRouting: true,
+            riskControls: true,
+            realTimeMonitoring: true
+          },
+          performance: {
+            accuracy: 96.7,
+            averageLatency: 0.5, // microseconds
+            dailyTrades: 15420,
+            profitFactor: 3.2,
+            maxDrawdown: 2.1
+          },
+          dataRequirements: ["Real-Time Market Data", "Order Book Data", "Exchange APIs"],
+          supportedRegions: ["US", "EU"],
+          complianceFrameworks: ["MiFID II", "Reg NMS"],
+          minInvestment: "100000.00",
+          isFeatured: true,
+          isActive: true,
+          createdAt: "2024-09-05T15:30:00Z",
+          lastUpdated: "2025-07-14T10:45:00Z"
+        },
+        {
+          id: 6,
+          name: "Fraud Detection Shield",
+          description: "Advanced AI system for real-time fraud detection in financial transactions using behavioral analytics, pattern recognition, and anomaly detection.",
+          category: "Risk Assessment",
+          subcategory: "Fraud Detection",
+          creator: "SecureAI Technologies",
+          rating: 4.5,
+          totalRatings: 445,
+          price: "599.99",
+          monthlySubscribers: 1156,
+          accuracy: 98.3,
+          riskLevel: "Low",
+          aiTechnique: "Deep Learning",
+          targetUserType: "Banks",
+          financialInstrument: "Payments",
+          tags: ["Fraud Detection", "Behavioral Analytics", "Real-Time", "Anomaly Detection"],
+          features: {
+            realTimeScoring: true,
+            behavioralAnalytics: true,
+            ruleEngine: true,
+            investigationTools: true,
+            reportingDashboard: true
+          },
+          performance: {
+            accuracy: 98.3,
+            falsePositiveRate: 0.8,
+            detectionRate: 97.1,
+            responseTime: 15, // milliseconds
+            savingsRatio: 8.4
+          },
+          dataRequirements: ["Transaction Data", "Behavioral Data", "Device Information"],
+          supportedRegions: ["Global"],
+          complianceFrameworks: ["PCI DSS", "AML", "KYC", "GDPR"],
+          minInvestment: "15000.00",
+          isFeatured: false,
+          isActive: true,
+          createdAt: "2024-02-28T12:15:00Z",
+          lastUpdated: "2025-07-11T16:30:00Z"
+        }
+      ];
+      
+      const model = sampleAiModels.find(m => m.id === modelId);
+      
+      if (!model) {
+        return res.status(404).json({ message: "AI model not found" });
+      }
+
+      // Add additional detailed information for individual model view
+      const detailedModel = {
+        ...model,
+        documentation: {
+          overview: `${model.name} is a state-of-the-art AI model designed for ${model.category.toLowerCase()}. This model leverages ${model.aiTechnique.toLowerCase()} techniques to provide accurate predictions and insights.`,
+          methodology: `The model uses advanced ${model.aiTechnique.toLowerCase()} algorithms trained on comprehensive datasets including ${model.dataRequirements.join(', ').toLowerCase()}.`,
+          useCases: [
+            `Portfolio risk assessment for ${model.targetUserType.toLowerCase()}`,
+            `Real-time monitoring and alerts`,
+            `Backtesting and strategy validation`,
+            `Compliance reporting and documentation`
+          ],
+          limitations: [
+            "Requires high-quality input data",
+            "Performance may vary in extreme market conditions",
+            "Regular model updates required for optimal performance"
+          ]
+        },
+        pricing: {
+          monthly: parseFloat(model.price),
+          annual: parseFloat(model.price) * 10, // 20% discount
+          enterprise: "Custom pricing available",
+          trial: "14-day free trial",
+          features: {
+            basic: ["Real-time analysis", "Basic alerts", "API access"],
+            premium: ["Advanced analytics", "Custom dashboards", "Priority support"],
+            enterprise: ["White-label solution", "Custom integration", "Dedicated support"]
+          }
+        },
+        reviews: [
+          {
+            id: 1,
+            userName: "Sarah Chen",
+            userRole: "Portfolio Manager",
+            rating: 5,
+            comment: "Exceptional accuracy and real-time insights. Has significantly improved our risk management process.",
+            date: "2025-07-01T10:30:00Z",
+            verified: true
+          },
+          {
+            id: 2,
+            userName: "Michael Rodriguez",
+            userRole: "Quantitative Analyst", 
+            rating: 4,
+            comment: "Great model with solid performance. The API integration was seamless and documentation is excellent.",
+            date: "2025-06-28T14:15:00Z",
+            verified: true
+          },
+          {
+            id: 3,
+            userName: "Emily Zhang",
+            userRole: "Risk Manager",
+            rating: 5,
+            comment: "Best-in-class risk assessment tool. The stress testing features are particularly impressive.",
+            date: "2025-06-25T09:45:00Z",
+            verified: true
+          }
+        ],
+        relatedModels: sampleAiModels
+          .filter(m => m.id !== modelId && (m.category === model.category || m.subcategory === model.subcategory))
+          .slice(0, 3)
+          .map(m => ({ id: m.id, name: m.name, rating: m.rating, price: m.price }))
+      };
+
+      res.json(detailedModel);
+    } catch (error) {
+      console.error("Error fetching AI model details:", error);
+      res.status(500).json({ message: "Failed to fetch AI model details" });
+    }
+  });
+
+  // Subscribe to AI Model
+  app.post('/api/ai-models/:id/subscribe', isAuthenticated, async (req, res) => {
+    try {
+      const modelId = parseInt(req.params.id);
+      const userId = req.user?.claims?.sub;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // In a real app, this would create a subscription record in the database
+      // For now, we'll just return a success response
+      res.json({ 
+        success: true, 
+        message: "Successfully subscribed to AI model",
+        subscription: {
+          modelId,
+          userId,
+          subscribedAt: new Date().toISOString(),
+          status: "active"
+        }
+      });
+    } catch (error) {
+      console.error("Error subscribing to AI model:", error);
+      res.status(500).json({ message: "Failed to subscribe to AI model" });
+    }
+  });
+
 }
