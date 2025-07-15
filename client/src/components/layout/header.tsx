@@ -264,6 +264,7 @@ export default function Header() {
       if (location.includes('/data-provider/portfolio/')) {
         return [
           { name: "Overview", href: "/data-provider", icon: BarChart3 },
+          { name: "Portfolio", href: "/data-provider/portfolio/dataset-overview", icon: Wallet },
           { name: "Usage", href: "/data-provider/portfolio/usage", icon: Activity },
           { name: "Quality", href: "/data-provider/portfolio/quality", icon: CheckCircle },
           { name: "Revenue", href: "/data-provider/portfolio/revenue", icon: DollarSign },
