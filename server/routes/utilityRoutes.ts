@@ -400,19 +400,27 @@ export function registerUtilityRoutes(app: Express) {
           break;
           
         case 'admin':
+          const isGuillaume = userId === 'github_55703540';
+          const isTechLead = userId === 'tech-lead';
+          
           profileData = {
             id: userId,
             type: 'admin',
-            name: userId === 'github_55703540' ? 'Guillaume Lauzier' : 
-                  userId === 'tech-lead' ? 'Alex Rodriguez' : 'Sarah Johnson',
-            role: userId === 'github_55703540' ? 'Platform Admin' :
-                  userId === 'tech-lead' ? 'Tech Lead' : 'Compliance Admin',
+            name: isGuillaume ? 'Guillaume Lauzier' : 
+                  isTechLead ? 'Alex Rodriguez' : 'Sarah Johnson',
+            role: isGuillaume ? 'Platform Administrator' :
+                  isTechLead ? 'Technical Lead' : 'Compliance Administrator',
+            email: isGuillaume ? 'guillaumelauzier@gmail.com' : 
+                   isTechLead ? 'alex@gefi.com' : 'sarah@gefi.com',
             verified: true,
-            joinedDate: userId === 'github_55703540' ? '2024-06-28' : '2024-01-15',
-            lastActive: '2 hours ago',
+            joinedDate: isGuillaume ? '2025-06-28' : '2024-01-15',
+            lastActive: 'Active now',
+            bio: isGuillaume ? 'Platform Administrator and Founder of GeFi. Leading the development of AI-powered financial technology solutions.' :
+                 isTechLead ? 'Technical Lead responsible for platform architecture and engineering excellence.' :
+                 'Compliance Administrator ensuring regulatory adherence and risk management.',
             adminRights: [
               'User Management',
-              'Content Moderation',
+              'Content Moderation', 
               'System Configuration',
               'Data Management',
               'Security Oversight',
@@ -423,7 +431,34 @@ export function registerUtilityRoutes(app: Express) {
               activeUsers: 15420,
               securityAlerts: 3,
               pendingTasks: 12
-            }
+            },
+            achievements: [
+              'Platform Founder',
+              'Security Certified',
+              'AI Technology Expert',
+              'Financial Technology Leader'
+            ],
+            experience: isGuillaume ? [
+              {
+                title: 'Platform Administrator',
+                company: 'GeFi',
+                period: '2025 - Present',
+                description: 'Leading platform development and strategic initiatives'
+              },
+              {
+                title: 'Technology Entrepreneur',
+                company: 'Various Ventures',
+                period: '2020 - 2025',
+                description: 'Founded and scaled multiple technology companies'
+              }
+            ] : [
+              {
+                title: 'Technical Lead',
+                company: 'GeFi',
+                period: '2024 - Present',
+                description: 'Leading technical architecture and development'
+              }
+            ]
           };
           break;
           

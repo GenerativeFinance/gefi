@@ -33,15 +33,19 @@ interface AdminProfileProps {
 }
 
 export default function AdminProfile({ adminId, data }: AdminProfileProps) {
-  // Mock data for admin profile
-  const adminData = {
+  // Use actual data if provided, otherwise fallback to mock data
+  const adminData = data || {
     id: adminId,
-    name: adminId === 'tech-lead' ? 'Alex Rodriguez' : 'Sarah Johnson',
-    role: adminId === 'tech-lead' ? 'Tech Lead' : 'Compliance Admin',
+    name: adminId === 'github_55703540' ? 'Guillaume Lauzier' :
+          adminId === 'tech-lead' ? 'Alex Rodriguez' : 'Sarah Johnson',
+    role: adminId === 'github_55703540' ? 'Platform Administrator' :
+          adminId === 'tech-lead' ? 'Technical Lead' : 'Compliance Administrator',
+    email: adminId === 'github_55703540' ? 'guillaumelauzier@gmail.com' :
+           adminId === 'tech-lead' ? 'alex@gefi.com' : 'sarah@gefi.com',
     avatar: `/avatars/${adminId}.png`,
     verified: true,
-    joinedDate: '2024-01-15',
-    lastActive: '2 hours ago',
+    joinedDate: adminId === 'github_55703540' ? '2025-06-28' : '2024-01-15',
+    lastActive: 'Active now',
     
     // Core Admin Fields
     adminRights: [
@@ -223,6 +227,12 @@ export default function AdminProfile({ adminId, data }: AdminProfileProps) {
                   )}
                 </div>
                 <p className="text-lg text-gray-600 dark:text-gray-400">{adminData.role}</p>
+                {adminData.email && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{adminData.email}</p>
+                )}
+                {adminData.bio && (
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 max-w-md">{adminData.bio}</p>
+                )}
                 <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
@@ -230,7 +240,7 @@ export default function AdminProfile({ adminId, data }: AdminProfileProps) {
                   </span>
                   <span className="flex items-center gap-1">
                     <Activity className="w-4 h-4" />
-                    Active {adminData.lastActive}
+                    {adminData.lastActive}
                   </span>
                 </div>
               </div>
