@@ -115,6 +115,8 @@ import DataProviderQualityMetrics from "@/pages/data-provider/portfolio/quality-
 import DataProviderRevenueTracking from "@/pages/data-provider/portfolio/revenue-tracking";
 import DataProviderComplianceStatus from "@/pages/data-provider/portfolio/compliance-status";
 import DataProviderReviewsFeedback from "@/pages/data-provider/portfolio/reviews-feedback";
+import DataProviderCollaborationHistory from "@/pages/data-provider/portfolio/collaboration-history";
+import DataProviderPortfolioScore from "@/pages/data-provider/portfolio/portfolio-score";
 
 
 function Router() {
@@ -233,6 +235,8 @@ function Router() {
             <Route path="/data-provider/portfolio/revenue-tracking" component={DataProviderRevenueTracking} />
             <Route path="/data-provider/portfolio/compliance-status" component={DataProviderComplianceStatus} />
             <Route path="/data-provider/portfolio/reviews-feedback" component={DataProviderReviewsFeedback} />
+            <Route path="/data-provider/portfolio/collaboration-history" component={DataProviderCollaborationHistory} />
+            <Route path="/data-provider/portfolio/portfolio-score" component={DataProviderPortfolioScore} />
             <Route path="/collaboration" component={InvestorCollaboration} />
             <Route path="/developer/collaboration" component={DeveloperCollaboration} />
             <Route path="/admin" component={AdminDashboard} />

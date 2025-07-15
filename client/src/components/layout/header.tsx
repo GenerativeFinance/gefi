@@ -217,7 +217,9 @@ export default function Header() {
           { name: "Quality Metrics", href: "/data-provider/portfolio/quality-metrics", icon: CheckCircle },
           { name: "Revenue Tracking", href: "/data-provider/portfolio/revenue-tracking", icon: DollarSign },
           { name: "Compliance Status", href: "/data-provider/portfolio/compliance-status", icon: Shield },
-          { name: "Reviews & Feedback", href: "/data-provider/portfolio/reviews-feedback", icon: Star }
+          { name: "Reviews & Feedback", href: "/data-provider/portfolio/reviews-feedback", icon: Star },
+          { name: "Collaboration History", href: "/data-provider/portfolio/collaboration-history", icon: Users },
+          { name: "Portfolio Score", href: "/data-provider/portfolio/portfolio-score", icon: Award }
         ];
       }
       
