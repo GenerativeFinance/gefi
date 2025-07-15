@@ -336,4 +336,79 @@ export function registerUtilityRoutes(app: Express) {
     });
   });
 
+  // User profile API endpoint
+  app.get('/api/user-profile/:userType/:userId', async (req, res) => {
+    try {
+      const { userType, userId } = req.params;
+      
+      // Validate user type
+      const validUserTypes = ['developer', 'investor', 'data-provider'];
+      if (!validUserTypes.includes(userType)) {
+        return res.status(400).json({ 
+          message: `Invalid user type. Must be one of: ${validUserTypes.join(', ')}` 
+        });
+      }
+
+      // For now, return mock data based on user type
+      // In production, this would query the database for actual user data
+      let profileData = null;
+      
+      switch (userType) {
+        case 'developer':
+          profileData = {
+            id: userId,
+            type: 'developer',
+            name: userId === 'sarah-chen' ? 'Sarah Chen' : 'John Developer',
+            handle: userId === 'sarah-chen' ? '@sarah_quant' : '@john_dev',
+            organization: userId === 'sarah-chen' ? 'Quantum AI Labs' : 'Tech Solutions Inc',
+            bio: userId === 'sarah-chen' ? 
+              'Specialized in algorithmic trading and portfolio optimization with 8+ years in quantitative finance.' :
+              'Full-stack developer with expertise in financial AI models and blockchain technology.',
+            verified: true,
+            // Additional developer-specific fields would be populated here
+          };
+          break;
+          
+        case 'investor':
+          profileData = {
+            id: userId,
+            type: 'investor',
+            name: userId === 'quantum-capital' ? 'Quantum Capital Partners' : 'Investment Group LLC',
+            type: 'Venture Capital',
+            bio: userId === 'quantum-capital' ? 
+              'Early-stage venture capital firm focused on AI and fintech innovations.' :
+              'Private investment firm specializing in emerging technologies and market solutions.',
+            verified: true,
+            accredited: true,
+            // Additional investor-specific fields would be populated here
+          };
+          break;
+          
+        case 'data-provider':
+          profileData = {
+            id: userId,
+            type: 'data-provider',
+            name: userId === 'financedata-solutions' ? 'FinanceData Solutions' : 'Data Corp Inc',
+            entity: userId === 'financedata-solutions' ? 'Financial Data Corporation' : 'Data Services LLC',
+            bio: userId === 'financedata-solutions' ? 
+              'Leading provider of real-time financial market data, alternative data, and economic indicators.' :
+              'Comprehensive data provider specializing in financial markets and economic analysis.',
+            verified: true,
+            certified: true,
+            // Additional data-provider-specific fields would be populated here
+          };
+          break;
+      }
+
+      if (!profileData) {
+        return res.status(404).json({ message: 'User profile not found' });
+      }
+
+      res.json(profileData);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      res.status(500).json({ message: 'Failed to fetch user profile' });
+    }
+  });
+
 }

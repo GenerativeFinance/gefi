@@ -304,6 +304,7 @@ function Router() {
             <Route path="/moderator/support-tickets" component={ModeratorSupportTickets} />
             <Route path="/moderator/user-monitoring" component={ModeratorUserMonitoring} />
             <Route path="/moderator/analytics" component={ModeratorAnalytics} />
+            <Route path="/profile/:userType/:userId" component={UserProfile} />
           </>
       ) : (
         <>

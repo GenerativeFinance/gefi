@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Link } from "wouter";
 import { 
   Users, 
   MessageCircle, 
@@ -389,7 +390,7 @@ export default function DataProviderCollaboration() {
                           <h5 className="font-semibold text-sm">New API Access Request</h5>
                           <Badge variant="outline">2h ago</Badge>
                         </div>
-                        <p className="text-xs text-gray-600">Alex Thompson requested access to Financial News Sentiment dataset</p>
+                        <p className="text-xs text-gray-600"><Link href="/profile/developer/alex-thompson" className="hover:text-blue-600 cursor-pointer">Alex Thompson</Link> requested access to Financial News Sentiment dataset</p>
                       </div>
 
                       <div className="p-3 border rounded-lg">
@@ -721,7 +722,7 @@ export default function DataProviderCollaboration() {
                       </div>
                       <p className="text-xs text-gray-600">Discussion about optimal API usage patterns and rate limit handling</p>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500">Started by: Alex Thompson</span>
+                        <span className="text-gray-500">Started by: <Link href="/profile/developer/alex-thompson" className="hover:text-blue-600 cursor-pointer">Alex Thompson</Link></span>
                         <span className="text-gray-500">Last activity: 2 hours ago</span>
                       </div>
                     </div>
@@ -733,7 +734,7 @@ export default function DataProviderCollaboration() {
                       </div>
                       <p className="text-xs text-gray-600">Questions about sentiment score calculation and data structure</p>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500">Started by: Maria Garcia</span>
+                        <span className="text-gray-500">Started by: <Link href="/profile/developer/maria-garcia" className="hover:text-blue-600 cursor-pointer">Maria Garcia</Link></span>
                         <span className="text-gray-500">Last activity: 1 day ago</span>
                       </div>
                     </div>
@@ -1110,7 +1111,9 @@ export default function DataProviderCollaboration() {
                             SC
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-semibold text-sm">Sarah Chen</h4>
+                            <Link href="/profile/investor/sarah-chen" className="font-semibold text-sm hover:text-blue-600 cursor-pointer">
+                              Sarah Chen
+                            </Link>
                             <p className="text-xs text-gray-500">GreenTech Ventures</p>
                           </div>
                           <div className="w-2 h-2 bg-green-600 rounded-full"></div>
@@ -1127,7 +1130,9 @@ export default function DataProviderCollaboration() {
                             DK
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-semibold text-sm">David Kim</h4>
+                            <Link href="/profile/developer/david-kim" className="font-semibold text-sm hover:text-blue-600 cursor-pointer">
+                              David Kim
+                            </Link>
                             <p className="text-xs text-gray-500">QuantumAI Systems</p>
                           </div>
                           <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
