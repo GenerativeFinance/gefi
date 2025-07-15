@@ -106,6 +106,7 @@ import DataProviderMarketInsights from "@/pages/data-provider/market-insights";
 import DataProviderPortfolio from "@/pages/data-provider/portfolio";
 import DataProviderAIMarketplace from "@/pages/data-provider/ai-marketplace";
 import DataProviderCollaboration from "@/pages/data-provider/collaboration";
+import DataProviderEnhanced from "@/pages/data-provider-enhanced";
 
 
 function Router() {

@@ -42,7 +42,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WebSocket server for real-time features
   const wss = new WebSocketServer({ 
     server: httpServer, 
-    path: '/ws' 
+    path: '/ws'
   });
 
   // Store active connections
