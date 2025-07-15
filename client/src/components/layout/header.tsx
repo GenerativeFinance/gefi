@@ -274,10 +274,13 @@ export default function Header() {
       return [
         { name: "Overview", href: "/data-provider", icon: BarChart3 },
         { name: "Portfolio", href: "/data-provider/portfolio/usage", icon: Wallet },
-        { name: "Data", href: "/data-provider/data/catalogs", icon: Database },
-        { name: "AI Marketplace", href: "/data-provider/ai-marketplace", icon: Store },
-        { name: "Learning", href: "/data-provider/learning", icon: GraduationCap },
-        { name: "Collaboration", href: "/data-provider/collaboration", icon: Users }
+        { name: "Usage", href: "/data-provider/portfolio/usage", icon: Activity },
+        { name: "Quality", href: "/data-provider/portfolio/quality", icon: CheckCircle },
+        { name: "Revenue", href: "/data-provider/portfolio/revenue", icon: DollarSign },
+        { name: "Compliance", href: "/data-provider/portfolio/compliance", icon: Shield },
+        { name: "Feedback", href: "/data-provider/portfolio/feedback", icon: Star },
+        { name: "Collaboration", href: "/data-provider/portfolio/collaboration", icon: Users },
+        { name: "Score", href: "/data-provider/portfolio/score", icon: Award }
       ];
     }
 
