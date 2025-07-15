@@ -41,12 +41,11 @@ import RegulatorComplianceIssues from "@/pages/regulator/compliance-issues";
 import RegulatorCommunications from "@/pages/regulator/communications";
 import RegulatorStandards from "@/pages/regulator/standards";
 import RegulatorExperienceEnhanced from "@/pages/regulator-experience-enhanced";
-import DataProviderPortfolio from "@/pages/data-provider-portfolio";
-import DataProviderPortfolioDatasets from "@/pages/data-provider-portfolio-datasets";
-import DataProviderPortfolioPerformance from "@/pages/data-provider-portfolio-performance";
-import DataProviderCollaboration from "@/pages/data-provider-collaboration";
-import DataProviderCollaborationCompliance from "@/pages/data-provider-collaboration-compliance";
-import DataProviderCollaborationAudit from "@/pages/data-provider-collaboration-audit";
+import DataProviderDatasets from "@/pages/data-provider/datasets";
+import DataProviderMarketInsights from "@/pages/data-provider/market-insights";
+import DataProviderPortfolio from "@/pages/data-provider/portfolio";
+import DataProviderAIMarketplace from "@/pages/data-provider/ai-marketplace";
+import DataProviderCollaboration from "@/pages/data-provider/collaboration";
 import DataProviderEnhanced from "@/pages/data-provider-enhanced";
 import Learning from "@/pages/learning";
 import InvestorLearning from "@/pages/investor-learning";
@@ -217,12 +216,11 @@ function Router() {
             <Route path="/regulator/standards" component={RegulatorStandards} />
             <Route path="/regulator/experience-enhanced" component={RegulatorExperienceEnhanced} />
             <Route path="/regulator/:regulatorId" component={RegulatorProfile} />
+            <Route path="/data-provider/datasets" component={DataProviderDatasets} />
+            <Route path="/data-provider/market-insights" component={DataProviderMarketInsights} />
             <Route path="/data-provider/portfolio" component={DataProviderPortfolio} />
-            <Route path="/data-provider/portfolio/datasets" component={DataProviderPortfolioDatasets} />
-            <Route path="/data-provider/portfolio/performance" component={DataProviderPortfolioPerformance} />
+            <Route path="/data-provider/ai-marketplace" component={DataProviderAIMarketplace} />
             <Route path="/data-provider/collaboration" component={DataProviderCollaboration} />
-            <Route path="/data-provider/collaboration/compliance" component={DataProviderCollaborationCompliance} />
-            <Route path="/data-provider/collaboration/audit" component={DataProviderCollaborationAudit} />
             <Route path="/data-provider/enhanced" component={DataProviderEnhanced} />
             <Route path="/admin" component={AdminDashboard} />
             <Route path="/admin/users" component={AdminUserManagement} />

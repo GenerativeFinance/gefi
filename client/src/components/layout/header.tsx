@@ -206,32 +206,14 @@ export default function Header() {
       ];
     }
 
-    // Data Provider Portfolio submenu - check more specific paths first
-    if (location.startsWith('/data-provider/portfolio')) {
-      return [
-        { name: "Overview", href: "/data-provider", icon: BarChart3 },
-        { name: "Portfolio", href: "/data-provider/portfolio", icon: Wallet },
-        { name: "Datasets", href: "/data-provider/portfolio/datasets", icon: Database },
-        { name: "Performance", href: "/data-provider/portfolio/performance", icon: TrendingUp }
-      ];
-    }
-
-    // Data Provider Collaboration submenu - check more specific paths first
-    if (location.startsWith('/data-provider/collaboration')) {
-      return [
-        { name: "Overview", href: "/data-provider", icon: BarChart3 },
-        { name: "Collaboration", href: "/data-provider/collaboration", icon: Users },
-        { name: "Compliance", href: "/data-provider/collaboration/compliance", icon: Shield },
-        { name: "Audit", href: "/data-provider/collaboration/audit", icon: FileText }
-      ];
-    }
-
-    // Data Provider submenu - main data provider dashboard
+    // Data Provider submenu - comprehensive AI marketplace specific navigation
     if (location.startsWith('/data-provider')) {
       return [
         { name: "Overview", href: "/data-provider", icon: BarChart3 },
+        { name: "Datasets", href: "/data-provider/datasets", icon: Database },
+        { name: "Market Insights", href: "/data-provider/market-insights", icon: TrendingUp },
         { name: "Portfolio", href: "/data-provider/portfolio", icon: Wallet },
-        { name: "AI Marketplace", href: "/marketplace", icon: Store },
+        { name: "AI Marketplace", href: "/data-provider/ai-marketplace", icon: Store },
         { name: "Collaboration", href: "/data-provider/collaboration", icon: Users }
       ];
     }
