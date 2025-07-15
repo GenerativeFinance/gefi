@@ -48,7 +48,8 @@ import {
   CheckCircle,
   Star,
   Award,
-  MessageCircle
+  MessageCircle,
+  GitBranch
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -165,13 +166,32 @@ export default function Header() {
 
     // Developer Portfolio submenu
     if (location.startsWith('/developer/portfolio')) {
+      // Collaboration History subsections
+      if (location.includes('/developer/portfolio/collaboration/')) {
+        return [
+          { name: "Data Usage", href: "/developer/portfolio/collaboration/data-usage", icon: Database },
+          { name: "Investor Interactions", href: "/developer/portfolio/collaboration/investor-interactions", icon: Users },
+          { name: "Project Involvement", href: "/developer/portfolio/collaboration/project-involvement", icon: Target }
+        ];
+      }
+      
+      // Score subsections
+      if (location.includes('/developer/portfolio/score/')) {
+        return [
+          { name: "Overall Score", href: "/developer/portfolio/score/overall", icon: Award },
+          { name: "Milestones", href: "/developer/portfolio/score/milestones", icon: Target }
+        ];
+      }
+      
       return [
         { name: "AI Models", href: "/developer/portfolio/ai-models", icon: Brain },
         { name: "Performance", href: "/developer/portfolio/performance", icon: TrendingUp },
         { name: "Activity", href: "/developer/portfolio/activity", icon: Activity },
         { name: "Funding", href: "/developer/portfolio/funding", icon: DollarSign },
         { name: "Feedback", href: "/developer/portfolio/feedback", icon: MessageCircle },
-        { name: "Compliance", href: "/developer/portfolio/compliance", icon: Shield }
+        { name: "Compliance", href: "/developer/portfolio/compliance", icon: Shield },
+        { name: "Collaboration History", href: "/developer/portfolio/collaboration/data-usage", icon: Users },
+        { name: "Score", href: "/developer/portfolio/score/overall", icon: Award }
       ];
     }
 
@@ -224,34 +244,38 @@ export default function Header() {
       ];
     }
 
-    // Data Provider submenu - hierarchical Portfolio structure
+    // Data Provider submenu - hierarchical structure
     if (location.startsWith('/data-provider')) {
-      // Portfolio submenu based on user requirements
-      if (location.includes('/data-provider/portfolio') || location.includes('/usage') || location.includes('/quality') || location.includes('/revenue') || location.includes('/compliance') || location.includes('/reviews') || location.includes('/collaboration') || location.includes('/score')) {
+      // Portfolio subsections
+      if (location.includes('/data-provider/portfolio/')) {
         return [
-          { name: "Overview", href: "/data-provider", icon: BarChart3 },
-          { name: "Portfolio", href: "/data-provider/portfolio/dataset-overview", icon: Database },
-          { name: "Usage", href: "/data-provider/usage", icon: Activity },
-          { name: "Quality", href: "/data-provider/quality", icon: CheckCircle },
-          { name: "Revenue", href: "/data-provider/revenue", icon: DollarSign },
-          { name: "Compliance", href: "/data-provider/compliance", icon: Shield },
-          { name: "Reviews & Feedback", href: "/data-provider/reviews", icon: Star },
-          { name: "Collaboration", href: "/data-provider/collaboration", icon: Users },
-          { name: "Score", href: "/data-provider/score", icon: Award }
+          { name: "Usage", href: "/data-provider/portfolio/usage", icon: Activity },
+          { name: "Quality", href: "/data-provider/portfolio/quality", icon: CheckCircle },
+          { name: "Revenue", href: "/data-provider/portfolio/revenue", icon: DollarSign },
+          { name: "Compliance", href: "/data-provider/portfolio/compliance", icon: Shield },
+          { name: "Feedback", href: "/data-provider/portfolio/feedback", icon: Star },
+          { name: "Collaboration", href: "/data-provider/portfolio/collaboration", icon: Users },
+          { name: "Score", href: "/data-provider/portfolio/score", icon: Award }
+        ];
+      }
+      
+      // Data subsections  
+      if (location.includes('/data-provider/data/')) {
+        return [
+          { name: "Dataset Catalogs", href: "/data-provider/data/catalogs", icon: Database },
+          { name: "Metadata Management", href: "/data-provider/data/metadata", icon: FileText },
+          { name: "Data Versioning", href: "/data-provider/data/versioning", icon: GitBranch }
         ];
       }
       
       // Main Data Provider menu
       return [
         { name: "Overview", href: "/data-provider", icon: BarChart3 },
-        { name: "Portfolio", href: "/data-provider/portfolio/dataset-overview", icon: Database },
-        { name: "Usage", href: "/data-provider/usage", icon: Activity },
-        { name: "Quality", href: "/data-provider/quality", icon: CheckCircle },
-        { name: "Revenue", href: "/data-provider/revenue", icon: DollarSign },
-        { name: "Compliance", href: "/data-provider/compliance", icon: Shield },
-        { name: "Reviews & Feedback", href: "/data-provider/reviews", icon: Star },
-        { name: "Collaboration", href: "/data-provider/collaboration", icon: Users },
-        { name: "Score", href: "/data-provider/score", icon: Award }
+        { name: "Portfolio", href: "/data-provider/portfolio/usage", icon: Wallet },
+        { name: "Data", href: "/data-provider/data/catalogs", icon: Database },
+        { name: "AI Marketplace", href: "/data-provider/ai-marketplace", icon: Store },
+        { name: "Learning", href: "/data-provider/learning", icon: GraduationCap },
+        { name: "Collaboration", href: "/data-provider/collaboration", icon: Users }
       ];
     }
 

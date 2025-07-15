@@ -39,6 +39,9 @@ import DataProviderQuality from "@/pages/data-provider/quality";
 import DataProviderRevenue from "@/pages/data-provider/revenue";
 import DataProviderReviews from "@/pages/data-provider/reviews";
 import DataProviderScore from "@/pages/data-provider/score";
+import DataProviderDataCatalogs from "@/pages/data-provider/data/catalogs";
+import DataProviderDataMetadata from "@/pages/data-provider/data/metadata";
+import DataProviderDataVersioning from "@/pages/data-provider/data/versioning";
 import RegulatorDashboard from "@/pages/regulator-dashboard";
 import RegulatorModelAudits from "@/pages/regulator/model-audits";
 import RegulatorDatasetAudits from "@/pages/regulator/dataset-audits";
@@ -128,6 +131,11 @@ import DeveloperPortfolioActivity from "@/pages/developer/portfolio/activity";
 import DeveloperPortfolioFunding from "@/pages/developer/portfolio/funding";
 import DeveloperPortfolioFeedback from "@/pages/developer/portfolio/feedback";
 import DeveloperPortfolioCompliance from "@/pages/developer/portfolio/compliance";
+import DeveloperCollaborationDataUsage from "@/pages/developer/portfolio/collaboration/data-usage";
+import DeveloperCollaborationInvestorInteractions from "@/pages/developer/portfolio/collaboration/investor-interactions";
+import DeveloperCollaborationProjectInvolvement from "@/pages/developer/portfolio/collaboration/project-involvement";
+import DeveloperPortfolioScoreOverall from "@/pages/developer/portfolio/score/overall";
+import DeveloperPortfolioScoreMilestones from "@/pages/developer/portfolio/score/milestones";
 
 
 function Router() {
@@ -239,11 +247,16 @@ function Router() {
             <Route path="/data-provider/portfolio" component={DataProviderPortfolio} />
             <Route path="/data-provider/ai-marketplace" component={DataProviderAIMarketplace} />
             <Route path="/data-provider/collaboration" component={DataProviderCollaboration} />
-            <Route path="/data-provider/usage" component={DataProviderUsage} />
-            <Route path="/data-provider/quality" component={DataProviderQuality} />
-            <Route path="/data-provider/revenue" component={DataProviderRevenue} />
-            <Route path="/data-provider/reviews" component={DataProviderReviews} />
-            <Route path="/data-provider/score" component={DataProviderScore} />
+            <Route path="/data-provider/portfolio/usage" component={DataProviderUsage} />
+            <Route path="/data-provider/portfolio/quality" component={DataProviderQuality} />
+            <Route path="/data-provider/portfolio/revenue" component={DataProviderRevenue} />
+            <Route path="/data-provider/portfolio/compliance" component={DataProviderComplianceStatus} />
+            <Route path="/data-provider/portfolio/feedback" component={DataProviderReviewsFeedback} />
+            <Route path="/data-provider/portfolio/collaboration" component={DataProviderCollaborationHistory} />
+            <Route path="/data-provider/portfolio/score" component={DataProviderPortfolioScore} />
+            <Route path="/data-provider/data/catalogs" component={DataProviderDataCatalogs} />
+            <Route path="/data-provider/data/metadata" component={DataProviderDataMetadata} />
+            <Route path="/data-provider/data/versioning" component={DataProviderDataVersioning} />
             <Route path="/data-provider/enhanced" component={DataProviderEnhanced} />
             <Route path="/data-provider/portfolio/dataset-overview" component={DataProviderDatasetOverview} />
             <Route path="/data-provider/portfolio/usage-statistics" component={DataProviderUsageStatistics} />
@@ -259,6 +272,11 @@ function Router() {
             <Route path="/developer/portfolio/funding" component={DeveloperPortfolioFunding} />
             <Route path="/developer/portfolio/feedback" component={DeveloperPortfolioFeedback} />
             <Route path="/developer/portfolio/compliance" component={DeveloperPortfolioCompliance} />
+            <Route path="/developer/portfolio/collaboration/data-usage" component={DeveloperCollaborationDataUsage} />
+            <Route path="/developer/portfolio/collaboration/investor-interactions" component={DeveloperCollaborationInvestorInteractions} />
+            <Route path="/developer/portfolio/collaboration/project-involvement" component={DeveloperCollaborationProjectInvolvement} />
+            <Route path="/developer/portfolio/score/overall" component={DeveloperPortfolioScoreOverall} />
+            <Route path="/developer/portfolio/score/milestones" component={DeveloperPortfolioScoreMilestones} />
             <Route path="/collaboration" component={InvestorCollaboration} />
             <Route path="/developer/collaboration" component={DeveloperCollaboration} />
             <Route path="/admin" component={AdminDashboard} />
