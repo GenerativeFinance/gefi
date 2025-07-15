@@ -184,6 +184,8 @@ export default function Header() {
       }
       
       return [
+        { name: "Overview", href: "/developer", icon: BarChart3 },
+        { name: "Portfolio", href: "/developer/portfolio/ai-models", icon: Wallet },
         { name: "AI Models", href: "/developer/portfolio/ai-models", icon: Brain },
         { name: "Performance", href: "/developer/portfolio/performance", icon: TrendingUp },
         { name: "Activity", href: "/developer/portfolio/activity", icon: Activity },
