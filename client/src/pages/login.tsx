@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Loader2 } from "lucide-react";
+import { Brain, Loader2, Code } from "lucide-react";
 import { FaGoogle, FaGithub, FaLinkedin } from "react-icons/fa";
 import { useState } from "react";
 
@@ -78,6 +78,21 @@ export default function Login() {
                 <FaLinkedin className="h-5 w-5" />
               )}
               <span>{loading === 'linkedin' ? 'Connecting...' : 'Continue with LinkedIn'}</span>
+            </Button>
+
+            {/* Development Login */}
+            <Button
+              onClick={() => handleLogin('dev')}
+              disabled={loading !== null}
+              className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center space-x-3 disabled:opacity-50"
+              variant="default"
+            >
+              {loading === 'dev' ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Code className="h-5 w-5" />
+              )}
+              <span>{loading === 'dev' ? 'Connecting...' : 'Development Login'}</span>
             </Button>
 
             {/* Divider */}

@@ -179,6 +179,34 @@ export async function setupMultiAuth(app: Express) {
     }
   );
 
+  // Development login for testing
+  app.get('/api/auth/dev', async (req, res) => {
+    try {
+      // Create a development user
+      const devProfile = {
+        id: 'dev_user_' + Date.now(),
+        displayName: 'Development User',
+        emails: [{ value: 'dev@gefi.local' }],
+        photos: [{ value: 'https://via.placeholder.com/40x40?text=DEV' }],
+        username: 'devuser'
+      };
+      
+      const user = await upsertUser(devProfile, 'dev');
+      
+      // Manually log in the user
+      req.login({ ...user, provider: 'dev' }, (err) => {
+        if (err) {
+          console.error('Development login error:', err);
+          return res.redirect('/login-failed?provider=dev');
+        }
+        res.redirect('/');
+      });
+    } catch (error) {
+      console.error('Development login error:', error);
+      res.redirect('/login-failed?provider=dev');
+    }
+  });
+
   // General login route - redirect to login page
   app.get('/api/login', (req, res) => {
     // Use a full redirect to the login page
