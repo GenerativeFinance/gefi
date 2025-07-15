@@ -27,6 +27,135 @@ export function registerGeFiRoutes(app: Express) {
     }
   });
 
+  // Data Provider routes with sample data fallbacks
+  app.get('/api/data-provider', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      let provider = await storage.getDataProvider(userId);
+      
+      // If no provider exists, return sample data for demonstration
+      if (!provider) {
+        const sampleProvider = {
+          id: 1,
+          userId: userId,
+          companyName: "Advanced Financial Data Solutions",
+          description: "Leading provider of real-time market data and analytics for institutional investors",
+          specialization: "Market Data, Risk Analytics, ESG Data, Algorithmic Trading Data",
+          complianceCertifications: ["SOC 2", "ISO 27001", "GDPR", "MiFID II"],
+          dataQualityRating: "9.4",
+          totalRevenue: "2847500.00",
+          totalDatasets: 24,
+          activeSubscriptions: 1847,
+          isVerified: true,
+          status: "active",
+          createdAt: "2024-03-15T10:30:00Z",
+          updatedAt: "2025-01-14T16:45:00Z"
+        };
+        return res.json(sampleProvider);
+      }
+      
+      res.json(provider);
+    } catch (error) {
+      console.error("Error fetching data provider:", error);
+      res.status(500).json({ message: "Failed to fetch data provider" });
+    }
+  });
+
+  app.get('/api/datasets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      let provider = await storage.getDataProvider(userId);
+      
+      if (!provider) {
+        // Return sample datasets for demonstration
+        const sampleDatasets = [
+          {
+            id: 1,
+            providerId: 1,
+            name: "S&P 500 Historical Prices",
+            description: "Complete historical pricing data for all S&P 500 companies from 2010-2024 with adjusted close prices, volume, and market cap data.",
+            category: "Market Data",
+            subcategory: "Equity Prices",
+            dataType: "Time Series",
+            fileSize: 2457600000, // 2.3 GB in bytes
+            recordCount: 2850000,
+            updateFrequency: "Daily",
+            qualityScore: "98",
+            pricePerRecord: "0.002",
+            monthlySubscriptionFee: "299.00",
+            oneTimePurchasePrice: "1499.00",
+            licenseType: "Commercial",
+            downloadCount: 1250,
+            subscriptionCount: 145,
+            revenue: "23450.00",
+            isActive: true,
+            isPublic: true,
+            complianceStatus: "SOC 2, GDPR",
+            createdAt: "2024-01-15T08:30:00Z",
+            updatedAt: "2025-01-14T16:45:00Z"
+          },
+          {
+            id: 2,
+            providerId: 1,
+            name: "Cryptocurrency Order Book Data",
+            description: "Real-time order book snapshots from major crypto exchanges including Binance, Coinbase, and Kraken for top 100 cryptocurrencies.",
+            category: "Alternative Data",
+            subcategory: "Crypto Market Data",
+            dataType: "Streaming",
+            fileSize: 5368709120, // 5 GB in bytes
+            recordCount: 15000000,
+            updateFrequency: "Real-time",
+            qualityScore: "96",
+            pricePerRecord: "0.001",
+            monthlySubscriptionFee: "599.00",
+            oneTimePurchasePrice: "2999.00",
+            licenseType: "Commercial",
+            downloadCount: 890,
+            subscriptionCount: 234,
+            revenue: "18750.00",
+            isActive: true,
+            isPublic: true,
+            complianceStatus: "ISO 27001, GDPR",
+            createdAt: "2024-02-20T14:15:00Z",
+            updatedAt: "2025-01-14T16:45:00Z"
+          },
+          {
+            id: 3,
+            providerId: 1,
+            name: "ESG Ratings Database",
+            description: "Comprehensive ESG (Environmental, Social, Governance) ratings for 5000+ global companies with quarterly updates and historical trends.",
+            category: "ESG Data",
+            subcategory: "Sustainability Metrics",
+            dataType: "Structured",
+            fileSize: 1073741824, // 1 GB in bytes
+            recordCount: 500000,
+            updateFrequency: "Quarterly",
+            qualityScore: "94",
+            pricePerRecord: "0.05",
+            monthlySubscriptionFee: "799.00",
+            oneTimePurchasePrice: "3999.00",
+            licenseType: "Research & Commercial",
+            downloadCount: 567,
+            subscriptionCount: 89,
+            revenue: "15600.00",
+            isActive: true,
+            isPublic: true,
+            complianceStatus: "SOC 2, GDPR, MiFID II",
+            createdAt: "2024-03-10T11:20:00Z",
+            updatedAt: "2025-01-14T16:45:00Z"
+          }
+        ];
+        return res.json(sampleDatasets);
+      }
+      
+      const datasets = await storage.getDatasets(provider.id);
+      res.json(datasets);
+    } catch (error) {
+      console.error("Error fetching datasets:", error);
+      res.status(500).json({ message: "Failed to fetch datasets" });
+    }
+  });
+
   // Comprehensive User Profile API
   app.get('/api/users/:userId/profile', async (req, res) => {
     try {
