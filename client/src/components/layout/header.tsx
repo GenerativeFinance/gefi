@@ -199,10 +199,20 @@ export default function Header() {
 
     // Developer submenu
     if (isDeveloperPage) {
+      // Develop subsections
+      if (location.includes('/developer/develop/') || location === '/backtesting') {
+        return [
+          { name: "Backtesting", href: "/backtesting", icon: TrendingUp },
+          { name: "IDE Access", href: "/developer/develop/ide-access", icon: Code },
+          { name: "Version Control", href: "/developer/develop/version-control", icon: GitBranch },
+          { name: "Code Review", href: "/developer/develop/code-review", icon: FileText }
+        ];
+      }
+      
       return [
         { name: "Overview", href: "/developer", icon: BarChart3 },
         { name: "Portfolio", href: "/developer/portfolio/ai-models", icon: Wallet },
-        { name: "Backtesting", href: "/backtesting", icon: TrendingUp },
+        { name: "Develop", href: "/backtesting", icon: Code },
         { name: "AI Marketplace", href: "/developer-marketplace", icon: Store },
         { name: "Market Data", href: "/market-data", icon: Database },
         { name: "Bounties", href: "/bounties", icon: Target },
