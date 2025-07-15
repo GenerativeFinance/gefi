@@ -37,7 +37,14 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  Copy
+  Copy,
+  Cloud,
+  Network,
+  Zap,
+  TrendingUp,
+  Bot,
+  Coins,
+  HardDrive
 } from "lucide-react";
 
 export default function DataProviderDatasets() {
@@ -221,7 +228,7 @@ export default function DataProviderDatasets() {
         </div>
 
         {/* Advanced Management Tools */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -279,6 +286,33 @@ export default function DataProviderDatasets() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
+                <Cloud className="h-5 w-5" />
+                Cloud Services Integration
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">AWS S3 Storage</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Google Cloud Platform</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Azure Blob Storage</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <Button size="sm" className="w-full">
+                <Settings className="h-4 w-4 mr-2" />
+                Configure Cloud
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
                 Version Control & Security
               </CardTitle>
@@ -300,6 +334,372 @@ export default function DataProviderDatasets() {
                 <Lock className="h-4 w-4 mr-2" />
                 Manage Access
               </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Infrastructure Integration Section */}
+        <div className="space-y-8 mb-8">
+          <h2 className="text-2xl font-bold">Infrastructure & Integration Capabilities</h2>
+          
+          {/* Cloud Services */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Cloud className="h-5 w-5" />
+                Cloud Services Integration
+              </CardTitle>
+              <p className="text-muted-foreground">Scalable computing power and global infrastructure for processing large datasets and running AI models</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-orange-100 rounded flex items-center justify-center">
+                      <Cloud className="h-4 w-4 text-orange-600" />
+                    </div>
+                    <h3 className="font-semibold">Amazon Web Services</h3>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>S3 Object Storage</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>EC2 Compute</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>RDS Database</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Lambda Functions</span>
+                      <Badge className="bg-blue-100 text-blue-800">Available</Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                      <Cloud className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <h3 className="font-semibold">Google Cloud Platform</h3>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Cloud Storage</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>BigQuery Analytics</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>AI/ML Platform</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Kubernetes Engine</span>
+                      <Badge className="bg-blue-100 text-blue-800">Available</Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-cyan-100 rounded flex items-center justify-center">
+                      <Cloud className="h-4 w-4 text-cyan-600" />
+                    </div>
+                    <h3 className="font-semibold">Microsoft Azure</h3>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Blob Storage</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Virtual Machines</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Machine Learning</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Data Factory</span>
+                      <Badge className="bg-blue-100 text-blue-800">Available</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 flex gap-3">
+                <Button>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configure Cloud Integration
+                </Button>
+                <Button variant="outline">
+                  <Activity className="h-4 w-4 mr-2" />
+                  Monitor Usage
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Decentralized Storage */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Network className="h-5 w-5" />
+                Decentralized Storage Solutions
+              </CardTitle>
+              <p className="text-muted-foreground">Enhanced security, resilience, and user control through distributed data storage across multiple nodes</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-purple-100 rounded flex items-center justify-center">
+                      <Network className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <h3 className="font-semibold">IPFS (InterPlanetary File System)</h3>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Content-Addressed Storage</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tamper-Proof Retrieval</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Distributed Network</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Version Control</span>
+                      <Badge className="bg-blue-100 text-blue-800">Available</Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
+                      <Coins className="h-4 w-4 text-green-600" />
+                    </div>
+                    <h3 className="font-semibold">Storj Network</h3>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Encrypted Storage</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Economic Incentives</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Node Redundancy</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>API Integration</span>
+                      <Badge className="bg-blue-100 text-blue-800">Available</Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-yellow-100 rounded flex items-center justify-center">
+                      <HardDrive className="h-4 w-4 text-yellow-600" />
+                    </div>
+                    <h3 className="font-semibold">Filecoin Protocol</h3>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Proof of Storage</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Marketplace Rewards</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Data Verification</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Smart Contracts</span>
+                      <Badge className="bg-blue-100 text-blue-800">Available</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6">
+                <div className="p-4 bg-blue-50 rounded-lg mb-4">
+                  <h4 className="font-semibold mb-2">Decentralized Storage Benefits</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span>Enhanced Security & Privacy</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span>Censorship Resistance</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span>Reduced Storage Costs</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span>Data Ownership Control</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button>
+                    <Network className="h-4 w-4 mr-2" />
+                    Configure Decentralized Storage
+                  </Button>
+                  <Button variant="outline">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Monitor Network Health
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* API Integration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5" />
+                API Integration & Connectivity
+              </CardTitle>
+              <p className="text-muted-foreground">Real-time data feeds, model deployment, and compliance checks through comprehensive API connections</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                      <TrendingUp className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <h3 className="font-semibold">Financial Data Sources</h3>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Bloomberg Terminal API</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Connected</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Reuters Eikon API</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Connected</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Alpha Vantage API</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Connected</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Yahoo Finance API</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Connected</Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-purple-100 rounded flex items-center justify-center">
+                      <Bot className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <h3 className="font-semibold">AI Model Repositories</h3>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Hugging Face Hub</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Connected</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>TensorFlow Hub</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Connected</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>PyTorch Hub</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Connected</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>MLflow Model Registry</span>
+                      <Badge className="bg-blue-100 text-blue-800">Available</Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center">
+                      <Shield className="h-4 w-4 text-red-600" />
+                    </div>
+                    <h3 className="font-semibold">Regulatory Compliance</h3>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>SEC EDGAR API</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Connected</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>FCA Regulatory API</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Connected</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>GDPR Compliance API</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Connected</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>KYC/AML Services</span>
+                      <Badge className="bg-green-100 text-green-800">✓ Connected</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6">
+                <div className="p-4 bg-green-50 rounded-lg mb-4">
+                  <h4 className="font-semibold mb-2">API Integration Capabilities</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span>Real-time Data Feeds</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span>Automated Model Deployment</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span>Compliance Monitoring</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span>Cross-platform Integration</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button>
+                    <Zap className="h-4 w-4 mr-2" />
+                    Configure API Connections
+                  </Button>
+                  <Button variant="outline">
+                    <Activity className="h-4 w-4 mr-2" />
+                    Monitor API Health
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
