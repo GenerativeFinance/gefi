@@ -4,6 +4,8 @@ import Layout from "@/components/layout/Layout";
 import DeveloperProfile from "@/components/profile/DeveloperProfile";
 import InvestorProfile from "@/components/profile/InvestorProfile";
 import DataProviderProfile from "@/components/profile/DataProviderProfile";
+import AdminProfile from "@/components/profile/AdminProfile";
+import ModeratorProfile from "@/components/profile/ModeratorProfile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
@@ -65,6 +67,10 @@ export default function UserProfile() {
         return <InvestorProfile investorId={userId} data={profileData} />;
       case 'data-provider':
         return <DataProviderProfile providerId={userId} data={profileData} />;
+      case 'admin':
+        return <AdminProfile adminId={userId} data={profileData} />;
+      case 'moderator':
+        return <ModeratorProfile moderatorId={userId} data={profileData} />;
       default:
         return (
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-6">

@@ -342,7 +342,7 @@ export function registerUtilityRoutes(app: Express) {
       const { userType, userId } = req.params;
       
       // Validate user type
-      const validUserTypes = ['developer', 'investor', 'data-provider'];
+      const validUserTypes = ['developer', 'investor', 'data-provider', 'admin', 'moderator'];
       if (!validUserTypes.includes(userType)) {
         return res.status(400).json({ 
           message: `Invalid user type. Must be one of: ${validUserTypes.join(', ')}` 
@@ -396,6 +396,61 @@ export function registerUtilityRoutes(app: Express) {
             verified: true,
             certified: true,
             // Additional data-provider-specific fields would be populated here
+          };
+          break;
+          
+        case 'admin':
+          profileData = {
+            id: userId,
+            type: 'admin',
+            name: userId === 'tech-lead' ? 'Alex Rodriguez' : 'Sarah Johnson',
+            role: userId === 'tech-lead' ? 'Tech Lead' : 'Compliance Admin',
+            verified: true,
+            joinedDate: '2024-01-15',
+            lastActive: '2 hours ago',
+            adminRights: [
+              'User Management',
+              'Content Moderation',
+              'System Configuration',
+              'Data Management',
+              'Security Oversight',
+              'Emergency Actions'
+            ],
+            systemStatus: {
+              uptime: '99.9%',
+              activeUsers: 15420,
+              securityAlerts: 3,
+              pendingTasks: 12
+            }
+          };
+          break;
+          
+        case 'moderator':
+          profileData = {
+            id: userId,
+            type: 'moderator',
+            name: userId === 'community-mod' ? 'Jordan Smith' : 'Riley Chen',
+            pseudonym: userId === 'community-mod' ? '@CommunityGuardian' : '@FairPlay',
+            verified: true,
+            joinedDate: '2024-03-20',
+            lastActive: '30 minutes ago',
+            moderationScope: [
+              'Community Forums',
+              'Bounty Disputes',
+              'Funding Process',
+              'User Reports',
+              'Content Review',
+              'Dispute Resolution'
+            ],
+            reputation: {
+              score: 4.7,
+              totalReviews: 89,
+              responseTime: '2.3 hours',
+              resolutionRate: '94%',
+              satisfactionRate: '96%'
+            },
+            activeCases: 3,
+            disputesResolved: 87
           };
           break;
       }
