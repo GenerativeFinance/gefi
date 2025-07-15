@@ -33,7 +33,10 @@ import {
   Settings,
   Activity,
   Target,
-  Zap
+  Zap,
+  BarChart3,
+  PieChart,
+  Copy
 } from "lucide-react";
 
 export default function DataProviderCollaboration() {
@@ -387,7 +390,7 @@ export default function DataProviderCollaboration() {
         </div>
 
         {/* Advanced Collaboration Tools */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -446,36 +449,64 @@ export default function DataProviderCollaboration() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5" />
-                Version Control Platform
+                Model Integration Platform
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Git-like Dataset Control</span>
+                <span className="text-sm">AI/ML Model Running</span>
                 <CheckCircle className="h-4 w-4 text-green-500" />
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Branch Management</span>
+                <span className="text-sm">Predictive Analytics</span>
                 <CheckCircle className="h-4 w-4 text-green-500" />
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Merge Requests</span>
+                <span className="text-sm">Pre-processed Insights</span>
                 <CheckCircle className="h-4 w-4 text-green-500" />
               </div>
               <Button size="sm" className="w-full">
-                <Copy className="h-4 w-4 mr-2" />
-                Manage Versions
+                <Zap className="h-4 w-4 mr-2" />
+                Run Model Analysis
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Visualization Tools
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Interactive Charts</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Custom Dashboards</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Stakeholder Reports</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <Button size="sm" className="w-full">
+                <PieChart className="h-4 w-4 mr-2" />
+                Create Visualization
               </Button>
             </CardContent>
           </Card>
         </div>
 
         <Tabs defaultValue="partnerships" className="space-y-6">
-          <TabsList className="grid grid-cols-5 w-full">
+          <TabsList className="grid grid-cols-6 w-full">
             <TabsTrigger value="partnerships">Partnerships</TabsTrigger>
             <TabsTrigger value="communications">Communications</TabsTrigger>
+            <TabsTrigger value="model-integration">Model Integration</TabsTrigger>
+            <TabsTrigger value="visualization">Visualization</TabsTrigger>
             <TabsTrigger value="compliance">Compliance Tools</TabsTrigger>
-            <TabsTrigger value="regulatory">Regulatory</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
           </TabsList>
 
@@ -617,6 +648,310 @@ export default function DataProviderCollaboration() {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="model-integration" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5" />
+                    AI/ML Model Integration
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CheckCircle className="h-5 w-5 text-blue-600" />
+                      <h3 className="font-semibold">Advanced Data Analysis</h3>
+                      <Badge className="bg-blue-100 text-blue-800">✓ Active</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Run sophisticated ML models for deep data analysis and pattern recognition</p>
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <h3 className="font-semibold">Forecasting Models</h3>
+                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Integrate time series and predictive models for accurate forecasting</p>
+                  </div>
+                  <div className="p-4 bg-purple-50 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CheckCircle className="h-5 w-5 text-purple-600" />
+                      <h3 className="font-semibold">Predictive Analytics</h3>
+                      <Badge className="bg-purple-100 text-purple-800">✓ Active</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Deploy models for risk assessment, trend prediction, and market analysis</p>
+                  </div>
+                  <Button className="w-full">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configure Model Pipeline
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    Pre-processed Insights
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Market Sentiment Analysis</p>
+                        <p className="text-sm text-muted-foreground">Real-time sentiment scoring</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Running</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Risk Factor Identification</p>
+                        <p className="text-sm text-muted-foreground">Automated risk detection</p>
+                      </div>
+                      <Badge className="bg-blue-100 text-blue-800">Active</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Portfolio Optimization</p>
+                        <p className="text-sm text-muted-foreground">AI-driven allocation recommendations</p>
+                      </div>
+                      <Badge className="bg-purple-100 text-purple-800">Scheduled</Badge>
+                    </div>
+                  </div>
+                  <Button className="w-full" variant="outline">
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Insight Reports
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Model Integration Features */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Developer Model Support Capabilities</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Activity className="h-5 w-5 text-blue-500" />
+                      <h3 className="font-semibold">Model Training Support</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Feature Engineering</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Data Preprocessing</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Validation Datasets</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Zap className="h-5 w-5 text-purple-500" />
+                      <h3 className="font-semibold">Model Deployment</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>API Integration</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Real-time Inference</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Batch Processing</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className="h-5 w-5 text-green-500" />
+                      <h3 className="font-semibold">Performance Monitoring</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Model Accuracy Tracking</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Drift Detection</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Performance Analytics</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="visualization" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Interactive Charts & Graphs
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CheckCircle className="h-5 w-5 text-blue-600" />
+                      <h3 className="font-semibold">Time Series Visualizations</h3>
+                      <Badge className="bg-blue-100 text-blue-800">✓ Available</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Interactive line charts, candlestick plots, and trend analysis</p>
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <h3 className="font-semibold">Statistical Charts</h3>
+                      <Badge className="bg-green-100 text-green-800">✓ Available</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Histograms, box plots, correlation matrices, and heatmaps</p>
+                  </div>
+                  <div className="p-4 bg-purple-50 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CheckCircle className="h-5 w-5 text-purple-600" />
+                      <h3 className="font-semibold">Portfolio Visualizations</h3>
+                      <Badge className="bg-purple-100 text-purple-800">✓ Available</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Asset allocation pie charts, performance comparisons, risk plots</p>
+                  </div>
+                  <Button className="w-full">
+                    <PieChart className="h-4 w-4 mr-2" />
+                    Create Chart
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Custom Dashboards
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Investor Dashboard</p>
+                        <p className="text-sm text-muted-foreground">ROI tracking and portfolio insights</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Active</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Regulator Dashboard</p>
+                        <p className="text-sm text-muted-foreground">Compliance and risk monitoring</p>
+                      </div>
+                      <Badge className="bg-blue-100 text-blue-800">Active</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Executive Summary</p>
+                        <p className="text-sm text-muted-foreground">High-level KPIs and trends</p>
+                      </div>
+                      <Badge className="bg-purple-100 text-purple-800">Draft</Badge>
+                    </div>
+                  </div>
+                  <Button className="w-full" variant="outline">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Customize Dashboard
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Stakeholder Communication Features */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Non-Technical Stakeholder Communication</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="h-5 w-5 text-blue-500" />
+                      <h3 className="font-semibold">Investor Reports</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Performance Summaries</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Risk Explanations</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Visual Storytelling</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Shield className="h-5 w-5 text-purple-500" />
+                      <h3 className="font-semibold">Regulatory Presentations</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Compliance Summaries</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Risk Assessments</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Market Impact Analysis</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Globe className="h-5 w-5 text-green-500" />
+                      <h3 className="font-semibold">Executive Briefings</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Strategic Insights</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Market Opportunities</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Decision Support</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="compliance" className="space-y-6">

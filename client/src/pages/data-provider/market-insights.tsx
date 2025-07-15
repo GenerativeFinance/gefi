@@ -199,17 +199,47 @@ export default function DataProviderMarketInsights() {
           </TabsList>
 
           <TabsContent value="trends" className="space-y-6">
-            {/* Financial Tracking Overview */}
+            {/* Trend Analysis Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Dataset Usage Revenue</p>
-                      <p className="text-2xl font-bold">$87,450</p>
+                      <p className="text-sm text-muted-foreground">Market Predictions</p>
+                      <p className="text-2xl font-bold">87%</p>
                       <p className="text-sm text-green-600 flex items-center">
                         <ArrowUp className="h-3 w-3 mr-1" />
-                        +18% MoM
+                        Accuracy rate
+                      </p>
+                    </div>
+                    <Target className="h-8 w-8 text-blue-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Trend Insights</p>
+                      <p className="text-2xl font-bold">145</p>
+                      <p className="text-sm text-green-600 flex items-center">
+                        <ArrowUp className="h-3 w-3 mr-1" />
+                        Generated this month
+                      </p>
+                    </div>
+                    <TrendingUp className="h-8 w-8 text-purple-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Investor Justifications</p>
+                      <p className="text-2xl font-bold">23</p>
+                      <p className="text-sm text-green-600 flex items-center">
+                        <ArrowUp className="h-3 w-3 mr-1" />
+                        Funding reports shared
                       </p>
                     </div>
                     <DollarSign className="h-8 w-8 text-green-500" />
@@ -220,45 +250,99 @@ export default function DataProviderMarketInsights() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Subscription Revenue</p>
-                      <p className="text-2xl font-bold">$45,230</p>
-                      <p className="text-sm text-green-600 flex items-center">
-                        <ArrowUp className="h-3 w-3 mr-1" />
-                        +12% MoM
-                      </p>
-                    </div>
-                    <Users className="h-8 w-8 text-purple-500" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Licensing Revenue</p>
-                      <p className="text-2xl font-bold">$23,890</p>
-                      <p className="text-sm text-green-600 flex items-center">
-                        <ArrowUp className="h-3 w-3 mr-1" />
-                        +8% MoM
-                      </p>
-                    </div>
-                    <Globe className="h-8 w-8 text-blue-500" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Financial Transparency</p>
-                      <p className="text-2xl font-bold">100%</p>
+                      <p className="text-sm text-muted-foreground">Market Relevance</p>
+                      <p className="text-2xl font-bold">94%</p>
                       <p className="text-sm text-blue-600 flex items-center">
                         <CheckCircle className="h-3 w-3 mr-1" />
-                        Verified
+                        Regulatory compliance
                       </p>
                     </div>
                     <Star className="h-8 w-8 text-yellow-500" />
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Advanced Trend Analysis Tools */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Market Data Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Time Series Analysis</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Seasonal Pattern Detection</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Volatility Forecasting</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <Button size="sm" className="w-full">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Run Market Analysis
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    Predictive Analytics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Price Movement Prediction</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Correlation Analysis</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Risk Factor Identification</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <Button size="sm" className="w-full">
+                    <Zap className="h-4 w-4 mr-2" />
+                    Generate Predictions
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Actionable Insights
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Investment Recommendations</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Regulatory Compliance Reports</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Market Opportunity Alerts</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <Button size="sm" className="w-full">
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Insights Dashboard
+                  </Button>
                 </CardContent>
               </Card>
             </div>
