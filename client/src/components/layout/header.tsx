@@ -167,7 +167,8 @@ export default function Header() {
         { name: "AI Marketplace", href: "/developer-marketplace", icon: Store },
         { name: "Market Data", href: "/market-data", icon: Database },
         { name: "Bounties", href: "/bounties", icon: Target },
-        { name: "Learning", href: "/learning", icon: GraduationCap }
+        { name: "Learning", href: "/learning", icon: GraduationCap },
+        { name: "Collaboration", href: "/developer/collaboration", icon: Users }
       ];
     }
 
@@ -226,7 +227,8 @@ export default function Header() {
       { name: "Trading", href: "/live-trading", icon: TrendingUp },
       { name: "Reports", href: "/reports", icon: FileText },
       { name: "Funding", href: "/funding", icon: DollarSign },
-      { name: "Learning", href: "/investor-learning", icon: GraduationCap }
+      { name: "Learning", href: "/investor-learning", icon: GraduationCap },
+      { name: "Collaboration", href: "/collaboration", icon: Users }
     ];
   };
 

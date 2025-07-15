@@ -107,6 +107,8 @@ import DataProviderPortfolio from "@/pages/data-provider/portfolio";
 import DataProviderAIMarketplace from "@/pages/data-provider/ai-marketplace";
 import DataProviderCollaboration from "@/pages/data-provider/collaboration";
 import DataProviderEnhanced from "@/pages/data-provider-enhanced";
+import InvestorCollaboration from "@/pages/collaboration";
+import DeveloperCollaboration from "@/pages/developer/collaboration";
 
 
 function Router() {
@@ -219,6 +221,8 @@ function Router() {
             <Route path="/data-provider/ai-marketplace" component={DataProviderAIMarketplace} />
             <Route path="/data-provider/collaboration" component={DataProviderCollaboration} />
             <Route path="/data-provider/enhanced" component={DataProviderEnhanced} />
+            <Route path="/collaboration" component={InvestorCollaboration} />
+            <Route path="/developer/collaboration" component={DeveloperCollaboration} />
             <Route path="/admin" component={AdminDashboard} />
             <Route path="/admin/users" component={AdminUserManagement} />
             <Route path="/admin/content" component={AdminContentModeration} />
