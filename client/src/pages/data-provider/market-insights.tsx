@@ -161,9 +161,9 @@ export default function DataProviderMarketInsights() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Market Insights</h1>
+            <h1 className="text-3xl font-bold mb-2">Financial Tracking Tools</h1>
             <p className="text-muted-foreground">
-              Analytics, trends, and predictive insights for the AI financial data marketplace
+              Monitor revenue from dataset usage, model subscriptions, and licensing agreements with full transparency
             </p>
           </div>
           <div className="flex gap-3">
@@ -199,47 +199,17 @@ export default function DataProviderMarketInsights() {
           </TabsList>
 
           <TabsContent value="trends" className="space-y-6">
-            {/* Market Overview Cards */}
+            {/* Financial Tracking Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Market Size</p>
-                      <p className="text-2xl font-bold">$2.4B</p>
+                      <p className="text-sm text-muted-foreground">Dataset Usage Revenue</p>
+                      <p className="text-2xl font-bold">$87,450</p>
                       <p className="text-sm text-green-600 flex items-center">
                         <ArrowUp className="h-3 w-3 mr-1" />
-                        +15% YoY
-                      </p>
-                    </div>
-                    <Globe className="h-8 w-8 text-blue-500" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Active Providers</p>
-                      <p className="text-2xl font-bold">1,247</p>
-                      <p className="text-sm text-green-600 flex items-center">
-                        <ArrowUp className="h-3 w-3 mr-1" />
-                        +8% MoM
-                      </p>
-                    </div>
-                    <Users className="h-8 w-8 text-purple-500" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Avg Dataset Price</p>
-                      <p className="text-2xl font-bold">$145</p>
-                      <p className="text-sm text-red-600 flex items-center">
-                        <ArrowDown className="h-3 w-3 mr-1" />
-                        -3% MoM
+                        +18% MoM
                       </p>
                     </div>
                     <DollarSign className="h-8 w-8 text-green-500" />
@@ -250,15 +220,129 @@ export default function DataProviderMarketInsights() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Quality Score</p>
-                      <p className="text-2xl font-bold">4.7/5</p>
+                      <p className="text-sm text-muted-foreground">Subscription Revenue</p>
+                      <p className="text-2xl font-bold">$45,230</p>
                       <p className="text-sm text-green-600 flex items-center">
                         <ArrowUp className="h-3 w-3 mr-1" />
-                        +0.2 MoM
+                        +12% MoM
+                      </p>
+                    </div>
+                    <Users className="h-8 w-8 text-purple-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Licensing Revenue</p>
+                      <p className="text-2xl font-bold">$23,890</p>
+                      <p className="text-sm text-green-600 flex items-center">
+                        <ArrowUp className="h-3 w-3 mr-1" />
+                        +8% MoM
+                      </p>
+                    </div>
+                    <Globe className="h-8 w-8 text-blue-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Financial Transparency</p>
+                      <p className="text-2xl font-bold">100%</p>
+                      <p className="text-sm text-blue-600 flex items-center">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Verified
                       </p>
                     </div>
                     <Star className="h-8 w-8 text-yellow-500" />
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Revenue Tracking Tools */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Usage Monitoring
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Real-time Usage Tracking</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">API Call Monitoring</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Revenue Attribution</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <Button size="sm" className="w-full">
+                    <Activity className="h-4 w-4 mr-2" />
+                    View Usage Analytics
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Revenue Transparency
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Detailed Revenue Reports</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Payment Tracking</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Investor Visibility</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <Button size="sm" className="w-full">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Revenue Dashboard
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Financial Accountability
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Audit-ready Reports</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Trust Metrics</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Compliance Tracking</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <Button size="sm" className="w-full">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Generate Reports
+                  </Button>
                 </CardContent>
               </Card>
             </div>

@@ -214,9 +214,9 @@ export default function DataProviderCollaboration() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Collaboration Hub</h1>
+            <h1 className="text-3xl font-bold mb-2">Collaboration Platforms & Compliance Tools</h1>
             <p className="text-muted-foreground">
-              Manage partnerships, communications, and regulatory documentation
+              Shared workspaces, messaging systems, version control, and automated compliance tools for seamless stakeholder collaboration
             </p>
           </div>
           <div className="flex gap-3">
@@ -334,16 +334,17 @@ export default function DataProviderCollaboration() {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Collaboration Tools Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Active Partnerships</p>
-                  <p className="text-2xl font-bold">12</p>
+                  <p className="text-sm text-muted-foreground">Shared Workspaces</p>
+                  <p className="text-2xl font-bold">8</p>
+                  <p className="text-xs text-blue-600">Git-like version control</p>
                 </div>
-                <Handshake className="h-8 w-8 text-blue-500" />
+                <Building className="h-8 w-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
@@ -351,8 +352,9 @@ export default function DataProviderCollaboration() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Unread Messages</p>
-                  <p className="text-2xl font-bold">4</p>
+                  <p className="text-sm text-muted-foreground">Message Threads</p>
+                  <p className="text-2xl font-bold">47</p>
+                  <p className="text-xs text-green-600">Real-time messaging</p>
                 </div>
                 <MessageSquare className="h-8 w-8 text-green-500" />
               </div>
@@ -363,7 +365,8 @@ export default function DataProviderCollaboration() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Compliance Score</p>
-                  <p className="text-2xl font-bold">94%</p>
+                  <p className="text-2xl font-bold">96%</p>
+                  <p className="text-xs text-purple-600">Auto-compliance checks</p>
                 </div>
                 <Shield className="h-8 w-8 text-purple-500" />
               </div>
@@ -373,19 +376,105 @@ export default function DataProviderCollaboration() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Regulatory Updates</p>
-                  <p className="text-2xl font-bold">3</p>
+                  <p className="text-sm text-muted-foreground">Audit Trails</p>
+                  <p className="text-2xl font-bold">100%</p>
+                  <p className="text-xs text-orange-600">Complete documentation</p>
                 </div>
-                <AlertTriangle className="h-8 w-8 text-orange-500" />
+                <FileText className="h-8 w-8 text-orange-500" />
               </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* Advanced Collaboration Tools */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Shared Workspaces
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Dataset Collaboration</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Model Development</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Funding Opportunities</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <Button size="sm" className="w-full">
+                <Building className="h-4 w-4 mr-2" />
+                Create Workspace
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Communication Systems
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Real-time Messaging</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Video Conferencing</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Document Sharing</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <Button size="sm" className="w-full">
+                <Send className="h-4 w-4 mr-2" />
+                Start Conversation
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Version Control Platform
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Git-like Dataset Control</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Branch Management</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Merge Requests</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <Button size="sm" className="w-full">
+                <Copy className="h-4 w-4 mr-2" />
+                Manage Versions
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
         <Tabs defaultValue="partnerships" className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="partnerships">Partnerships</TabsTrigger>
             <TabsTrigger value="communications">Communications</TabsTrigger>
+            <TabsTrigger value="compliance">Compliance Tools</TabsTrigger>
             <TabsTrigger value="regulatory">Regulatory</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
           </TabsList>
@@ -528,6 +617,158 @@ export default function DataProviderCollaboration() {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="compliance" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Automated Compliance Checks
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <h3 className="font-semibold">GDPR Compliance</h3>
+                      <Badge className="bg-green-100 text-green-800">✓ Verified</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">All datasets comply with GDPR data protection requirements</p>
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <h3 className="font-semibold">SOC 2 Type II</h3>
+                      <Badge className="bg-green-100 text-green-800">✓ Verified</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Security controls meet industry standards</p>
+                  </div>
+                  <div className="p-4 bg-yellow-50 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Clock className="h-5 w-5 text-yellow-600" />
+                      <h3 className="font-semibold">ISO 27001</h3>
+                      <Badge className="bg-yellow-100 text-yellow-800">⏳ In Progress</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Certification renewal in progress</p>
+                  </div>
+                  <Button className="w-full">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Run Compliance Scan
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Audit Trails & Documentation
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Data Access Logs</p>
+                        <p className="text-sm text-muted-foreground">Complete access history</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">100% Coverage</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Change Management</p>
+                        <p className="text-sm text-muted-foreground">All modifications tracked</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Automated</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Compliance Reports</p>
+                        <p className="text-sm text-muted-foreground">Quarterly assessments</p>
+                      </div>
+                      <Badge className="bg-blue-100 text-blue-800">Ready</Badge>
+                    </div>
+                  </div>
+                  <Button className="w-full" variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Audit Report
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Legal Standards Compliance */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Legal & Industry Standards Adherence</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Shield className="h-5 w-5 text-green-500" />
+                      <h3 className="font-semibold">Data Protection</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>GDPR Compliance</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>CCPA Compliance</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Data Encryption</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="h-5 w-5 text-blue-500" />
+                      <h3 className="font-semibold">Financial Regulations</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>SEC Requirements</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>MiFID II</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Basel III</span>
+                        <Badge className="bg-yellow-100 text-yellow-800">⏳</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Activity className="h-5 w-5 text-purple-500" />
+                      <h3 className="font-semibold">AI/ML Standards</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>AI Ethics Framework</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Model Transparency</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Bias Testing</span>
+                        <Badge className="bg-green-100 text-green-800">✓</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="regulatory" className="space-y-6">

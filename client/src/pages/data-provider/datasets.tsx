@@ -162,20 +162,21 @@ export default function DataProviderDatasets() {
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Dataset Management</h1>
+          <h1 className="text-3xl font-bold mb-2">Dataset Upload & Management Tools</h1>
           <p className="text-muted-foreground">
-            Upload, manage, and monetize your datasets for the AI marketplace
+            Robust tools to upload, organize, clean, and manage datasets with data versioning, tagging, and access control
           </p>
         </div>
 
-        {/* Stats Cards */}
+        {/* Management Tools Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Datasets</p>
-                  <p className="text-2xl font-bold">{datasets.length}</p>
+                  <p className="text-sm text-muted-foreground">Dataset Versions</p>
+                  <p className="text-2xl font-bold">47</p>
+                  <p className="text-xs text-green-600">Auto-versioning enabled</p>
                 </div>
                 <Database className="h-8 w-8 text-blue-500" />
               </div>
@@ -185,33 +186,120 @@ export default function DataProviderDatasets() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Revenue</p>
-                  <p className="text-2xl font-bold">$120,110</p>
-                </div>
-                <DollarSign className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Active Subscriptions</p>
-                  <p className="text-2xl font-bold">535</p>
-                </div>
-                <Users className="h-8 w-8 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Avg Quality Score</p>
+                  <p className="text-sm text-muted-foreground">Data Quality Score</p>
                   <p className="text-2xl font-bold">94%</p>
+                  <p className="text-xs text-blue-600">Auto-cleaning tools</p>
                 </div>
                 <Star className="h-8 w-8 text-yellow-500" />
               </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Access Controls</p>
+                  <p className="text-2xl font-bold">12</p>
+                  <p className="text-xs text-purple-600">Security layers active</p>
+                </div>
+                <Shield className="h-8 w-8 text-purple-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Tagged Datasets</p>
+                  <p className="text-2xl font-bold">535</p>
+                  <p className="text-xs text-green-600">Smart tagging system</p>
+                </div>
+                <Users className="h-8 w-8 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Advanced Management Tools */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Upload & Organization Tools
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Bulk Upload</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Auto-Classification</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Folder Organization</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <Button size="sm" className="w-full">
+                <Settings className="h-4 w-4 mr-2" />
+                Configure Tools
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Data Cleaning & Quality
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Missing Value Detection</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Outlier Analysis</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Data Validation</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <Button size="sm" className="w-full">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Run Quality Check
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Version Control & Security
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Git-like Versioning</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Role-based Access</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm">Audit Trails</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <Button size="sm" className="w-full">
+                <Lock className="h-4 w-4 mr-2" />
+                Manage Access
+              </Button>
             </CardContent>
           </Card>
         </div>
