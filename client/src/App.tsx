@@ -140,6 +140,7 @@ import DeveloperDevelopIDEAccess from "@/pages/developer/develop/ide-access";
 import DeveloperDevelopVersionControl from "@/pages/developer/develop/version-control";
 import DeveloperDevelopCodeReview from "@/pages/developer/develop/code-review";
 import DeveloperPortfolioCollaborationHistory from "@/pages/developer/portfolio/collaboration-history";
+import DataProviderMarketplace from "@/pages/data-provider-marketplace";
 
 
 function Router() {
@@ -185,6 +186,7 @@ function Router() {
             <Route path="/marketplace" component={Marketplace} />
             <Route path="/risk-assessment-models" component={RiskAssessmentModels} />
             <Route path="/data-provider" component={DataProviderDashboard} />
+            <Route path="/data-provider-marketplace" component={DataProviderMarketplace} />
             <Route path="/regulator" component={RegulatorDashboard} />
             <Route path="/pricing" component={Pricing} />
             <Route path="/checkout" component={Checkout} />
