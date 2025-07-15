@@ -192,7 +192,7 @@ export default function Header() {
         { name: "Funding", href: "/developer/portfolio/funding", icon: DollarSign },
         { name: "Feedback", href: "/developer/portfolio/feedback", icon: MessageCircle },
         { name: "Compliance", href: "/developer/portfolio/compliance", icon: Shield },
-        { name: "Collaboration History", href: "/developer/portfolio/collaboration/data-usage", icon: Users },
+        { name: "Collaboration", href: "/developer/portfolio/collaboration-history", icon: Users },
         { name: "Score", href: "/developer/portfolio/score/overall", icon: Award }
       ];
     }

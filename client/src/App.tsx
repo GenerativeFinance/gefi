@@ -139,6 +139,7 @@ import DeveloperPortfolioScoreMilestones from "@/pages/developer/portfolio/score
 import DeveloperDevelopIDEAccess from "@/pages/developer/develop/ide-access";
 import DeveloperDevelopVersionControl from "@/pages/developer/develop/version-control";
 import DeveloperDevelopCodeReview from "@/pages/developer/develop/code-review";
+import DeveloperPortfolioCollaborationHistory from "@/pages/developer/portfolio/collaboration-history";
 
 
 function Router() {
@@ -283,6 +284,7 @@ function Router() {
             <Route path="/developer/develop/ide-access" component={DeveloperDevelopIDEAccess} />
             <Route path="/developer/develop/version-control" component={DeveloperDevelopVersionControl} />
             <Route path="/developer/develop/code-review" component={DeveloperDevelopCodeReview} />
+            <Route path="/developer/portfolio/collaboration-history" component={DeveloperPortfolioCollaborationHistory} />
             <Route path="/collaboration" component={InvestorCollaboration} />
             <Route path="/developer/collaboration" component={DeveloperCollaboration} />
             <Route path="/admin" component={AdminDashboard} />
