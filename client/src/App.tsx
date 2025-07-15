@@ -180,7 +180,6 @@ function Router() {
             <Route path="/user/:userId" component={UserProfile} />
             <Route path="/developer/:developerId" component={DeveloperProfile} />
             <Route path="/data-provider/:providerId" component={DataProviderProfile} />
-            <Route path="/regulator/:regulatorId" component={RegulatorProfile} />
             <Route path="/learning" component={Learning} />
             <Route path="/investor-learning" component={InvestorLearning} />
             <Route path="/model/:id" component={ModelProfile} />
@@ -217,6 +216,7 @@ function Router() {
             <Route path="/regulator/communications" component={RegulatorCommunications} />
             <Route path="/regulator/standards" component={RegulatorStandards} />
             <Route path="/regulator/experience-enhanced" component={RegulatorExperienceEnhanced} />
+            <Route path="/regulator/:regulatorId" component={RegulatorProfile} />
             <Route path="/data-provider/portfolio" component={DataProviderPortfolio} />
             <Route path="/data-provider/portfolio/datasets" component={DataProviderPortfolioDatasets} />
             <Route path="/data-provider/portfolio/performance" component={DataProviderPortfolioPerformance} />
