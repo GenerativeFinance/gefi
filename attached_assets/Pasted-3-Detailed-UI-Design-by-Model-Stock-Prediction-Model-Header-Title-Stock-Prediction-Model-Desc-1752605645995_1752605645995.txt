@@ -1,0 +1,53 @@
+3. Detailed UI Design by Model
+
+Stock Prediction Model
+
+Header:
+Title: "Stock Prediction Model"
+Description: "AI-driven stock price forecasting"
+Metrics Row:
+"1,200 Subscribers" (person icon, blue)
+"85% Accuracy" (target icon, green)
+"90th Percentile Speed" (gauge icon, purple)
+"12% Returns" (dollar sign icon, green)
+Graphs and Charts:
+Line Graph: Returns over the last year (X-axis: months, Y-axis: percentage returns). A green line trends upward, showing 12% annualized return, with markers for model updates.
+Bar Chart: Accuracy comparison with competing models (X-axis: model names, Y-axis: accuracy). A blue bar at 85% alongside others (e.g., 80%, 90%) in green and purple.
+Scatter Plot: Predicted vs. actual returns (X-axis: predicted, Y-axis: actual). Green points cluster near a diagonal line, showing 85% accuracy, with outliers in red.
+Interactive Features:
+Tooltips: Hover over "85% Accuracy" to see "Based on 12-month backtesting."
+Filters: Dropdowns for time periods (e.g., "Last 6 Months") and regions.
+Portfolio Optimization Algorithm
+
+Header:
+Title: "Portfolio Optimization Algorithm"
+Description: "Optimal asset allocation based on risk tolerance"
+Metrics Row:
+"500 Subscribers" (person icon, blue)
+"90% Accuracy" (target icon, green)
+"Sharpe Ratio: 1.5" (gauge icon, purple)
+"10% Returns" (dollar sign icon, green)
+Graphs and Charts:
+Pie Chart: Portfolio allocation (e.g., 40% equities, 30% bonds, 20% crypto, 10% cash) in blue, green, purple, and gray segments, with hover effects showing exact percentages.
+Line Graph: Subscriber growth over 6 months (X-axis: months, Y-axis: subscribers). A blue line rises from 300 to 500.
+Bar Chart: Sharpe Ratio comparison (X-axis: models, Y-axis: Sharpe Ratio). A purple bar at 1.5 alongside others (e.g., 1.2, 1.8) in different colors.
+Interactive Features:
+Tooltips: Hover over "Sharpe Ratio: 1.5" to see "Risk-adjusted return metric."
+Filters: Dropdowns for risk tolerance levels (e.g., "Low," "High").
+Real-Time Risk Analyzer
+
+Header:
+Title: "Real-Time Risk Analyzer"
+Description: "Assesses portfolio risk with real-time data"
+Metrics Row:
+"800 Subscribers" (person icon, blue)
+"95% Accuracy" (target icon, green)
+"99.9% Uptime" (gauge icon, purple)
+"15% Loss Reduction" (shield icon, green)
+Graphs and Charts:
+Gauge Chart: Accuracy display (semi-circle with a needle at 95% in a green zone, 80-100%). A gradient from red (low) to green (high) emphasizes performance.
+Line Graph: Loss reduction over time (X-axis: months, Y-axis: percentage loss reduction). A green line trends at 15% annually.
+Scatter Plot: Predicted vs. actual risk outcomes (X-axis: predicted risk, Y-axis: actual risk). Green points show tight clustering, indicating 95% accuracy.
+Interactive Features:
+Tooltips: Hover over "99.9% Uptime" to see "Continuous operation metric."
+Filters: Dropdowns for market conditions (e.g., "Volatile," "Stable").

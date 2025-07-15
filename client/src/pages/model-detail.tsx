@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -46,627 +48,610 @@ import {
   FileText,
   MessageSquare,
   Calendar,
-  ChevronLeft
+  ChevronLeft,
+  Gauge
 } from "lucide-react";
-import { Link } from "wouter";
 
 export default function ModelDetail() {
-  const [, params] = useRoute("/model/:id");
+  const [, params] = useRoute("/marketplace/:id");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedTimePeriod, setSelectedTimePeriod] = useState("1year");
+  const [selectedRegion, setSelectedRegion] = useState("us");
+  const [selectedChartType, setSelectedChartType] = useState("line");
+  const [isPlaying, setIsPlaying] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [isSubscribed, setIsSubscribed] = useState(false);
 
-  const modelId = params?.id;
-
-  // Fetch model details
   const { data: model, isLoading, error } = useQuery({
-    queryKey: ["/api/ai-models", modelId],
-    enabled: !!modelId,
+    queryKey: ['/api/ai-models', params?.id],
+    queryFn: async () => {
+      const response = await apiRequest(`/api/ai-models/${params?.id}`);
+      return response.json();
+    },
+    enabled: !!params?.id,
   });
 
-  // Subscribe mutation
   const subscribeMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", `/api/ai-models/${modelId}/subscribe`);
+      const response = await apiRequest(`/api/ai-models/${params?.id}/subscribe`, {
+        method: 'POST'
+      });
+      return response.json();
     },
     onSuccess: () => {
-      setIsSubscribed(true);
       toast({
-        title: "Success",
-        description: "Successfully subscribed to AI model",
+        title: "Successfully subscribed",
+        description: "You now have access to this AI model.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/ai-models"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/ai-models'] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          description: "You need to be logged in to subscribe.",
           variant: "destructive",
         });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to subscribe to model",
+        title: "Subscription failed",
+        description: "Please try again later.",
         variant: "destructive",
       });
     },
   });
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-          <div className="max-w-7xl mx-auto p-6">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
-              <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-2/3 mb-8"></div>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                  <div className="h-96 bg-gray-300 dark:bg-gray-700 rounded-lg"></div>
-                </div>
-                <div className="space-y-4">
-                  <div className="h-64 bg-gray-300 dark:bg-gray-700 rounded-lg"></div>
-                  <div className="h-32 bg-gray-300 dark:bg-gray-700 rounded-lg"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (error || !model) {
-    return (
-      <Layout>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-          <div className="max-w-7xl mx-auto p-6">
-            <div className="text-center py-12">
-              <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Model Not Found
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                The AI model you're looking for doesn't exist or has been removed.
-              </p>
-              <Link href="/marketplace">
-                <Button>
-                  <ChevronLeft className="w-4 h-4 mr-2" />
-                  Back to Marketplace
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
-  const getRiskLevelColor = (riskLevel: string | undefined) => {
-    if (!riskLevel) return "bg-gray-100 text-gray-800 border-gray-300";
-    
-    switch (riskLevel.toLowerCase()) {
-      case "low":
-        return "bg-green-100 text-green-800 border-green-300";
-      case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case "high":
-        return "bg-red-100 text-red-800 border-red-300";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
-    }
+  const handleSubscribe = () => {
+    subscribeMutation.mutate();
   };
 
-  const formatCurrency = (amount: string | number) => {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+  const formatCurrency = (amount: number | string) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(num);
+    }).format(numAmount);
   };
+
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('en-US').format(num);
+  };
+
+  const formatPercentage = (num: number) => {
+    return `${num.toFixed(1)}%`;
+  };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container mx-auto p-6 max-w-7xl">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-6"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+              </div>
+              <div className="space-y-6">
+                <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="container mx-auto p-6 max-w-7xl">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Model</h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Unable to load the model details. Please try again later.
+            </p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!model) {
+    return (
+      <Layout>
+        <div className="container mx-auto p-6 max-w-7xl">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-600 mb-4">Model Not Found</h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              The requested model could not be found.
+            </p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto p-6">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
-            <Link href="/marketplace" className="hover:text-blue-600 dark:hover:text-blue-400">
-              AI Marketplace
-            </Link>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-900 dark:text-white">{model.name}</span>
-          </div>
+      <div className="container mx-auto p-6 max-w-7xl">
+        {/* Navigation Breadcrumb */}
+        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-6">
+          <a href="/marketplace" className="hover:text-gray-800 dark:hover:text-gray-200">
+            AI Marketplace
+          </a>
+          <ChevronRight className="w-4 h-4 mx-2" />
+          <span>{model.category}</span>
+          <ChevronRight className="w-4 h-4 mx-2" />
+          <span className="text-gray-800 dark:text-gray-200">{model.name}</span>
+        </div>
 
-          {/* Header */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                    <Brain className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                      {model.name}
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      by {model.creator}
-                    </p>
-                  </div>
+        {/* Model Header */}
+        <div className="mb-8">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+                {model.name}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                {model.description}
+              </p>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-5 h-5 ${
+                        i < Math.floor(model.rating)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  ))}
+                  <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">
+                    {model.rating} ({formatNumber(model.totalRatings)} reviews)
+                  </span>
                 </div>
-                
-                <p className="text-gray-700 dark:text-gray-300 text-lg mb-4 max-w-3xl">
-                  {model.description}
-                </p>
-
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  <Badge variant="secondary" className="text-sm">
-                    {model.category}
-                  </Badge>
-                  <Badge variant="outline" className="text-sm">
-                    {model.subcategory}
-                  </Badge>
-                  <Badge className={`text-sm ${getRiskLevelColor(model.riskLevel)}`}>
-                    {model.riskLevel || 'Unknown'} Risk
-                  </Badge>
-                  <Badge variant="outline" className="text-sm">
-                    {model.aiTechnique}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {model.rating}
-                    </span>
-                    <span>({model.totalRatings} reviews)</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    <span>{model.monthlySubscribers ? model.monthlySubscribers.toLocaleString() : '0'} subscribers</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Target className="w-4 h-4" />
-                    <span>{model.accuracy || 'N/A'}% accuracy</span>
-                  </div>
-                </div>
+                <Badge variant="secondary" className="text-sm">
+                  {model.category}
+                </Badge>
+                <Badge variant="outline" className="text-sm">
+                  {model.subcategory}
+                </Badge>
               </div>
-
-              {/* Pricing Card */}
-              <div className="lg:w-80 bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                <div className="text-center mb-4">
-                  <div className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {formatCurrency(model.price)}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">per month</div>
-                </div>
-
-                <div className="space-y-3 mb-6">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Minimum Investment</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {model.minInvestment ? formatCurrency(model.minInvestment) : 'N/A'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Target Users</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {model.targetUserType || 'General'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Supported Regions</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {model.supportedRegions && model.supportedRegions.length > 0 ? model.supportedRegions.join(", ") : 'Global'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Button 
-                    onClick={() => subscribeMutation.mutate()}
-                    disabled={subscribeMutation.isPending || isSubscribed}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {subscribeMutation.isPending ? (
-                      <>
-                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                        Subscribing...
-                      </>
-                    ) : isSubscribed ? (
-                      <>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Subscribed
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4 mr-2" />
-                        Subscribe Now
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    <Eye className="w-4 h-4 mr-2" />
-                    Start Free Trial
-                  </Button>
-                  <Button variant="ghost" className="w-full">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Documentation
-                  </Button>
-                </div>
-              </div>
+            </div>
+            <div className="flex items-center gap-2 ml-6">
+              <Button variant="outline" size="sm">
+                <Heart className="w-4 h-4 mr-2" />
+                Save
+              </Button>
+              <Button variant="outline" size="sm">
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Content Area */}
-            <div className="lg:col-span-2">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-5 mb-6">
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="performance">Performance</TabsTrigger>
-                  <TabsTrigger value="documentation">Docs</TabsTrigger>
-                  <TabsTrigger value="reviews">Reviews</TabsTrigger>
-                  <TabsTrigger value="pricing">Pricing</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="overview" className="space-y-6">
-                  {/* Features */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5" />
-                        Key Features
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-4">
-                        {model.features && Object.entries(model.features).map(([feature, enabled]) => (
-                          <div key={feature} className="flex items-center gap-2">
-                            {enabled ? (
-                              <CheckCircle className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <div className="w-4 h-4 rounded-full border-2 border-gray-300" />
-                            )}
-                            <span className="text-sm capitalize">
-                              {feature.replace(/([A-Z])/g, ' $1').trim()}
-                            </span>
-                          </div>
-                        ))}
+          {/* Key Metrics Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Card className="cursor-help">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Users className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Subscribers</span>
                       </div>
+                      <div className="text-2xl font-bold">{formatNumber(model.monthlySubscribers)}</div>
                     </CardContent>
                   </Card>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Number of active monthly subscribers</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
-                  {/* Data Requirements */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Database className="w-5 h-5" />
-                        Data Requirements
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        {model.dataRequirements && model.dataRequirements.map((requirement, index) => (
-                          <Badge key={index} variant="outline" className="text-sm">
-                            {requirement}
-                          </Badge>
-                        ))}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Card className="cursor-help">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Target className="w-4 h-4 text-green-600" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Accuracy</span>
                       </div>
+                      <div className="text-2xl font-bold">{formatPercentage(model.accuracy)}</div>
                     </CardContent>
                   </Card>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Model prediction accuracy rate</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
-                  {/* Compliance */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <ShieldCheck className="w-5 h-5" />
-                        Compliance Frameworks
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        {model.complianceFrameworks && model.complianceFrameworks.map((framework, index) => (
-                          <Badge key={index} variant="secondary" className="text-sm">
-                            <Lock className="w-3 h-3 mr-1" />
-                            {framework}
-                          </Badge>
-                        ))}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Card className="cursor-help">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <TrendingUp className="w-4 h-4 text-purple-600" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Performance</span>
                       </div>
+                      <div className="text-2xl font-bold">{formatPercentage(model.performance?.annualReturn || 0)}</div>
                     </CardContent>
                   </Card>
-                </TabsContent>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Annual return performance</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
-                <TabsContent value="performance" className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <BarChart3 className="w-5 h-5" />
-                        Performance Metrics
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-6">
-                        {model.performance && Object.entries(model.performance).map(([metric, value]) => (
-                          <div key={metric} className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium capitalize">
-                                {metric.replace(/([A-Z])/g, ' $1').trim()}
-                              </span>
-                              <span className="text-lg font-bold">
-                                {typeof value === 'number' ? 
-                                  (metric.includes('ratio') || metric.includes('Rate') ? value.toFixed(2) : 
-                                   metric.includes('Percent') || metric.includes('accuracy') ? `${value}%` : 
-                                   value.toFixed(1)) : value}
-                              </span>
-                            </div>
-                            <Progress 
-                              value={typeof value === 'number' ? 
-                                (metric.includes('accuracy') || metric.includes('Rate') ? value : 
-                                 Math.min(value * 20, 100)) : 50} 
-                              className="h-2" 
-                            />
-                          </div>
-                        ))}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Card className="cursor-help">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <DollarSign className="w-4 h-4 text-orange-600" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Price</span>
                       </div>
+                      <div className="text-2xl font-bold">{formatCurrency(model.price)}</div>
                     </CardContent>
                   </Card>
-                </TabsContent>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Monthly subscription price</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
 
-                <TabsContent value="documentation" className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="w-5 h-5" />
-                        Documentation
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <h4 className="font-semibold mb-2">Overview</h4>
-                        <p className="text-gray-600 dark:text-gray-400">
-                          {model.documentation?.overview}
-                        </p>
-                      </div>
-                      <Separator />
-                      <div>
-                        <h4 className="font-semibold mb-2">Methodology</h4>
-                        <p className="text-gray-600 dark:text-gray-400">
-                          {model.documentation?.methodology}
-                        </p>
-                      </div>
-                      <Separator />
-                      <div>
-                        <h4 className="font-semibold mb-2">Use Cases</h4>
-                        <ul className="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
-                          {model.documentation?.useCases?.map((useCase, index) => (
-                            <li key={index}>{useCase}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <Separator />
-                      <div>
-                        <h4 className="font-semibold mb-2">Limitations</h4>
-                        <ul className="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
-                          {model.documentation?.limitations?.map((limitation, index) => (
-                            <li key={index}>{limitation}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Main Content */}
+          <div className="lg:col-span-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="performance">Performance</TabsTrigger>
+                <TabsTrigger value="documentation">Documentation</TabsTrigger>
+                <TabsTrigger value="reviews">Reviews</TabsTrigger>
+              </TabsList>
 
-                <TabsContent value="reviews" className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <MessageSquare className="w-5 h-5" />
-                        User Reviews
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        {model.reviews?.map((review) => (
-                          <div key={review.id} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-b-0">
-                            <div className="flex items-start gap-4">
-                              <Avatar className="w-10 h-10">
-                                <AvatarFallback>
-                                  {review.userName.split(' ').map(n => n[0]).join('')}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-medium">{review.userName}</span>
-                                  <Badge variant="outline" className="text-xs">
-                                    {review.userRole}
-                                  </Badge>
-                                  {review.verified && (
-                                    <Badge className="text-xs bg-green-100 text-green-800">
-                                      <CheckCircle className="w-3 h-3 mr-1" />
-                                      Verified
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-1 mb-2">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star
-                                      key={i}
-                                      className={`w-4 h-4 ${
-                                        i < review.rating
-                                          ? "fill-yellow-400 text-yellow-400"
-                                          : "text-gray-300"
-                                      }`}
-                                    />
-                                  ))}
-                                  <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">
-                                    {new Date(review.date).toLocaleDateString()}
-                                  </span>
-                                </div>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                  {review.comment}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="pricing" className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <DollarSign className="w-5 h-5" />
-                        Pricing Plans
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                          <div className="text-center mb-4">
-                            <h3 className="font-semibold text-lg">Basic</h3>
-                            <div className="text-2xl font-bold">{formatCurrency(model.price)}</div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">per month</div>
-                          </div>
-                          <ul className="space-y-2 text-sm">
-                            {model.pricing?.features?.basic?.map((feature, index) => (
-                              <li key={index} className="flex items-center gap-2">
-                                <CheckCircle className="w-4 h-4 text-green-600" />
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <div className="border-2 border-blue-500 rounded-lg p-6 relative">
-                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                            <Badge className="bg-blue-500 text-white">Most Popular</Badge>
-                          </div>
-                          <div className="text-center mb-4">
-                            <h3 className="font-semibold text-lg">Premium</h3>
-                            <div className="text-2xl font-bold">{formatCurrency(model.pricing?.annual / 12)}</div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">per month</div>
-                          </div>
-                          <ul className="space-y-2 text-sm">
-                            {model.pricing?.features?.premium?.map((feature, index) => (
-                              <li key={index} className="flex items-center gap-2">
-                                <CheckCircle className="w-4 h-4 text-green-600" />
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                          <div className="text-center mb-4">
-                            <h3 className="font-semibold text-lg">Enterprise</h3>
-                            <div className="text-lg font-bold">Custom</div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">pricing</div>
-                          </div>
-                          <ul className="space-y-2 text-sm">
-                            {model.pricing?.features?.enterprise?.map((feature, index) => (
-                              <li key={index} className="flex items-center gap-2">
-                                <CheckCircle className="w-4 h-4 text-green-600" />
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Quick Stats */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Quick Stats</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Last Updated</span>
-                    <span className="font-medium">
-                      {new Date(model.lastUpdated).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Created</span>
-                    <span className="font-medium">
-                      {new Date(model.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Active Status</span>
-                    <Badge className="bg-green-100 text-green-800">
-                      <Activity className="w-3 h-3 mr-1" />
-                      Active
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Related Models */}
-              {model.relatedModels && model.relatedModels.length > 0 && (
+              <TabsContent value="overview" className="space-y-6">
+                {/* Description */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Related Models</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Model Overview
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    {model.relatedModels.map((relatedModel) => (
-                      <Link key={relatedModel.id} href={`/model/${relatedModel.id}`}>
-                        <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer">
-                          <div className="flex justify-between items-start mb-1">
-                            <h4 className="font-medium text-sm">{relatedModel.name}</h4>
-                            <div className="flex items-center gap-1">
-                              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                              <span className="text-xs">{relatedModel.rating}</span>
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400">
-                            {formatCurrency(relatedModel.price)}/month
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
+                  <CardContent>
+                    <p className="text-gray-700 dark:text-gray-300 mb-4">
+                      {model.description}
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Creator:</span>
+                        <p className="font-medium">{model.creator}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Risk Level:</span>
+                        <Badge variant={model.riskLevel === 'Low' ? 'default' : model.riskLevel === 'Medium' ? 'secondary' : 'destructive'}>
+                          {model.riskLevel}
+                        </Badge>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">AI Technique:</span>
+                        <p className="font-medium">{model.aiTechnique}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Target Users:</span>
+                        <p className="font-medium">{model.targetUserType}</p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-              )}
 
-              {/* Tags */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Tags</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {model.tags.map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
+                {/* Features */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Zap className="w-5 h-5" />
+                      Key Features
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {model.features && Object.entries(model.features).map(([key, value]) => (
+                        <div key={key} className="flex items-center gap-2">
+                          <CheckCircle className={`w-4 h-4 ${value ? 'text-green-600' : 'text-gray-400'}`} />
+                          <span className="text-sm capitalize">
+                            {key.replace(/([A-Z])/g, ' $1').trim()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Tags */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" />
+                      Tags
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {model.tags && model.tags.map((tag, index) => (
+                        <Badge key={index} variant="outline" className="text-sm">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="performance" className="space-y-6">
+                {/* Performance Chart Controls */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Performance Analytics</CardTitle>
+                    <div className="flex items-center gap-4">
+                      <Select value={selectedTimePeriod} onValueChange={setSelectedTimePeriod}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1month">1 Month</SelectItem>
+                          <SelectItem value="3months">3 Months</SelectItem>
+                          <SelectItem value="6months">6 Months</SelectItem>
+                          <SelectItem value="1year">1 Year</SelectItem>
+                          <SelectItem value="all">All Time</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="us">US Market</SelectItem>
+                          <SelectItem value="eu">EU Market</SelectItem>
+                          <SelectItem value="asia">Asia-Pacific</SelectItem>
+                          <SelectItem value="global">Global</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                      <div className="text-center">
+                        <Activity className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Performance chart would be displayed here
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Performance Metrics */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="w-4 h-4 text-green-600" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Sharpe Ratio</span>
+                      </div>
+                      <div className="text-2xl font-bold">{model.performance?.sharpeRatio || 'N/A'}</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Max Drawdown</span>
+                      </div>
+                      <div className="text-2xl font-bold">{formatPercentage(model.performance?.maxDrawdown || 0)}</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Gauge className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Calmar Ratio</span>
+                      </div>
+                      <div className="text-2xl font-bold">{model.performance?.calmarRatio || 'N/A'}</div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="documentation" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Technical Documentation</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      Comprehensive documentation for this AI model is available to subscribers. 
+                      This includes implementation guides, API references, and integration examples.
+                    </p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="reviews" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>User Reviews</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {/* Sample review */}
+                      <div className="border-b pb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Avatar className="w-8 h-8">
+                            <AvatarFallback>JD</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">John Doe</p>
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Excellent model with consistent performance. The accuracy is impressive and the integration was seamless.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Right Column - Sidebar */}
+          <div className="space-y-6">
+            {/* Subscription Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5" />
+                  Subscription
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center mb-4">
+                  <div className="text-3xl font-bold mb-2">{formatCurrency(model.price)}</div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">per month</p>
+                </div>
+                <Button 
+                  className="w-full mb-4" 
+                  onClick={handleSubscribe}
+                  disabled={subscribeMutation.isPending}
+                >
+                  {subscribeMutation.isPending ? 'Subscribing...' : 'Subscribe Now'}
+                </Button>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Free trial:</span>
+                    <span>14 days</span>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                  <div className="flex justify-between">
+                    <span>Cancel anytime:</span>
+                    <span>Yes</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Stats */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  Quick Stats
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Monthly Subscribers</span>
+                    <span className="font-medium">{formatNumber(model.monthlySubscribers)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Accuracy Rate</span>
+                    <span className="font-medium">{formatPercentage(model.accuracy)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Risk Level</span>
+                    <Badge variant={model.riskLevel === 'Low' ? 'default' : 'secondary'}>
+                      {model.riskLevel}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Min Investment</span>
+                    <span className="font-medium">{formatCurrency(model.minInvestment || 0)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Data Requirements */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="w-5 h-5" />
+                  Data Requirements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {model.dataRequirements && model.dataRequirements.map((req, index) => (
+                    <div key={index} className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      {req}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Supported Regions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="w-5 h-5" />
+                  Supported Regions
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {model.supportedRegions && model.supportedRegions.map((region, index) => (
+                    <Badge key={index} variant="secondary" className="text-sm">
+                      {region}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Compliance */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5" />
+                  Compliance Frameworks
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {model.complianceFrameworks && model.complianceFrameworks.map((framework, index) => (
+                    <Badge key={index} variant="secondary" className="text-sm">
+                      <Lock className="w-3 h-3 mr-1" />
+                      {framework}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
