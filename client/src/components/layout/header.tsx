@@ -202,6 +202,8 @@ export default function Header() {
       // Develop subsections
       if (location.includes('/developer/develop/') || location === '/backtesting') {
         return [
+          { name: "Overview", href: "/developer", icon: BarChart3 },
+          { name: "Develop", href: "/backtesting", icon: Code },
           { name: "Backtesting", href: "/backtesting", icon: TrendingUp },
           { name: "IDE Access", href: "/developer/develop/ide-access", icon: Code },
           { name: "Version Control", href: "/developer/develop/version-control", icon: GitBranch },
