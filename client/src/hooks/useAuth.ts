@@ -15,18 +15,8 @@ export function useAuth() {
   const isLoading = userLoading || (!!user && profileLoading);
   const isAuthenticated = !!user;
   
-  // For now, assume profile is completed if profile exists
-  // The user has already been through setup flow
+  // Assume profile is completed if user is authenticated
   const hasCompletedProfile = !!profile || !!user;
-
-  console.log("Auth Debug:", { 
-    user: !!user, 
-    profile: !!profile, 
-    profileCompleted: profile?.profileCompleted,
-    hasCompletedProfile,
-    isLoading,
-    isAuthenticated 
-  });
 
   return {
     user,

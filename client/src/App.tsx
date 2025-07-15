@@ -121,7 +121,7 @@ function Router() {
 
   return (
     <Switch>
-      {/* Public routes */}
+      {/* Public routes - always available */}
       <Route path="/login" component={Login} />
       <Route path="/login-failed" component={LoginFailed} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
@@ -130,13 +130,10 @@ function Router() {
       <Route path="/security-compliance" component={SecurityCompliance} />
       <Route path="/bug-bounty-program" component={BugBountyProgram} />
       <Route path="/enterprise-sales" component={EnterpriseSales} />
-      
-      {/* Profile setup route */}
       <Route path="/profile-setup" component={ProfileSetup} />
       
       {/* Protected routes */}
       {isAuthenticated ? (
-        hasCompletedProfile ? (
           <>
             <Route path="/" component={Home} />
             <Route path="/home" component={Home} />
@@ -233,17 +230,9 @@ function Router() {
             <Route path="/moderator/user-monitoring" component={ModeratorUserMonitoring} />
             <Route path="/moderator/analytics" component={ModeratorAnalytics} />
           </>
-        ) : (
-          <>
-            <Route path="/" component={ProfileSetup} />
-            <Route path="*" component={ProfileSetup} />
-          </>
-        )
       ) : (
         <>
           <Route path="/" component={Landing} />
-          <Route path="/login" component={Login} />
-          <Route path="/login-failed" component={LoginFailed} />
           <Route path="*" component={Landing} />
         </>
       )}
