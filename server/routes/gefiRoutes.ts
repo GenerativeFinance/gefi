@@ -17,9 +17,14 @@ export function registerGeFiRoutes(app: Express) {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
+      console.log('🔍 Auth user request - Session user:', req.user);
+      console.log('🔍 Session ID:', req.sessionID);
+      console.log('🔍 Is authenticated:', req.isAuthenticated());
+      
       // For multi-provider auth, user ID is directly available
       const userId = req.user.id;
       const user = await storage.getUser(userId);
+      console.log('📝 Found user in DB:', !!user);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);

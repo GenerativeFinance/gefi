@@ -182,8 +182,11 @@ export async function setupMultiAuth(app: Express) {
   // Development login for testing
   app.get('/api/auth/dev', async (req, res) => {
     try {
+      console.log('🔧 Development login attempt...');
+      
       // Check if dev user already exists
       let user = await storage.getUserByEmail('dev@gefi.local');
+      console.log('🔍 Found existing dev user:', !!user);
       
       if (!user) {
         // Create a development user only if it doesn't exist
@@ -195,19 +198,25 @@ export async function setupMultiAuth(app: Express) {
           username: 'devuser'
         };
         
+        console.log('🆕 Creating new dev user...');
         user = await upsertUser(devProfile, 'dev');
+        console.log('✅ Dev user created:', user.id);
       }
       
       // Manually log in the user
-      req.login({ ...user, provider: 'dev' }, (err) => {
+      const sessionUser = { ...user, provider: 'dev' };
+      console.log('🔑 Attempting to log in user:', sessionUser.id);
+      
+      req.login(sessionUser, (err) => {
         if (err) {
-          console.error('Development login error:', err);
+          console.error('❌ Development login error:', err);
           return res.redirect('/login-failed?provider=dev');
         }
+        console.log('✅ Development login successful, redirecting to /');
         res.redirect('/');
       });
     } catch (error) {
-      console.error('Development login error:', error);
+      console.error('❌ Development login error:', error);
       res.redirect('/login-failed?provider=dev');
     }
   });
@@ -232,6 +241,9 @@ export async function setupMultiAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = (req, res, next) => {
+  console.log('🔐 Auth check - isAuthenticated:', req.isAuthenticated());
+  console.log('🔐 Auth check - user:', req.user);
+  
   if (req.isAuthenticated()) {
     return next();
   }
