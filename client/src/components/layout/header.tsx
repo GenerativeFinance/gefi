@@ -44,7 +44,10 @@ import {
   Database,
   Key,
   HardDrive,
-  Flag
+  Flag,
+  CheckCircle,
+  Star,
+  Award
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/theme/theme-provider";

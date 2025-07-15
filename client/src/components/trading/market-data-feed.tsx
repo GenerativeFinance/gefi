@@ -70,10 +70,13 @@ export default function MarketDataFeed() {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws`;
     
+    console.log('Attempting WebSocket connection to:', wsUrl);
+    
     try {
       wsRef.current = new WebSocket(wsUrl);
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
+      setIsConnected(false);
       return;
     }
 
@@ -133,7 +136,13 @@ export default function MarketDataFeed() {
     wsRef.current.onerror = (error) => {
       console.error('WebSocket error:', error);
       setIsConnected(false);
-      // Don't attempt to reconnect immediately on error
+      // Try to reconnect after a delay on error
+      setTimeout(() => {
+        if (!isPaused && wsRef.current?.readyState !== WebSocket.CONNECTING) {
+          console.log('Attempting to reconnect after error...');
+          connectWebSocket();
+        }
+      }, 5000);
     };
   };
 
