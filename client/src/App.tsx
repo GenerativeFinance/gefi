@@ -141,6 +141,7 @@ import DeveloperDevelopVersionControl from "@/pages/developer/develop/version-co
 import DeveloperDevelopCodeReview from "@/pages/developer/develop/code-review";
 import DeveloperPortfolioCollaborationHistory from "@/pages/developer/portfolio/collaboration-history";
 import DataProviderMarketplace from "@/pages/data-provider-marketplace";
+import DeveloperCollaborationMain from "@/pages/developer/collaboration";
 
 
 function Router() {
@@ -200,6 +201,7 @@ function Router() {
             <Route path="/api-access" component={ApiAccess} />
             <Route path="/developer" component={DeveloperDashboard} />
             <Route path="/developer-marketplace" component={DeveloperMarketplace} />
+            <Route path="/developer/collaboration" component={DeveloperCollaborationMain} />
             <Route path="/backtesting" component={BacktestingEnvironment} />
             <Route path="/live-trading" component={LiveTradingPage} />
             <Route path="/model-funding" component={ModelFunding} />

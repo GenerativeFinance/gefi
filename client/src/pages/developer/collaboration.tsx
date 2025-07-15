@@ -1,507 +1,702 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Users, 
-  MessageSquare, 
+  MessageCircle, 
   GitBranch, 
-  Clock, 
   Star, 
-  Code, 
-  Database, 
-  Share2, 
-  FileText, 
-  Plus,
+  Calendar,
   Search,
   Filter,
-  Calendar,
-  ChevronRight,
+  Plus,
+  Send,
+  Eye,
+  ExternalLink,
+  Clock,
+  TrendingUp,
   DollarSign,
-  Target,
   CheckCircle,
   AlertCircle,
-  TrendingUp
+  Code,
+  Database,
+  Shield,
+  Zap,
+  Target,
+  Award
 } from "lucide-react";
-import Layout from "@/components/layout/Layout";
 
 export default function DeveloperCollaboration() {
-  const [activeTab, setActiveTab] = useState("projects");
-  const [newProjectOpen, setNewProjectOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  // Sample collaboration data
-  const collaborationProjects = [
+  const collaborations = [
     {
       id: 1,
-      title: "High-Frequency Trading Algorithm",
-      description: "Building an advanced HFT system with machine learning optimization for cryptocurrency markets.",
-      status: "active",
-      progress: 75,
-      participants: 4,
-      leader: "Alex Chen",
-      budget: "$150,000",
-      deadline: "2025-09-15",
-      tags: ["Trading", "ML", "Crypto"],
-      participants_list: [
-        { name: "Alex Chen", avatar: "AC", role: "Lead Developer" },
-        { name: "Sarah Johnson", avatar: "SJ", role: "Data Scientist" },
-        { name: "Mike Rodriguez", avatar: "MR", role: "Quant Analyst" },
-        { name: "You", avatar: "YU", role: "AI Engineer" }
-      ]
+      title: "Advanced Portfolio Risk Model",
+      partner: "QuantTech Solutions",
+      partnerType: "Data Provider",
+      status: "Active",
+      role: "Lead Developer",
+      startDate: "2025-03-15",
+      revenue: "$15,600",
+      progress: 85,
+      lastActivity: "2 hours ago",
+      team: 5,
+      description: "Developing sophisticated risk assessment model using real-time market data",
+      technologies: ["Python", "TensorFlow", "AWS"],
+      priority: "High"
     },
     {
       id: 2,
-      title: "ESG Risk Assessment Model",
-      description: "Developing comprehensive ESG scoring system for institutional investment decision-making.",
-      status: "planning",
-      progress: 25,
-      participants: 3,
-      leader: "Emma Watson",
-      budget: "$85,000",
-      deadline: "2025-11-30",
-      tags: ["ESG", "Risk", "Compliance"],
-      participants_list: [
-        { name: "Emma Watson", avatar: "EW", role: "Project Lead" },
-        { name: "David Kim", avatar: "DK", role: "Risk Analyst" },
-        { name: "You", avatar: "YU", role: "ML Engineer" }
-      ]
+      title: "Crypto Sentiment Analysis Bot",
+      partner: "CryptoData Inc",
+      partnerType: "Data Provider",
+      status: "In Progress",
+      role: "AI Specialist",
+      startDate: "2025-04-20",
+      revenue: "$8,400",
+      progress: 62,
+      lastActivity: "1 day ago",
+      team: 3,
+      description: "Building sentiment analysis engine for cryptocurrency trading decisions",
+      technologies: ["Python", "NLP", "Docker"],
+      priority: "Medium"
     },
     {
       id: 3,
-      title: "DeFi Yield Optimization",
-      description: "Smart contract system for automated yield farming with risk management across multiple protocols.",
-      status: "completed",
-      progress: 100,
-      participants: 5,
-      leader: "Carlos Martinez",
-      budget: "$200,000",
-      deadline: "2025-06-30",
-      tags: ["DeFi", "Smart Contracts", "Yield"],
-      participants_list: [
-        { name: "Carlos Martinez", avatar: "CM", role: "Blockchain Lead" },
-        { name: "Lisa Zhang", avatar: "LZ", role: "Smart Contract Dev" },
-        { name: "Tom Wilson", avatar: "TW", role: "Frontend Dev" },
-        { name: "Nina Patel", avatar: "NP", role: "Security Auditor" },
-        { name: "You", avatar: "YU", role: "DeFi Specialist" }
-      ]
+      title: "ESG Investment Optimizer",
+      partner: "GreenFin Analytics",
+      partnerType: "Investor",
+      status: "Planning",
+      role: "Technical Lead",
+      startDate: "2025-06-01",
+      revenue: "$22,000",
+      progress: 15,
+      lastActivity: "3 days ago",
+      team: 4,
+      description: "Creating ESG-focused investment optimization algorithm",
+      technologies: ["R", "Machine Learning", "API"],
+      priority: "High"
     }
   ];
 
-  const availableProjects = [
+  const invitations = [
     {
-      id: 4,
-      title: "Cross-Chain Arbitrage Bot",
-      description: "Automated arbitrage opportunities across different blockchain networks with minimal latency.",
-      budget: "$120,000",
+      id: 1,
+      title: "Real-time Fraud Detection System",
+      partner: "SecureBank Corp",
+      partnerType: "Investor",
+      budget: "$35,000",
       duration: "4 months",
-      skills: ["Blockchain", "Arbitrage", "Python", "Web3"],
-      postedBy: "BlockTech Solutions",
-      applicants: 12
+      role: "Senior ML Engineer",
+      skills: ["Machine Learning", "Python", "Real-time Processing"],
+      deadline: "2025-08-15",
+      description: "Develop advanced fraud detection system for banking transactions"
     },
     {
-      id: 5,
-      title: "Credit Scoring AI for Microfinance",
-      description: "Machine learning model for credit assessment in emerging markets using alternative data sources.",
-      budget: "$95,000",
-      duration: "6 months",
-      skills: ["Credit Analysis", "ML", "Alternative Data"],
-      postedBy: "MicroFin Global",
-      applicants: 8
+      id: 2,
+      title: "Alternative Credit Scoring Model",
+      partner: "FinTech Innovations",
+      partnerType: "Data Provider",
+      budget: "$18,500",
+      duration: "3 months",
+      role: "Data Scientist",
+      skills: ["Credit Risk", "Statistical Modeling", "SQL"],
+      deadline: "2025-07-30",
+      description: "Build credit scoring model using alternative data sources"
+    }
+  ];
+
+  const messages = [
+    {
+      id: 1,
+      sender: "Sarah Chen",
+      company: "QuantTech Solutions",
+      message: "The latest model iteration shows 94.2% accuracy. Ready for production deployment?",
+      timestamp: "2 hours ago",
+      project: "Advanced Portfolio Risk Model",
+      unread: true
+    },
+    {
+      id: 2,
+      sender: "Mike Rodriguez",
+      company: "CryptoData Inc",
+      message: "Updated dataset available. Can we schedule a review meeting this week?",
+      timestamp: "1 day ago",
+      project: "Crypto Sentiment Analysis Bot",
+      unread: true
+    },
+    {
+      id: 3,
+      sender: "Emma Thompson",
+      company: "GreenFin Analytics",
+      message: "Thanks for the technical specifications. Our team is reviewing the proposal.",
+      timestamp: "3 days ago",
+      project: "ESG Investment Optimizer",
+      unread: false
     }
   ];
 
   const teamMembers = [
     {
       id: 1,
-      name: "Alex Chen",
-      avatar: "AC",
-      role: "Senior AI Engineer",
-      specialties: ["Machine Learning", "Trading Algorithms", "Python"],
-      rating: 4.9,
-      projects: 15,
-      location: "San Francisco, CA",
-      status: "Available"
+      name: "Alex Kumar",
+      role: "ML Engineer",
+      company: "QuantTech Solutions",
+      project: "Advanced Portfolio Risk Model",
+      contributions: 156,
+      rating: 4.8,
+      status: "online"
     },
     {
       id: 2,
-      name: "Sarah Johnson",
-      avatar: "SJ",
+      name: "Jennifer Walsh",
       role: "Data Scientist",
-      specialties: ["Statistical Analysis", "Risk Modeling", "R"],
-      rating: 4.8,
-      projects: 12,
-      location: "New York, NY",
-      status: "Busy"
+      company: "CryptoData Inc",
+      project: "Crypto Sentiment Analysis Bot",
+      contributions: 89,
+      rating: 4.9,
+      status: "away"
     },
     {
       id: 3,
-      name: "Mike Rodriguez",
-      avatar: "MR",
-      role: "Quantitative Analyst",
-      specialties: ["Financial Modeling", "Derivatives", "C++"],
+      name: "David Park",
+      role: "Backend Developer",
+      company: "GreenFin Analytics",
+      project: "ESG Investment Optimizer",
+      contributions: 45,
       rating: 4.7,
-      projects: 18,
-      location: "London, UK",
-      status: "Available"
+      status: "offline"
     }
   ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active": return "bg-green-500";
-      case "planning": return "bg-yellow-500";
-      case "completed": return "bg-blue-500";
-      default: return "bg-gray-500";
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Available": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case "Busy": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
-    }
-  };
-
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Developer Collaboration</h1>
-            <p className="text-muted-foreground">Connect with developers, join projects, and build innovative AI financial solutions together.</p>
-          </div>
-          <div className="flex gap-3 mt-4 lg:mt-0">
-            <Dialog open={newProjectOpen} onOpenChange={setNewProjectOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  New Project
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Create New Collaboration Project</DialogTitle>
-                  <DialogDescription>
-                    Start a new project and invite other developers to collaborate.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="project-title">Project Title</Label>
-                    <Input id="project-title" placeholder="Enter project title" />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="project-description">Description</Label>
-                    <Textarea id="project-description" placeholder="Describe your project goals and requirements" rows={3} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="budget">Budget</Label>
-                      <Input id="budget" placeholder="$50,000" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="deadline">Deadline</Label>
-                      <Input id="deadline" type="date" />
-                    </div>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="skills">Required Skills</Label>
-                    <Input id="skills" placeholder="Python, Machine Learning, Trading" />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="team-size">Team Size</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select team size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="2-3">2-3 developers</SelectItem>
-                        <SelectItem value="4-6">4-6 developers</SelectItem>
-                        <SelectItem value="7-10">7-10 developers</SelectItem>
-                        <SelectItem value="10+">10+ developers</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-3">
-                  <Button variant="outline" onClick={() => setNewProjectOpen(false)}>Cancel</Button>
-                  <Button onClick={() => setNewProjectOpen(false)}>Create Project</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              Find Team
-            </Button>
-          </div>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="projects">My Projects</TabsTrigger>
-            <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
-            <TabsTrigger value="team">Team Network</TabsTrigger>
-            <TabsTrigger value="messages">Messages</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="projects" className="space-y-6">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search projects..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  Developer Collaboration
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Manage partnerships, team collaboration, and project communications
+                </p>
               </div>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
+              <div className="flex items-center gap-4">
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  3 Active Projects
+                </Badge>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Collaboration
+                </Button>
+              </div>
             </div>
+          </div>
 
-            <div className="grid gap-6">
-              {collaborationProjects.map((project) => (
-                <Card key={project.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <CardTitle className="text-xl">{project.title}</CardTitle>
-                          <Badge variant="outline" className={`${getStatusColor(project.status)} text-white`}>
-                            {project.status}
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Collaborations</p>
+                    <p className="text-2xl font-bold text-blue-600">3</p>
+                  </div>
+                  <Users className="w-8 h-8 text-blue-600" />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">+1 from last month</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
+                    <p className="text-2xl font-bold text-green-600">$46,000</p>
+                  </div>
+                  <DollarSign className="w-8 h-8 text-green-600" />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">+23% from last month</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Team Members</p>
+                    <p className="text-2xl font-bold text-purple-600">12</p>
+                  </div>
+                  <Users className="w-8 h-8 text-purple-600" />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Across all projects</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Rating</p>
+                    <p className="text-2xl font-bold text-yellow-600">4.8</p>
+                  </div>
+                  <Star className="w-8 h-8 text-yellow-600" />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">From partners</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content Tabs */}
+          <Tabs defaultValue="projects" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="projects">Active Projects</TabsTrigger>
+              <TabsTrigger value="invitations">Invitations</TabsTrigger>
+              <TabsTrigger value="messages">Messages</TabsTrigger>
+              <TabsTrigger value="team">Team</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            </TabsList>
+
+            {/* Active Projects Tab */}
+            <TabsContent value="projects" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Active Collaboration Projects</h2>
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input placeholder="Search projects..." className="pl-10 w-64" />
+                  </div>
+                  <Select>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="planning">Planning</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {collaborations.map((collab) => (
+                  <Card key={collab.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{collab.title}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={collab.status === 'Active' ? 'default' : 
+                                         collab.status === 'Planning' ? 'secondary' : 'outline'}>
+                            {collab.status}
+                          </Badge>
+                          <Badge variant="outline" className={collab.priority === 'High' ? 'border-red-200 text-red-700' : 
+                                                             collab.priority === 'Medium' ? 'border-yellow-200 text-yellow-700' : 
+                                                             'border-green-200 text-green-700'}>
+                            {collab.priority}
                           </Badge>
                         </div>
-                        <CardDescription className="text-base">{project.description}</CardDescription>
                       </div>
-                      <Button variant="outline" size="sm">
-                        View Details
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap gap-2">
-                        {project.tags.map((tag) => (
-                          <Badge key={tag} variant="secondary">{tag}</Badge>
+                      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                        <span className="flex items-center gap-1">
+                          <Users className="w-4 h-4" />
+                          {collab.partner}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Target className="w-4 h-4" />
+                          {collab.role}
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        {collab.description}
+                      </p>
+                      
+                      <div className="space-y-3 mb-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-medium">Progress</span>
+                          <span className="text-blue-600">{collab.progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full transition-all" 
+                            style={{ width: `${collab.progress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Revenue</p>
+                          <p className="text-sm font-semibold text-green-600">{collab.revenue}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Team Size</p>
+                          <p className="text-sm font-semibold">{collab.team} members</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Started</p>
+                          <p className="text-sm font-semibold">{new Date(collab.startDate).toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Last Activity</p>
+                          <p className="text-sm font-semibold">{collab.lastActivity}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {collab.technologies.map((tech, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            <Code className="w-3 h-3 mr-1" />
+                            {tech}
+                          </Badge>
                         ))}
                       </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
-                          <span>{project.budget}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span>{new Date(project.deadline).toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          <span>{project.participants} members</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Target className="h-4 w-4 text-muted-foreground" />
-                          <span>Led by {project.leader}</span>
-                        </div>
-                      </div>
 
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Progress</span>
-                          <span>{project.progress}%</span>
-                        </div>
-                        <Progress value={project.progress} className="h-2" />
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="flex-1">
+                          <MessageCircle className="w-4 h-4 mr-1" />
+                          Message
+                        </Button>
+                        <Button size="sm" className="flex-1">
+                          <Eye className="w-4 h-4 mr-1" />
+                          View Details
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          <ExternalLink className="w-4 h-4" />
+                        </Button>
                       </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
 
-                      <div className="flex items-center justify-between">
-                        <div className="flex -space-x-2">
-                          {project.participants_list.map((participant, idx) => (
-                            <Avatar key={idx} className="h-8 w-8 border-2 border-background">
-                              <AvatarFallback className="text-xs">{participant.avatar}</AvatarFallback>
-                            </Avatar>
-                          ))}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            <MessageSquare className="h-4 w-4 mr-1" />
-                            Chat
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <GitBranch className="h-4 w-4 mr-1" />
-                            Repository
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
+            {/* Invitations Tab */}
+            <TabsContent value="invitations" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Collaboration Invitations</h2>
+                <Badge variant="outline">{invitations.length} Pending</Badge>
+              </div>
 
-          <TabsContent value="opportunities" className="space-y-6">
-            <div className="grid gap-6">
-              {availableProjects.map((project) => (
-                <Card key={project.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <CardTitle className="text-xl mb-2">{project.title}</CardTitle>
-                        <CardDescription className="text-base">{project.description}</CardDescription>
-                      </div>
-                      <Button>Apply Now</Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap gap-2">
-                        {project.skills.map((skill) => (
-                          <Badge key={skill} variant="secondary">{skill}</Badge>
-                        ))}
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
-                          <span>{project.budget}</span>
+              <div className="space-y-4">
+                {invitations.map((invitation) => (
+                  <Card key={invitation.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="text-lg font-semibold">{invitation.title}</h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            from {invitation.partner} • {invitation.partnerType}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span>{project.duration}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          <span>{project.applicants} applicants</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4 text-muted-foreground" />
-                          <span>{project.postedBy}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="team" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {teamMembers.map((member) => (
-                <Card key={member.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader className="text-center">
-                    <Avatar className="h-16 w-16 mx-auto mb-3">
-                      <AvatarFallback className="text-lg">{member.avatar}</AvatarFallback>
-                    </Avatar>
-                    <CardTitle className="text-lg">{member.name}</CardTitle>
-                    <CardDescription>{member.role}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Status:</span>
-                        <Badge className={getStatusBadge(member.status)}>
-                          {member.status}
+                        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                          <Clock className="w-4 h-4 mr-1" />
+                          Pending
                         </Badge>
                       </div>
-                      
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Rating:</span>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span>{member.rating}</span>
+
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        {invitation.description}
+                      </p>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Budget</p>
+                          <p className="text-sm font-semibold text-green-600">{invitation.budget}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Duration</p>
+                          <p className="text-sm font-semibold">{invitation.duration}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Role</p>
+                          <p className="text-sm font-semibold">{invitation.role}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Deadline</p>
+                          <p className="text-sm font-semibold">{new Date(invitation.deadline).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Projects:</span>
-                        <span>{member.projects}</span>
-                      </div>
-                      
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Location:</span>
-                        <p>{member.location}</p>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <span className="text-sm text-muted-foreground">Specialties:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {member.specialties.map((specialty) => (
-                            <Badge key={specialty} variant="outline" className="text-xs">
-                              {specialty}
+
+                      <div className="mb-4">
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Required Skills</p>
+                        <div className="flex flex-wrap gap-2">
+                          {invitation.skills.map((skill, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              <Zap className="w-3 h-3 mr-1" />
+                              {skill}
                             </Badge>
                           ))}
                         </div>
                       </div>
-                      
-                      <div className="flex gap-2">
+
+                      <div className="flex items-center gap-2">
+                        <Button>
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Accept Invitation
+                        </Button>
+                        <Button variant="outline">
+                          <MessageCircle className="w-4 h-4 mr-1" />
+                          Discuss Terms
+                        </Button>
+                        <Button variant="ghost">
+                          Decline
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Messages Tab */}
+            <TabsContent value="messages" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Team Communications</h2>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    2 Unread
+                  </Badge>
+                  <Button size="sm">
+                    <Send className="w-4 h-4 mr-1" />
+                    New Message
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <Card key={message.id} className={message.unread ? 'border-blue-200 bg-blue-50/30' : ''}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                            {message.sender.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <p className="font-semibold">{message.sender}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{message.company}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-500">{message.timestamp}</p>
+                          {message.unread && (
+                            <Badge variant="default" className="text-xs mt-1">New</Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <Badge variant="outline" className="text-xs mb-2">
+                          {message.project}
+                        </Badge>
+                        <p className="text-gray-700 dark:text-gray-300">{message.message}</p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          <Send className="w-4 h-4 mr-1" />
+                          Reply
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          <ExternalLink className="w-4 h-4 mr-1" />
+                          View Project
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Team Tab */}
+            <TabsContent value="team" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Collaboration Team Members</h2>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Invite Member
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {teamMembers.map((member) => (
+                  <Card key={member.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="relative">
+                          <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                            {member.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                            member.status === 'online' ? 'bg-green-500' : 
+                            member.status === 'away' ? 'bg-yellow-500' : 'bg-gray-400'
+                          }`}></div>
+                        </div>
+                        <div>
+                          <p className="font-semibold">{member.name}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{member.role}</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span>Company</span>
+                          <span className="font-medium">{member.company}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span>Project</span>
+                          <span className="font-medium text-xs">{member.project.substring(0, 20)}...</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span>Contributions</span>
+                          <span className="font-medium">{member.contributions}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span>Rating</span>
+                          <div className="flex items-center gap-1">
+                            <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                            <span className="font-medium">{member.rating}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" className="flex-1">
-                          <MessageSquare className="h-4 w-4 mr-1" />
+                          <MessageCircle className="w-4 h-4 mr-1" />
                           Message
                         </Button>
-                        <Button size="sm" className="flex-1">
-                          <Users className="h-4 w-4 mr-1" />
-                          Invite
+                        <Button variant="ghost" size="sm">
+                          <Eye className="w-4 h-4" />
                         </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Analytics Tab */}
+            <TabsContent value="analytics" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Collaboration Analytics</h2>
+                <Select>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Last 30 days" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7d">Last 7 days</SelectItem>
+                    <SelectItem value="30d">Last 30 days</SelectItem>
+                    <SelectItem value="90d">Last 90 days</SelectItem>
+                    <SelectItem value="1y">Last year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Revenue by Project</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {collaborations.map((collab, index) => (
+                        <div key={collab.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-3 h-3 rounded-full ${
+                              index === 0 ? 'bg-blue-500' : 
+                              index === 1 ? 'bg-green-500' : 'bg-purple-500'
+                            }`}></div>
+                            <span className="text-sm font-medium">{collab.title.substring(0, 25)}...</span>
+                          </div>
+                          <span className="text-sm font-semibold text-green-600">{collab.revenue}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Collaboration Performance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Award className="w-5 h-5 text-green-600" />
+                          <span className="text-sm font-medium">Projects Completed</span>
+                        </div>
+                        <span className="text-lg font-bold text-green-600">8</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="w-5 h-5 text-blue-600" />
+                          <span className="text-sm font-medium">Success Rate</span>
+                        </div>
+                        <span className="text-lg font-bold text-blue-600">94%</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Star className="w-5 h-5 text-purple-600" />
+                          <span className="text-sm font-medium">Avg Partner Rating</span>
+                        </div>
+                        <span className="text-lg font-bold text-purple-600">4.8/5</span>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          </TabsContent>
+              </div>
 
-          <TabsContent value="messages" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Messages</CardTitle>
-                <CardDescription>Stay connected with your collaboration teams</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { sender: "Alex Chen", message: "Ready to start the testing phase of the HFT algorithm?", time: "2 hours ago", unread: true },
-                    { sender: "Emma Watson", message: "Updated the ESG scoring methodology document", time: "5 hours ago", unread: true },
-                    { sender: "Sarah Johnson", message: "The backtesting results look promising!", time: "1 day ago", unread: false },
-                    { sender: "Mike Rodriguez", message: "Can we schedule a code review session?", time: "2 days ago", unread: false }
-                  ].map((msg, idx) => (
-                    <div key={idx} className={`flex items-start gap-3 p-3 rounded-lg border ${msg.unread ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800' : 'bg-background'}`}>
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback>{msg.sender.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h4 className="text-sm font-medium">{msg.sender}</h4>
-                          <span className="text-xs text-muted-foreground">{msg.time}</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{msg.message}</p>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Achievements</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                      <Award className="w-6 h-6 text-yellow-600" />
+                      <div>
+                        <p className="text-sm font-medium">Top Collaborator Badge</p>
+                        <p className="text-xs text-gray-500">Earned for exceptional partnership performance</p>
                       </div>
-                      {msg.unread && (
-                        <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                      )}
                     </div>
-                  ))}
-                </div>
-                <div className="mt-6 text-center">
-                  <Button variant="outline">View All Messages</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                    
+                    <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <CheckCircle className="w-6 h-6 text-green-600" />
+                      <div>
+                        <p className="text-sm font-medium">Project Milestone Reached</p>
+                        <p className="text-xs text-gray-500">Advanced Portfolio Risk Model - 85% completion</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <Star className="w-6 h-6 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium">5-Star Partner Review</p>
+                        <p className="text-xs text-gray-500">Received from QuantTech Solutions</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </Layout>
   );
