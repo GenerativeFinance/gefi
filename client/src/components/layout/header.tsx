@@ -175,14 +175,6 @@ export default function Header() {
         ];
       }
       
-      // Score subsections
-      if (location.includes('/developer/portfolio/score/')) {
-        return [
-          { name: "Overall Score", href: "/developer/portfolio/score/overall", icon: Award },
-          { name: "Milestones", href: "/developer/portfolio/score/milestones", icon: Target }
-        ];
-      }
-      
       return [
         { name: "Overview", href: "/developer", icon: BarChart3 },
         { name: "Portfolio", href: "/developer/portfolio/ai-models", icon: Wallet },
@@ -192,8 +184,7 @@ export default function Header() {
         { name: "Funding", href: "/developer/portfolio/funding", icon: DollarSign },
         { name: "Feedback", href: "/developer/portfolio/feedback", icon: MessageCircle },
         { name: "Compliance", href: "/developer/portfolio/compliance", icon: Shield },
-        { name: "Collaboration", href: "/developer/portfolio/collaboration-history", icon: Users },
-        { name: "Score", href: "/developer/portfolio/score/overall", icon: Award }
+        { name: "Score", href: "/developer/portfolio/score", icon: Award }
       ];
     }
 
