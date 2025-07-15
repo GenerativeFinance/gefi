@@ -1,1220 +1,1313 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import Layout from "@/components/layout/Layout";
-import {
-  Users,
-  MessageSquare,
-  Handshake,
-  Shield,
-  FileText,
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Users, 
+  MessageCircle, 
+  Star, 
   Calendar,
-  Globe,
-  Building,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Star,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
+  Search,
   Plus,
   Send,
   Eye,
-  Download,
-  Settings,
-  Activity,
-  Target,
+  ExternalLink,
+  Clock,
+  TrendingUp,
+  DollarSign,
+  CheckCircle,
+  AlertCircle,
+  Code,
+  Database,
+  Shield,
   Zap,
-  BarChart3,
-  PieChart,
-  Copy
+  Target,
+  Award,
+  Building,
+  FileText,
+  Settings,
+  Bell,
+  Video,
+  Lock,
+  Download,
+  Play,
+  BarChart,
+  Activity,
+  Handshake,
+  CreditCard,
+  FileCheck,
+  UserCheck,
+  MessageSquare,
+  Briefcase,
+  Scale,
+  Key,
+  Monitor,
+  Globe,
+  Gavel,
+  Share,
+  BookOpen,
+  HelpCircle,
+  LineChart,
+  Upload,
+  Filter
 } from "lucide-react";
 
 export default function DataProviderCollaboration() {
-  const [isPartnershipDialogOpen, setIsPartnershipDialogOpen] = useState(false);
-  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
-
-  // Sample partnerships data
-  const partnerships = [
+  const activeCollaborations = [
     {
       id: 1,
-      partner: "QuantAI Labs",
-      type: "AI Developer",
+      name: "Real-time Market Data Feed",
+      partner: "QuantumAI Systems",
+      type: "developer",
       status: "Active",
-      startDate: "2023-11-15",
-      projects: 3,
-      revenue: "$45,230",
-      contactPerson: "Dr. Sarah Chen",
-      email: "sarah.chen@quantai.com",
-      specialization: "Risk Management AI",
-      location: "San Francisco, CA",
-      rating: 4.8,
-      complianceLevel: "SOC 2, ISO 27001",
-      lastActivity: "2024-01-15"
+      revenue: "$12,500/month",
+      dataUsage: "2.3M calls/day",
+      lastActivity: "2 hours ago"
     },
     {
       id: 2,
+      name: "ESG Investment Analytics",
+      partner: "GreenTech Ventures",
+      type: "investor",
+      status: "Active", 
+      revenue: "$8,000/month",
+      dataUsage: "850K calls/day",
+      lastActivity: "1 day ago"
+    },
+    {
+      id: 3,
+      name: "Regulatory Compliance Dataset",
       partner: "Financial Conduct Authority",
-      type: "Regulator",
-      status: "Active",
-      startDate: "2024-01-01",
-      projects: 1,
-      revenue: "$0",
-      contactPerson: "James Morrison",
-      email: "j.morrison@fca.org.uk",
-      specialization: "Financial Regulation",
-      location: "London, UK",
-      rating: 4.9,
-      complianceLevel: "Full Regulatory Authority",
-      lastActivity: "2024-01-14"
-    },
-    {
-      id: 3,
-      partner: "Institutional Investor Corp",
-      type: "Investor",
-      status: "Pending",
-      startDate: "2024-01-10",
-      projects: 0,
-      revenue: "$0",
-      contactPerson: "Michael Rodriguez",
-      email: "m.rodriguez@instinvest.com",
-      specialization: "Portfolio Management",
-      location: "New York, NY",
-      rating: 4.6,
-      complianceLevel: "FINRA, SEC",
-      lastActivity: "2024-01-12"
+      type: "regulator",
+      status: "Under Review",
+      revenue: "N/A",
+      dataUsage: "150K calls/day",
+      lastActivity: "3 days ago"
     }
   ];
 
-  const communications = [
+  const investmentOpportunities = [
     {
       id: 1,
-      type: "Message",
-      from: "Dr. Sarah Chen",
-      organization: "QuantAI Labs",
-      subject: "Dataset Integration for Risk Model v2.1",
-      preview: "Hi, we're looking to integrate your S&P 500 historical data into our new risk assessment model...",
-      timestamp: "2024-01-15 14:30",
-      status: "Unread",
+      dataset: "Alternative Credit Scoring Data",
+      description: "Non-traditional credit assessment data including social, behavioral, and transactional indicators",
+      fundingGoal: "$150,000",
+      currentFunding: "$89,000",
+      investors: 12,
+      expectedROI: "18-25%",
+      timeline: "6 months",
+      riskLevel: "Medium"
+    },
+    {
+      id: 2,
+      dataset: "Real-time Commodity Pricing",
+      description: "Live pricing data for agricultural, energy, and metal commodities with millisecond latency",
+      fundingGoal: "$200,000", 
+      currentFunding: "$145,000",
+      investors: 8,
+      expectedROI: "22-30%",
+      timeline: "4 months",
+      riskLevel: "High"
+    }
+  ];
+
+  const developerRequests = [
+    {
+      id: 1,
+      developer: "Alex Thompson",
+      company: "FinTech Innovations",
+      dataset: "Financial News Sentiment",
+      requestType: "API Access",
+      status: "Pending Review",
+      submittedDate: "2025-07-20",
       priority: "High"
     },
     {
       id: 2,
-      type: "Compliance Update",
-      from: "James Morrison",
-      organization: "Financial Conduct Authority",
-      subject: "GDPR Compliance Review - Q1 2024",
-      preview: "This is a quarterly review of your data processing practices under GDPR regulations...",
-      timestamp: "2024-01-14 09:15",
-      status: "Read",
+      developer: "Maria Garcia", 
+      company: "AI Trading Solutions",
+      dataset: "Options Market Data",
+      requestType: "Extended Access",
+      status: "Approved",
+      submittedDate: "2025-07-18",
       priority: "Medium"
-    },
-    {
-      id: 3,
-      type: "Partnership Request",
-      from: "Michael Rodriguez",
-      organization: "Institutional Investor Corp",
-      subject: "Data Partnership Proposal",
-      preview: "We're interested in establishing a data partnership for our ESG investment strategies...",
-      timestamp: "2024-01-12 16:45",
-      status: "Read",
-      priority: "High"
-    },
-    {
-      id: 4,
-      type: "Technical Support",
-      from: "Alex Kumar",
-      organization: "CryptoInsight AI",
-      subject: "API Rate Limiting Issues",
-      preview: "We're experiencing some rate limiting issues with the crypto order book API endpoint...",
-      timestamp: "2024-01-11 11:20",
-      status: "Responded",
-      priority: "Low"
     }
   ];
 
-  const regulatoryUpdates = [
+  const complianceReports = [
     {
       id: 1,
-      title: "GDPR Data Processing Amendment",
-      regulator: "European Commission",
-      effectiveDate: "2024-03-01",
-      impact: "High",
-      description: "New requirements for data subject consent in AI model training datasets.",
-      status: "Review Required",
-      deadline: "2024-02-15"
+      authority: "SEC",
+      reportType: "Data Governance Audit",
+      status: "Submitted",
+      submissionDate: "2025-07-15",
+      reviewDeadline: "2025-08-15",
+      complianceScore: "98.5%"
     },
     {
       id: 2,
-      title: "AI Model Transparency Guidelines",
-      regulator: "Financial Conduct Authority",
-      effectiveDate: "2024-04-15",
-      impact: "Medium",
-      description: "Enhanced disclosure requirements for AI models used in financial services.",
-      status: "Compliant",
-      deadline: "2024-04-01"
-    },
-    {
-      id: 3,
-      title: "Data Localization Requirements",
-      regulator: "Securities and Exchange Commission",
-      effectiveDate: "2024-06-01",
-      impact: "High",
-      description: "New requirements for data storage location for US financial institutions.",
-      status: "Action Required",
-      deadline: "2024-05-15"
+      authority: "GDPR Commission",
+      reportType: "Privacy Impact Assessment", 
+      status: "In Progress",
+      submissionDate: "2025-07-22",
+      reviewDeadline: "2025-08-22",
+      complianceScore: "96.2%"
     }
   ];
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "active": return "bg-green-100 text-green-800";
-      case "pending": return "bg-yellow-100 text-yellow-800";
-      case "inactive": return "bg-gray-100 text-gray-800";
-      default: return "bg-gray-100 text-gray-800";
+  const collaborationMessages = [
+    {
+      id: 1,
+      from: "Sarah Chen",
+      organization: "GreenTech Ventures",
+      type: "investor",
+      message: "The ESG dataset performance has exceeded expectations. Let's discuss expanding the partnership.",
+      time: "2 hours ago",
+      unread: true
+    },
+    {
+      id: 2,
+      from: "David Kim",
+      organization: "QuantumAI Systems", 
+      type: "developer",
+      message: "Need clarification on the new API rate limits and pricing structure.",
+      time: "5 hours ago",
+      unread: false
+    },
+    {
+      id: 3,
+      from: "Regulatory Affairs",
+      organization: "FCA",
+      type: "regulator",
+      message: "Please provide additional documentation for the compliance review by July 30th.",
+      time: "1 day ago",
+      unread: true
     }
-  };
+  ];
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority.toLowerCase()) {
-      case "high": return "bg-red-100 text-red-800";
-      case "medium": return "bg-yellow-100 text-yellow-800";
-      case "low": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getImpactColor = (impact: string) => {
-    switch (impact.toLowerCase()) {
-      case "high": return "bg-red-100 text-red-800";
-      case "medium": return "bg-yellow-100 text-yellow-800";
-      case "low": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getMessageStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "unread": return "bg-blue-100 text-blue-800";
-      case "read": return "bg-gray-100 text-gray-800";
-      case "responded": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
+  const performanceMetrics = {
+    totalRevenue: "$45,500",
+    monthlyGrowth: "+23.5%",
+    activeDatasets: 12,
+    totalApiCalls: "4.2M",
+    averageUptime: "99.8%",
+    clientSatisfaction: "4.7/5"
   };
 
   return (
     <Layout>
-      <div className="container mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Collaboration Platforms & Compliance Tools</h1>
-            <p className="text-muted-foreground">
-              Shared workspaces, messaging systems, version control, and automated compliance tools for seamless stakeholder collaboration
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  New Message
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Send Message</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="recipient">Recipient</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select recipient" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="quantai">Dr. Sarah Chen - QuantAI Labs</SelectItem>
-                          <SelectItem value="fca">James Morrison - FCA</SelectItem>
-                          <SelectItem value="investor">Michael Rodriguez - Institutional Investor</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="priority">Priority</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="low">Low</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="subject">Subject</Label>
-                    <Input id="subject" placeholder="Enter message subject" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Message</Label>
-                    <Textarea id="message" placeholder="Enter your message..." rows={6} />
-                  </div>
-                </div>
-                <div className="flex gap-2 pt-4">
-                  <Button onClick={() => setIsMessageDialogOpen(false)}>
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Message
-                  </Button>
-                  <Button variant="outline" onClick={() => setIsMessageDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-            <Dialog open={isPartnershipDialogOpen} onOpenChange={setIsPartnershipDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  Data Provider Collaboration
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Manage partnerships with investors, developers, and regulators
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  {activeCollaborations.length} Active Partnerships
+                </Badge>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
                   New Partnership
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Initiate New Partnership</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="partner-name">Partner Name</Label>
-                      <Input id="partner-name" placeholder="Enter partner organization" />
+              </div>
+            </div>
+          </div>
+
+          {/* Performance Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
+                    <p className="text-2xl font-bold text-green-600">{performanceMetrics.totalRevenue}</p>
+                  </div>
+                  <DollarSign className="w-8 h-8 text-green-600" />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">{performanceMetrics.monthlyGrowth} from last month</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Datasets</p>
+                    <p className="text-2xl font-bold text-blue-600">{performanceMetrics.activeDatasets}</p>
+                  </div>
+                  <Database className="w-8 h-8 text-blue-600" />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">+2 this month</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">API Calls</p>
+                    <p className="text-2xl font-bold text-purple-600">{performanceMetrics.totalApiCalls}</p>
+                  </div>
+                  <Activity className="w-8 h-8 text-purple-600" />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Daily average</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Uptime</p>
+                    <p className="text-2xl font-bold text-green-600">{performanceMetrics.averageUptime}</p>
+                  </div>
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Last 30 days</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Satisfaction</p>
+                    <p className="text-2xl font-bold text-yellow-600">{performanceMetrics.clientSatisfaction}</p>
+                  </div>
+                  <Star className="w-8 h-8 text-yellow-600" />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Client rating</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Partners</p>
+                    <p className="text-2xl font-bold text-blue-600">{activeCollaborations.length}</p>
+                  </div>
+                  <Users className="w-8 h-8 text-blue-600" />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Active collaborations</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content Tabs */}
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-7">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="investors">Investors</TabsTrigger>
+              <TabsTrigger value="developers">Developers</TabsTrigger>
+              <TabsTrigger value="regulators">Regulators</TabsTrigger>
+              <TabsTrigger value="collaborations">Collaborations</TabsTrigger>
+              <TabsTrigger value="messaging">Messaging</TabsTrigger>
+              <TabsTrigger value="security">Security</TabsTrigger>
+            </TabsList>
+
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Handshake className="w-5 h-5 text-blue-600" />
+                      Active Collaborations
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {activeCollaborations.map((collaboration) => (
+                      <div key={collaboration.id} className="p-4 border rounded-lg space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold text-sm">{collaboration.name}</h4>
+                          <Badge variant={collaboration.status === 'Active' ? 'default' : 'secondary'}>
+                            {collaboration.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <p className="text-gray-500">Partner</p>
+                            <p className="font-semibold">{collaboration.partner}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Type</p>
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {collaboration.type}
+                            </Badge>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Revenue</p>
+                            <p className="font-semibold text-green-600">{collaboration.revenue}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Usage</p>
+                            <p className="font-semibold">{collaboration.dataUsage}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <BarChart className="w-3 h-3 mr-1" />
+                            Analytics
+                          </Button>
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <MessageCircle className="w-3 h-3 mr-1" />
+                            Contact
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Bell className="w-5 h-5 text-yellow-600" />
+                      Recent Activity
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <h5 className="font-semibold text-sm">New API Access Request</h5>
+                          <Badge variant="outline">2h ago</Badge>
+                        </div>
+                        <p className="text-xs text-gray-600">Alex Thompson requested access to Financial News Sentiment dataset</p>
+                      </div>
+
+                      <div className="p-3 border rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <h5 className="font-semibold text-sm">Investment Proposal</h5>
+                          <Badge variant="secondary">1d ago</Badge>
+                        </div>
+                        <p className="text-xs text-gray-600">GreenTech Ventures submitted funding proposal for ESG expansion</p>
+                      </div>
+
+                      <div className="p-3 border rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <h5 className="font-semibold text-sm">Compliance Review</h5>
+                          <Badge variant="outline">3d ago</Badge>
+                        </div>
+                        <p className="text-xs text-gray-600">FCA requested additional documentation for regulatory compliance</p>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="partner-type">Partner Type</Label>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Investors Tab */}
+            <TabsContent value="investors" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-green-600" />
+                      Investment Opportunities
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {investmentOpportunities.map((opportunity) => (
+                      <div key={opportunity.id} className="p-4 border rounded-lg space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold text-sm">{opportunity.dataset}</h4>
+                          <Badge variant="default">Open</Badge>
+                        </div>
+                        
+                        <p className="text-xs text-gray-600">{opportunity.description}</p>
+                        
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <p className="text-gray-500">Funding Goal</p>
+                            <p className="font-semibold text-green-600">{opportunity.fundingGoal}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Current Funding</p>
+                            <p className="font-semibold">{opportunity.currentFunding}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Expected ROI</p>
+                            <p className="font-semibold text-blue-600">{opportunity.expectedROI}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Timeline</p>
+                            <p className="font-semibold">{opportunity.timeline}</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-xs">
+                            <span>Funding Progress</span>
+                            <span>{Math.round((parseInt(opportunity.currentFunding.replace(/[$,]/g, '')) / parseInt(opportunity.fundingGoal.replace(/[$,]/g, ''))) * 100)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-green-600 h-2 rounded-full" 
+                              style={{ width: `${Math.round((parseInt(opportunity.currentFunding.replace(/[$,]/g, '')) / parseInt(opportunity.fundingGoal.replace(/[$,]/g, ''))) * 100)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="default" className="flex-1">
+                            <Eye className="w-3 h-3 mr-1" />
+                            View Details
+                          </Button>
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <Share className="w-3 h-3 mr-1" />
+                            Share
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <LineChart className="w-5 h-5 text-blue-600" />
+                      Performance Metrics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <DollarSign className="w-5 h-5 text-green-600" />
+                          <h4 className="font-semibold text-sm">Revenue Growth</h4>
+                        </div>
+                        <p className="text-2xl font-bold text-green-600">+23.5%</p>
+                        <p className="text-xs text-gray-600">Month over month</p>
+                      </div>
+
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Users className="w-5 h-5 text-blue-600" />
+                          <h4 className="font-semibold text-sm">Active Investors</h4>
+                        </div>
+                        <p className="text-2xl font-bold text-blue-600">24</p>
+                        <p className="text-xs text-gray-600">Portfolio partners</p>
+                      </div>
+
+                      <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <TrendingUp className="w-5 h-5 text-purple-600" />
+                          <h4 className="font-semibold text-sm">ROI Average</h4>
+                        </div>
+                        <p className="text-2xl font-bold text-purple-600">18.2%</p>
+                        <p className="text-xs text-gray-600">Across all datasets</p>
+                      </div>
+
+                      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Star className="w-5 h-5 text-yellow-600" />
+                          <h4 className="font-semibold text-sm">Satisfaction</h4>
+                        </div>
+                        <p className="text-2xl font-bold text-yellow-600">4.8/5</p>
+                        <p className="text-xs text-gray-600">Investor rating</p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 border rounded-lg space-y-3">
+                      <h4 className="font-semibold text-sm">Revenue Alerts</h4>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span>Monthly target achieved</span>
+                          <Badge variant="default">Success</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>ESG dataset outperforming</span>
+                          <Badge variant="default">+15% above target</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>New investor interest</span>
+                          <Badge variant="secondary">3 inquiries</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Developers Tab */}
+            <TabsContent value="developers" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Code className="w-5 h-5 text-purple-600" />
+                      Documentation Hub
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="p-4 border rounded-lg space-y-3">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="w-4 h-4 text-blue-600" />
+                          <h4 className="font-semibold text-sm">API Documentation</h4>
+                        </div>
+                        <p className="text-xs text-gray-600">Complete reference for all dataset APIs with examples and rate limits</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <Eye className="w-3 h-3 mr-1" />
+                            View Docs
+                          </Button>
+                          <Button size="sm" variant="ghost">
+                            <Download className="w-3 h-3 mr-1" />
+                            Download
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="p-4 border rounded-lg space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Database className="w-4 h-4 text-green-600" />
+                          <h4 className="font-semibold text-sm">Data Schemas</h4>
+                        </div>
+                        <p className="text-xs text-gray-600">JSON schemas and field definitions for all available datasets</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <Code className="w-3 h-3 mr-1" />
+                            View Schema
+                          </Button>
+                          <Button size="sm" variant="ghost">
+                            <Share className="w-3 h-3 mr-1" />
+                            Share
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="p-4 border rounded-lg space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Play className="w-4 h-4 text-purple-600" />
+                          <h4 className="font-semibold text-sm">Sample Queries</h4>
+                        </div>
+                        <p className="text-xs text-gray-600">Ready-to-use code examples in Python, JavaScript, and R</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <Play className="w-3 h-3 mr-1" />
+                            Try Examples
+                          </Button>
+                          <Button size="sm" variant="ghost">
+                            <Download className="w-3 h-3 mr-1" />
+                            Download
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5 text-orange-600" />
+                      Developer Requests
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Input placeholder="Search requests..." className="flex-1" />
                       <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
+                        <SelectTrigger className="w-32">
+                          <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="developer">AI Developer</SelectItem>
-                          <SelectItem value="investor">Investor</SelectItem>
-                          <SelectItem value="regulator">Regulator</SelectItem>
-                          <SelectItem value="data-provider">Data Provider</SelectItem>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="approved">Approved</SelectItem>
+                          <SelectItem value="rejected">Rejected</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contact-person">Contact Person</Label>
-                    <Input id="contact-person" placeholder="Primary contact name" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="proposal">Partnership Proposal</Label>
-                    <Textarea id="proposal" placeholder="Describe the partnership opportunity..." rows={4} />
-                  </div>
-                </div>
-                <div className="flex gap-2 pt-4">
-                  <Button onClick={() => setIsPartnershipDialogOpen(false)}>
-                    Send Proposal
-                  </Button>
-                  <Button variant="outline" onClick={() => setIsPartnershipDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
 
-        {/* Collaboration Tools Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Shared Workspaces</p>
-                  <p className="text-2xl font-bold">8</p>
-                  <p className="text-xs text-blue-600">Git-like version control</p>
-                </div>
-                <Building className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Message Threads</p>
-                  <p className="text-2xl font-bold">47</p>
-                  <p className="text-xs text-green-600">Real-time messaging</p>
-                </div>
-                <MessageSquare className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Compliance Score</p>
-                  <p className="text-2xl font-bold">96%</p>
-                  <p className="text-xs text-purple-600">Auto-compliance checks</p>
-                </div>
-                <Shield className="h-8 w-8 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Audit Trails</p>
-                  <p className="text-2xl font-bold">100%</p>
-                  <p className="text-xs text-orange-600">Complete documentation</p>
-                </div>
-                <FileText className="h-8 w-8 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Advanced Collaboration Tools */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Shared Workspaces
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Dataset Collaboration</span>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Model Development</span>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Funding Opportunities</span>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <Button size="sm" className="w-full">
-                <Building className="h-4 w-4 mr-2" />
-                Create Workspace
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Communication Systems
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Real-time Messaging</span>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Video Conferencing</span>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Document Sharing</span>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <Button size="sm" className="w-full">
-                <Send className="h-4 w-4 mr-2" />
-                Start Conversation
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Model Integration Platform
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">AI/ML Model Running</span>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Predictive Analytics</span>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Pre-processed Insights</span>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <Button size="sm" className="w-full">
-                <Zap className="h-4 w-4 mr-2" />
-                Run Model Analysis
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Visualization Tools
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Interactive Charts</span>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Custom Dashboards</span>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm">Stakeholder Reports</span>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <Button size="sm" className="w-full">
-                <PieChart className="h-4 w-4 mr-2" />
-                Create Visualization
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Tabs defaultValue="partnerships" className="space-y-6">
-          <TabsList className="grid grid-cols-6 w-full">
-            <TabsTrigger value="partnerships">Partnerships</TabsTrigger>
-            <TabsTrigger value="communications">Communications</TabsTrigger>
-            <TabsTrigger value="model-integration">Model Integration</TabsTrigger>
-            <TabsTrigger value="visualization">Visualization</TabsTrigger>
-            <TabsTrigger value="compliance">Compliance Tools</TabsTrigger>
-            <TabsTrigger value="projects">Projects</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="partnerships" className="space-y-6">
-            <div className="space-y-4">
-              {partnerships.map((partnership) => (
-                <Card key={partnership.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          {partnership.type === "AI Developer" && <Users className="h-6 w-6 text-blue-600" />}
-                          {partnership.type === "Regulator" && <Shield className="h-6 w-6 text-purple-600" />}
-                          {partnership.type === "Investor" && <Building className="h-6 w-6 text-green-600" />}
+                    {developerRequests.map((request) => (
+                      <div key={request.id} className="p-4 border rounded-lg space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold text-sm">{request.developer}</h4>
+                          <Badge variant={request.status === 'Approved' ? 'default' : request.status === 'Pending Review' ? 'secondary' : 'destructive'}>
+                            {request.status}
+                          </Badge>
                         </div>
-                        <div>
-                          <h3 className="text-lg font-semibold">{partnership.partner}</h3>
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                            <span>{partnership.type}</span>
-                            <span>•</span>
-                            <span>Since {partnership.startDate}</span>
-                            <span>•</span>
-                            <span>{partnership.projects} projects</span>
+                        
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Company</span>
+                            <span className="font-semibold">{request.company}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Dataset</span>
+                            <span className="font-semibold">{request.dataset}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Request Type</span>
+                            <span className="font-semibold">{request.requestType}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Priority</span>
+                            <Badge variant={request.priority === 'High' ? 'destructive' : 'secondary'} className="text-xs">
+                              {request.priority}
+                            </Badge>
                           </div>
                         </div>
+
+                        <div className="flex gap-2">
+                          {request.status === 'Pending Review' && (
+                            <>
+                              <Button size="sm" variant="default" className="flex-1">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Approve
+                              </Button>
+                              <Button size="sm" variant="outline" className="flex-1">
+                                <MessageCircle className="w-3 h-3 mr-1" />
+                                Review
+                              </Button>
+                            </>
+                          )}
+                          {request.status === 'Approved' && (
+                            <Button size="sm" variant="outline" className="w-full">
+                              <Eye className="w-3 h-3 mr-1" />
+                              View Access
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                      <Badge className={getStatusColor(partnership.status)}>
-                        {partnership.status}
-                      </Badge>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Technical Forum Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <HelpCircle className="w-5 h-5 text-blue-600" />
+                    Technical Forum
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex gap-2 mb-4">
+                    <Input placeholder="Search discussions..." className="flex-1" />
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Topic
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="p-4 border rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-sm">API Rate Limiting Best Practices</h4>
+                        <Badge variant="outline">12 replies</Badge>
+                      </div>
+                      <p className="text-xs text-gray-600">Discussion about optimal API usage patterns and rate limit handling</p>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-500">Started by: Alex Thompson</span>
+                        <span className="text-gray-500">Last activity: 2 hours ago</span>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">{partnership.contactPerson}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">{partnership.email}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">{partnership.location}</span>
-                        </div>
+                    <div className="p-4 border rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-sm">Financial News Sentiment Data Format</h4>
+                        <Badge variant="outline">8 replies</Badge>
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Star className="h-4 w-4 text-yellow-500" />
-                          <span className="text-sm font-medium">{partnership.rating}/5 Rating</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Target className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">{partnership.specialization}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Activity className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">Last: {partnership.lastActivity}</span>
-                        </div>
+                      <p className="text-xs text-gray-600">Questions about sentiment score calculation and data structure</p>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-500">Started by: Maria Garcia</span>
+                        <span className="text-gray-500">Last activity: 1 day ago</span>
                       </div>
-                      <div className="space-y-2">
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Revenue Generated</p>
-                          <p className="text-lg font-semibold text-green-600">{partnership.revenue}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Regulators Tab */}
+            <TabsContent value="regulators" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-red-600" />
+                      Compliance Dashboard
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          <h4 className="font-semibold text-sm">GDPR</h4>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-green-500" />
-                          <span className="text-sm text-muted-foreground">{partnership.complianceLevel}</span>
+                        <p className="text-xs text-gray-600">Compliant - Last audit: June 2025</p>
+                      </div>
+
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          <h4 className="font-semibold text-sm">SOC 2</h4>
                         </div>
+                        <p className="text-xs text-gray-600">Type II - Valid until Dec 2025</p>
+                      </div>
+
+                      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="w-5 h-5 text-yellow-600" />
+                          <h4 className="font-semibold text-sm">SEC Filing</h4>
+                        </div>
+                        <p className="text-xs text-gray-600">In progress - Due: Aug 15, 2025</p>
+                      </div>
+
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          <h4 className="font-semibold text-sm">ISO 27001</h4>
+                        </div>
+                        <p className="text-xs text-gray-600">Certified - Valid until Mar 2026</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <MessageSquare className="h-4 w-4 mr-1" />
-                          Message
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View Details
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <FileText className="h-4 w-4 mr-1" />
-                          Contracts
-                        </Button>
+                    <div className="p-4 border rounded-lg space-y-3">
+                      <h4 className="font-semibold text-sm">Data Lineage Tracking</h4>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span>Data Sources Tracked</span>
+                          <Badge variant="default">15/15</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Processing Steps Logged</span>
+                          <Badge variant="default">100%</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Access Controls Applied</span>
+                          <Badge variant="default">Active</Badge>
+                        </div>
                       </div>
-                      <Button variant="outline" size="sm">
-                        <Settings className="h-4 w-4 mr-1" />
-                        Manage
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileCheck className="w-5 h-5 text-blue-600" />
+                      Regulatory Reports
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {complianceReports.map((report) => (
+                      <div key={report.id} className="p-4 border rounded-lg space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold text-sm">{report.reportType}</h4>
+                          <Badge variant={report.status === 'Submitted' ? 'default' : 'secondary'}>
+                            {report.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Authority</span>
+                            <span className="font-semibold">{report.authority}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Submission Date</span>
+                            <span className="font-semibold">{report.submissionDate}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Review Deadline</span>
+                            <span className="font-semibold">{report.reviewDeadline}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Compliance Score</span>
+                            <span className="font-semibold text-green-600">{report.complianceScore}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <Download className="w-3 h-3 mr-1" />
+                            Download
+                          </Button>
+                          <Button size="sm" variant="ghost" className="flex-1">
+                            <Eye className="w-3 h-3 mr-1" />
+                            Track Status
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+
+                    <Button className="w-full">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Generate New Report
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Query Response System */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-purple-600" />
+                    Query Response System
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex gap-2 mb-4">
+                    <Input placeholder="Search regulatory queries..." className="flex-1" />
+                    <Select>
+                      <SelectTrigger className="w-32">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="responded">Responded</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="p-4 border rounded-lg space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-sm">Data Governance Inquiry #RQ-2025-001</h4>
+                        <Badge variant="default">Responded</Badge>
+                      </div>
+                      <p className="text-xs text-gray-600">Request for additional documentation on data retention policies and access controls</p>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">From: SEC</span>
+                          <span className="text-gray-500">Received: July 10, 2025</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Response Due: July 25, 2025</span>
+                          <span className="text-gray-500">Responded: July 22, 2025</span>
+                        </div>
+                      </div>
+                      <Button size="sm" variant="outline" className="w-full">
+                        <Eye className="w-3 h-3 mr-1" />
+                        View Response
+                      </Button>
+                    </div>
+
+                    <div className="p-4 border rounded-lg space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-sm">Privacy Impact Assessment #RQ-2025-002</h4>
+                        <Badge variant="secondary">Pending</Badge>
+                      </div>
+                      <p className="text-xs text-gray-600">Request for detailed privacy impact assessment for new dataset collection</p>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">From: GDPR Commission</span>
+                          <span className="text-gray-500">Received: July 18, 2025</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Response Due: August 2, 2025</span>
+                          <span className="text-gray-500 font-semibold">11 days remaining</span>
+                        </div>
+                      </div>
+                      <Button size="sm" variant="default" className="w-full">
+                        <Send className="w-3 h-3 mr-1" />
+                        Prepare Response
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Collaborations Management Tab */}
+            <TabsContent value="collaborations" className="space-y-6">
+              <div className="grid grid-cols-1 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Handshake className="w-5 h-5 text-blue-600" />
+                      Collaboration Management
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Input placeholder="Search collaborations..." className="flex-1" />
+                      <Select>
+                        <SelectTrigger className="w-32">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select>
+                        <SelectTrigger className="w-32">
+                          <SelectValue placeholder="Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Types</SelectItem>
+                          <SelectItem value="investor">Investor</SelectItem>
+                          <SelectItem value="developer">Developer</SelectItem>
+                          <SelectItem value="regulator">Regulator</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {activeCollaborations.map((collaboration) => (
+                        <div key={collaboration.id} className="p-4 border rounded-lg space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold text-sm">{collaboration.name}</h4>
+                            <Badge variant={collaboration.status === 'Active' ? 'default' : 'secondary'}>
+                              {collaboration.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="space-y-2 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Partner</span>
+                              <span className="font-semibold">{collaboration.partner}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Type</span>
+                              <Badge variant="outline" className="text-xs capitalize">
+                                {collaboration.type}
+                              </Badge>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Revenue</span>
+                              <span className="font-semibold text-green-600">{collaboration.revenue}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Data Usage</span>
+                              <span className="font-semibold">{collaboration.dataUsage}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Last Activity</span>
+                              <span className="font-semibold">{collaboration.lastActivity}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" className="flex-1">
+                              <Settings className="w-3 h-3 mr-1" />
+                              Manage
+                            </Button>
+                            <Button size="sm" variant="ghost" className="flex-1">
+                              <BarChart className="w-3 h-3 mr-1" />
+                              Analytics
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Messaging Tab */}
+            <TabsContent value="messaging" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5 text-green-600" />
+                      Secure Messaging
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Input placeholder="Search messages..." className="flex-1" />
+                      <Select>
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="Filter by type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Messages</SelectItem>
+                          <SelectItem value="investor">Investors</SelectItem>
+                          <SelectItem value="developer">Developers</SelectItem>
+                          <SelectItem value="regulator">Regulators</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {collaborationMessages.map((message) => (
+                        <div key={message.id} className={`p-4 border rounded-lg ${message.unread ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold text-sm">{message.from}</h4>
+                              <Badge variant="outline" className="text-xs capitalize">
+                                {message.type}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {message.unread && <div className="w-2 h-2 bg-blue-600 rounded-full"></div>}
+                              <span className="text-xs text-gray-500">{message.time}</span>
+                            </div>
+                          </div>
+                          
+                          <p className="text-sm text-gray-600 mb-2">{message.message}</p>
+                          <p className="text-xs text-gray-500 mb-3">From: {message.organization}</p>
+
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline">
+                              <Send className="w-3 h-3 mr-1" />
+                              Reply
+                            </Button>
+                            <Button size="sm" variant="ghost">
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              View Thread
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2 pt-4 border-t">
+                      <Textarea placeholder="Type your message..." className="flex-1" />
+                      <Button>
+                        <Send className="w-4 h-4" />
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          </TabsContent>
 
-          <TabsContent value="communications" className="space-y-6">
-            <div className="space-y-4">
-              {communications.map((communication) => (
-                <Card key={communication.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3">
-                        <MessageSquare className="h-5 w-5 text-blue-500 mt-1" />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-1">
-                            <h3 className="font-semibold">{communication.subject}</h3>
-                            <Badge className={getPriorityColor(communication.priority)}>
-                              {communication.priority}
-                            </Badge>
-                            <Badge className={getMessageStatusColor(communication.status)}>
-                              {communication.status}
-                            </Badge>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="w-5 h-5 text-purple-600" />
+                      Active Contacts
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="p-3 border rounded-lg space-y-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                            SC
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                            <span>From: {communication.from}</span>
-                            <span>•</span>
-                            <span>{communication.organization}</span>
-                            <span>•</span>
-                            <span>{communication.timestamp}</span>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm">Sarah Chen</h4>
+                            <p className="text-xs text-gray-500">GreenTech Ventures</p>
                           </div>
-                          <p className="text-sm text-muted-foreground">{communication.preview}</p>
+                          <div className="w-2 h-2 bg-green-600 rounded-full"></div>
                         </div>
+                        <Button size="sm" variant="ghost" className="w-full">
+                          <MessageCircle className="w-3 h-3 mr-1" />
+                          Message
+                        </Button>
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-1" />
-                          Read
+
+                      <div className="p-3 border rounded-lg space-y-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                            DK
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm">David Kim</h4>
+                            <p className="text-xs text-gray-500">QuantumAI Systems</p>
+                          </div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                        </div>
+                        <Button size="sm" variant="ghost" className="w-full">
+                          <MessageCircle className="w-3 h-3 mr-1" />
+                          Message
                         </Button>
-                        <Button variant="outline" size="sm">
-                          <Send className="h-4 w-4 mr-1" />
-                          Reply
+                      </div>
+
+                      <div className="p-3 border rounded-lg space-y-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-orange-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                            RA
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm">Regulatory Affairs</h4>
+                            <p className="text-xs text-gray-500">FCA</p>
+                          </div>
+                          <div className="w-2 h-2 bg-yellow-600 rounded-full"></div>
+                        </div>
+                        <Button size="sm" variant="ghost" className="w-full">
+                          <MessageCircle className="w-3 h-3 mr-1" />
+                          Message
                         </Button>
+                      </div>
+                    </div>
+
+                    <Button className="w-full" size="sm">
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Conversation
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Security Tab */}
+            <TabsContent value="security" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Lock className="w-5 h-5 text-red-600" />
+                      Data Security & Access Controls
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Shield className="w-5 h-5 text-green-600" />
+                          <h4 className="font-semibold text-sm">Encryption</h4>
+                        </div>
+                        <p className="text-xs text-gray-600">AES-256 at rest, TLS 1.3 in transit</p>
+                      </div>
+
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Key className="w-5 h-5 text-green-600" />
+                          <h4 className="font-semibold text-sm">Access Control</h4>
+                        </div>
+                        <p className="text-xs text-gray-600">Role-based permissions active</p>
+                      </div>
+
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Activity className="w-5 h-5 text-green-600" />
+                          <h4 className="font-semibold text-sm">Audit Trails</h4>
+                        </div>
+                        <p className="text-xs text-gray-600">Complete activity logging</p>
+                      </div>
+
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Monitor className="w-5 h-5 text-green-600" />
+                          <h4 className="font-semibold text-sm">Monitoring</h4>
+                        </div>
+                        <p className="text-xs text-gray-600">24/7 security monitoring</p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 border rounded-lg space-y-3">
+                      <h4 className="font-semibold text-sm">Role-Based Access Permissions</h4>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span>Investor Access</span>
+                          <Badge variant="default">Financial Data Only</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Developer Access</span>
+                          <Badge variant="default">API & Documentation</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Regulator Access</span>
+                          <Badge variant="default">Audit & Compliance</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Data Provider Admin</span>
+                          <Badge variant="default">Full Access</Badge>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          </TabsContent>
 
-          <TabsContent value="model-integration" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Zap className="h-5 w-5" />
-                    AI/ML Model Integration
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CheckCircle className="h-5 w-5 text-blue-600" />
-                      <h3 className="font-semibold">Advanced Data Analysis</h3>
-                      <Badge className="bg-blue-100 text-blue-800">✓ Active</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Run sophisticated ML models for deep data analysis and pattern recognition</p>
-                  </div>
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <h3 className="font-semibold">Forecasting Models</h3>
-                      <Badge className="bg-green-100 text-green-800">✓ Active</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Integrate time series and predictive models for accurate forecasting</p>
-                  </div>
-                  <div className="p-4 bg-purple-50 rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CheckCircle className="h-5 w-5 text-purple-600" />
-                      <h3 className="font-semibold">Predictive Analytics</h3>
-                      <Badge className="bg-purple-100 text-purple-800">✓ Active</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Deploy models for risk assessment, trend prediction, and market analysis</p>
-                  </div>
-                  <Button className="w-full">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Configure Model Pipeline
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5" />
-                    Pre-processed Insights
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Market Sentiment Analysis</p>
-                        <p className="text-sm text-muted-foreground">Real-time sentiment scoring</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Running</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Risk Factor Identification</p>
-                        <p className="text-sm text-muted-foreground">Automated risk detection</p>
-                      </div>
-                      <Badge className="bg-blue-100 text-blue-800">Active</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Portfolio Optimization</p>
-                        <p className="text-sm text-muted-foreground">AI-driven allocation recommendations</p>
-                      </div>
-                      <Badge className="bg-purple-100 text-purple-800">Scheduled</Badge>
-                    </div>
-                  </div>
-                  <Button className="w-full" variant="outline">
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Insight Reports
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Model Integration Features */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Developer Model Support Capabilities</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Activity className="h-5 w-5 text-blue-500" />
-                      <h3 className="font-semibold">Model Training Support</h3>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Feature Engineering</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Data Preprocessing</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Validation Datasets</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Zap className="h-5 w-5 text-purple-500" />
-                      <h3 className="font-semibold">Model Deployment</h3>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>API Integration</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Real-time Inference</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Batch Processing</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Target className="h-5 w-5 text-green-500" />
-                      <h3 className="font-semibold">Performance Monitoring</h3>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Model Accuracy Tracking</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Drift Detection</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Performance Analytics</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="visualization" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Interactive Charts & Graphs
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CheckCircle className="h-5 w-5 text-blue-600" />
-                      <h3 className="font-semibold">Time Series Visualizations</h3>
-                      <Badge className="bg-blue-100 text-blue-800">✓ Available</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Interactive line charts, candlestick plots, and trend analysis</p>
-                  </div>
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <h3 className="font-semibold">Statistical Charts</h3>
-                      <Badge className="bg-green-100 text-green-800">✓ Available</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Histograms, box plots, correlation matrices, and heatmaps</p>
-                  </div>
-                  <div className="p-4 bg-purple-50 rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CheckCircle className="h-5 w-5 text-purple-600" />
-                      <h3 className="font-semibold">Portfolio Visualizations</h3>
-                      <Badge className="bg-purple-100 text-purple-800">✓ Available</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Asset allocation pie charts, performance comparisons, risk plots</p>
-                  </div>
-                  <Button className="w-full">
-                    <PieChart className="h-4 w-4 mr-2" />
-                    Create Chart
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5" />
-                    Custom Dashboards
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Investor Dashboard</p>
-                        <p className="text-sm text-muted-foreground">ROI tracking and portfolio insights</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Active</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Regulator Dashboard</p>
-                        <p className="text-sm text-muted-foreground">Compliance and risk monitoring</p>
-                      </div>
-                      <Badge className="bg-blue-100 text-blue-800">Active</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Executive Summary</p>
-                        <p className="text-sm text-muted-foreground">High-level KPIs and trends</p>
-                      </div>
-                      <Badge className="bg-purple-100 text-purple-800">Draft</Badge>
-                    </div>
-                  </div>
-                  <Button className="w-full" variant="outline">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Customize Dashboard
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Stakeholder Communication Features */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Non-Technical Stakeholder Communication</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Users className="h-5 w-5 text-blue-500" />
-                      <h3 className="font-semibold">Investor Reports</h3>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Performance Summaries</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Risk Explanations</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Visual Storytelling</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Shield className="h-5 w-5 text-purple-500" />
-                      <h3 className="font-semibold">Regulatory Presentations</h3>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Compliance Summaries</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Risk Assessments</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Market Impact Analysis</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Globe className="h-5 w-5 text-green-500" />
-                      <h3 className="font-semibold">Executive Briefings</h3>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Strategic Insights</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Market Opportunities</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Decision Support</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="compliance" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
-                    Automated Compliance Checks
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <h3 className="font-semibold">GDPR Compliance</h3>
-                      <Badge className="bg-green-100 text-green-800">✓ Verified</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">All datasets comply with GDPR data protection requirements</p>
-                  </div>
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <h3 className="font-semibold">SOC 2 Type II</h3>
-                      <Badge className="bg-green-100 text-green-800">✓ Verified</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Security controls meet industry standards</p>
-                  </div>
-                  <div className="p-4 bg-yellow-50 rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Clock className="h-5 w-5 text-yellow-600" />
-                      <h3 className="font-semibold">ISO 27001</h3>
-                      <Badge className="bg-yellow-100 text-yellow-800">⏳ In Progress</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Certification renewal in progress</p>
-                  </div>
-                  <Button className="w-full">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Run Compliance Scan
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Audit Trails & Documentation
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Data Access Logs</p>
-                        <p className="text-sm text-muted-foreground">Complete access history</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">100% Coverage</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Change Management</p>
-                        <p className="text-sm text-muted-foreground">All modifications tracked</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Automated</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Compliance Reports</p>
-                        <p className="text-sm text-muted-foreground">Quarterly assessments</p>
-                      </div>
-                      <Badge className="bg-blue-100 text-blue-800">Ready</Badge>
-                    </div>
-                  </div>
-                  <Button className="w-full" variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Audit Report
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Legal Standards Compliance */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Legal & Industry Standards Adherence</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Shield className="h-5 w-5 text-green-500" />
-                      <h3 className="font-semibold">Data Protection</h3>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>GDPR Compliance</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>CCPA Compliance</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Data Encryption</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FileText className="h-5 w-5 text-blue-500" />
-                      <h3 className="font-semibold">Financial Regulations</h3>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>SEC Requirements</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>MiFID II</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Basel III</span>
-                        <Badge className="bg-yellow-100 text-yellow-800">⏳</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Activity className="h-5 w-5 text-purple-500" />
-                      <h3 className="font-semibold">AI/ML Standards</h3>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>AI Ethics Framework</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Model Transparency</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Bias Testing</span>
-                        <Badge className="bg-green-100 text-green-800">✓</Badge>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="regulatory" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Regulatory Updates & Compliance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {regulatoryUpdates.map((update) => (
-                    <div key={update.id} className="p-4 border rounded-lg">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="font-semibold">{update.title}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {update.regulator} • Effective: {update.effectiveDate}
-                          </p>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileCheck className="w-5 h-5 text-blue-600" />
+                      Compliance Certifications
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            <h4 className="font-semibold text-sm">SOC 2 Type II</h4>
+                          </div>
+                          <Badge variant="default">Active</Badge>
                         </div>
-                        <div className="flex gap-2">
-                          <Badge className={getImpactColor(update.impact)}>
-                            {update.impact} Impact
-                          </Badge>
-                          <Badge className={
-                            update.status === "Compliant" ? "bg-green-100 text-green-800" :
-                            update.status === "Review Required" ? "bg-yellow-100 text-yellow-800" :
-                            "bg-red-100 text-red-800"
-                          }>
-                            {update.status}
-                          </Badge>
-                        </div>
+                        <p className="text-xs text-gray-600">Security, availability, and confidentiality controls</p>
+                        <p className="text-xs text-gray-500 mt-1">Valid until: December 2025</p>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-3">{update.description}</p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span>Deadline: {update.deadline}</span>
+
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            <h4 className="font-semibold text-sm">ISO 27001</h4>
+                          </div>
+                          <Badge variant="default">Active</Badge>
                         </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-1" />
-                            View Details
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <FileText className="h-4 w-4 mr-1" />
-                            Documentation
-                          </Button>
+                        <p className="text-xs text-gray-600">Information security management system</p>
+                        <p className="text-xs text-gray-500 mt-1">Valid until: March 2026</p>
+                      </div>
+
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            <h4 className="font-semibold text-sm">GDPR Compliance</h4>
+                          </div>
+                          <Badge variant="default">Active</Badge>
+                        </div>
+                        <p className="text-xs text-gray-600">Data protection and privacy compliance</p>
+                        <p className="text-xs text-gray-500 mt-1">Last audit: June 2025</p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 border rounded-lg space-y-3">
+                      <h4 className="font-semibold text-sm">Security Protocols</h4>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span>Multi-Factor Authentication</span>
+                          <Badge variant="default">Required</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>API Key Rotation</span>
+                          <Badge variant="default">90 Days</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Data Retention Policy</span>
+                          <Badge variant="default">7 Years</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Incident Response</span>
+                          <Badge variant="default">&lt; 4 Hours</Badge>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
 
-          <TabsContent value="projects" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Collaboration Projects</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h3 className="font-semibold">Risk Assessment Model Integration</h3>
-                        <p className="text-sm text-muted-foreground">With QuantAI Labs • Started Dec 2023</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Active</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Integrating S&P 500 historical data and economic indicators into advanced risk assessment AI model.
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Progress: </span>
-                        <span className="font-semibold">75%</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">View Project</Button>
-                        <Button variant="outline" size="sm">Documents</Button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h3 className="font-semibold">GDPR Compliance Audit</h3>
-                        <p className="text-sm text-muted-foreground">With Financial Conduct Authority • Started Jan 2024</p>
-                      </div>
-                      <Badge className="bg-yellow-100 text-yellow-800">In Review</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Quarterly review of data processing practices and compliance with GDPR regulations.
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Progress: </span>
-                        <span className="font-semibold">90%</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">View Project</Button>
-                        <Button variant="outline" size="sm">Documents</Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          </Tabs>
+        </div>
       </div>
     </Layout>
   );
