@@ -41,12 +41,6 @@ import RegulatorComplianceIssues from "@/pages/regulator/compliance-issues";
 import RegulatorCommunications from "@/pages/regulator/communications";
 import RegulatorStandards from "@/pages/regulator/standards";
 import RegulatorExperienceEnhanced from "@/pages/regulator-experience-enhanced";
-import DataProviderDatasets from "@/pages/data-provider/datasets";
-import DataProviderMarketInsights from "@/pages/data-provider/market-insights";
-import DataProviderPortfolio from "@/pages/data-provider/portfolio";
-import DataProviderAIMarketplace from "@/pages/data-provider/ai-marketplace";
-import DataProviderCollaboration from "@/pages/data-provider/collaboration";
-import DataProviderEnhanced from "@/pages/data-provider-enhanced";
 import Learning from "@/pages/learning";
 import InvestorLearning from "@/pages/investor-learning";
 import TermsOfService from "@/pages/terms-of-service";
@@ -107,6 +101,11 @@ import DeveloperProfile from "@/pages/developer-profile";
 import DataProviderProfile from "@/pages/data-provider-profile";
 import RegulatorProfile from "@/pages/regulator-profile";
 import InvestmentInsights from "@/pages/investment-insights";
+import DataProviderDatasets from "@/pages/data-provider/datasets";
+import DataProviderMarketInsights from "@/pages/data-provider/market-insights";
+import DataProviderPortfolio from "@/pages/data-provider/portfolio";
+import DataProviderAIMarketplace from "@/pages/data-provider/ai-marketplace";
+import DataProviderCollaboration from "@/pages/data-provider/collaboration";
 
 
 function Router() {
