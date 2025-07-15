@@ -148,7 +148,9 @@ export default function ModelDetail() {
     );
   }
 
-  const getRiskLevelColor = (riskLevel: string) => {
+  const getRiskLevelColor = (riskLevel: string | undefined) => {
+    if (!riskLevel) return "bg-gray-100 text-gray-800 border-gray-300";
+    
     switch (riskLevel.toLowerCase()) {
       case "low":
         return "bg-green-100 text-green-800 border-green-300";
@@ -214,7 +216,7 @@ export default function ModelDetail() {
                     {model.subcategory}
                   </Badge>
                   <Badge className={`text-sm ${getRiskLevelColor(model.riskLevel)}`}>
-                    {model.riskLevel} Risk
+                    {model.riskLevel || 'Unknown'} Risk
                   </Badge>
                   <Badge variant="outline" className="text-sm">
                     {model.aiTechnique}
@@ -231,11 +233,11 @@ export default function ModelDetail() {
                   </div>
                   <div className="flex items-center gap-1">
                     <Users className="w-4 h-4" />
-                    <span>{model.monthlySubscribers.toLocaleString()} subscribers</span>
+                    <span>{model.monthlySubscribers ? model.monthlySubscribers.toLocaleString() : '0'} subscribers</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Target className="w-4 h-4" />
-                    <span>{model.accuracy}% accuracy</span>
+                    <span>{model.accuracy || 'N/A'}% accuracy</span>
                   </div>
                 </div>
               </div>
@@ -253,19 +255,19 @@ export default function ModelDetail() {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">Minimum Investment</span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {formatCurrency(model.minInvestment)}
+                      {model.minInvestment ? formatCurrency(model.minInvestment) : 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">Target Users</span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {model.targetUserType}
+                      {model.targetUserType || 'General'}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">Supported Regions</span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {model.supportedRegions.join(", ")}
+                      {model.supportedRegions && model.supportedRegions.length > 0 ? model.supportedRegions.join(", ") : 'Global'}
                     </span>
                   </div>
                 </div>
@@ -331,7 +333,7 @@ export default function ModelDetail() {
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-2 gap-4">
-                        {Object.entries(model.features).map(([feature, enabled]) => (
+                        {model.features && Object.entries(model.features).map(([feature, enabled]) => (
                           <div key={feature} className="flex items-center gap-2">
                             {enabled ? (
                               <CheckCircle className="w-4 h-4 text-green-600" />
@@ -357,7 +359,7 @@ export default function ModelDetail() {
                     </CardHeader>
                     <CardContent>
                       <div className="flex flex-wrap gap-2">
-                        {model.dataRequirements.map((requirement, index) => (
+                        {model.dataRequirements && model.dataRequirements.map((requirement, index) => (
                           <Badge key={index} variant="outline" className="text-sm">
                             {requirement}
                           </Badge>
@@ -376,7 +378,7 @@ export default function ModelDetail() {
                     </CardHeader>
                     <CardContent>
                       <div className="flex flex-wrap gap-2">
-                        {model.complianceFrameworks.map((framework, index) => (
+                        {model.complianceFrameworks && model.complianceFrameworks.map((framework, index) => (
                           <Badge key={index} variant="secondary" className="text-sm">
                             <Lock className="w-3 h-3 mr-1" />
                             {framework}
@@ -397,7 +399,7 @@ export default function ModelDetail() {
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-2 gap-6">
-                        {Object.entries(model.performance).map(([metric, value]) => (
+                        {model.performance && Object.entries(model.performance).map(([metric, value]) => (
                           <div key={metric} className="space-y-2">
                             <div className="flex items-center justify-between">
                               <span className="text-sm font-medium capitalize">
