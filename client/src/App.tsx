@@ -143,6 +143,7 @@ import DeveloperDevelopCodeReview from "@/pages/developer/develop/code-review";
 import DeveloperPortfolioCollaborationHistory from "@/pages/developer/portfolio/collaboration-history";
 import DataProviderMarketplace from "@/pages/data-provider-marketplace";
 import DeveloperCollaborationMain from "@/pages/developer/collaboration";
+import MyProfile from "@/pages/my-profile";
 
 
 function Router() {
@@ -304,6 +305,7 @@ function Router() {
             <Route path="/moderator/support-tickets" component={ModeratorSupportTickets} />
             <Route path="/moderator/user-monitoring" component={ModeratorUserMonitoring} />
             <Route path="/moderator/analytics" component={ModeratorAnalytics} />
+            <Route path="/profile" component={MyProfile} />
             <Route path="/profile/:userType/:userId" component={UserProfile} />
           </>
       ) : (

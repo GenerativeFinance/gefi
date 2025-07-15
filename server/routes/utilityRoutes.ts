@@ -403,10 +403,12 @@ export function registerUtilityRoutes(app: Express) {
           profileData = {
             id: userId,
             type: 'admin',
-            name: userId === 'tech-lead' ? 'Alex Rodriguez' : 'Sarah Johnson',
-            role: userId === 'tech-lead' ? 'Tech Lead' : 'Compliance Admin',
+            name: userId === 'github_55703540' ? 'Guillaume Lauzier' : 
+                  userId === 'tech-lead' ? 'Alex Rodriguez' : 'Sarah Johnson',
+            role: userId === 'github_55703540' ? 'Platform Admin' :
+                  userId === 'tech-lead' ? 'Tech Lead' : 'Compliance Admin',
             verified: true,
-            joinedDate: '2024-01-15',
+            joinedDate: userId === 'github_55703540' ? '2024-06-28' : '2024-01-15',
             lastActive: '2 hours ago',
             adminRights: [
               'User Management',

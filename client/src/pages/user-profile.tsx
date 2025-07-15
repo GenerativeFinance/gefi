@@ -15,7 +15,7 @@ export default function UserProfile() {
   const { userType, userId } = useParams<{ userType: string; userId: string }>();
 
   const { data: profileData, isLoading, error } = useQuery({
-    queryKey: ['/api/user-profile', userType, userId],
+    queryKey: [`/api/user-profile/${userType}/${userId}`],
     enabled: !!userType && !!userId,
     retry: false,
   });
