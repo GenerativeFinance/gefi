@@ -34,6 +34,11 @@ import BountyLeaderboard from "@/pages/bounty-leaderboard";
 import UserDetail from "@/pages/user-detail";
 import RiskAssessmentModels from "@/pages/risk-assessment-models";
 import DataProviderDashboard from "@/pages/data-provider-dashboard";
+import DataProviderUsage from "@/pages/data-provider/usage";
+import DataProviderQuality from "@/pages/data-provider/quality";
+import DataProviderRevenue from "@/pages/data-provider/revenue";
+import DataProviderReviews from "@/pages/data-provider/reviews";
+import DataProviderScore from "@/pages/data-provider/score";
 import RegulatorDashboard from "@/pages/regulator-dashboard";
 import RegulatorModelAudits from "@/pages/regulator/model-audits";
 import RegulatorDatasetAudits from "@/pages/regulator/dataset-audits";
@@ -234,6 +239,11 @@ function Router() {
             <Route path="/data-provider/portfolio" component={DataProviderPortfolio} />
             <Route path="/data-provider/ai-marketplace" component={DataProviderAIMarketplace} />
             <Route path="/data-provider/collaboration" component={DataProviderCollaboration} />
+            <Route path="/data-provider/usage" component={DataProviderUsage} />
+            <Route path="/data-provider/quality" component={DataProviderQuality} />
+            <Route path="/data-provider/revenue" component={DataProviderRevenue} />
+            <Route path="/data-provider/reviews" component={DataProviderReviews} />
+            <Route path="/data-provider/score" component={DataProviderScore} />
             <Route path="/data-provider/enhanced" component={DataProviderEnhanced} />
             <Route path="/data-provider/portfolio/dataset-overview" component={DataProviderDatasetOverview} />
             <Route path="/data-provider/portfolio/usage-statistics" component={DataProviderUsageStatistics} />
