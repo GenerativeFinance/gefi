@@ -117,6 +117,12 @@ import DataProviderCollaboration from "@/pages/data-provider/collaboration";
 import DataProviderEnhanced from "@/pages/data-provider-enhanced";
 import InvestorCollaboration from "@/pages/collaboration";
 import DeveloperCollaboration from "@/pages/developer/collaboration";
+import DeveloperCollaborationProjects from "@/pages/developer/collaboration/projects";
+import DeveloperCollaborationInvitations from "@/pages/developer/collaboration/invitations";
+import DeveloperCollaborationResources from "@/pages/developer/collaboration/resources";
+import DeveloperCollaborationMessaging from "@/pages/developer/collaboration/messaging";
+import DeveloperCollaborationCompliance from "@/pages/developer/collaboration/compliance";
+import DeveloperCollaborationNotifications from "@/pages/developer/collaboration/notifications";
 import DataProviderDatasetOverview from "@/pages/data-provider/portfolio/dataset-overview";
 import DataProviderUsageStatistics from "@/pages/data-provider/portfolio/usage-statistics";
 import DataProviderQualityMetrics from "@/pages/data-provider/portfolio/quality-metrics";
@@ -304,6 +310,12 @@ function Router() {
             <Route path="/developer/portfolio/collaboration-history" component={DeveloperPortfolioCollaborationHistory} />
             <Route path="/collaboration" component={InvestorCollaboration} />
             <Route path="/developer/collaboration" component={DeveloperCollaboration} />
+            <Route path="/developer/collaboration/projects" component={DeveloperCollaborationProjects} />
+            <Route path="/developer/collaboration/invitations" component={DeveloperCollaborationInvitations} />
+            <Route path="/developer/collaboration/resources" component={DeveloperCollaborationResources} />
+            <Route path="/developer/collaboration/messaging" component={DeveloperCollaborationMessaging} />
+            <Route path="/developer/collaboration/compliance" component={DeveloperCollaborationCompliance} />
+            <Route path="/developer/collaboration/notifications" component={DeveloperCollaborationNotifications} />
             <Route path="/admin" component={AdminDashboard} />
             <Route path="/admin/users" component={AdminUserManagement} />
             <Route path="/admin/content" component={AdminContentModeration} />

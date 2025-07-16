@@ -50,7 +50,9 @@ import {
   Award,
   MessageCircle,
   GitBranch,
-  BookmarkCheck
+  BookmarkCheck,
+  Briefcase,
+  UserPlus
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -191,6 +193,20 @@ export default function Header() {
 
     // Developer submenu
     if (isDeveloperPage) {
+      // Collaboration subsections
+      if (location.startsWith('/developer/collaboration')) {
+        return [
+          { name: "Overview", href: "/developer", icon: BarChart3 },
+          { name: "Collaboration", href: "/developer/collaboration", icon: Users },
+          { name: "Projects", href: "/developer/collaboration/projects", icon: Briefcase },
+          { name: "Invitations", href: "/developer/collaboration/invitations", icon: UserPlus },
+          { name: "Resources", href: "/developer/collaboration/resources", icon: FileText },
+          { name: "Messaging", href: "/developer/collaboration/messaging", icon: MessageCircle },
+          { name: "Compliance", href: "/developer/collaboration/compliance", icon: Shield },
+          { name: "Notifications", href: "/developer/collaboration/notifications", icon: Bell }
+        ];
+      }
+      
       // Develop subsections
       if (location.includes('/developer/develop/') || location === '/backtesting') {
         return [
