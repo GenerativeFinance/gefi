@@ -116,6 +116,10 @@ import DataProviderAIMarketplace from "@/pages/data-provider/ai-marketplace";
 import DataProviderCollaboration from "@/pages/data-provider/collaboration";
 import DataProviderEnhanced from "@/pages/data-provider-enhanced";
 import InvestorCollaboration from "@/pages/collaboration";
+import CollaborationProjects from "@/pages/collaboration/projects";
+import CollaborationTeams from "@/pages/collaboration/teams";
+import CollaborationMessaging from "@/pages/collaboration/messaging";
+import CollaborationResources from "@/pages/collaboration/resources";
 import DeveloperCollaboration from "@/pages/developer/collaboration";
 import DeveloperCollaborationProjects from "@/pages/developer/collaboration/projects";
 import DeveloperCollaborationInvitations from "@/pages/developer/collaboration/invitations";
@@ -309,6 +313,10 @@ function Router() {
             <Route path="/developer/develop/code-review" component={DeveloperDevelopCodeReview} />
             <Route path="/developer/portfolio/collaboration-history" component={DeveloperPortfolioCollaborationHistory} />
             <Route path="/collaboration" component={InvestorCollaboration} />
+            <Route path="/collaboration/projects" component={CollaborationProjects} />
+            <Route path="/collaboration/teams" component={CollaborationTeams} />
+            <Route path="/collaboration/messaging" component={CollaborationMessaging} />
+            <Route path="/collaboration/resources" component={CollaborationResources} />
             <Route path="/developer/collaboration" component={DeveloperCollaboration} />
             <Route path="/developer/collaboration/projects" component={DeveloperCollaborationProjects} />
             <Route path="/developer/collaboration/invitations" component={DeveloperCollaborationInvitations} />

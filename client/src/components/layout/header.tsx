@@ -157,6 +157,18 @@ export default function Header() {
       ];
     }
     
+    // Collaboration submenu
+    if (location.startsWith('/collaboration')) {
+      return [
+        { name: "Overview", href: "/", icon: BarChart3 },
+        { name: "Collaboration", href: "/collaboration", icon: Users },
+        { name: "Projects", href: "/collaboration/projects", icon: Briefcase },
+        { name: "Teams", href: "/collaboration/teams", icon: Users },
+        { name: "Messaging", href: "/collaboration/messaging", icon: MessageCircle },
+        { name: "Resources", href: "/collaboration/resources", icon: FileText }
+      ];
+    }
+    
     if (location.startsWith('/marketplace') || location.startsWith('/my-subscriptions') || location.startsWith('/developers') || location.startsWith('/trading-bots') || location.startsWith('/categories')) {
       return [
         { name: "Overview", href: "/", icon: BarChart3 },
@@ -304,14 +316,16 @@ export default function Header() {
       ];
     }
 
-    // Default submenu - includes main navigation items
+    // Default submenu - Investor main navigation
     return [
       { name: "Overview", href: "/", icon: BarChart3 },
+      { name: "Portfolio", href: "/portfolio", icon: Wallet },
       { name: "AI Marketplace", href: "/marketplace", icon: Store },
-      { name: "Categories", href: "/categories", icon: Grid },
-      { name: "My Subscriptions", href: "/my-subscriptions", icon: BookmarkCheck },
-      { name: "Developers", href: "/developers", icon: Users },
-      { name: "Data Providers", href: "/data-providers", icon: Database }
+      { name: "Trading", href: "/live-trading", icon: TrendingUp },
+      { name: "Reports", href: "/reports", icon: FileText },
+      { name: "Funding", href: "/funding", icon: DollarSign },
+      { name: "Learning", href: "/investor-learning", icon: GraduationCap },
+      { name: "Collaboration", href: "/collaboration", icon: Users }
     ];
   };
 
