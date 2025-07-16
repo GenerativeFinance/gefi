@@ -290,7 +290,6 @@ export default function Header() {
           { name: "Revenue", href: "/data-provider/portfolio/revenue", icon: DollarSign },
           { name: "Compliance", href: "/data-provider/portfolio/compliance", icon: Shield },
           { name: "Feedback", href: "/data-provider/portfolio/feedback", icon: Star },
-          { name: "Collaboration", href: "/data-provider/portfolio/collaboration", icon: Users },
           { name: "Score", href: "/data-provider/portfolio/score", icon: Award }
         ];
       }
@@ -311,7 +310,7 @@ export default function Header() {
         { name: "Portfolio", href: "/data-provider/portfolio", icon: Wallet },
         { name: "Data", href: "/data-provider/data/catalogs", icon: Database },
         { name: "AI Marketplace", href: "/data-provider-marketplace", icon: Store },
-        { name: "Collaboration", href: "/data-provider/portfolio/collaboration", icon: Users },
+        { name: "Collaboration", href: "/data-provider/collaboration", icon: Users },
         { name: "Learning", href: "/learning", icon: GraduationCap }
       ];
     }

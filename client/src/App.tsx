@@ -272,29 +272,19 @@ function Router() {
             <Route path="/regulator/:regulatorId" component={RegulatorProfile} />
             <Route path="/data-provider/datasets" component={DataProviderDatasets} />
             <Route path="/data-provider/market-insights" component={DataProviderMarketInsights} />
-            <Route path="/data-provider/portfolio" component={DataProviderPortfolio} />
+            <Route path="/data-provider/portfolio" component={DataProviderPortfolioOverview} />
             <Route path="/data-provider/ai-marketplace" component={DataProviderAIMarketplace} />
             <Route path="/data-provider/collaboration" component={DataProviderCollaboration} />
-            <Route path="/data-provider/portfolio/usage" component={DataProviderUsage} />
-            <Route path="/data-provider/portfolio/quality" component={DataProviderQuality} />
-            <Route path="/data-provider/portfolio/revenue" component={DataProviderRevenue} />
+            <Route path="/data-provider/portfolio/usage" component={DataProviderUsageStatistics} />
+            <Route path="/data-provider/portfolio/quality" component={DataProviderQualityMetrics} />
+            <Route path="/data-provider/portfolio/revenue" component={DataProviderRevenueTracking} />
             <Route path="/data-provider/portfolio/compliance" component={DataProviderComplianceStatus} />
             <Route path="/data-provider/portfolio/feedback" component={DataProviderReviewsFeedback} />
-            <Route path="/data-provider/portfolio/collaboration" component={DataProviderCollaborationHistory} />
             <Route path="/data-provider/portfolio/score" component={DataProviderPortfolioScore} />
             <Route path="/data-provider/data/catalogs" component={DataProviderDataCatalogs} />
             <Route path="/data-provider/data/metadata" component={DataProviderDataMetadata} />
             <Route path="/data-provider/data/versioning" component={DataProviderDataVersioning} />
             <Route path="/data-provider/enhanced" component={DataProviderEnhanced} />
-            <Route path="/data-provider/portfolio/dataset-overview" component={DataProviderDatasetOverview} />
-            <Route path="/data-provider/portfolio" component={DataProviderPortfolioOverview} />
-            <Route path="/data-provider/portfolio/usage-statistics" component={DataProviderUsageStatistics} />
-            <Route path="/data-provider/portfolio/quality-metrics" component={DataProviderQualityMetrics} />
-            <Route path="/data-provider/portfolio/revenue-tracking" component={DataProviderRevenueTracking} />
-            <Route path="/data-provider/portfolio/compliance-status" component={DataProviderComplianceStatus} />
-            <Route path="/data-provider/portfolio/reviews-feedback" component={DataProviderReviewsFeedback} />
-            <Route path="/data-provider/portfolio/collaboration-history" component={DataProviderCollaborationHistory} />
-            <Route path="/data-provider/portfolio/portfolio-score" component={DataProviderPortfolioScore} />
             <Route path="/developer/portfolio" component={DeveloperPortfolioOverview} />
             <Route path="/developer/portfolio/ai-models" component={DeveloperPortfolioAIModels} />
             <Route path="/developer/portfolio/performance" component={DeveloperPortfolioPerformance} />
