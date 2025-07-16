@@ -159,6 +159,8 @@ import CategoryPage from "@/pages/category/[categoryName]";
 import DataProviders from "@/pages/data-providers";
 import DeveloperPortfolioOverview from "@/pages/developer/portfolio-overview";
 import DataProviderPortfolioOverview from "@/pages/data-provider/portfolio-overview";
+import SupportDashboard from "@/pages/support-dashboard";
+
 
 
 function Router() {
@@ -325,6 +327,7 @@ function Router() {
             <Route path="/moderator/support-tickets" component={ModeratorSupportTickets} />
             <Route path="/moderator/user-monitoring" component={ModeratorUserMonitoring} />
             <Route path="/moderator/analytics" component={ModeratorAnalytics} />
+            <Route path="/support" component={SupportDashboard} />
             <Route path="/profile" component={MyProfile} />
             <Route path="/profile/:userType/:userId" component={UserProfile} />
           </>

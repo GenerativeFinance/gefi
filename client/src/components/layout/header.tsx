@@ -52,7 +52,8 @@ import {
   GitBranch,
   BookmarkCheck,
   Briefcase,
-  UserPlus
+  UserPlus,
+  HelpCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -278,6 +279,17 @@ export default function Header() {
       ];
     }
 
+    // Support submenu
+    if (location.startsWith('/support')) {
+      return [
+        { name: "Overview", href: "/support", icon: BarChart3 },
+        { name: "Tickets", href: "/support", icon: MessageCircle },
+        { name: "Knowledge Base", href: "/support", icon: BookOpen },
+        { name: "Analytics", href: "/support", icon: Activity },
+        { name: "Settings", href: "/support", icon: Settings }
+      ];
+    }
+
     // Data Provider submenu - hierarchical structure
     if (location.startsWith('/data-provider')) {
       // Portfolio subsections
@@ -367,6 +379,7 @@ export default function Header() {
                      location.startsWith('/data-provider') ? <Database className="h-4 w-4 md:h-5 md:w-5" /> :
                      location.startsWith('/admin') ? <Settings className="h-4 w-4 md:h-5 md:w-5" /> :
                      location.startsWith('/moderator') ? <Flag className="h-4 w-4 md:h-5 md:w-5" /> :
+                     location.startsWith('/support') ? <HelpCircle className="h-4 w-4 md:h-5 md:w-5" /> :
                      <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />}
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -404,6 +417,12 @@ export default function Header() {
                       <Link href="/moderator" className="flex items-center space-x-2">
                         <Flag className="h-4 w-4" />
                         <span>Moderator</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/support" className="flex items-center space-x-2">
+                        <HelpCircle className="h-4 w-4" />
+                        <span>Support</span>
                       </Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
