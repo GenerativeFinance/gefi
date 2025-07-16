@@ -20,10 +20,31 @@ import {
   Target,
   CheckCircle,
   AlertCircle,
-  Clock
+  Clock,
+  ExternalLink,
+  ArrowUpRight,
+  ArrowDownRight,
+  TrendingDown,
+  FileText,
+  GitCommit,
+  Code,
+  Building,
+  Zap
 } from "lucide-react";
 
 export default function DeveloperPortfolioOverview() {
+  // Portfolio overview statistics
+  const portfolioStats = {
+    totalModels: 12,
+    activeModels: 8,
+    totalUsers: 1247,
+    totalRevenue: 125000,
+    avgAccuracy: 92.3,
+    totalFunding: 75000,
+    complianceScore: 95,
+    overallScore: 88
+  };
+
   const portfolioSections = [
     {
       id: "ai-models",
@@ -34,13 +55,14 @@ export default function DeveloperPortfolioOverview() {
       color: "bg-blue-500",
       stats: {
         primary: "12 Models",
-        secondary: "3 Active, 2 Pending",
+        secondary: "8 Active, 2 Draft, 2 Review",
         trend: "+2 this month"
       },
       metrics: [
-        { label: "Total Models", value: "12", change: "+2" },
-        { label: "Active", value: "3", change: "0" },
-        { label: "Draft", value: "2", change: "+1" }
+        { label: "Published", value: "8", change: "+2", trend: "up" },
+        { label: "Draft", value: "2", change: "0", trend: "neutral" },
+        { label: "Under Review", value: "2", change: "+1", trend: "up" },
+        { label: "Total Downloads", value: "2.4K", change: "+312", trend: "up" }
       ]
     },
     {
@@ -51,14 +73,15 @@ export default function DeveloperPortfolioOverview() {
       href: "/developer/portfolio/performance",
       color: "bg-green-500",
       stats: {
-        primary: "92% Avg Accuracy",
-        secondary: "200 Users",
-        trend: "+5% this week"
+        primary: "92.3% Avg Accuracy",
+        secondary: "1,247 Active Users",
+        trend: "+5.2% this week"
       },
       metrics: [
-        { label: "Accuracy", value: "92%", change: "+3%" },
-        { label: "Users", value: "200", change: "+15" },
-        { label: "Uptime", value: "99.5%", change: "+0.2%" }
+        { label: "Accuracy", value: "92.3%", change: "+3.1%", trend: "up" },
+        { label: "Users", value: "1,247", change: "+89", trend: "up" },
+        { label: "Uptime", value: "99.5%", change: "+0.2%", trend: "up" },
+        { label: "API Calls", value: "45.2K", change: "+8.7K", trend: "up" }
       ]
     },
     {
@@ -69,14 +92,15 @@ export default function DeveloperPortfolioOverview() {
       href: "/developer/portfolio/activity",
       color: "bg-purple-500",
       stats: {
-        primary: "50 Commits",
-        secondary: "3 Projects Active",
-        trend: "5 commits this week"
+        primary: "127 Commits",
+        secondary: "5 Active Projects",
+        trend: "23 commits this week"
       },
       metrics: [
-        { label: "Commits", value: "50", change: "+5" },
-        { label: "Projects", value: "3", change: "0" },
-        { label: "Contributors", value: "4", change: "+1" }
+        { label: "Commits", value: "127", change: "+23", trend: "up" },
+        { label: "Projects", value: "5", change: "+1", trend: "up" },
+        { label: "Contributors", value: "8", change: "+2", trend: "up" },
+        { label: "Pull Requests", value: "34", change: "+7", trend: "up" }
       ]
     },
     {
@@ -87,14 +111,15 @@ export default function DeveloperPortfolioOverview() {
       href: "/developer/portfolio/funding",
       color: "bg-yellow-500",
       stats: {
-        primary: "$50,000 Raised",
-        secondary: "15% ROI Q2",
-        trend: "+$5K this month"
+        primary: "$75,000 Raised",
+        secondary: "18.5% ROI Q2",
+        trend: "+$12K this month"
       },
       metrics: [
-        { label: "Total Funding", value: "$50K", change: "+$5K" },
-        { label: "ROI", value: "15%", change: "+3%" },
-        { label: "Investors", value: "8", change: "+2" }
+        { label: "Total Funding", value: "$75K", change: "+$12K", trend: "up" },
+        { label: "ROI", value: "18.5%", change: "+3.2%", trend: "up" },
+        { label: "Investors", value: "12", change: "+3", trend: "up" },
+        { label: "Revenue", value: "$42.8K", change: "+$8.5K", trend: "up" }
       ]
     },
     {
@@ -105,14 +130,15 @@ export default function DeveloperPortfolioOverview() {
       href: "/developer/portfolio/feedback",
       color: "bg-orange-500",
       stats: {
-        primary: "4.7/5 Rating",
-        secondary: "89% Response Rate",
-        trend: "12 new reviews"
+        primary: "4.8/5 Rating",
+        secondary: "94% Response Rate",
+        trend: "23 new reviews"
       },
       metrics: [
-        { label: "Rating", value: "4.7/5", change: "+0.1" },
-        { label: "Reviews", value: "156", change: "+12" },
-        { label: "Response Rate", value: "89%", change: "+5%" }
+        { label: "Rating", value: "4.8/5", change: "+0.2", trend: "up" },
+        { label: "Reviews", value: "189", change: "+23", trend: "up" },
+        { label: "Response Rate", value: "94%", change: "+8%", trend: "up" },
+        { label: "Satisfaction", value: "96%", change: "+5%", trend: "up" }
       ]
     },
     {
@@ -123,14 +149,15 @@ export default function DeveloperPortfolioOverview() {
       href: "/developer/portfolio/compliance",
       color: "bg-red-500",
       stats: {
-        primary: "SEC Compliant",
-        secondary: "Last Audit: July 5",
-        trend: "2 pending actions"
+        primary: "95% Compliant",
+        secondary: "Last Audit: July 12",
+        trend: "1 pending action"
       },
       metrics: [
-        { label: "Compliance Rate", value: "98%", change: "+2%" },
-        { label: "Audits", value: "5", change: "+1" },
-        { label: "Issues", value: "2", change: "-1" }
+        { label: "Compliance Rate", value: "95%", change: "+2%", trend: "up" },
+        { label: "Audits Passed", value: "7/8", change: "+1", trend: "up" },
+        { label: "Issues Resolved", value: "15", change: "+3", trend: "up" },
+        { label: "Certifications", value: "4", change: "+1", trend: "up" }
       ]
     },
     {
@@ -141,14 +168,15 @@ export default function DeveloperPortfolioOverview() {
       href: "/developer/portfolio/score",
       color: "bg-indigo-500",
       stats: {
-        primary: "85/100 Score",
-        secondary: "Top 15% Developer",
-        trend: "+3 points this month"
+        primary: "88/100 Score",
+        secondary: "Top 12% Developer",
+        trend: "+5 points this month"
       },
       metrics: [
-        { label: "Overall Score", value: "85/100", change: "+3" },
-        { label: "Rank", value: "Top 15%", change: "+2%" },
-        { label: "Milestones", value: "12/15", change: "+1" }
+        { label: "Overall Score", value: "88/100", change: "+5", trend: "up" },
+        { label: "Rank", value: "Top 12%", change: "+3%", trend: "up" },
+        { label: "Milestones", value: "14/16", change: "+2", trend: "up" },
+        { label: "Achievements", value: "23", change: "+4", trend: "up" }
       ]
     }
   ];
@@ -238,7 +266,7 @@ export default function DeveloperPortfolioOverview() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Avg Rating</p>
-                  <p className="text-2xl font-bold">4.7</p>
+                  <p className="text-2xl font-bold">4.8</p>
                 </div>
                 <Star className="h-8 w-8 text-yellow-500" />
               </div>
@@ -248,59 +276,82 @@ export default function DeveloperPortfolioOverview() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Users</p>
-                  <p className="text-2xl font-bold">2,840</p>
+                  <p className="text-sm font-medium text-muted-foreground">Overall Score</p>
+                  <p className="text-2xl font-bold">88/100</p>
                 </div>
-                <Users className="h-8 w-8 text-purple-500" />
+                <Award className="h-8 w-8 text-indigo-500" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Portfolio Sections Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
           {portfolioSections.map((section) => {
             const IconComponent = section.icon;
             return (
-              <Card key={section.id} className="hover:shadow-lg transition-shadow group">
+              <Card key={section.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <div className={`p-2 rounded-lg ${section.color}`}>
-                      <IconComponent className="h-6 w-6 text-white" />
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 rounded-lg ${section.color}`}>
+                        <IconComponent className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">{section.title}</CardTitle>
+                        <CardDescription className="text-sm">
+                          {section.description}
+                        </CardDescription>
+                      </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                    <Link href={section.href}>
+                      <Button variant="ghost" size="sm">
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
                   </div>
-                  <CardTitle className="text-lg">{section.title}</CardTitle>
-                  <CardDescription className="text-sm">{section.description}</CardDescription>
                 </CardHeader>
-
                 <CardContent>
                   <div className="space-y-4">
-                    {/* Main Stats */}
-                    <div className="space-y-1">
-                      <p className="text-lg font-semibold">{section.stats.primary}</p>
-                      <p className="text-sm text-muted-foreground">{section.stats.secondary}</p>
-                      <p className="text-xs text-green-600">{section.stats.trend}</p>
+                    {/* Primary Stats */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-2xl font-bold">{section.stats.primary}</p>
+                        <p className="text-sm text-muted-foreground">{section.stats.secondary}</p>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {section.stats.trend}
+                      </Badge>
                     </div>
 
                     {/* Metrics Grid */}
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                       {section.metrics.map((metric, index) => (
-                        <div key={index} className="text-center p-2 bg-muted/30 rounded">
-                          <p className="text-sm font-medium">{metric.value}</p>
+                        <div key={index} className="space-y-1">
                           <p className="text-xs text-muted-foreground">{metric.label}</p>
-                          <p className="text-xs text-green-600">{metric.change}</p>
+                          <div className="flex items-center space-x-1">
+                            <p className="text-sm font-semibold">{metric.value}</p>
+                            <div className="flex items-center">
+                              {metric.trend === "up" && (
+                                <ArrowUpRight className="h-3 w-3 text-green-500" />
+                              )}
+                              {metric.trend === "down" && (
+                                <ArrowDownRight className="h-3 w-3 text-red-500" />
+                              )}
+                              <span className={`text-xs ${
+                                metric.trend === "up" 
+                                  ? "text-green-600" 
+                                  : metric.trend === "down" 
+                                    ? "text-red-600" 
+                                    : "text-muted-foreground"
+                              }`}>
+                                {metric.change}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
-
-                    {/* Action Button */}
-                    <Button asChild className="w-full" variant="outline">
-                      <Link href={section.href}>
-                        View Details
-                        <ChevronRight className="h-4 w-4 ml-2" />
-                      </Link>
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -308,39 +359,34 @@ export default function DeveloperPortfolioOverview() {
           })}
         </div>
 
-        {/* Recent Activity & Upcoming Tasks */}
+        {/* Bottom Section - Recent Activity and Tasks */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Activity */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center space-x-2">
                 <Activity className="h-5 w-5" />
-                Recent Activity
+                <span>Recent Activity</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium">{activity.action}</p>
-                      <p className="text-sm text-muted-foreground">{activity.model}</p>
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-2 h-2 rounded-full ${
+                        activity.status === "success" 
+                          ? "bg-green-500" 
+                          : activity.status === "pending" 
+                            ? "bg-yellow-500" 
+                            : "bg-red-500"
+                      }`} />
+                      <div>
+                        <p className="text-sm font-medium">{activity.action}</p>
+                        <p className="text-xs text-muted-foreground">{activity.model}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">{activity.time}</p>
-                      <Badge 
-                        className={`text-xs ${
-                          activity.status === 'success' ? 'bg-green-100 text-green-800' : 
-                          activity.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                          'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {activity.status === 'success' && <CheckCircle className="h-3 w-3 mr-1" />}
-                        {activity.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
-                        {activity.status === 'error' && <AlertCircle className="h-3 w-3 mr-1" />}
-                        {activity.status}
-                      </Badge>
-                    </div>
+                    <span className="text-xs text-muted-foreground">{activity.time}</span>
                   </div>
                 ))}
               </div>
@@ -350,35 +396,33 @@ export default function DeveloperPortfolioOverview() {
           {/* Upcoming Tasks */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Upcoming Tasks
+              <CardTitle className="flex items-center space-x-2">
+                <Clock className="h-5 w-5" />
+                <span>Upcoming Tasks</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {upcomingTasks.map((task, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium">{task.task}</p>
-                      <p className="text-sm text-muted-foreground">{task.deadline}</p>
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-2 h-2 rounded-full ${
+                        task.priority === "high" 
+                          ? "bg-red-500" 
+                          : task.priority === "medium" 
+                            ? "bg-yellow-500" 
+                            : "bg-green-500"
+                      }`} />
+                      <div>
+                        <p className="text-sm font-medium">{task.task}</p>
+                        <p className="text-xs text-muted-foreground">{task.deadline}</p>
+                      </div>
                     </div>
-                    <Badge 
-                      className={`text-xs ${
-                        task.priority === 'high' ? 'bg-red-100 text-red-800' : 
-                        task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 
-                        'bg-green-100 text-green-800'
-                      }`}
-                    >
+                    <Badge variant={task.priority === "high" ? "destructive" : "secondary"} className="text-xs">
                       {task.priority}
                     </Badge>
                   </div>
                 ))}
-                
-                <Button className="w-full mt-4" variant="outline">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  View All Tasks
-                </Button>
               </div>
             </CardContent>
           </Card>
