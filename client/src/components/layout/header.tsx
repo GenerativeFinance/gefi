@@ -49,7 +49,8 @@ import {
   Star,
   Award,
   MessageCircle,
-  GitBranch
+  GitBranch,
+  BookmarkCheck
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -290,13 +291,11 @@ export default function Header() {
     // Default submenu - includes main navigation items
     return [
       { name: "Overview", href: "/", icon: BarChart3 },
-      { name: "Portfolio", href: "/portfolio", icon: Wallet },
       { name: "AI Marketplace", href: "/marketplace", icon: Store },
-      { name: "Trading", href: "/live-trading", icon: TrendingUp },
-      { name: "Reports", href: "/reports", icon: FileText },
-      { name: "Funding", href: "/funding", icon: DollarSign },
-      { name: "Learning", href: "/investor-learning", icon: GraduationCap },
-      { name: "Collaboration", href: "/collaboration", icon: Users }
+      { name: "Categories", href: "/categories", icon: Grid },
+      { name: "My Subscriptions", href: "/my-subscriptions", icon: BookmarkCheck },
+      { name: "Developers", href: "/developers", icon: Users },
+      { name: "Data Providers", href: "/data-providers", icon: Database }
     ];
   };
 

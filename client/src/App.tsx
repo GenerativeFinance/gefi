@@ -146,6 +146,7 @@ import DeveloperCollaborationMain from "@/pages/developer/collaboration";
 import MyProfile from "@/pages/my-profile";
 import ModelDetail from "@/pages/model-detail";
 import CategoryPage from "@/pages/category/[categoryName]";
+import DataProviders from "@/pages/data-providers";
 
 
 function Router() {
@@ -240,6 +241,7 @@ function Router() {
             <Route path="/investor-dashboard" component={InvestorDashboard} />
             <Route path="/my-subscriptions" component={MySubscriptions} />
             <Route path="/developers" component={Developers} />
+            <Route path="/data-providers" component={DataProviders} />
             <Route path="/categories" component={Categories} />
             <Route path="/category/:categoryName" component={CategoryPage} />
             <Route path="/tutorials" component={Tutorials} />
