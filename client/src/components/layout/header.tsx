@@ -178,7 +178,7 @@ export default function Header() {
       
       return [
         { name: "Overview", href: "/developer", icon: BarChart3 },
-        { name: "Portfolio", href: "/developer/portfolio/ai-models", icon: Wallet },
+        { name: "Portfolio", href: "/developer/portfolio", icon: Wallet },
         { name: "AI Models", href: "/developer/portfolio/ai-models", icon: Brain },
         { name: "Performance", href: "/developer/portfolio/performance", icon: TrendingUp },
         { name: "Activity", href: "/developer/portfolio/activity", icon: Activity },
@@ -205,7 +205,7 @@ export default function Header() {
       
       return [
         { name: "Overview", href: "/developer", icon: BarChart3 },
-        { name: "Portfolio", href: "/developer/portfolio/ai-models", icon: Wallet },
+        { name: "Portfolio", href: "/developer/portfolio", icon: Wallet },
         { name: "Develop", href: "/backtesting", icon: Code },
         { name: "AI Marketplace", href: "/developer-marketplace", icon: Store },
         { name: "Market Data", href: "/market-data", icon: Database },
@@ -256,7 +256,7 @@ export default function Header() {
       if (location.includes('/data-provider/portfolio/')) {
         return [
           { name: "Overview", href: "/data-provider", icon: BarChart3 },
-          { name: "Portfolio", href: "/data-provider/portfolio/dataset-overview", icon: Wallet },
+          { name: "Portfolio", href: "/data-provider/portfolio", icon: Wallet },
           { name: "Usage", href: "/data-provider/portfolio/usage", icon: Activity },
           { name: "Quality", href: "/data-provider/portfolio/quality", icon: CheckCircle },
           { name: "Revenue", href: "/data-provider/portfolio/revenue", icon: DollarSign },
@@ -280,7 +280,7 @@ export default function Header() {
       // Main Data Provider menu
       return [
         { name: "Overview", href: "/data-provider", icon: BarChart3 },
-        { name: "Portfolio", href: "/data-provider/portfolio/usage", icon: Wallet },
+        { name: "Portfolio", href: "/data-provider/portfolio", icon: Wallet },
         { name: "Data", href: "/data-provider/data/catalogs", icon: Database },
         { name: "AI Marketplace", href: "/data-provider-marketplace", icon: Store },
         { name: "Collaboration", href: "/data-provider/portfolio/collaboration", icon: Users },

@@ -147,6 +147,8 @@ import MyProfile from "@/pages/my-profile";
 import ModelDetail from "@/pages/model-detail";
 import CategoryPage from "@/pages/category/[categoryName]";
 import DataProviders from "@/pages/data-providers";
+import DeveloperPortfolioOverview from "@/pages/developer/portfolio-overview";
+import DataProviderPortfolioOverview from "@/pages/data-provider/portfolio-overview";
 
 
 function Router() {
@@ -275,6 +277,7 @@ function Router() {
             <Route path="/data-provider/data/versioning" component={DataProviderDataVersioning} />
             <Route path="/data-provider/enhanced" component={DataProviderEnhanced} />
             <Route path="/data-provider/portfolio/dataset-overview" component={DataProviderDatasetOverview} />
+            <Route path="/data-provider/portfolio" component={DataProviderPortfolioOverview} />
             <Route path="/data-provider/portfolio/usage-statistics" component={DataProviderUsageStatistics} />
             <Route path="/data-provider/portfolio/quality-metrics" component={DataProviderQualityMetrics} />
             <Route path="/data-provider/portfolio/revenue-tracking" component={DataProviderRevenueTracking} />
@@ -282,6 +285,7 @@ function Router() {
             <Route path="/data-provider/portfolio/reviews-feedback" component={DataProviderReviewsFeedback} />
             <Route path="/data-provider/portfolio/collaboration-history" component={DataProviderCollaborationHistory} />
             <Route path="/data-provider/portfolio/portfolio-score" component={DataProviderPortfolioScore} />
+            <Route path="/developer/portfolio" component={DeveloperPortfolioOverview} />
             <Route path="/developer/portfolio/ai-models" component={DeveloperPortfolioAIModels} />
             <Route path="/developer/portfolio/performance" component={DeveloperPortfolioPerformance} />
             <Route path="/developer/portfolio/activity" component={DeveloperPortfolioActivity} />
