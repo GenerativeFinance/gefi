@@ -86,8 +86,22 @@ class MarketDataService extends EventEmitter {
   }
 
   // Get order book for a symbol
-  getOrderBook(symbol: string): OrderBook | null {
-    return this.orderBooks.get(symbol) || null;
+  getOrderBook(symbol: string, depth: number = 20): OrderBook | null {
+    let orderBook = this.orderBooks.get(symbol);
+    
+    if (!orderBook) {
+      // Generate order book if it doesn't exist
+      const currentPrice = this.getCurrentPrice(symbol)?.price || this.getBasePriceForSymbol(symbol);
+      orderBook = this.generateOrderBook(symbol, currentPrice);
+      this.orderBooks.set(symbol, orderBook);
+    }
+    
+    // Limit to requested depth
+    return {
+      ...orderBook,
+      bids: orderBook.bids.slice(0, depth),
+      asks: orderBook.asks.slice(0, depth)
+    };
   }
 
   // Get all current prices
@@ -398,6 +412,114 @@ class MarketDataService extends EventEmitter {
       '1w': 7 * 24 * 60 * 60 * 1000
     };
     return intervals[interval] || intervals['1d'];
+  }
+
+  // Get live market data with sentiment analysis
+  async getLiveData(symbols: string[], category?: string): Promise<MarketDataPoint[]> {
+    const filteredSymbols = symbols.filter(symbol => {
+      if (!category || category === 'all') return true;
+      
+      const data = this.priceCache.get(symbol);
+      if (!data) return false;
+      
+      return data.assetType === category;
+    });
+
+    const results: MarketDataPoint[] = [];
+    
+    for (const symbol of filteredSymbols) {
+      let data = this.priceCache.get(symbol);
+      
+      // If data doesn't exist, generate it
+      if (!data) {
+        const assetType = this.getAssetType(symbol);
+        const basePrice = this.getBasePriceForSymbol(symbol);
+        
+        data = {
+          symbol,
+          price: basePrice,
+          volume: Math.floor(Math.random() * 10000000) + 1000000,
+          timestamp: Date.now(),
+          bid: basePrice * 0.999,
+          ask: basePrice * 1.001,
+          high24h: basePrice * 1.05,
+          low24h: basePrice * 0.95,
+          change24h: (Math.random() - 0.5) * 0.1,
+          assetType,
+          sentiment: this.generateSentimentData(symbol)
+        };
+        
+        if (assetType === 'crypto') {
+          data.marketCap = basePrice * Math.floor(Math.random() * 100000000) + 1000000000;
+        }
+        
+        this.priceCache.set(symbol, data);
+      }
+      
+      results.push(data);
+    }
+    
+    return results;
+  }
+
+  // Get sentiment data for specific symbols
+  async getSentimentData(symbols: string[]): Promise<{ symbol: string; sentiment: SentimentData }[]> {
+    const results: { symbol: string; sentiment: SentimentData }[] = [];
+    
+    for (const symbol of symbols) {
+      let data = this.priceCache.get(symbol);
+      
+      if (!data || !data.sentiment) {
+        const sentiment = this.generateSentimentData(symbol);
+        results.push({ symbol, sentiment });
+        
+        // Update cache if data exists
+        if (data) {
+          data.sentiment = sentiment;
+          this.priceCache.set(symbol, data);
+        }
+      } else {
+        results.push({ symbol, sentiment: data.sentiment });
+      }
+    }
+    
+    return results;
+  }
+
+  // Get recent trades for a symbol
+  async getRecentTrades(symbol: string, limit: number = 50): Promise<Trade[]> {
+    const trades: Trade[] = [];
+    const currentPrice = this.getCurrentPrice(symbol)?.price || this.getBasePriceForSymbol(symbol);
+    
+    for (let i = 0; i < limit; i++) {
+      trades.push({
+        symbol,
+        price: currentPrice * (1 + (Math.random() - 0.5) * 0.01),
+        quantity: Math.floor(Math.random() * 1000) + 10,
+        side: Math.random() > 0.5 ? 'buy' : 'sell',
+        timestamp: Date.now() - (i * 1000 * Math.random() * 60),
+        tradeId: `trade_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`
+      });
+    }
+    
+    return trades.sort((a, b) => b.timestamp - a.timestamp);
+  }
+
+  // Get asset type from symbol
+  private getAssetType(symbol: string): 'stock' | 'crypto' | 'forex' | 'commodity' | 'index' {
+    if (['BTC', 'ETH', 'XRP', 'LTC', 'ADA', 'DOT', 'LINK', 'UNI'].includes(symbol)) {
+      return 'crypto';
+    }
+    if (['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'USDCAD'].includes(symbol)) {
+      return 'forex';
+    }
+    if (['GOLD', 'SILVER', 'OIL', 'NATURAL_GAS'].includes(symbol)) {
+      return 'commodity';
+    }
+    if (['SPY', 'QQQ', 'DIA', 'IWM'].includes(symbol)) {
+      return 'index';
+    }
+    return 'stock';
   }
 
   // Clean up connections

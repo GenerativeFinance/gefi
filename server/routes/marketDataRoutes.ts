@@ -80,8 +80,9 @@ export function registerMarketDataRoutes(app: Express) {
   // Sentiment Analysis
   app.get('/api/market-data/sentiment', async (req, res) => {
     try {
-      const { category, asset_type } = req.query;
-      const sentimentData = await marketDataService.getSentimentData(category as string, asset_type as string);
+      const { symbols, category } = req.query;
+      const symbolList = symbols ? (symbols as string).split(',') : ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'BTC', 'ETH'];
+      const sentimentData = await marketDataService.getSentimentData(symbolList);
       res.json(sentimentData);
     } catch (error) {
       console.error("Error fetching sentiment data:", error);
