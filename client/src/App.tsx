@@ -7,7 +7,7 @@ import { NotificationBanner } from "@/components/ui/notification-banner";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Web3Provider } from "@/contexts/Web3Context";
 import { useAuth } from "@/hooks/useAuth";
-import AIChatbot from "@/components/chatbot/AIChatbot";
+
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
@@ -354,7 +354,6 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
-            <AIChatbot />
           </TooltipProvider>
         </Web3Provider>
       </ThemeProvider>
