@@ -212,7 +212,8 @@ function Router() {
             <Route path="/pricing" component={Pricing} />
             <Route path="/checkout" component={Checkout} />
 
-            <Route path="/profile" component={UserProfile} />
+            <Route path="/profile" component={MyProfile} />
+            <Route path="/profile/:userType/:userId" component={UserProfile} />
             <Route path="/settings" component={Settings} />
             <Route path="/profile-setup" component={ProfileSetup} />
             <Route path="/user-access" component={UserAccess} />
