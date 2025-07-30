@@ -58,8 +58,13 @@ export default function MarketDataFeed() {
   const symbols = ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN', 'NVDA', 'META', 'NFLX'];
 
   useEffect(() => {
-    connectWebSocket();
+    // Only establish WebSocket connection when component is mounted and visible
+    const timer = setTimeout(() => {
+      connectWebSocket();
+    }, 1000); // Delay to ensure server is ready
+    
     return () => {
+      clearTimeout(timer);
       if (wsRef.current) {
         wsRef.current.close();
       }
@@ -67,12 +72,22 @@ export default function MarketDataFeed() {
   }, []);
 
   const connectWebSocket = () => {
+    // Prevent multiple connections
+    if (wsRef.current && wsRef.current.readyState === WebSocket.CONNECTING) {
+      return;
+    }
+    
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws`;
     
     console.log('Attempting WebSocket connection to:', wsUrl);
     
     try {
+      // Close existing connection if any
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+      
       wsRef.current = new WebSocket(wsUrl);
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
@@ -127,7 +142,7 @@ export default function MarketDataFeed() {
       
       // Attempt to reconnect after 3 seconds
       setTimeout(() => {
-        if (!isPaused && !wsRef.current?.CONNECTING) {
+        if (!isPaused && (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED)) {
           connectWebSocket();
         }
       }, 3000);

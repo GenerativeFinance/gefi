@@ -85,7 +85,8 @@ export default function Header() {
     enabled: !!user,
   });
 
-  const unreadCount = notifications.filter((n: any) => !n.read).length;
+  const notificationsArray = Array.isArray(notifications) ? notifications : [];
+  const unreadCount = notificationsArray.filter((n: any) => !n.read).length;
 
   // Submenu items based on current location
   const getSubmenuItems = () => {
@@ -374,7 +375,7 @@ export default function Header() {
             {/* Right Side Actions */}
             <div className="flex items-center space-x-2 md:space-x-3">
               {/* Dashboard Mode Toggle - Icon Only - Only for Admin/Moderator */}
-              {(user?.role === 'admin' || user?.role === 'moderator') && (
+              {((user as any)?.role === 'admin' || (user as any)?.role === 'moderator') && (
                 <DropdownMenu>
                   <DropdownMenuTrigger className="flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-md text-foreground hover:bg-accent transition-colors">
                     {isDeveloperPage ? <Code className="h-4 w-4 md:h-5 md:w-5" /> : 
@@ -465,11 +466,11 @@ export default function Header() {
                 <DropdownMenuContent align="end" className="w-80">
                   <div className="p-4">
                     <h3 className="font-semibold mb-2">Notifications</h3>
-                    {notifications.length === 0 ? (
+                    {notificationsArray.length === 0 ? (
                       <p className="text-muted-foreground text-sm">No notifications</p>
                     ) : (
                       <div className="space-y-2">
-                        {notifications.slice(0, 5).map((notification: any) => (
+                        {notificationsArray.slice(0, 5).map((notification: any) => (
                           <div key={notification.id} className="p-2 rounded border">
                             <p className="text-sm font-medium">{notification.title}</p>
                             <p className="text-xs text-muted-foreground">{notification.message}</p>
@@ -515,9 +516,9 @@ export default function Header() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.profileImageUrl || ""} />
+                        <AvatarImage src={(user as any)?.profileImageUrl || ""} />
                         <AvatarFallback>
-                          {user.firstName?.[0]}{user.lastName?.[0]}
+                          {(user as any)?.firstName?.[0]}{(user as any)?.lastName?.[0]}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -525,15 +526,15 @@ export default function Header() {
                   <DropdownMenuContent align="end">
                     <div className="flex items-center justify-start gap-2 p-2">
                       <div className="flex flex-col space-y-1 leading-none">
-                        <p className="font-medium">{user.firstName} {user.lastName}</p>
+                        <p className="font-medium">{(user as any)?.firstName} {(user as any)?.lastName}</p>
                         <p className="w-[200px] truncate text-sm text-muted-foreground">
-                          {user.email || 'No email provided'}
+                          {(user as any)?.email || 'No email provided'}
                         </p>
                       </div>
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href={`/profile/${user.role || 'investor'}/${user.id}`} className="flex items-center">
+                      <Link href={`/profile/${(user as any)?.role || 'investor'}/${(user as any)?.id}`} className="flex items-center">
                         <User className="mr-2 h-4 w-4" />
                         Profile
                       </Link>
@@ -546,7 +547,7 @@ export default function Header() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {/* Dashboard Mode - Only for Admin and Moderator users */}
-                    {(user?.role === 'admin' || user?.role === 'moderator') && (
+                    {((user as any)?.role === 'admin' || (user as any)?.role === 'moderator') && (
                       <>
                         <div className="px-2 py-1">
                           <p className="text-sm font-medium text-muted-foreground">Dashboard Mode</p>
