@@ -119,11 +119,16 @@ export function registerChatbotRoutes(app: Express) {
       const currentMessages = conversation.messages || [];
       const profileType = conversation.userProfile || 'unknown';
 
-      // Generate AI response
+      // Generate AI response with full context
       const aiResponse = AIChatbotService.generateResponse(
         message,
         profileType,
-        { hasWelcomed: true, conversationHistory: currentMessages }
+        { 
+          hasWelcomed: true, 
+          conversationHistory: currentMessages,
+          userId: userId,
+          sessionId: sessionId
+        }
       );
 
       // Get next question
