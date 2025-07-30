@@ -7,31 +7,6 @@ import { eq, and, desc } from "drizzle-orm";
 import { AIChatbotService, USER_PROFILES } from "../services/aiChatbotService";
 
 export function registerChatbotRoutes(app: Express) {
-  // Test endpoint to verify intelligent responses
-  app.get("/api/chatbot/test", (req, res) => {
-    const testMessages = [
-      "Give me details on GeFi features",
-      "I am not happy the platform keeps giving me the same responses", 
-      "What are the best AI models for beginners?"
-    ];
-    
-    const responses = testMessages.map(message => {
-      const profileDetection = AIChatbotService.detectUserProfile(message);
-      const response = AIChatbotService.generateResponse(message, profileDetection.profile, {});
-      return {
-        input: message,
-        profile: profileDetection.profile,
-        confidence: profileDetection.confidence,
-        response: response
-      };
-    });
-    
-    res.json({ 
-      message: "Enhanced AI Chatbot Test - Intelligent Context-Aware Responses",
-      tests: responses 
-    });
-  });
-
   // Start new conversation
   app.post("/api/chatbot/conversation", async (req, res) => {
     try {
@@ -75,8 +50,11 @@ export function registerChatbotRoutes(app: Express) {
               timestamp: new Date().toISOString()
             }
           ],
+          profileConfidence: profileDetection.confidence.toString(),
           currentQuestionIndex: 0,
-          completedQuestions: []
+          completedQuestions: [],
+          userGoals: [],
+          preferences: {},
         })
         .returning();
 
@@ -96,7 +74,7 @@ export function registerChatbotRoutes(app: Express) {
             set: {
               confidence: profileDetection.confidence.toString(),
               responses: [message],
-              updatedAt: new Date()
+              lastUpdated: new Date()
             }
           });
       }
