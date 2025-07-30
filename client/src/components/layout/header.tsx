@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useRoute } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -65,6 +66,7 @@ export default function Header() {
   const { theme, setTheme } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
 
   // Check if we're on developer pages
@@ -440,6 +442,16 @@ export default function Header() {
                 <Search className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
 
+              {/* AI Chatbot */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsChatbotOpen(true)}
+                className="w-9 h-9 md:w-auto md:h-auto p-2 md:px-3 md:py-2 text-muted-foreground hover:text-foreground"
+              >
+                <MessageCircle className="h-4 w-4 md:h-5 md:w-5" />
+              </Button>
+
               {/* Notifications */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -755,6 +767,311 @@ export default function Header() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* AI Chatbot Dialog */}
+      <AIFinancialChatbot 
+        isOpen={isChatbotOpen} 
+        onClose={() => setIsChatbotOpen(false)} 
+        user={user}
+      />
     </>
+  );
+}
+
+// AI Financial Chatbot Component
+function AIFinancialChatbot({ isOpen, onClose, user }: { isOpen: boolean; onClose: () => void; user: any }) {
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; timestamp: Date }>>([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [currentStep, setCurrentStep] = useState<'welcome' | 'profiling' | 'chat'>('welcome');
+  const [profileData, setProfileData] = useState({
+    financialGoals: '',
+    riskTolerance: '',
+    experienceLevel: '',
+    currentSituation: '',
+    aiPreference: ''
+  });
+
+  // Initialize chatbot with welcome message
+  useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      setMessages([{
+        role: 'assistant',
+        content: `Hi! Welcome to GeFi AI Assistant! 🤖\n\nI'm here to help you with:\n• Personalized financial advice\n• GeFi platform features\n• AI model recommendations\n• Technology suggestions\n\nTo provide the best assistance, would you like me to learn about your financial goals first?`,
+        timestamp: new Date()
+      }]);
+    }
+  }, [isOpen, messages.length]);
+
+  const profilingQuestions = [
+    {
+      key: 'financialGoals',
+      question: "What are your primary financial goals? (e.g., saving, investing, debt management, retirement planning)",
+      suggestions: ["Saving", "Investing", "Debt Management", "Retirement Planning", "Building Emergency Fund"]
+    },
+    {
+      key: 'riskTolerance',
+      question: "How comfortable are you with investment risks? Do you prefer safer options or higher-risk opportunities?",
+      suggestions: ["Conservative (Low Risk)", "Moderate (Balanced)", "Aggressive (High Risk)", "Very Conservative", "Speculative"]
+    },
+    {
+      key: 'experienceLevel',
+      question: "What's your investment experience level?",
+      suggestions: ["Beginner", "Intermediate", "Advanced", "Expert", "Professional"]
+    },
+    {
+      key: 'currentSituation',
+      question: "Can you share your current financial situation? (income range, existing investments, debt level)",
+      suggestions: ["Just Starting Out", "Building Wealth", "Pre-Retirement", "High Net Worth", "Managing Debt"]
+    },
+    {
+      key: 'aiPreference',
+      question: "How do you feel about AI for financial advice? Do you prefer fully automated recommendations or with human oversight?",
+      suggestions: ["Fully Automated", "AI + Human Review", "Minimal AI", "Prefer Human Advisors", "Mixed Approach"]
+    }
+  ];
+
+  const getCurrentQuestion = () => {
+    const unansweredKeys = profilingQuestions.filter(q => !profileData[q.key as keyof typeof profileData]);
+    return unansweredKeys[0];
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
+
+    const userMessage = {
+      role: 'user' as const,
+      content: inputMessage,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage("");
+    setIsLoading(true);
+
+    try {
+      // Handle profiling phase
+      if (currentStep === 'profiling') {
+        const currentQ = getCurrentQuestion();
+        if (currentQ) {
+          setProfileData(prev => ({
+            ...prev,
+            [currentQ.key]: inputMessage
+          }));
+
+          const nextQuestion = profilingQuestions.find(q => 
+            q.key !== currentQ.key && !profileData[q.key as keyof typeof profileData]
+          );
+
+          if (nextQuestion) {
+            setTimeout(() => {
+              setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: `Great! ${nextQuestion.question}`,
+                timestamp: new Date()
+              }]);
+              setIsLoading(false);
+            }, 1000);
+          } else {
+            // Profiling complete
+            setCurrentStep('chat');
+            setTimeout(() => {
+              setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: `Perfect! I now have a good understanding of your financial profile:\n\n• Goals: ${profileData.financialGoals || inputMessage}\n• Risk Tolerance: ${profileData.riskTolerance}\n• Experience: ${profileData.experienceLevel}\n• Situation: ${profileData.currentSituation}\n• AI Preference: ${profileData.aiPreference || inputMessage}\n\nNow I can provide personalized recommendations! What would you like help with today?`,
+                timestamp: new Date()
+              }]);
+              setIsLoading(false);
+            }, 1500);
+          }
+          return;
+        }
+      }
+
+      // Handle general chat
+      const response = await generateAIResponse(inputMessage, profileData, user);
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: response,
+          timestamp: new Date()
+        }]);
+        setIsLoading(false);
+      }, 1000);
+
+    } catch (error) {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "I apologize, but I'm having trouble processing your request right now. Please try again or contact support if the issue persists.",
+        timestamp: new Date()
+      }]);
+      setIsLoading(false);
+    }
+  };
+
+  const generateAIResponse = async (message: string, profile: any, user: any): Promise<string> => {
+    const lowerMessage = message.toLowerCase();
+
+    // Feature explanations
+    if (lowerMessage.includes('explain') || lowerMessage.includes('what is') || lowerMessage.includes('how does')) {
+      if (lowerMessage.includes('backtesting')) {
+        return "GeFi's Backtesting feature allows you to test your AI trading strategies against historical market data. You can:\n\n• Configure test parameters (timeframe, assets, initial capital)\n• Run simulations with real market data\n• Analyze performance metrics (Sharpe ratio, drawdown, win rate)\n• Compare multiple strategies\n• Export detailed reports\n\nWould you like me to show you how to set up your first backtest?";
+      }
+      if (lowerMessage.includes('risk assessment')) {
+        return "Our Risk Assessment models help you understand and manage financial risks:\n\n• **Credit Risk**: Evaluate borrower default probability\n• **Market Risk**: Assess portfolio volatility and VaR\n• **Operational Risk**: Identify process and system risks\n• **Liquidity Risk**: Monitor asset convertibility\n\nBased on your profile, I'd recommend starting with Market Risk models for portfolio management. Want to explore specific risk models?";
+      }
+      if (lowerMessage.includes('ai models') || lowerMessage.includes('marketplace')) {
+        return `GeFi's AI Marketplace offers over 150+ financial models:\n\n• **Trading Strategies**: Algorithmic and HFT models\n• **Risk Management**: Credit, market, and operational risk\n• **Portfolio Optimization**: Asset allocation and rebalancing\n• **Fraud Detection**: Transaction and identity monitoring\n\n${profile.experienceLevel === 'Beginner' ? 'For beginners, I recommend starting with Portfolio Optimization models.' : 'Based on your experience, you might be interested in advanced Trading Strategy models.'}\n\nShall I show you models matching your ${profile.financialGoals || 'goals'}?`;
+      }
+    }
+
+    // Technology recommendations
+    if (lowerMessage.includes('technology') || lowerMessage.includes('python') || lowerMessage.includes('recommend')) {
+      if (lowerMessage.includes('predictive') || lowerMessage.includes('modeling')) {
+        return "For predictive modeling in finance, I recommend:\n\n**Programming Languages:**\n• Python (pandas, scikit-learn, TensorFlow)\n• R (quantmod, PerformanceAnalytics)\n\n**AI/ML Frameworks:**\n• TensorFlow/Keras for deep learning\n• PyTorch for research-oriented models\n• XGBoost for gradient boosting\n\n**Data Sources:**\n• Alpha Vantage API for market data\n• Quandl for financial datasets\n• Yahoo Finance for historical data\n\nBased on your profile, would you like specific model recommendations for your use case?";
+      }
+      if (lowerMessage.includes('trading') || lowerMessage.includes('automated')) {
+        return "For automated trading systems, consider:\n\n**Platforms:**\n• MetaTrader 4/5 with Expert Advisors\n• QuantConnect for algorithm development\n• Interactive Brokers API\n\n**Languages:**\n• Python with libraries: zipline, backtrader, ccxt\n• C++ for high-frequency trading\n• MQL4/5 for MetaTrader\n\n**Risk Management:**\n• Position sizing algorithms\n• Stop-loss and take-profit automation\n• Portfolio diversification rules\n\nWould you like help choosing the right platform for your trading strategy?";
+      }
+    }
+
+    // Personalized recommendations based on profile
+    if (profile.financialGoals) {
+      if (profile.financialGoals.toLowerCase().includes('saving')) {
+        return "Based on your savings goals, here are some relevant GeFi features:\n\n• **Savings Optimization Models**: AI algorithms to maximize savings rates\n• **Expense Analysis**: Track and categorize spending patterns\n• **Goal Planning**: Set and monitor savings milestones\n• **Risk-Adjusted Returns**: Low-risk investment options\n\nWould you like me to help you set up a savings strategy using our AI models?";
+      }
+      if (profile.financialGoals.toLowerCase().includes('investing')) {
+        const riskLevel = profile.riskTolerance?.toLowerCase() || 'moderate';
+        return `For your investment goals with ${riskLevel} risk tolerance, I suggest:\n\n• **Portfolio Optimization**: AI-driven asset allocation\n• **Market Sentiment Analysis**: Real-time market insights\n• **Robo-Advisor Models**: Automated investment management\n• **ESG Investing**: Sustainable investment options\n\n${riskLevel.includes('conservative') ? 'Given your conservative approach, focus on diversified ETF strategies.' : 'With your risk tolerance, consider growth-oriented AI models.'}\n\nShall I show you specific models for your investment style?`;
+      }
+    }
+
+    // Default helpful response
+    return `I understand you're asking about "${message}". Here's how I can help:\n\n• **Feature Explanations**: Ask about any GeFi feature\n• **Model Recommendations**: Get AI models matching your needs\n• **Technology Advice**: Programming and platform suggestions\n• **Strategy Planning**: Personalized financial strategies\n\nBased on your profile (${profile.experienceLevel || 'your experience level'}), what specific area would you like to explore?`;
+  };
+
+  const startProfiling = () => {
+    setCurrentStep('profiling');
+    setMessages(prev => [...prev, {
+      role: 'assistant',
+      content: profilingQuestions[0].question,
+      timestamp: new Date()
+    }]);
+  };
+
+  const skipProfiling = () => {
+    setCurrentStep('chat');
+    setMessages(prev => [...prev, {
+      role: 'assistant',
+      content: "No problem! I'm here to help with any questions about GeFi's features, AI models, or financial technology. What would you like to know?",
+      timestamp: new Date()
+    }]);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl h-[600px] flex flex-col bg-background/98 backdrop-blur-sm">
+        <DialogHeader className="pb-4 border-b">
+          <DialogTitle className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-blue-500" />
+            GeFi AI Assistant
+            <Badge variant="secondary" className="ml-2">Beta</Badge>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.map((msg, idx) => (
+              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[80%] p-3 rounded-lg ${
+                  msg.role === 'user' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-muted'
+                }`}>
+                  <div className="whitespace-pre-wrap text-sm">{msg.content}</div>
+                  <div className="text-xs opacity-70 mt-1">
+                    {msg.timestamp.toLocaleTimeString()}
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-muted p-3 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                    <span className="text-sm">AI Assistant is thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Actions for Welcome/Profiling */}
+          {currentStep === 'welcome' && (
+            <div className="p-4 border-t bg-muted/50">
+              <div className="flex gap-2 justify-center">
+                <Button onClick={startProfiling} className="bg-blue-500 hover:bg-blue-600">
+                  Create My Profile
+                </Button>
+                <Button variant="outline" onClick={skipProfiling}>
+                  Skip & Chat Now
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Suggestion Buttons for Profiling */}
+          {currentStep === 'profiling' && getCurrentQuestion() && (
+            <div className="p-4 border-t bg-muted/50">
+              <div className="flex flex-wrap gap-2 justify-center">
+                {getCurrentQuestion()?.suggestions.map((suggestion) => (
+                  <Button
+                    key={suggestion}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setInputMessage(suggestion);
+                      setTimeout(() => handleSendMessage(), 100);
+                    }}
+                    className="text-xs"
+                  >
+                    {suggestion}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Input Area */}
+          <div className="p-4 border-t">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              handleSendMessage();
+            }}>
+              <div className="flex gap-2">
+                <Input
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  placeholder="Ask me anything about GeFi, AI models, or financial strategies..."
+                  className="flex-1"
+                  disabled={isLoading}
+                />
+                <Button 
+                  type="submit" 
+                  disabled={!inputMessage.trim() || isLoading}
+                  className="bg-blue-500 hover:bg-blue-600"
+                >
+                  Send
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
