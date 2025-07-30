@@ -374,7 +374,7 @@ export function registerUtilityRoutes(app: Express) {
             id: userId,
             type: 'investor',
             name: userId === 'quantum-capital' ? 'Quantum Capital Partners' : 'Investment Group LLC',
-            type: 'Venture Capital',
+            investorType: 'Venture Capital',
             bio: userId === 'quantum-capital' ? 
               'Early-stage venture capital firm focused on AI and fintech innovations.' :
               'Private investment firm specializing in emerging technologies and market solutions.',
@@ -500,6 +500,125 @@ export function registerUtilityRoutes(app: Express) {
     } catch (error) {
       console.error('Error fetching user profile:', error);
       res.status(500).json({ message: 'Failed to fetch user profile' });
+    }
+  });
+
+  // Feedback API endpoint for chatbot suggestions
+  app.post('/api/feedback', async (req, res) => {
+    try {
+      const {
+        userId,
+        timestamp,
+        suggestion,
+        category,
+        details,
+        importance,
+        problemSolved,
+        additionalFeatures
+      } = req.body;
+
+      // Store feedback in temporary storage or log for now
+      // In a real implementation, this would go to a database
+      const feedbackEntry = {
+        id: Date.now().toString(),
+        userId: userId || 'anonymous',
+        timestamp: timestamp || new Date().toISOString(),
+        suggestion: suggestion || '',
+        category: category || 'General',
+        details: details || '',
+        importance: importance || 'Medium',
+        problemSolved: problemSolved || '',
+        additionalFeatures: additionalFeatures || '',
+        status: 'submitted',
+        createdAt: new Date().toISOString()
+      };
+
+      // Log feedback for development team review
+      console.log('===========================================');
+      console.log('🎯 NEW PLATFORM FEEDBACK RECEIVED');
+      console.log('===========================================');
+      console.log(`User ID: ${feedbackEntry.userId}`);
+      console.log(`Timestamp: ${feedbackEntry.timestamp}`);
+      console.log(`Feature Suggestion: ${feedbackEntry.suggestion}`);
+      console.log(`Category: ${feedbackEntry.category}`);
+      console.log(`Importance: ${feedbackEntry.importance}`);
+      console.log(`Problem Solved: ${feedbackEntry.problemSolved}`);
+      console.log(`Details: ${feedbackEntry.details}`);
+      console.log(`Additional Features: ${feedbackEntry.additionalFeatures}`);
+      console.log('===========================================');
+
+      // In a real implementation, save to database:
+      // await storage.createFeedback(feedbackEntry);
+
+      res.json({
+        success: true,
+        message: 'Feedback submitted successfully',
+        feedbackId: feedbackEntry.id,
+        status: 'received'
+      });
+
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to submit feedback',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Get feedback statistics (for admin dashboard)
+  app.get('/api/feedback/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mock statistics for development
+      const stats = {
+        totalFeedback: 47,
+        thisMonth: 12,
+        topCategories: [
+          { name: 'User Interface', count: 15 },
+          { name: 'Analytics & Reporting', count: 12 },
+          { name: 'Trading Tools', count: 8 },
+          { name: 'Mobile Features', count: 7 },
+          { name: 'AI & Automation', count: 5 }
+        ],
+        importanceDistribution: {
+          critical: 8,
+          high: 19,
+          medium: 15,
+          low: 5
+        },
+        recentSuggestions: [
+          {
+            id: '1',
+            suggestion: 'Dark mode for mobile app',
+            category: 'Mobile Features',
+            importance: 'High',
+            timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+            status: 'under_review'
+          },
+          {
+            id: '2',
+            suggestion: 'Portfolio comparison tool',
+            category: 'Analytics & Reporting',
+            importance: 'Critical',
+            timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+            status: 'in_development'
+          },
+          {
+            id: '3',
+            suggestion: 'Advanced risk alerts',
+            category: 'Risk Management',
+            importance: 'High',
+            timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            status: 'planned'
+          }
+        ]
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching feedback stats:', error);
+      res.status(500).json({ message: 'Failed to fetch feedback statistics' });
     }
   });
 

@@ -785,7 +785,7 @@ function AIFinancialChatbot({ isOpen, onClose, user }: { isOpen: boolean; onClos
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [currentStep, setCurrentStep] = useState<'welcome' | 'profiling' | 'chat'>('welcome');
+  const [currentStep, setCurrentStep] = useState<'welcome' | 'profiling' | 'chat' | 'feedback'>('welcome');
   const [profileData, setProfileData] = useState({
     financialGoals: '',
     riskTolerance: '',
@@ -793,13 +793,22 @@ function AIFinancialChatbot({ isOpen, onClose, user }: { isOpen: boolean; onClos
     currentSituation: '',
     aiPreference: ''
   });
+  const [feedbackStep, setFeedbackStep] = useState(0);
+  const [feedbackData, setFeedbackData] = useState({
+    suggestion: '',
+    category: '',
+    details: '',
+    importance: '',
+    problemSolved: '',
+    additionalFeatures: ''
+  });
 
   // Initialize chatbot with welcome message
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       setMessages([{
         role: 'assistant',
-        content: `Hi! Welcome to GeFi AI Assistant! 🤖\n\nI'm here to help you with:\n• Personalized financial advice\n• GeFi platform features\n• AI model recommendations\n• Technology suggestions\n\nTo provide the best assistance, would you like me to learn about your financial goals first?`,
+        content: `Hi! Welcome to GeFi AI Assistant! 🤖\n\nI'm here to help you with:\n• Personalized financial advice\n• GeFi platform features\n• AI model recommendations\n• Technology suggestions\n• Platform feedback and suggestions\n\n**💡 Want to suggest new features?** Type "/feedback" anytime!\n\nTo provide the best assistance, would you like me to learn about your financial goals first?`,
         timestamp: new Date()
       }]);
     }
@@ -833,9 +842,111 @@ function AIFinancialChatbot({ isOpen, onClose, user }: { isOpen: boolean; onClos
     }
   ];
 
+  const feedbackQuestions = [
+    {
+      key: 'suggestion',
+      question: "What new tools or features would you like to see on the GeFi platform?",
+      placeholder: "Describe your feature idea...",
+      suggestions: ["Budgeting Tool", "Portfolio Analytics", "Risk Assessment", "Trading Bots", "Mobile App", "AI Advisor", "Educational Content"]
+    },
+    {
+      key: 'category',
+      question: "Which category best describes your suggestion?",
+      suggestions: ["User Interface", "Analytics & Reporting", "Trading Tools", "Risk Management", "Educational Resources", "Mobile Features", "AI & Automation", "Data Visualization"]
+    },
+    {
+      key: 'details',
+      question: "How do you envision this tool/feature working? Please provide more details.",
+      placeholder: "Describe how it should work, what it should include...",
+      suggestions: ["Step-by-step workflow", "Integration with existing features", "Real-time updates", "Customizable settings", "Mobile-friendly design"]
+    },
+    {
+      key: 'problemSolved',
+      question: "What specific problem would this tool solve for you?",
+      placeholder: "Explain the challenge you're facing...",
+      suggestions: ["Save time", "Reduce complexity", "Better insights", "Automated decisions", "Risk reduction", "Cost savings"]
+    },
+    {
+      key: 'importance',
+      question: "How important is this feature to you?",
+      suggestions: ["Critical - Would significantly improve my experience", "High - Would be very useful", "Medium - Nice to have", "Low - Minor improvement"]
+    },
+    {
+      key: 'additionalFeatures',
+      question: "Are there any additional features or improvements you'd like to add?",
+      placeholder: "Any other ideas, integrations, or enhancements...",
+      suggestions: ["Progress tracking", "Notifications", "Charts & graphs", "Export functionality", "Collaboration features", "API access"]
+    }
+  ];
+
   const getCurrentQuestion = () => {
     const unansweredKeys = profilingQuestions.filter(q => !profileData[q.key as keyof typeof profileData]);
     return unansweredKeys[0];
+  };
+
+  const getCurrentFeedbackQuestion = () => {
+    return feedbackQuestions[feedbackStep];
+  };
+
+  const handleFeedbackResponse = (response: string) => {
+    const currentQuestion = getCurrentFeedbackQuestion();
+    if (currentQuestion) {
+      setFeedbackData(prev => ({
+        ...prev,
+        [currentQuestion.key]: response
+      }));
+      
+      if (feedbackStep < feedbackQuestions.length - 1) {
+        setFeedbackStep(prev => prev + 1);
+      } else {
+        // Submit feedback and complete flow
+        submitFeedback();
+      }
+    }
+  };
+
+  const submitFeedback = async () => {
+    setIsLoading(true);
+    try {
+      // Submit feedback to backend
+      await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id,
+          timestamp: new Date().toISOString(),
+          ...feedbackData
+        })
+      });
+
+      // Show confirmation message
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `🎉 Thank you for your valuable feedback!\n\nYour suggestion for "${feedbackData.suggestion}" has been submitted to our development team. We appreciate you taking the time to help improve the GeFi platform.\n\n📋 **Summary of your feedback:**\n• **Feature:** ${feedbackData.suggestion}\n• **Category:** ${feedbackData.category}\n• **Importance:** ${feedbackData.importance}\n\nOur team will review your suggestion and may reach out for additional details. You'll be notified when we implement features based on community feedback!\n\nIs there anything else I can help you with today?`,
+        timestamp: new Date()
+      }]);
+
+      // Reset feedback flow
+      setCurrentStep('chat');
+      setFeedbackStep(0);
+      setFeedbackData({
+        suggestion: '',
+        category: '',
+        details: '',
+        importance: '',
+        problemSolved: '',
+        additionalFeatures: ''
+      });
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, there was an error submitting your feedback. Please try again later.',
+        timestamp: new Date()
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSendMessage = async () => {
@@ -852,6 +963,45 @@ function AIFinancialChatbot({ isOpen, onClose, user }: { isOpen: boolean; onClos
     setIsLoading(true);
 
     try {
+      // Handle feedback commands
+      if (inputMessage.toLowerCase().includes('/feedback') || inputMessage.toLowerCase().includes('provide feedback') || inputMessage.toLowerCase().includes('suggest feature')) {
+        setCurrentStep('feedback');
+        setFeedbackStep(0);
+        const firstQuestion = feedbackQuestions[0];
+        setTimeout(() => {
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: `🛠️ **Feature Feedback & Suggestions**\n\nGreat! I'd love to hear your ideas for improving the GeFi platform. Your feedback helps us build better tools for our community.\n\n${firstQuestion.question}`,
+            timestamp: new Date()
+          }]);
+          setIsLoading(false);
+        }, 1000);
+        return;
+      }
+
+      // Handle feedback phase
+      if (currentStep === 'feedback') {
+        handleFeedbackResponse(inputMessage);
+        const currentQuestion = getCurrentFeedbackQuestion();
+        const nextStep = feedbackStep + 1;
+        
+        if (nextStep < feedbackQuestions.length) {
+          const nextQuestion = feedbackQuestions[nextStep];
+          setTimeout(() => {
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: `Thank you! ${nextQuestion.question}`,
+              timestamp: new Date()
+            }]);
+            setIsLoading(false);
+          }, 1000);
+        } else {
+          // Feedback will be submitted by handleFeedbackResponse
+          setIsLoading(false);
+        }
+        return;
+      }
+
       // Handle profiling phase
       if (currentStep === 'profiling') {
         const currentQ = getCurrentQuestion();
@@ -948,8 +1098,17 @@ function AIFinancialChatbot({ isOpen, onClose, user }: { isOpen: boolean; onClos
       }
     }
 
+    // Help and feedback prompts
+    if (lowerMessage.includes('help') || lowerMessage.includes('what can you do')) {
+      return `I'm your GeFi AI Assistant! Here's how I can help:\n\n**🎯 Core Features:**\n• Feature explanations (backtesting, risk assessment, AI models)\n• Personalized recommendations based on your profile\n• Technology and programming guidance\n• Financial strategy planning\n\n**💡 Special Commands:**\n• Type "/feedback" to suggest new features\n• Ask "what is [feature]" for detailed explanations\n• Say "recommend" for personalized suggestions\n\n**🛠️ Want to Shape GeFi's Future?**\nType "/feedback" or "I have a suggestion" to share your ideas for new tools and features!\n\nWhat would you like to explore first?`;
+    }
+
+    if (lowerMessage.includes('suggestion') || lowerMessage.includes('idea') || lowerMessage.includes('feature request')) {
+      return `💡 **Love Your Initiative!**\n\nI'd be happy to help you share suggestions for improving GeFi! Your ideas are valuable for our development team.\n\n**Quick Options:**\n• Type "/feedback" to start the structured feedback process\n• Tell me your idea directly and I'll help you elaborate\n• Ask about specific areas you'd like to see improved\n\nCommon suggestion areas include:\n• New analytical tools\n• Better user interface features\n• Mobile app enhancements\n• Trading automation improvements\n• Educational resources\n\nWhat's your idea? I'm listening! 👂`;
+    }
+
     // Default helpful response
-    return `I understand you're asking about "${message}". Here's how I can help:\n\n• **Feature Explanations**: Ask about any GeFi feature\n• **Model Recommendations**: Get AI models matching your needs\n• **Technology Advice**: Programming and platform suggestions\n• **Strategy Planning**: Personalized financial strategies\n\nBased on your profile (${profile.experienceLevel || 'your experience level'}), what specific area would you like to explore?`;
+    return `I understand you're asking about "${message}". Here's how I can help:\n\n• **Feature Explanations**: Ask about any GeFi feature\n• **Model Recommendations**: Get AI models matching your needs\n• **Technology Advice**: Programming and platform suggestions\n• **Strategy Planning**: Personalized financial strategies\n• **Platform Feedback**: Type "/feedback" to suggest improvements\n\nBased on your profile (${profile.experienceLevel || 'your experience level'}), what specific area would you like to explore?`;
   };
 
   const startProfiling = () => {
@@ -1043,6 +1202,69 @@ function AIFinancialChatbot({ isOpen, onClose, user }: { isOpen: boolean; onClos
                     {suggestion}
                   </Button>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Suggestion Buttons for Feedback */}
+          {currentStep === 'feedback' && getCurrentFeedbackQuestion() && (
+            <div className="p-4 border-t bg-muted/50">
+              <div className="flex flex-wrap gap-2 justify-center">
+                {getCurrentFeedbackQuestion()?.suggestions.map((suggestion) => (
+                  <Button
+                    key={suggestion}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setInputMessage(suggestion);
+                      setTimeout(() => handleSendMessage(), 100);
+                    }}
+                    className="text-xs"
+                  >
+                    {suggestion}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Quick Action Buttons for Chat */}
+          {currentStep === 'chat' && (
+            <div className="p-4 border-t bg-muted/50">
+              <div className="flex gap-2 justify-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setInputMessage('/feedback');
+                    setTimeout(() => handleSendMessage(), 100);
+                  }}
+                  className="text-xs"
+                >
+                  💡 Suggest Feature
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setInputMessage('help');
+                    setTimeout(() => handleSendMessage(), 100);
+                  }}
+                  className="text-xs"
+                >
+                  ❓ What can you do?
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setInputMessage('recommend AI models');
+                    setTimeout(() => handleSendMessage(), 100);
+                  }}
+                  className="text-xs"
+                >
+                  🎯 Get Recommendations
+                </Button>
               </div>
             </div>
           )}
