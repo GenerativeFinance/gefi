@@ -33,8 +33,8 @@ interface AdminProfileProps {
 }
 
 export default function AdminProfile({ adminId, data }: AdminProfileProps) {
-  // Use actual data if provided, otherwise fallback to mock data
-  const adminData = data || {
+  // Create complete admin data with proper defaults
+  const defaultAdminData = {
     id: adminId,
     name: adminId === 'github_55703540' ? 'Guillaume Lauzier' :
           adminId === 'tech-lead' ? 'Alex Rodriguez' : 'Sarah Johnson',
@@ -182,6 +182,26 @@ export default function AdminProfile({ adminId, data }: AdminProfileProps) {
     ]
   };
 
+  // Merge actual data with defaults to ensure all required fields exist
+  const adminData = {
+    ...defaultAdminData,
+    ...data,
+    // Ensure nested objects exist with defaults
+    systemMonitoring: {
+      ...defaultAdminData.systemMonitoring,
+      ...(data?.systemMonitoring || {})
+    },
+    systemHealth: {
+      ...defaultAdminData.systemHealth,
+      ...(data?.systemHealth || {})
+    },
+    adminRights: data?.adminRights || defaultAdminData.adminRights,
+    escalationHistory: data?.escalationHistory || defaultAdminData.escalationHistory,
+    activityLog: data?.activityLog || defaultAdminData.activityLog,
+    emergencyActions: data?.emergencyActions || defaultAdminData.emergencyActions,
+    incidentReports: data?.incidentReports || defaultAdminData.incidentReports
+  };
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'Critical': return 'bg-red-100 text-red-800 border-red-300';
@@ -211,7 +231,7 @@ export default function AdminProfile({ adminId, data }: AdminProfileProps) {
               <Avatar className="h-16 w-16">
                 <AvatarImage src={adminData.avatar} />
                 <AvatarFallback className="text-lg font-semibold">
-                  {adminData.name.split(' ').map(n => n[0]).join('')}
+                  {adminData.name.split(' ').map((n: string) => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
               <div>
@@ -269,7 +289,7 @@ export default function AdminProfile({ adminId, data }: AdminProfileProps) {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-2">
-                {adminData.adminRights.map((right, index) => (
+                {adminData.adminRights.map((right: string, index: number) => (
                   <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded">
                     <CheckCircle className="w-4 h-4 text-green-600" />
                     <span className="text-sm font-medium">{right}</span>
@@ -317,7 +337,7 @@ export default function AdminProfile({ adminId, data }: AdminProfileProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {adminData.emergencyActions.slice(0, 3).map((action) => (
+                {adminData.emergencyActions.slice(0, 3).map((action: any) => (
                   <div key={action.id} className="p-2 border rounded hover:bg-gray-50 dark:hover:bg-gray-700">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">{action.type}</span>
@@ -350,7 +370,7 @@ export default function AdminProfile({ adminId, data }: AdminProfileProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {adminData.escalationHistory.map((escalation) => (
+                  {adminData.escalationHistory.map((escalation: any) => (
                     <div key={escalation.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
@@ -391,7 +411,7 @@ export default function AdminProfile({ adminId, data }: AdminProfileProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {adminData.activityLog.map((log) => (
+                  {adminData.activityLog.map((log: any) => (
                     <div key={log.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
@@ -496,7 +516,7 @@ export default function AdminProfile({ adminId, data }: AdminProfileProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {adminData.incidentReports.map((incident) => (
+                  {adminData.incidentReports.map((incident: any) => (
                     <div key={incident.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
