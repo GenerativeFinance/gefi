@@ -42,6 +42,54 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// AI Chatbot Conversations
+export const chatbotConversations = pgTable("chatbot_conversations", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id),
+  sessionId: varchar("session_id").notNull(),
+  userProfile: varchar("user_profile"), // beginner_investor, experienced_investor, saver, developer, data_provider
+  messages: jsonb("messages").$type<Array<{
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: string;
+    metadata?: any;
+  }>>().default([]),
+  profileConfidence: decimal("profile_confidence", { precision: 3, scale: 2 }).default("0.0"),
+  currentQuestionIndex: integer("current_question_index").default(0),
+  completedQuestions: jsonb("completed_questions").$type<string[]>().default([]),
+  userGoals: jsonb("user_goals").$type<string[]>().default([]),
+  preferences: jsonb("preferences").$type<Record<string, any>>().default({}),
+  feedbackProvided: boolean("feedback_provided").default(false),
+  conversationStatus: varchar("conversation_status").default("active"), // active, completed, paused
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// AI Chatbot User Profiles
+export const chatbotUserProfiles = pgTable("chatbot_user_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id),
+  profileType: varchar("profile_type").notNull(), // beginner_investor, experienced_investor, saver, developer, data_provider
+  confidence: decimal("confidence", { precision: 3, scale: 2 }).notNull(),
+  keywords: jsonb("keywords").$type<string[]>().default([]),
+  responses: jsonb("responses").$type<string[]>().default([]),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  isActive: boolean("is_active").default(true),
+});
+
+// AI Chatbot Feedback
+export const chatbotFeedback = pgTable("chatbot_feedback", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").references(() => chatbotConversations.id),
+  userId: varchar("user_id").references(() => users.id),
+  rating: integer("rating"), // 1-5 stars
+  feedbackText: text("feedback_text"),
+  improvementSuggestions: jsonb("improvement_suggestions").$type<string[]>().default([]),
+  wasHelpful: boolean("was_helpful"),
+  recommendedFeatures: jsonb("recommended_features").$type<string[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 
 
 // Education History
@@ -794,6 +842,14 @@ export const backtestPositions = pgTable("backtest_positions", {
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// AI Chatbot Types
+export type ChatbotConversation = typeof chatbotConversations.$inferSelect;
+export type InsertChatbotConversation = typeof chatbotConversations.$inferInsert;
+export type ChatbotUserProfile = typeof chatbotUserProfiles.$inferSelect;
+export type InsertChatbotUserProfile = typeof chatbotUserProfiles.$inferInsert;
+export type ChatbotFeedback = typeof chatbotFeedback.$inferSelect;
+export type InsertChatbotFeedback = typeof chatbotFeedback.$inferInsert;
 
 
 export type Portfolio = typeof portfolios.$inferSelect;

@@ -9,6 +9,7 @@ import { registerTokenomicRoutes } from "./tokenomicRoutes";
 import { registerMarketDataRoutes } from "./marketDataRoutes";
 import { registerDeveloperRoutes } from "./developerRoutes";
 import { registerUtilityRoutes } from "./utilityRoutes";
+import { registerChatbotRoutes } from "./chatbotRoutes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware setup
@@ -32,6 +33,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   console.log("🔧 Registering Utility & Admin APIs...");
   registerUtilityRoutes(app);
+
+  console.log("🤖 Registering AI Chatbot APIs...");
+  registerChatbotRoutes(app);
 
   // ===========================================
   // WebSocket Server Setup
