@@ -114,6 +114,7 @@ import DataProviderMarketInsights from "@/pages/data-provider/market-insights";
 import DataProviderPortfolio from "@/pages/data-provider/portfolio";
 import DataProviderAIMarketplace from "@/pages/data-provider/ai-marketplace";
 import DataProviderCollaboration from "@/pages/data-provider-collaboration";
+import DataProviderLearning from "@/pages/data-provider-learning";
 import DataProviderEnhanced from "@/pages/data-provider-enhanced";
 import InvestorCollaboration from "@/pages/collaboration";
 import CollaborationProjects from "@/pages/collaboration/projects";
@@ -278,6 +279,7 @@ function Router() {
             <Route path="/data-provider/portfolio" component={DataProviderPortfolioOverview} />
             <Route path="/data-provider/ai-marketplace" component={DataProviderAIMarketplace} />
             <Route path="/data-provider/collaboration" component={DataProviderCollaboration} />
+            <Route path="/data-provider/learning" component={DataProviderLearning} />
             <Route path="/data-provider/portfolio/usage" component={DataProviderUsageStatistics} />
             <Route path="/data-provider/portfolio/quality" component={DataProviderQualityMetrics} />
             <Route path="/data-provider/portfolio/revenue" component={DataProviderRevenueTracking} />
