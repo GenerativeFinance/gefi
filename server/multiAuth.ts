@@ -2,10 +2,9 @@ import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import connectPg from "connect-pg-simple";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import { Strategy as GitHubStrategy } from "passport-github2";
-
-import { Strategy as LinkedInStrategy } from "passport-linkedin-oauth2";
+import { Strategy as GoogleStrategy, type Profile as GoogleProfile, type VerifyCallback } from "passport-google-oauth20";
+import { Strategy as GitHubStrategy, type Profile as GitHubProfile } from "passport-github2";
+import { Strategy as LinkedInStrategy, type Profile as LinkedInProfile } from "passport-linkedin-oauth2";
 import { storage } from "./storage";
 
 export function getSession() {
@@ -57,32 +56,48 @@ export async function setupMultiAuth(app: Express) {
 
   // Google OAuth Strategy
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    console.log('🟡 Configuring Google OAuth with callback:', `${baseUrl}/api/auth/google/callback`);
     passport.use(new GoogleStrategy({
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: `${baseUrl}/api/auth/google/callback`
-    }, async (accessToken, refreshToken, profile, done) => {
+    }, async (accessToken: string, refreshToken: string, profile: GoogleProfile, done: VerifyCallback) => {
       try {
+        console.log('🔍 Google OAuth profile received:', {
+          id: profile.id,
+          email: profile.emails?.[0]?.value,
+          displayName: profile.displayName
+        });
         const user = await upsertUser(profile, 'google');
+        console.log('✅ Google user created/updated:', user.id);
         return done(null, { ...user, provider: 'google' });
       } catch (error) {
-        return done(error, null);
+        console.error('❌ Google OAuth error:', error);
+        return done(error as Error, undefined);
       }
     }));
   }
 
   // GitHub OAuth Strategy
   if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+    console.log('🐙 Configuring GitHub OAuth with callback:', `${baseUrl}/api/auth/github/callback`);
     passport.use(new GitHubStrategy({
       clientID: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
       callbackURL: `${baseUrl}/api/auth/github/callback`,
       scope: ['user:email'] // Request email scope
-    }, async (accessToken, refreshToken, profile, done) => {
+    }, async (accessToken: string, refreshToken: string, profile: GitHubProfile, done: any) => {
       try {
+        console.log('🔍 GitHub OAuth profile received:', {
+          id: profile.id,
+          email: profile.emails?.[0]?.value,
+          displayName: profile.displayName
+        });
         const user = await upsertUser(profile, 'github');
+        console.log('✅ GitHub user created/updated:', user.id);
         return done(null, { ...user, provider: 'github' });
       } catch (error) {
+        console.error('❌ GitHub OAuth error:', error);
         return done(error, null);
       }
     }));
@@ -92,16 +107,24 @@ export async function setupMultiAuth(app: Express) {
 
   // LinkedIn OAuth Strategy
   if (process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET) {
+    console.log('🔗 Configuring LinkedIn OAuth with callback:', `${baseUrl}/api/auth/linkedin/callback`);
     passport.use(new LinkedInStrategy({
       clientID: process.env.LINKEDIN_CLIENT_ID,
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
       callbackURL: `${baseUrl}/api/auth/linkedin/callback`,
-      scope: ['r_emailaddress', 'r_liteprofile', 'openid', 'profile', 'email']
-    }, async (accessToken, refreshToken, profile, done) => {
+      scope: ['openid', 'profile', 'email']
+    }, async (accessToken: string, refreshToken: string, profile: LinkedInProfile, done: any) => {
       try {
+        console.log('🔍 LinkedIn OAuth profile received:', {
+          id: profile.id,
+          email: profile.emails?.[0]?.value,
+          displayName: profile.displayName
+        });
         const user = await upsertUser(profile, 'linkedin');
+        console.log('✅ LinkedIn user created/updated:', user.id);
         return done(null, { ...user, provider: 'linkedin' });
       } catch (error) {
+        console.error('❌ LinkedIn OAuth error:', error);
         return done(error, null);
       }
     }));
@@ -136,9 +159,11 @@ export async function setupMultiAuth(app: Express) {
   );
   app.get('/api/auth/google/callback', 
     passport.authenticate('google', { 
-      failureRedirect: '/login-failed?provider=google'
+      failureRedirect: '/login-failed?provider=google',
+      session: true
     }),
     (req, res) => {
+      console.log('✅ Google OAuth callback successful, user authenticated:', req.user);
       // Custom redirect logic to ensure single-window experience
       res.redirect('/');
     }
@@ -171,9 +196,11 @@ export async function setupMultiAuth(app: Express) {
   );
   app.get('/api/auth/linkedin/callback',
     passport.authenticate('linkedin', {
-      failureRedirect: '/login-failed?provider=linkedin'
+      failureRedirect: '/login-failed?provider=linkedin',
+      session: true
     }),
     (req, res) => {
+      console.log('✅ LinkedIn OAuth callback successful, user authenticated:', req.user);
       // Custom redirect logic to ensure single-window experience
       res.redirect('/');
     }
