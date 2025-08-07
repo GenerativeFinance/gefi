@@ -38,9 +38,6 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   role: varchar("role").default("user"), // user, admin, moderator
   subscriptionTier: varchar("subscription_tier").default("free"),
-  onboardingCompleted: boolean("onboarding_completed").default(false),
-  onboardingAnswers: text("onboarding_answers"), // JSON string of Q&A pairs
-  onboardingCompletedAt: timestamp("onboarding_completed_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

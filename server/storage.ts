@@ -335,26 +335,6 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async updateUserOnboarding(id: string, onboardingData: {
-    role: string;
-    onboardingAnswers: Record<string, string>;
-    onboardingCompleted: boolean;
-    onboardingCompletedAt: Date;
-  }): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({ 
-        role: onboardingData.role,
-        onboardingAnswers: JSON.stringify(onboardingData.onboardingAnswers),
-        onboardingCompleted: onboardingData.onboardingCompleted,
-        onboardingCompletedAt: onboardingData.onboardingCompletedAt,
-        updatedAt: new Date() 
-      })
-      .where(eq(users.id, id))
-      .returning();
-    return user;
-  }
-
   // User Profile operations
   async getUserProfile(userId: string): Promise<UserProfile | undefined> {
     try {
