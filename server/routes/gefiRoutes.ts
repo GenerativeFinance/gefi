@@ -600,18 +600,19 @@ export function registerGeFiRoutes(app: Express) {
         commodities: 2
       };
       
-      Object.entries(targetAllocation).forEach(([asset, target]) => {
+      Object.entries(targetAllocation || {}).forEach(([asset, target]) => {
         const current = currentAllocation[asset as keyof typeof currentAllocation] || 0;
-        const drift = Math.abs(current - target);
+        const targetValue = Number(target) || 0;
+        const drift = Math.abs(current - targetValue);
         
-        if (drift >= threshold) {
+        if (drift >= (threshold || 5)) {
           rebalanceActions.push({
             asset,
             currentAllocation: current,
-            targetAllocation: target,
-            action: current > target ? 'sell' : 'buy',
+            targetAllocation: targetValue,
+            action: current > targetValue ? 'sell' : 'buy',
             amount: drift,
-            estimatedValue: drift * parseFloat(portfolio.totalInvestment) / 100
+            estimatedValue: drift * (parseFloat(portfolio.totalInvestment || '100000') / 100)
           });
         }
       });

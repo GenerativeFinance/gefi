@@ -526,6 +526,48 @@ export default function FederatedLearningGraph() {
                     </div>
                   </div>
                 </div>
+
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-3">Contract Details</h4>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium">Contract Address</span>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(`https://etherscan.io/address/0xf1_001...abc`, '_blank')}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          View on Explorer
+                        </Button>
+                      </div>
+                      <div className="text-xs text-muted-foreground font-mono">
+                        0xf1_001...abc
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Reward per Update:</span>
+                        <div className="font-medium text-purple-600">10 GeFI/update</div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Participants:</span>
+                        <div className="font-medium">12</div>
+                      </div>
+                    </div>
+                    <Button 
+                      className="w-full"
+                      onClick={() => {
+                        // This would trigger participation in the federated learning model
+                        alert('Participating in training session...');
+                      }}
+                    >
+                      <Activity className="h-4 w-4 mr-2" />
+                      Participate in Training
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </DialogContent>
