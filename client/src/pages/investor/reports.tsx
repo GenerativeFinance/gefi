@@ -10,6 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/layout/Layout";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { generatePDFReport, type ReportData, type PDFCustomizations } from "@/lib/pdfGenerator";
 import {
   FileText,
   Download,
@@ -46,8 +49,12 @@ export default function InvestorReports() {
   });
   const { toast } = useToast();
 
-  // Sample reports data
-  const reports = [
+  // Fetch reports from API
+  const { data: reportsData, isLoading: isLoadingReports } = useQuery({
+    queryKey: ["/api/reports"],
+  });
+
+  const reports = (reportsData as any)?.data || [
     {
       id: 1,
       name: "Monthly AI Performance Review",
@@ -89,30 +96,99 @@ export default function InvestorReports() {
     { value: "table", label: "Data Table", icon: FileText }
   ];
 
-  const handleDownloadReport = (reportName: string) => {
-    toast({
-      title: "Report Downloaded",
-      description: `${reportName} has been downloaded successfully.`,
-    });
+
+
+  const handleDownloadReport = async (reportName: string, reportId?: string) => {
+    try {
+      const report = reports.find((r: any) => r.name === reportName || r.id === reportId) || 
+                   { id: reportId || 'temp', name: reportName, status: 'ready', lastUpdated: new Date().toLocaleDateString(), type: 'performance' };
+      
+      // Convert to proper ReportData format
+      const reportData: ReportData = {
+        id: report.id.toString(),
+        name: report.name,
+        type: report.type || 'performance',
+        status: report.status,
+        lastUpdated: report.lastUpdated,
+        description: report.description
+      };
+      
+      // Generate PDF using the new generator
+      const doc = generatePDFReport(reportData, { layout: 'portrait' });
+      
+      // Download the PDF
+      const fileName = `${reportName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+      
+      toast({
+        title: "Report Downloaded",
+        description: `${reportName} has been downloaded successfully as PDF.`,
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to generate PDF report. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleGenerateReport = () => {
-    toast({
-      title: "Report Generated",
-      description: `${reportSettings.name} is being generated with your custom settings.`,
-    });
-    setIsGenerateOpen(false);
-    setReportSettings({
-      name: "",
-      type: "",
-      visualizations: [],
-      layout: "portrait",
-      period: "monthly",
-      includeCharts: true,
-      includeTables: true,
-      includeRecommendations: true,
-      customSections: ""
-    });
+  const handleGenerateReport = async () => {
+    try {
+      // Create a new custom report object
+      const reportData: ReportData = {
+        id: `custom-${Date.now()}`,
+        name: reportSettings.name,
+        type: reportSettings.type,
+        status: 'ready',
+        lastUpdated: new Date().toLocaleDateString(),
+        description: `Custom ${reportSettings.type} report with ${reportSettings.visualizations.length} visualizations`
+      };
+      
+      // Convert settings to PDFCustomizations
+      const customizations: PDFCustomizations = {
+        layout: reportSettings.layout as 'portrait' | 'landscape',
+        includeCharts: reportSettings.includeCharts,
+        includeTables: reportSettings.includeTables,
+        includeRecommendations: reportSettings.includeRecommendations,
+        visualizations: reportSettings.visualizations,
+        period: reportSettings.period,
+        customSections: reportSettings.customSections
+      };
+      
+      // Generate PDF immediately for custom reports
+      const doc = generatePDFReport(reportData, customizations);
+      
+      // Download the PDF
+      const fileName = `${reportSettings.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+      
+      toast({
+        title: "Report Generated",
+        description: `${reportSettings.name} has been generated and downloaded successfully.`,
+      });
+      
+      setIsGenerateOpen(false);
+      setReportSettings({
+        name: "",
+        type: "",
+        visualizations: [],
+        layout: "portrait",
+        period: "monthly",
+        includeCharts: true,
+        includeTables: true,
+        includeRecommendations: true,
+        customSections: ""
+      });
+    } catch (error) {
+      console.error('Generate report error:', error);
+      toast({
+        title: "Generation Failed",
+        description: "Failed to generate custom report. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleVisualization = (viz: string) => {
@@ -304,9 +380,16 @@ export default function InvestorReports() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {isLoadingReports && (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+          </div>
+        )}
+
         {/* Report Cards */}
         <div className="space-y-4">
-          {reports.map((report) => (
+          {reports.map((report: any) => (
             <Card key={report.id} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -402,8 +485,8 @@ export default function InvestorReports() {
                             <Button variant="outline" onClick={() => setIsCustomizeOpen(false)}>
                               Cancel
                             </Button>
-                            <Button onClick={() => {
-                              handleDownloadReport(report.name);
+                            <Button onClick={async () => {
+                              await handleDownloadReport(report.name, report.id);
                               setIsCustomizeOpen(false);
                             }}>
                               <Download className="h-4 w-4 mr-2" />
@@ -413,7 +496,7 @@ export default function InvestorReports() {
                         </div>
                       </DialogContent>
                     </Dialog>
-                    <Button onClick={() => handleDownloadReport(report.name)}>
+                    <Button onClick={() => handleDownloadReport(report.name, report.id)}>
                       <Download className="h-4 w-4 mr-2" />
                       Download
                     </Button>
