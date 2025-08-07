@@ -932,7 +932,13 @@ export default function WalletPage() {
                       </>
                     )}
                   </Button>
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      const contractAddress = selectedContract.contractAddress || '0xf1_001...abc';
+                      window.open(`https://etherscan.io/address/${contractAddress}`, '_blank');
+                    }}
+                  >
                     <ExternalLink className="w-4 h-4 mr-2" />
                     View on Explorer
                   </Button>

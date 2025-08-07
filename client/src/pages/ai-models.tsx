@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import Layout from "@/components/layout/Layout";
 import { 
   Bot, 
@@ -15,13 +17,21 @@ import {
   Filter,
   Plus,
   Eye,
-  BarChart3
+  BarChart3,
+  ExternalLink,
+  Activity,
+  Users,
+  Clock,
+  CheckCircle,
+  Target
 } from "lucide-react";
 
 export default function AIModels() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("performance");
+  const [selectedModel, setSelectedModel] = useState<any>(null);
+  const [modelDetailsOpen, setModelDetailsOpen] = useState(false);
 
   const { data: aiModels = [], isLoading } = useQuery({
     queryKey: ["/api/ai-models"]
@@ -250,7 +260,15 @@ export default function AIModels() {
                     </div>
                     
                     <div className="flex gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => {
+                          setSelectedModel(model);
+                          setModelDetailsOpen(true);
+                        }}
+                      >
                         <Eye className="h-4 w-4 mr-2" />
                         View Details
                       </Button>
@@ -283,6 +301,158 @@ export default function AIModels() {
             </Card>
           )}
         </div>
+
+        {/* Model Details Dialog */}
+        <Dialog open={modelDetailsOpen} onOpenChange={setModelDetailsOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Bot className="h-5 w-5 text-primary" />
+                {selectedModel?.name || "AI Model Details"}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {selectedModel && (
+              <div className="space-y-6">
+                {/* Basic Information */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">ML Task</Label>
+                    <p className="text-sm font-medium">{selectedModel.category || "Price Prediction"}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Model Accuracy</Label>
+                    <p className="text-sm font-medium text-green-600">{selectedModel.performance || 89}%</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Current Status</Label>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm font-medium text-green-600">Active</span>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Participants</Label>
+                    <div className="flex items-center gap-1">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">{selectedModel.subscribers || 1247}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Performance Metrics */}
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    Performance Metrics
+                  </h4>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <div className="font-semibold text-lg text-green-600">{selectedModel.performance || 89}%</div>
+                      <div className="text-muted-foreground">Accuracy</div>
+                    </div>
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <div className="font-semibold text-lg text-blue-600">1.47</div>
+                      <div className="text-muted-foreground">Sharpe Ratio</div>
+                    </div>
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <div className="font-semibold text-lg text-purple-600">8.2%</div>
+                      <div className="text-muted-foreground">Max Drawdown</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Activity */}
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    Recent Activity
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span>Model update submitted</span>
+                      <span className="text-muted-foreground">2 hours ago</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span>Earned 15 GeFI reward</span>
+                      <span className="text-muted-foreground">5 hours ago</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span>Training session completed</span>
+                      <span className="text-muted-foreground">1 day ago</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contract Details */}
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <Target className="h-4 w-4" />
+                    Contract Details
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium">Contract Address</span>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            const contractAddress = selectedModel.contractAddress || '0xf1_' + selectedModel.id + '_model_contract';
+                            window.open(`https://etherscan.io/address/${contractAddress}`, '_blank');
+                          }}
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          View on Explorer
+                        </Button>
+                      </div>
+                      <div className="text-xs text-muted-foreground font-mono">
+                        {selectedModel.contractAddress || `0xf1_${selectedModel.id}_model_contract`}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Monthly Fee:</span>
+                        <div className="font-medium text-green-600">${selectedModel.pricing?.monthly || 149}/month</div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Developer Share:</span>
+                        <div className="font-medium">70%</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="border-t pt-4 flex gap-3">
+                  {!isUserSubscribed(selectedModel.id) ? (
+                    <>
+                      <Button className="flex-1">
+                        <Activity className="h-4 w-4 mr-2" />
+                        Subscribe to Model
+                      </Button>
+                      <Button variant="outline" className="flex-1">
+                        <Clock className="h-4 w-4 mr-2" />
+                        Start Free Trial
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button className="flex-1">
+                        <Activity className="h-4 w-4 mr-2" />
+                        Access Dashboard
+                      </Button>
+                      <Button variant="outline" className="flex-1">
+                        <Target className="h-4 w-4 mr-2" />
+                        View Performance
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
