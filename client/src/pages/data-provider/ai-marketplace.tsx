@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/layout/Layout";
 import {
   Store,
@@ -39,6 +40,10 @@ export default function DataProviderAIMarketplace() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("browse");
+  const [isFindPartnersOpen, setIsFindPartnersOpen] = useState(false);
+  const [partnerSearchQuery, setPartnerSearchQuery] = useState("");
+  const [selectedPartnerType, setSelectedPartnerType] = useState("all");
+  const { toast } = useToast();
 
   // Sample AI models data from Data Provider perspective
   const aiModels = [
@@ -155,6 +160,75 @@ export default function DataProviderAIMarketplace() {
     }
   ];
 
+  // Potential collaboration partners
+  const collaborationPartners = [
+    {
+      id: 1,
+      name: "QuantAI Labs",
+      type: "AI Developer",
+      rating: 4.9,
+      activeProjects: 15,
+      expertise: ["Risk Management", "Portfolio Optimization"],
+      location: "New York, USA",
+      dataNeeds: ["Market Data", "Economic Indicators"],
+      revenue: "$2.4M",
+      verified: true,
+      lastActive: "2 hours ago"
+    },
+    {
+      id: 2,
+      name: "CryptoInsight AI",
+      type: "AI Developer",
+      rating: 4.7,
+      activeProjects: 8,
+      expertise: ["Cryptocurrency", "Sentiment Analysis"],
+      location: "London, UK",
+      dataNeeds: ["Crypto Data", "Social Media Data"],
+      revenue: "$1.8M",
+      verified: true,
+      lastActive: "1 day ago"
+    },
+    {
+      id: 3,
+      name: "ESG Analytics Corp",
+      type: "Data Provider",
+      rating: 4.8,
+      activeProjects: 12,
+      expertise: ["ESG Data", "Sustainability Metrics"],
+      location: "Berlin, Germany",
+      dataNeeds: ["Corporate Data", "Environmental Data"],
+      revenue: "$3.1M",
+      verified: true,
+      lastActive: "3 hours ago"
+    },
+    {
+      id: 4,
+      name: "RegTech Solutions",
+      type: "Compliance Expert",
+      rating: 4.6,
+      activeProjects: 20,
+      expertise: ["Regulatory Compliance", "Risk Assessment"],
+      location: "Singapore",
+      dataNeeds: ["Regulatory Data", "Transaction Data"],
+      revenue: "$1.5M",
+      verified: false,
+      lastActive: "1 week ago"
+    },
+    {
+      id: 5,
+      name: "Alpha Investment Fund",
+      type: "Investor",
+      rating: 4.9,
+      activeProjects: 25,
+      expertise: ["Portfolio Management", "Alternative Data"],
+      location: "San Francisco, USA",
+      dataNeeds: ["Alternative Data", "Market Sentiment"],
+      revenue: "$12.5M",
+      verified: true,
+      lastActive: "30 minutes ago"
+    }
+  ];
+
   const filteredModels = aiModels.filter(model => {
     const matchesSearch = model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          model.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -191,15 +265,67 @@ export default function DataProviderAIMarketplace() {
     }
   };
 
+  const getPartnerTypeColor = (type: string) => {
+    switch (type.toLowerCase()) {
+      case "ai developer": return "bg-blue-100 text-blue-800";
+      case "data provider": return "bg-green-100 text-green-800";
+      case "investor": return "bg-purple-100 text-purple-800";
+      case "compliance expert": return "bg-orange-100 text-orange-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const filteredPartners = collaborationPartners.filter(partner => {
+    const matchesSearch = partner.name.toLowerCase().includes(partnerSearchQuery.toLowerCase()) ||
+                         partner.expertise.some(exp => exp.toLowerCase().includes(partnerSearchQuery.toLowerCase()));
+    const matchesType = selectedPartnerType === "all" || partner.type.toLowerCase() === selectedPartnerType.toLowerCase();
+    return matchesSearch && matchesType;
+  });
+
+  const handleAddDataset = () => {
+    toast({
+      title: "Dataset Added",
+      description: "Your dataset has been successfully added to the marketplace.",
+    });
+    setIsUploadDialogOpen(false);
+  };
+
+  const handleContactPartner = (partnerId: number) => {
+    toast({
+      title: "Message Sent",
+      description: "Your collaboration request has been sent successfully.",
+    });
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">AI Marketplace</h1>
-          <p className="text-muted-foreground">
-            Browse, integrate, and monetize AI financial models with your datasets
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">AI Marketplace</h1>
+            <p className="text-muted-foreground">
+              Browse, integrate, and monetize AI financial models with your datasets
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Dialog open={isFindPartnersOpen} onOpenChange={setIsFindPartnersOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Users className="h-4 w-4 mr-2" />
+                  Find Partners
+                </Button>
+              </DialogTrigger>
+            </Dialog>
+            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Dataset
+                </Button>
+              </DialogTrigger>
+            </Dialog>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -503,6 +629,232 @@ export default function DataProviderAIMarketplace() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Add Dataset Dialog */}
+        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Add New Dataset</DialogTitle>
+              <DialogDescription>
+                Upload and configure your dataset for the AI marketplace
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dataset-name">Dataset Name</Label>
+                  <Input id="dataset-name" placeholder="e.g., S&P 500 Options Data" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dataset-category">Category</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="market-data">Market Data</SelectItem>
+                      <SelectItem value="cryptocurrency">Cryptocurrency</SelectItem>
+                      <SelectItem value="esg-data">ESG Data</SelectItem>
+                      <SelectItem value="economic-data">Economic Data</SelectItem>
+                      <SelectItem value="alternative-data">Alternative Data</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="dataset-description">Description</Label>
+                <Textarea 
+                  id="dataset-description" 
+                  placeholder="Describe your dataset, its source, frequency, and key features..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pricing-model">Pricing Model</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select pricing" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="subscription">Monthly Subscription</SelectItem>
+                      <SelectItem value="pay-per-use">Pay Per Use</SelectItem>
+                      <SelectItem value="revenue-share">Revenue Share</SelectItem>
+                      <SelectItem value="free">Free (Open Source)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price">Price</Label>
+                  <Input id="price" placeholder="$299/month or 5% revenue share" />
+                </div>
+              </div>
+
+              <div className="p-4 border-2 border-dashed border-gray-200 rounded-lg text-center">
+                <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Drop your dataset files here or click to browse
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Supports CSV, JSON, Parquet files up to 1GB
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddDataset}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Add Dataset
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Find Partners Dialog */}
+        <Dialog open={isFindPartnersOpen} onOpenChange={setIsFindPartnersOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Find Collaboration Partners</DialogTitle>
+              <DialogDescription>
+                Connect with AI developers, investors, and other data providers for strategic partnerships
+              </DialogDescription>
+            </DialogHeader>
+            
+            {/* Partner Search and Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search partners by name, expertise, or location..."
+                  value={partnerSearchQuery}
+                  onChange={(e) => setPartnerSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={selectedPartnerType} onValueChange={setSelectedPartnerType}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Partner Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="ai developer">AI Developer</SelectItem>
+                  <SelectItem value="data provider">Data Provider</SelectItem>
+                  <SelectItem value="investor">Investor</SelectItem>
+                  <SelectItem value="compliance expert">Compliance Expert</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Partners Grid */}
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {filteredPartners.map((partner) => (
+                <Card key={partner.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            {partner.name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold">{partner.name}</h3>
+                              {partner.verified && (
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge className={getPartnerTypeColor(partner.type)}>
+                                {partner.type}
+                              </Badge>
+                              <span className="text-sm text-muted-foreground">{partner.location}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3 text-sm">
+                          <div>
+                            <p className="text-muted-foreground">Rating</p>
+                            <div className="flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                              <span className="font-semibold">{partner.rating}</span>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Projects</p>
+                            <p className="font-semibold">{partner.activeProjects}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Revenue</p>
+                            <p className="font-semibold text-green-600">{partner.revenue}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Last Active</p>
+                            <p className="font-semibold">{partner.lastActive}</p>
+                          </div>
+                        </div>
+
+                        <div className="mb-3">
+                          <p className="text-sm text-muted-foreground mb-1">Expertise:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {partner.expertise.map((skill, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mb-3">
+                          <p className="text-sm text-muted-foreground mb-1">Data Needs:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {partner.dataNeeds.map((need, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {need}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-2">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleContactPartner(partner.id)}
+                        >
+                          Contact
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Eye className="h-3 w-3 mr-1" />
+                          View Profile
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {filteredPartners.length === 0 && (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">No partners found matching your criteria</p>
+                <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={() => setIsFindPartnersOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
