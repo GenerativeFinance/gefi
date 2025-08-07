@@ -283,26 +283,45 @@ export class DatabaseStorage implements IStorage {
       }
 
       if (existingUser) {
-        // Update existing user
+        // Update only safe fields that won't cause constraint violations
         const [user] = await db
           .update(users)
           .set({ 
-            ...userData, 
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            profileImageUrl: userData.profileImageUrl,
             updatedAt: new Date() 
           })
           .where(eq(users.id, existingUser.id))
           .returning();
         return user;
       } else {
-        // Create new user
+        // Create new user - use insert with onConflictDoNothing to avoid duplicate key errors
         const [user] = await db
           .insert(users)
           .values(userData)
+          .onConflictDoNothing()
           .returning();
+        
+        if (!user) {
+          // If insert was skipped due to conflict, fetch the existing user
+          return await this.getUser(userData.id!) || await this.getUserByEmail(userData.email!);
+        }
+        
         return user;
       }
     } catch (error) {
       console.error('Error in upsertUser:', error);
+      // Try to fetch existing user as fallback
+      if (userData.id) {
+        const existing = await this.getUser(userData.id);
+        if (existing) return existing;
+      }
+      if (userData.email) {
+        const existing = await this.getUserByEmail(userData.email);
+        if (existing) return existing;
+      }
       throw error;
     }
   }
