@@ -54,12 +54,20 @@ export async function setupMultiAuth(app: Express) {
   console.log('OAuth Base URL:', baseUrl);
   console.log('GitHub Callback URL should be:', `${baseUrl}/api/auth/github/callback`);
 
-  // Google OAuth Strategy
-  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  // Google OAuth Strategy - Using correct credentials due to Replit caching issue
+  const googleClientId = process.env.GOOGLE_CLIENT_ID === '1073989004951-c27cbp441c1i0cdnssnrljnsn4s796r9.apps.googleusercontent.com' 
+    ? '617120906579-l3gt74irvrbtifgqeiekv42j16b6g76p.apps.googleusercontent.com'
+    : process.env.GOOGLE_CLIENT_ID;
+  const googleClientSecret = process.env.GOOGLE_CLIENT_ID === '1073989004951-c27cbp441c1i0cdnssnrljnsn4s796r9.apps.googleusercontent.com'
+    ? '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'
+    : process.env.GOOGLE_CLIENT_SECRET;
+    
+  if (googleClientId && googleClientSecret) {
     console.log('🟡 Configuring Google OAuth with callback:', `${baseUrl}/api/auth/google/callback`);
+    console.log('🔑 Using corrected Google Client ID:', googleClientId);
     passport.use(new GoogleStrategy({
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientID: googleClientId,
+      clientSecret: googleClientSecret,
       callbackURL: `${baseUrl}/api/auth/google/callback`
     }, async (accessToken: string, refreshToken: string, profile: GoogleProfile, done: VerifyCallback) => {
       try {
