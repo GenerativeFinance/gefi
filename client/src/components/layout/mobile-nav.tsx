@@ -22,7 +22,8 @@ import {
   Users,
   Settings as SettingsIcon,
   Wallet,
-  HelpCircle
+  HelpCircle,
+  Server
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -40,6 +41,8 @@ const moreNavigationItems = [
   { path: "/backtesting", label: "Backtesting", icon: BarChart3 },
   { path: "/federated-learning", label: "FL Network", icon: Network },
   { path: "/trading-bots", label: "Trading Bots", icon: Activity },
+  { path: "/wallet-management", label: "Wallet Management", icon: Wallet },
+  { path: "/server-management", label: "Server Management", icon: Server },
   { path: "/developer", label: "Developer", icon: Code },
   { path: "/data-provider", label: "Data Provider", icon: Database },
   { path: "/collaboration", label: "Collaboration", icon: Users },

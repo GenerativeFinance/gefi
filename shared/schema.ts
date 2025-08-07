@@ -840,6 +840,151 @@ export const backtestPositions = pgTable("backtest_positions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Wallet Management Tables
+export const userWallets = pgTable("user_wallets", {
+  id: uuid("id").primaryKey().notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  name: varchar("name").notNull(),
+  type: varchar("type").notNull(), // federated_learning, trading, staking, general
+  publicAddress: varchar("public_address").notNull().unique(),
+  privateKey: varchar("private_key").notNull(), // Encrypted in production
+  balance: decimal("balance", { precision: 18, scale: 8 }).default("0.00000000"),
+  isActive: boolean("is_active").default(true),
+  lastTransactionAt: timestamp("last_transaction_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const walletTransactions = pgTable("wallet_transactions", {
+  id: uuid("id").primaryKey().notNull(),
+  walletId: uuid("wallet_id").references(() => userWallets.id).notNull(),
+  type: varchar("type").notNull(), // deposit, withdrawal, transfer, reward, fee
+  amount: decimal("amount", { precision: 18, scale: 8 }).notNull(),
+  fromAddress: varchar("from_address"),
+  toAddress: varchar("to_address"),
+  transactionHash: varchar("transaction_hash").unique(),
+  status: varchar("status").notNull().default("pending"), // pending, confirmed, failed
+  blockNumber: varchar("block_number"),
+  gasUsed: decimal("gas_used", { precision: 18, scale: 8 }),
+  gasPrice: decimal("gas_price", { precision: 18, scale: 8 }),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  confirmedAt: timestamp("confirmed_at"),
+});
+
+// Server Management Tables
+export const serverInfrastructure = pgTable("server_infrastructure", {
+  id: uuid("id").primaryKey().notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  name: varchar("name").notNull(),
+  provider: varchar("provider").notNull(), // aws, azure, gcp, local, hybrid
+  region: varchar("region").notNull(),
+  instanceType: varchar("instance_type").notNull(),
+  status: varchar("status").notNull().default("pending"), // pending, provisioning, running, stopped, terminated, error
+  ipAddress: varchar("ip_address"),
+  sshKey: text("ssh_key"), // Encrypted SSH key
+  configuration: jsonb("configuration").$type<{
+    cpu: number;
+    memory: number;
+    storage: number;
+    networkSpeed: string;
+    operatingSystem: string;
+    securityGroups?: string[];
+    tags?: Record<string, string>;
+  }>(),
+  costPerHour: decimal("cost_per_hour", { precision: 10, scale: 4 }),
+  totalCost: decimal("total_cost", { precision: 12, scale: 2 }).default("0.00"),
+  lastHealthCheck: timestamp("last_health_check"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const federatedLearningNodes = pgTable("federated_learning_nodes", {
+  id: uuid("id").primaryKey().notNull(),
+  serverId: uuid("server_id").references(() => serverInfrastructure.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  nodeId: varchar("node_id").notNull().unique(), // FL network node identifier
+  nodeType: varchar("node_type").notNull(), // coordinator, participant, validator
+  modelId: integer("model_id").references(() => aiModels.id),
+  status: varchar("status").notNull().default("inactive"), // inactive, active, training, syncing, error
+  performance: jsonb("performance").$type<{
+    accuracy: number;
+    loss: number;
+    epochs: number;
+    trainingTime: number;
+    dataContribution: number;
+    networkLatency: number;
+  }>(),
+  rewards: decimal("rewards", { precision: 18, scale: 8 }).default("0.00000000"),
+  reputation: decimal("reputation", { precision: 5, scale: 2 }).default("0.00"),
+  lastSyncAt: timestamp("last_sync_at"),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const serverDeployments = pgTable("server_deployments", {
+  id: uuid("id").primaryKey().notNull(),
+  serverId: uuid("server_id").references(() => serverInfrastructure.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  deploymentType: varchar("deployment_type").notNull(), // federated_learning, api_server, model_training, data_processing
+  name: varchar("name").notNull(),
+  description: text("description"),
+  configuration: jsonb("configuration").$type<{
+    dockerImage?: string;
+    environmentVars?: Record<string, string>;
+    ports?: number[];
+    volumes?: string[];
+    resources?: {
+      cpu: string;
+      memory: string;
+      storage: string;
+    };
+  }>(),
+  status: varchar("status").notNull().default("pending"), // pending, deploying, running, stopped, failed
+  endpoint: varchar("endpoint"),
+  healthCheckUrl: varchar("health_check_url"),
+  logs: text("logs"),
+  metrics: jsonb("metrics").$type<{
+    cpuUsage: number;
+    memoryUsage: number;
+    networkIO: number;
+    requestCount: number;
+    errorRate: number;
+    uptime: number;
+  }>(),
+  deployedAt: timestamp("deployed_at"),
+  lastHealthCheck: timestamp("last_health_check"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const serverMetrics = pgTable("server_metrics", {
+  id: uuid("id").primaryKey().notNull(),
+  serverId: uuid("server_id").references(() => serverInfrastructure.id).notNull(),
+  timestamp: timestamp("timestamp").defaultNow(),
+  cpuUsage: decimal("cpu_usage", { precision: 5, scale: 2 }),
+  memoryUsage: decimal("memory_usage", { precision: 5, scale: 2 }),
+  diskUsage: decimal("disk_usage", { precision: 5, scale: 2 }),
+  networkInbound: decimal("network_inbound", { precision: 12, scale: 2 }),
+  networkOutbound: decimal("network_outbound", { precision: 12, scale: 2 }),
+  activeConnections: integer("active_connections"),
+  responseTime: decimal("response_time", { precision: 8, scale: 3 }),
+  errorCount: integer("error_count").default(0),
+});
+
+export const cloudProviderCredentials = pgTable("cloud_provider_credentials", {
+  id: uuid("id").primaryKey().notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  provider: varchar("provider").notNull(), // aws, azure, gcp
+  credentialName: varchar("credential_name").notNull(),
+  credentials: text("credentials"), // Encrypted JSON with provider-specific credentials
+  region: varchar("region"),
+  isActive: boolean("is_active").default(true),
+  lastUsed: timestamp("last_used"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
@@ -1127,6 +1272,24 @@ export const insertRiskAlertSchema = createInsertSchema(riskAlerts).omit({
   id: true,
   createdAt: true,
 });
+
+// Wallet Management Types
+export type UserWallet = typeof userWallets.$inferSelect;
+export type InsertUserWallet = typeof userWallets.$inferInsert;
+export type WalletTransaction = typeof walletTransactions.$inferSelect;
+export type InsertWalletTransaction = typeof walletTransactions.$inferInsert;
+
+// Server Management Types
+export type ServerInfrastructure = typeof serverInfrastructure.$inferSelect;
+export type InsertServerInfrastructure = typeof serverInfrastructure.$inferInsert;
+export type FederatedLearningNode = typeof federatedLearningNodes.$inferSelect;
+export type InsertFederatedLearningNode = typeof federatedLearningNodes.$inferInsert;
+export type ServerDeployment = typeof serverDeployments.$inferSelect;
+export type InsertServerDeployment = typeof serverDeployments.$inferInsert;
+export type ServerMetrics = typeof serverMetrics.$inferSelect;
+export type InsertServerMetrics = typeof serverMetrics.$inferInsert;
+export type CloudProviderCredentials = typeof cloudProviderCredentials.$inferSelect;
+export type InsertCloudProviderCredentials = typeof cloudProviderCredentials.$inferInsert;
 
 // Web3 Wallets table
 export const web3Wallets = pgTable("web3_wallets", {

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { storage } from "../storage";
 import { isAuthenticated } from "../multiAuth";
-import { insertPortfolioSchema, insertAiModelSchema, insertRiskAlertSchema } from "@shared/schema";
+import { insertPortfolioSchema, insertAiModelSchema, insertRiskAlertSchema, userWallets, walletTransactions, serverInfrastructure, federatedLearningNodes, serverDeployments } from "@shared/schema";
 import { z } from "zod";
 import { PortfolioOptimizer, RiskAssessment, MarketAnalysis } from "../aiModels";
 import { marketDataService } from "../marketDataService";
@@ -18,6 +18,283 @@ export function registerGeFiRoutes(app: Express) {
   
   // Register report routes
   app.use('/api', reportRoutes);
+
+  // ===========================================
+  // Wallet Management APIs
+  // ===========================================
+
+  // Get user wallets
+  app.get('/api/wallets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Return mock wallet data for demonstration
+      const mockWallets = [
+        {
+          id: "fl_zqmi8z8e5",
+          userId: userId,
+          name: "FL Training Node 1",
+          type: "federated_learning",
+          publicAddress: "fl_zqmi8z8e5",
+          privateKey: "••••••••••••••••••••••••••••••••",
+          balance: 125.4567,
+          isActive: true,
+          lastTransactionAt: new Date(Date.now() - 3600000).toISOString(),
+          createdAt: new Date(Date.now() - 86400000 * 7).toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: "fl_abc123def",
+          userId: userId,
+          name: "FL Validator Node",
+          type: "federated_learning",
+          publicAddress: "fl_abc123def",
+          privateKey: "••••••••••••••••••••••••••••••••",
+          balance: 89.2341,
+          isActive: true,
+          lastTransactionAt: new Date(Date.now() - 7200000).toISOString(),
+          createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: "trade_xyz789",
+          userId: userId,
+          name: "Trading Wallet",
+          type: "trading",
+          publicAddress: "0x742d35cc6cd34b2c95b2e2e3a8b1f1e83d2d3e4f",
+          privateKey: "••••••••••••••••••••••••••••••••",
+          balance: 1250.0000,
+          isActive: true,
+          lastTransactionAt: new Date(Date.now() - 1800000).toISOString(),
+          createdAt: new Date(Date.now() - 86400000 * 14).toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ];
+      
+      res.json(mockWallets);
+    } catch (error) {
+      console.error("Error fetching wallets:", error);
+      res.status(500).json({ message: "Failed to fetch wallets" });
+    }
+  });
+
+  // Get wallet statistics
+  app.get('/api/wallets/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const stats = {
+        totalBalance: 1464.69,
+        activeWallets: 3,
+        lastActivity: "2 hours ago"
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching wallet stats:", error);
+      res.status(500).json({ message: "Failed to fetch wallet stats" });
+    }
+  });
+
+  // Create new wallet
+  app.post('/api/wallets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { name, type } = req.body;
+      
+      if (!name || !type) {
+        return res.status(400).json({ message: "Name and type are required" });
+      }
+      
+      // Generate mock wallet address based on type
+      let publicAddress = "";
+      if (type === "federated_learning") {
+        publicAddress = `fl_${Math.random().toString(36).substr(2, 9)}`;
+      } else {
+        publicAddress = `0x${Math.random().toString(16).substr(2, 40)}`;
+      }
+      
+      const mockWallet = {
+        id: publicAddress,
+        userId: userId,
+        name: name,
+        type: type,
+        publicAddress: publicAddress,
+        privateKey: `pk_${Math.random().toString(36).substr(2, 32)}`,
+        balance: 0,
+        isActive: true,
+        lastTransactionAt: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      res.status(201).json(mockWallet);
+    } catch (error) {
+      console.error("Error creating wallet:", error);
+      res.status(500).json({ message: "Failed to create wallet" });
+    }
+  });
+
+  // Delete wallet
+  app.delete('/api/wallets/:walletId', isAuthenticated, async (req: any, res) => {
+    try {
+      const walletId = req.params.walletId;
+      res.json({ message: "Wallet deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting wallet:", error);
+      res.status(500).json({ message: "Failed to delete wallet" });
+    }
+  });
+
+  // ===========================================
+  // Server Management APIs
+  // ===========================================
+
+  // Get user servers
+  app.get('/api/servers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Return mock server data for demonstration
+      const mockServers = [
+        {
+          id: "srv_aws_001",
+          userId: userId,
+          name: "FL-Node-Production",
+          provider: "aws",
+          region: "us-east-1",
+          instanceType: "t3.large",
+          status: "running",
+          ipAddress: "54.123.45.67",
+          configuration: {
+            cpu: 2,
+            memory: 8,
+            storage: 100,
+            networkSpeed: "1 Gbps",
+            operatingSystem: "Ubuntu 22.04"
+          },
+          costPerHour: 0.0832,
+          totalCost: 59.90,
+          lastHealthCheck: new Date(Date.now() - 300000).toISOString(),
+          createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: "srv_gcp_002",
+          userId: userId,
+          name: "FL-Development",
+          provider: "gcp",
+          region: "us-west-2",
+          instanceType: "n1-standard-2",
+          status: "stopped",
+          ipAddress: "35.89.123.45",
+          configuration: {
+            cpu: 2,
+            memory: 7.5,
+            storage: 50,
+            networkSpeed: "1 Gbps",
+            operatingSystem: "Ubuntu 22.04"
+          },
+          costPerHour: 0.0735,
+          totalCost: 15.20,
+          lastHealthCheck: new Date(Date.now() - 3600000).toISOString(),
+          createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ];
+      
+      res.json(mockServers);
+    } catch (error) {
+      console.error("Error fetching servers:", error);
+      res.status(500).json({ message: "Failed to fetch servers" });
+    }
+  });
+
+  // Create new server
+  app.post('/api/servers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { name, provider, region, instanceType, configuration } = req.body;
+      
+      if (!name || !provider || !region || !instanceType) {
+        return res.status(400).json({ message: "All server details are required" });
+      }
+      
+      const mockServer = {
+        id: `srv_${provider}_${Math.random().toString(36).substr(2, 6)}`,
+        userId: userId,
+        name: name,
+        provider: provider,
+        region: region,
+        instanceType: instanceType,
+        status: "provisioning",
+        ipAddress: null,
+        configuration: configuration,
+        costPerHour: 0.08,
+        totalCost: 0,
+        lastHealthCheck: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      res.status(201).json(mockServer);
+    } catch (error) {
+      console.error("Error creating server:", error);
+      res.status(500).json({ message: "Failed to create server" });
+    }
+  });
+
+  // Server actions (start, stop, restart)
+  app.post('/api/servers/:serverId/actions', isAuthenticated, async (req: any, res) => {
+    try {
+      const serverId = req.params.serverId;
+      const { action } = req.body;
+      
+      if (!["start", "stop", "restart"].includes(action)) {
+        return res.status(400).json({ message: "Invalid action" });
+      }
+      
+      res.json({ message: `Server ${action} action completed successfully` });
+    } catch (error) {
+      console.error("Error performing server action:", error);
+      res.status(500).json({ message: "Failed to perform server action" });
+    }
+  });
+
+  // Get server deployments
+  app.get('/api/server-deployments', isAuthenticated, async (req: any, res) => {
+    try {
+      const deployments = [];
+      res.json(deployments);
+    } catch (error) {
+      console.error("Error fetching deployments:", error);
+      res.status(500).json({ message: "Failed to fetch deployments" });
+    }
+  });
+
+  // Get federated learning nodes
+  app.get('/api/federated-learning-nodes', isAuthenticated, async (req: any, res) => {
+    try {
+      const nodes = [];
+      res.json(nodes);
+    } catch (error) {
+      console.error("Error fetching FL nodes:", error);
+      res.status(500).json({ message: "Failed to fetch FL nodes" });
+    }
+  });
+
+  // Get cloud providers
+  app.get('/api/cloud-providers', isAuthenticated, async (req: any, res) => {
+    try {
+      const providers = [
+        { id: "aws", name: "Amazon Web Services", regions: ["us-east-1", "us-west-2", "eu-west-1"] },
+        { id: "gcp", name: "Google Cloud Platform", regions: ["us-central1", "us-west1", "europe-west1"] },
+        { id: "azure", name: "Microsoft Azure", regions: ["eastus", "westus", "westeurope"] }
+      ];
+      res.json(providers);
+    } catch (error) {
+      console.error("Error fetching cloud providers:", error);
+      res.status(500).json({ message: "Failed to fetch cloud providers" });
+    }
+  });
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
