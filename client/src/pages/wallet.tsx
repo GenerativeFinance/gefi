@@ -66,6 +66,7 @@ import {
 import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import FederatedLearningGraph from "@/components/FederatedLearningGraph";
 
 export default function WalletPage() {
   const { user } = useAuth();
@@ -410,10 +411,11 @@ export default function WalletPage() {
 
         {/* Main Content */}
         <Tabs defaultValue="contracts" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="contracts">FL Contracts</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
             <TabsTrigger value="models">Model Performance</TabsTrigger>
+            <TabsTrigger value="network">Network</TabsTrigger>
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
@@ -669,6 +671,11 @@ export default function WalletPage() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Network Visualization Tab */}
+          <TabsContent value="network" className="space-y-6">
+            <FederatedLearningGraph />
           </TabsContent>
 
           {/* Leaderboard Tab */}
