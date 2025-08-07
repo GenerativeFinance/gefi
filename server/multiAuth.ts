@@ -112,7 +112,8 @@ export async function setupMultiAuth(app: Express) {
       clientID: process.env.LINKEDIN_CLIENT_ID,
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
       callbackURL: `${baseUrl}/api/auth/linkedin/callback`,
-      scope: ['openid', 'profile', 'email']
+      scope: ['openid', 'profile', 'email'],
+      profileFields: ['id', 'first-name', 'last-name', 'email-address', 'headline', 'public-profile-url', 'picture-url', 'picture-urls::(original)']
     }, async (accessToken: string, refreshToken: string, profile: LinkedInProfile, done: any) => {
       try {
         console.log('🔍 LinkedIn OAuth profile received:', {
