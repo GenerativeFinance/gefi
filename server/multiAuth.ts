@@ -64,7 +64,7 @@ export async function setupMultiAuth(app: Express) {
     
   if (googleClientId && googleClientSecret) {
     console.log('🟡 Configuring Google OAuth with callback:', `${baseUrl}/api/auth/google/callback`);
-    console.log('🔑 Using corrected Google Client ID:', googleClientId);
+    console.log('🔑 Using Google Client ID:', googleClientId?.substring(0, 20) + '...');
     passport.use(new GoogleStrategy({
       clientID: googleClientId,
       clientSecret: googleClientSecret,
@@ -113,10 +113,33 @@ export async function setupMultiAuth(app: Express) {
 
 
 
-  // LinkedIn OAuth Strategy - TEMPORARILY DISABLED
-  // LinkedIn API has deprecated older endpoints, causing authentication issues
-  // TODO: Implement LinkedIn OAuth using their newer API or OpenID Connect
-  console.log('🔗 LinkedIn OAuth temporarily disabled due to API changes');
+  // LinkedIn OAuth Strategy
+  if (process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET) {
+    console.log('🔗 Configuring LinkedIn OAuth with callback:', `${baseUrl}/api/auth/linkedin/callback`);
+    passport.use(new LinkedInStrategy({
+      clientID: process.env.LINKEDIN_CLIENT_ID,
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+      callbackURL: `${baseUrl}/api/auth/linkedin/callback`,
+      scope: ['r_emailaddress', 'r_liteprofile']
+    }, async (accessToken: string, refreshToken: string, profile: LinkedInProfile, done: VerifyCallback) => {
+      try {
+        console.log('🔍 LinkedIn OAuth profile received:', {
+          id: profile.id,
+          email: profile.emails?.[0]?.value,
+          displayName: profile.displayName
+        });
+        const user = await upsertUser(profile, 'linkedin');
+        console.log('✅ LinkedIn user created/updated:', user.id);
+        return done(null, { ...user, provider: 'linkedin' });
+      } catch (error) {
+        console.error('❌ LinkedIn OAuth error:', error);
+        return done(error, null);
+      }
+    }));
+    console.log('✅ LinkedIn OAuth strategy configured');
+  } else {
+    console.log('⚠️ LinkedIn OAuth not configured - missing LINKEDIN_CLIENT_ID or LINKEDIN_CLIENT_SECRET');
+  }
 
   passport.serializeUser((user: any, done) => {
     done(null, user);
@@ -176,13 +199,22 @@ export async function setupMultiAuth(app: Express) {
 
 
 
-  // LinkedIn - TEMPORARILY DISABLED
-  app.get('/api/auth/linkedin', (req, res) => {
-    res.redirect('/login-failed?provider=linkedin&message=LinkedIn authentication is temporarily disabled due to API changes');
-  });
-  app.get('/api/auth/linkedin/callback', (req, res) => {
-    res.redirect('/login-failed?provider=linkedin&message=LinkedIn authentication is temporarily disabled due to API changes');
-  });
+  // LinkedIn
+  app.get('/api/auth/linkedin',
+    passport.authenticate('linkedin', { 
+      scope: ['r_emailaddress', 'r_liteprofile'],
+      session: true
+    })
+  );
+  app.get('/api/auth/linkedin/callback',
+    passport.authenticate('linkedin', {
+      failureRedirect: '/login-failed?provider=linkedin'
+    }),
+    (req, res) => {
+      console.log('✅ LinkedIn OAuth callback successful, user authenticated:', req.user);
+      res.redirect('/');
+    }
+  );
 
   // Development login for testing
   app.get('/api/auth/dev', async (req, res) => {

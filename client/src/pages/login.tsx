@@ -66,13 +66,18 @@ export default function Login() {
               <span>{loading === 'github' ? 'Connecting...' : 'Continue with GitHub'}</span>
             </Button>
 
-            {/* LinkedIn Login - Temporarily Disabled */}
+            {/* LinkedIn Login */}
             <Button
-              disabled={true}
-              className="w-full h-12 bg-gray-400 text-gray-600 flex items-center justify-center space-x-3 opacity-50 cursor-not-allowed"
+              onClick={() => handleLogin('linkedin')}
+              disabled={loading !== null}
+              className="w-full h-12 bg-blue-700 hover:bg-blue-800 text-white flex items-center justify-center space-x-3 disabled:opacity-50"
             >
-              <FaLinkedin className="h-5 w-5" />
-              <span>LinkedIn (Coming Soon)</span>
+              {loading === 'linkedin' ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <FaLinkedin className="h-5 w-5" />
+              )}
+              <span>{loading === 'linkedin' ? 'Connecting...' : 'Continue with LinkedIn'}</span>
             </Button>
 
             {/* Development Login */}
