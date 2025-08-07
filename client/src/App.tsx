@@ -73,6 +73,7 @@ import ProfileSetup from "@/pages/profile-setup";
 import ModelProfile from "@/pages/model-profile";
 import TradingBots from "@/pages/trading-bots";
 import Web3DeFi from "@/pages/web3-defi";
+import Onboarding from "@/pages/onboarding";
 import BlockchainContracts from "@/pages/blockchain-contracts";
 import MarketSentiment from "@/pages/market-sentiment";
 import AIModels from "@/pages/ai-models";
@@ -195,6 +196,7 @@ function Router() {
       <Route path="/bug-bounty-program" component={BugBountyProgram} />
       <Route path="/enterprise-sales" component={EnterpriseSales} />
       <Route path="/profile-setup" component={ProfileSetup} />
+      <Route path="/onboarding" component={Onboarding} />
       
       {/* Protected routes */}
       {isAuthenticated ? (
