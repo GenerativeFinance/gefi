@@ -79,23 +79,24 @@ export default function CustomReports() {
   const [schedule, setSchedule] = useState("");
 
   // Fetch existing reports
-  const { data: reports = [], isLoading } = useQuery<CustomReport[]>({
-    queryKey: ["/api/custom-reports"],
+  const { data: reportsResponse = {}, isLoading } = useQuery({
+    queryKey: ["/api/reports"],
     retry: false,
   });
+
+  const reports = reportsResponse.data || [];
 
   // Create report mutation
   const createReportMutation = useMutation({
     mutationFn: async (reportData: any) => {
-      const response = await apiRequest("POST", "/api/custom-reports", reportData);
-      return response.json();
+      return apiRequest("POST", "/api/reports/test-generate", reportData);
     },
     onSuccess: () => {
       toast({
         title: "Report Created",
         description: "Your custom report has been created successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/custom-reports"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
       resetForm();
     },
     onError: (error: Error) => {
@@ -159,15 +160,14 @@ export default function CustomReports() {
 
     const reportData = {
       name: reportName,
-      description: reportDescription,
-      reportType,
-      dateRange,
-      metrics: selectedMetrics,
+      type: reportType,
       visualizations: selectedVisualizations,
-      isPublic,
-      schedule: schedule || null,
-      filters: {},
-      status: 'active'
+      layout: "portrait",
+      period: dateRange,
+      includeCharts: selectedVisualizations.includes("bar_chart") || selectedVisualizations.includes("line_chart"),
+      includeTables: selectedVisualizations.includes("data_table"),
+      includeRecommendations: true,
+      customSections: reportDescription
     };
 
     createReportMutation.mutate(reportData);

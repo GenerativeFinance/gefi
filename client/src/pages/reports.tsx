@@ -27,15 +27,18 @@ export default function Reports() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: reports, isLoading: reportsLoading } = useQuery({
+  const { data: reportsResponse = {}, isLoading: reportsLoading } = useQuery({
     queryKey: ["/api/reports"],
     retry: false,
   });
 
-  const { data: marketInsights, isLoading: insightsLoading } = useQuery({
+  const { data: marketInsightsResponse = {}, isLoading: insightsLoading } = useQuery({
     queryKey: ["/api/market-insights"],
     retry: false,
   });
+
+  const reports = reportsResponse.data || [];
+  const marketInsights = marketInsightsResponse.data || [];
 
   if (reportsLoading || insightsLoading) {
     return (

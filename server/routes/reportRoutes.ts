@@ -216,6 +216,61 @@ router.get("/reports/:reportId", isAuthenticated, (req, res) => {
   }
 });
 
+// Test endpoint without auth for debugging
+router.post("/reports/test-generate", (req, res) => {
+  try {
+    const {
+      name,
+      type,
+      visualizations = [],
+      layout = "portrait",
+      period = "monthly",
+      includeCharts = true,
+      includeTables = true,
+      includeRecommendations = true,
+      customSections = ""
+    } = req.body;
+
+    if (!name || !type) {
+      return res.status(400).json({
+        success: false,
+        error: "Report name and type are required"
+      });
+    }
+
+    const newReport = {
+      id: `report-test-${Date.now()}`,
+      name,
+      type,
+      status: "ready",
+      createdAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
+      downloadCount: 0,
+      visualizations,
+      layout,
+      period,
+      content: {
+        includeCharts,
+        includeTables,
+        includeRecommendations,
+        customSections
+      }
+    };
+
+    res.json({
+      success: true,
+      data: newReport,
+      message: "Test report generated successfully"
+    });
+  } catch (error) {
+    console.error("Error generating test report:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate test report"
+    });
+  }
+});
+
 // Generate new report
 router.post("/reports/generate", isAuthenticated, (req, res) => {
   try {
