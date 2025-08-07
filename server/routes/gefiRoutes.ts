@@ -20,6 +20,39 @@ export function registerGeFiRoutes(app: Express) {
   app.use('/api', reportRoutes);
 
   // ===========================================
+  // User Onboarding APIs
+  // ===========================================
+
+  // Complete user onboarding
+  app.post('/api/complete-onboarding', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { role, answers } = req.body;
+      
+      if (!role || !answers) {
+        return res.status(400).json({ message: "Role and answers are required" });
+      }
+
+      // Update user profile with onboarding data
+      await storage.updateUserOnboarding(userId, {
+        role,
+        onboardingAnswers: answers,
+        onboardingCompleted: true,
+        onboardingCompletedAt: new Date()
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Onboarding completed successfully",
+        role: role
+      });
+    } catch (error) {
+      console.error("Error completing onboarding:", error);
+      res.status(500).json({ message: "Failed to complete onboarding" });
+    }
+  });
+
+  // ===========================================
   // Wallet Management APIs
   // ===========================================
 
