@@ -31,6 +31,7 @@ import {
   Clock,
   ArrowRight
 } from "lucide-react";
+import { Link } from "wouter";
 
 export default function InvestorReports() {
   const [selectedReport, setSelectedReport] = useState("");
@@ -135,6 +136,25 @@ export default function InvestorReports() {
   };
 
   const handleGenerateReport = async () => {
+    // Validate required fields
+    if (!reportSettings.name.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Report name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!reportSettings.type) {
+      toast({
+        title: "Validation Error", 
+        description: "Report type is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       // Create a new custom report object
       const reportData: ReportData = {
@@ -219,11 +239,17 @@ export default function InvestorReports() {
                 <ArrowRight className="h-4 w-4 ml-2" />
               </a>
             </Button>
+            <Link href="/investor/create-custom-report">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Generate New Report
+              </Button>
+            </Link>
             <Dialog open={isGenerateOpen} onOpenChange={setIsGenerateOpen}>
               <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Generate New Report
+                <Button variant="outline">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Quick Generate
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -253,6 +279,7 @@ export default function InvestorReports() {
                           <SelectItem value="compliance">Compliance Review</SelectItem>
                           <SelectItem value="portfolio">Portfolio Optimization</SelectItem>
                           <SelectItem value="market">Market Analysis</SelectItem>
+                          <SelectItem value="ai-insights">AI Insights Report</SelectItem>
                           <SelectItem value="custom">Custom Report</SelectItem>
                         </SelectContent>
                       </Select>
@@ -369,7 +396,10 @@ export default function InvestorReports() {
                     <Button variant="outline" onClick={() => setIsGenerateOpen(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={handleGenerateReport}>
+                    <Button 
+                      onClick={handleGenerateReport}
+                      disabled={!reportSettings.name.trim() || !reportSettings.type}
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Generate Report
                     </Button>
