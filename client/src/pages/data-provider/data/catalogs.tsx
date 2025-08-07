@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/layout/Layout";
 import {
   Database,
@@ -29,6 +33,17 @@ export default function DataProviderDataCatalogs() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isAddDatasetOpen, setIsAddDatasetOpen] = useState(false);
+  const [newDataset, setNewDataset] = useState({
+    name: "",
+    description: "",
+    category: "",
+    dataFormat: "",
+    updateFrequency: "",
+    price: "",
+    tags: ""
+  });
+  const { toast } = useToast();
 
   // Sample dataset catalog data
   const datasets = [
@@ -121,10 +136,132 @@ export default function DataProviderDataCatalogs() {
             <h1 className="text-3xl font-bold">Dataset Catalogs</h1>
             <p className="text-muted-foreground">Manage your dataset catalog and marketplace listings</p>
           </div>
-          <Button className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add New Dataset
-          </Button>
+          <Dialog open={isAddDatasetOpen} onOpenChange={setIsAddDatasetOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add New Dataset
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Add New Dataset</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Dataset Name</Label>
+                    <Input
+                      id="name"
+                      value={newDataset.name}
+                      onChange={(e) => setNewDataset({...newDataset, name: e.target.value})}
+                      placeholder="Enter dataset name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={newDataset.category} onValueChange={(value) => setNewDataset({...newDataset, category: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Market Data">Market Data</SelectItem>
+                        <SelectItem value="Crypto">Crypto</SelectItem>
+                        <SelectItem value="Economics">Economics</SelectItem>
+                        <SelectItem value="Alternative Finance">Alternative Finance</SelectItem>
+                        <SelectItem value="ESG">ESG</SelectItem>
+                        <SelectItem value="Risk Analytics">Risk Analytics</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={newDataset.description}
+                    onChange={(e) => setNewDataset({...newDataset, description: e.target.value})}
+                    placeholder="Describe your dataset"
+                    className="min-h-20"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="dataFormat">Data Format</Label>
+                    <Select value={newDataset.dataFormat} onValueChange={(value) => setNewDataset({...newDataset, dataFormat: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CSV">CSV</SelectItem>
+                        <SelectItem value="JSON">JSON</SelectItem>
+                        <SelectItem value="Parquet">Parquet</SelectItem>
+                        <SelectItem value="API">REST API</SelectItem>
+                        <SelectItem value="GraphQL">GraphQL</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="updateFrequency">Update Frequency</Label>
+                    <Select value={newDataset.updateFrequency} onValueChange={(value) => setNewDataset({...newDataset, updateFrequency: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Frequency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Real-time">Real-time</SelectItem>
+                        <SelectItem value="Hourly">Hourly</SelectItem>
+                        <SelectItem value="Daily">Daily</SelectItem>
+                        <SelectItem value="Weekly">Weekly</SelectItem>
+                        <SelectItem value="Monthly">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Price</Label>
+                    <Input
+                      id="price"
+                      value={newDataset.price}
+                      onChange={(e) => setNewDataset({...newDataset, price: e.target.value})}
+                      placeholder="$99/month"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Tags (comma-separated)</Label>
+                  <Input
+                    id="tags"
+                    value={newDataset.tags}
+                    onChange={(e) => setNewDataset({...newDataset, tags: e.target.value})}
+                    placeholder="trading, stocks, real-time"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button variant="outline" onClick={() => setIsAddDatasetOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={() => {
+                    toast({
+                      title: "Dataset Created",
+                      description: `${newDataset.name} has been successfully added to your catalog.`,
+                    });
+                    setIsAddDatasetOpen(false);
+                    setNewDataset({
+                      name: "",
+                      description: "",
+                      category: "",
+                      dataFormat: "",
+                      updateFrequency: "",
+                      price: "",
+                      tags: ""
+                    });
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Dataset
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Stats Cards */}

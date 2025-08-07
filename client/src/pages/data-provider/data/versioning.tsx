@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/layout/Layout";
 import {
   GitBranch,
@@ -32,6 +33,14 @@ import {
 export default function DataProviderDataVersioning() {
   const [selectedDataset, setSelectedDataset] = useState("dataset-1");
   const [isCreateVersionOpen, setIsCreateVersionOpen] = useState(false);
+  const [newVersion, setNewVersion] = useState({
+    version: "",
+    type: "minor",
+    description: "",
+    changes: [""],
+    baseVersion: "v2.1.0"
+  });
+  const { toast } = useToast();
 
   // Sample version history data
   const versionHistory = [
@@ -150,19 +159,24 @@ export default function DataProviderDataVersioning() {
                 Create New Version
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Version</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-6 py-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>Version Number</Label>
-                    <Input placeholder="v2.2.0" />
+                    <Label htmlFor="version">Version Number</Label>
+                    <Input 
+                      id="version"
+                      value={newVersion.version}
+                      onChange={(e) => setNewVersion({...newVersion, version: e.target.value})}
+                      placeholder="v2.2.0" 
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label>Version Type</Label>
-                    <Select>
+                    <Label htmlFor="type">Version Type</Label>
+                    <Select value={newVersion.type} onValueChange={(value) => setNewVersion({...newVersion, type: value})}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
@@ -173,29 +187,107 @@ export default function DataProviderDataVersioning() {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="base">Base Version</Label>
+                    <Select value={newVersion.baseVersion} onValueChange={(value) => setNewVersion({...newVersion, baseVersion: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="v2.1.0">v2.1.0 (Current)</SelectItem>
+                        <SelectItem value="v2.0.1">v2.0.1</SelectItem>
+                        <SelectItem value="v2.0.0">v2.0.0</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>Release Description</Label>
+                  <Label htmlFor="description">Release Description</Label>
                   <Textarea 
+                    id="description"
+                    value={newVersion.description}
+                    onChange={(e) => setNewVersion({...newVersion, description: e.target.value})}
                     placeholder="Brief description of changes in this version..."
                     rows={3}
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label>Changelog</Label>
-                  <Textarea 
-                    placeholder="• Added new feature X&#10;• Fixed bug Y&#10;• Improved performance Z"
-                    rows={5}
-                  />
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-base font-semibold">Change Log</Label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setNewVersion({
+                        ...newVersion,
+                        changes: [...newVersion.changes, ""]
+                      })}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Change
+                    </Button>
+                  </div>
+                  
+                  {newVersion.changes.map((change, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        value={change}
+                        onChange={(e) => {
+                          const updatedChanges = [...newVersion.changes];
+                          updatedChanges[index] = e.target.value;
+                          setNewVersion({...newVersion, changes: updatedChanges});
+                        }}
+                        placeholder="Describe what changed..."
+                        className="flex-1"
+                      />
+                      {newVersion.changes.length > 1 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const updatedChanges = newVersion.changes.filter((_, i) => i !== index);
+                            setNewVersion({...newVersion, changes: updatedChanges});
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
                 </div>
                 
-                <div className="flex justify-end gap-2">
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Info className="h-4 w-4" />
+                    Version Guidelines
+                  </h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• <strong>Major:</strong> Breaking changes, new data schema, significant feature additions</li>
+                    <li>• <strong>Minor:</strong> New features, data source additions, backward-compatible changes</li>
+                    <li>• <strong>Patch:</strong> Bug fixes, data corrections, small improvements</li>
+                  </ul>
+                </div>
+                
+                <div className="flex justify-end gap-2 pt-4">
                   <Button variant="outline" onClick={() => setIsCreateVersionOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={() => setIsCreateVersionOpen(false)}>
+                  <Button onClick={() => {
+                    toast({
+                      title: "Version Created",
+                      description: `${newVersion.version} has been successfully created and is now being processed.`,
+                    });
+                    setIsCreateVersionOpen(false);
+                    setNewVersion({
+                      version: "",
+                      type: "minor",
+                      description: "",
+                      changes: [""],
+                      baseVersion: "v2.1.0"
+                    });
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
                     Create Version
                   </Button>
                 </div>

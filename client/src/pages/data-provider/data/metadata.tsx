@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/layout/Layout";
 import {
   FileText,
@@ -26,12 +28,20 @@ import {
   Info,
   Globe,
   Lock,
-  Shield
+  Shield,
+  Trash2
 } from "lucide-react";
 
 export default function DataProviderMetadataManagement() {
   const [selectedDataset, setSelectedDataset] = useState("dataset-1");
   const [isEditing, setIsEditing] = useState(false);
+  const [isNewSchemaOpen, setIsNewSchemaOpen] = useState(false);
+  const [newSchema, setNewSchema] = useState({
+    name: "",
+    description: "",
+    fields: [{ name: "", type: "", description: "", required: true }]
+  });
+  const { toast } = useToast();
 
   // Sample metadata for different datasets
   const metadataTemplates = {
@@ -88,10 +98,168 @@ export default function DataProviderMetadataManagement() {
               <Download className="h-4 w-4 mr-2" />
               Export Metadata
             </Button>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              New Schema
-            </Button>
+            <Dialog open={isNewSchemaOpen} onOpenChange={setIsNewSchemaOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Schema
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Create New Schema</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="schema-name">Schema Name</Label>
+                      <Input
+                        id="schema-name"
+                        value={newSchema.name}
+                        onChange={(e) => setNewSchema({...newSchema, name: e.target.value})}
+                        placeholder="Financial Market Data Schema"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="schema-description">Description</Label>
+                      <Input
+                        id="schema-description"
+                        value={newSchema.description}
+                        onChange={(e) => setNewSchema({...newSchema, description: e.target.value})}
+                        placeholder="Schema for stock market data"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-base font-semibold">Schema Fields</Label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setNewSchema({
+                          ...newSchema,
+                          fields: [...newSchema.fields, { name: "", type: "", description: "", required: true }]
+                        })}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Field
+                      </Button>
+                    </div>
+                    
+                    {newSchema.fields.map((field, index) => (
+                      <Card key={index} className="p-4">
+                        <div className="grid grid-cols-4 gap-4">
+                          <div className="space-y-2">
+                            <Label>Field Name</Label>
+                            <Input
+                              value={field.name}
+                              onChange={(e) => {
+                                const updatedFields = [...newSchema.fields];
+                                updatedFields[index].name = e.target.value;
+                                setNewSchema({...newSchema, fields: updatedFields});
+                              }}
+                              placeholder="symbol"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Data Type</Label>
+                            <Select
+                              value={field.type}
+                              onValueChange={(value) => {
+                                const updatedFields = [...newSchema.fields];
+                                updatedFields[index].type = value;
+                                setNewSchema({...newSchema, fields: updatedFields});
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="string">String</SelectItem>
+                                <SelectItem value="number">Number</SelectItem>
+                                <SelectItem value="decimal">Decimal</SelectItem>
+                                <SelectItem value="date">Date</SelectItem>
+                                <SelectItem value="datetime">DateTime</SelectItem>
+                                <SelectItem value="boolean">Boolean</SelectItem>
+                                <SelectItem value="array">Array</SelectItem>
+                                <SelectItem value="object">Object</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Description</Label>
+                            <Input
+                              value={field.description}
+                              onChange={(e) => {
+                                const updatedFields = [...newSchema.fields];
+                                updatedFields[index].description = e.target.value;
+                                setNewSchema({...newSchema, fields: updatedFields});
+                              }}
+                              placeholder="Stock ticker symbol"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Required</Label>
+                            <div className="flex items-center justify-between">
+                              <Select
+                                value={field.required ? "true" : "false"}
+                                onValueChange={(value) => {
+                                  const updatedFields = [...newSchema.fields];
+                                  updatedFields[index].required = value === "true";
+                                  setNewSchema({...newSchema, fields: updatedFields});
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="true">Yes</SelectItem>
+                                  <SelectItem value="false">No</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {newSchema.fields.length > 1 && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const updatedFields = newSchema.fields.filter((_, i) => i !== index);
+                                    setNewSchema({...newSchema, fields: updatedFields});
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button variant="outline" onClick={() => setIsNewSchemaOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={() => {
+                      toast({
+                        title: "Schema Created",
+                        description: `${newSchema.name} schema has been successfully created.`,
+                      });
+                      setIsNewSchemaOpen(false);
+                      setNewSchema({
+                        name: "",
+                        description: "",
+                        fields: [{ name: "", type: "", description: "", required: true }]
+                      });
+                    }}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Schema
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
