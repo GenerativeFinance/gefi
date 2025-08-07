@@ -116,6 +116,8 @@ import DataProviderPortfolio from "@/pages/data-provider/portfolio";
 import DataProviderAIMarketplace from "@/pages/data-provider/ai-marketplace";
 import DataProviderCollaboration from "@/pages/data-provider/collaboration";
 import DataProviderLearning from "@/pages/data-provider-learning";
+import DataProviderLearningPage from "@/pages/data-provider/learning";
+import DeveloperLearningPage from "@/pages/developer/learning";
 import DataProviderEnhanced from "@/pages/data-provider-enhanced";
 import InvestorCollaboration from "@/pages/collaboration";
 import CollaborationProjects from "@/pages/collaboration/projects";
@@ -281,7 +283,7 @@ function Router() {
             <Route path="/data-provider/portfolio" component={DataProviderPortfolioOverview} />
             <Route path="/data-provider/ai-marketplace" component={DataProviderAIMarketplace} />
             <Route path="/data-provider/collaboration" component={DataProviderCollaboration} />
-            <Route path="/data-provider/learning" component={DataProviderLearning} />
+            <Route path="/data-provider/learning" component={DataProviderLearningPage} />
             <Route path="/data-provider/portfolio/usage" component={DataProviderUsageStatistics} />
             <Route path="/data-provider/portfolio/quality" component={DataProviderQualityMetrics} />
             <Route path="/data-provider/portfolio/revenue" component={DataProviderRevenueTracking} />
@@ -292,6 +294,7 @@ function Router() {
             <Route path="/data-provider/data/metadata" component={DataProviderDataMetadata} />
             <Route path="/data-provider/data/versioning" component={DataProviderDataVersioning} />
             <Route path="/data-provider/enhanced" component={DataProviderEnhanced} />
+            <Route path="/developer/learning" component={DeveloperLearningPage} />
             <Route path="/developer/portfolio" component={DeveloperPortfolioOverview} />
             <Route path="/developer/portfolio/ai-models" component={DeveloperPortfolioAIModels} />
             <Route path="/developer/portfolio/performance" component={DeveloperPortfolioPerformance} />
