@@ -37,8 +37,8 @@ export default function Reports() {
     retry: false,
   });
 
-  const reports = reportsResponse.data || [];
-  const marketInsights = marketInsightsResponse.data || [];
+  const reports = Array.isArray(reportsResponse.data) ? reportsResponse.data : [];
+  const marketInsights = Array.isArray(marketInsightsResponse.data) ? marketInsightsResponse.data : [];
 
   if (reportsLoading || insightsLoading) {
     return (
