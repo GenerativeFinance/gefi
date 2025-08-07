@@ -113,7 +113,7 @@ import DataProviderDatasets from "@/pages/data-provider/datasets";
 import DataProviderMarketInsights from "@/pages/data-provider/market-insights";
 import DataProviderPortfolio from "@/pages/data-provider/portfolio";
 import DataProviderAIMarketplace from "@/pages/data-provider/ai-marketplace";
-import DataProviderCollaboration from "@/pages/data-provider-collaboration";
+import DataProviderCollaboration from "@/pages/data-provider/collaboration";
 import DataProviderLearning from "@/pages/data-provider-learning";
 import DataProviderEnhanced from "@/pages/data-provider-enhanced";
 import InvestorCollaboration from "@/pages/collaboration";
