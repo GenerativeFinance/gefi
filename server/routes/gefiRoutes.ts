@@ -9,11 +9,15 @@ import { tradingService } from "../tradingService";
 import { RecommendationEngine } from "../recommendationEngine";
 import { insertUserPreferencesSchema, insertUserModelInteractionSchema } from "@shared/schema";
 import { aiModelsData } from "../data/ai-models.js";
+import reportRoutes from "./reportRoutes";
 
 export function registerGeFiRoutes(app: Express) {
   // ===========================================
   // GeFi Core Financial Platform APIs
   // ===========================================
+  
+  // Register report routes
+  app.use('/api', reportRoutes);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {

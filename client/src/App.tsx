@@ -73,6 +73,7 @@ import Web3DeFi from "@/pages/web3-defi";
 import BlockchainContracts from "@/pages/blockchain-contracts";
 import MarketSentiment from "@/pages/market-sentiment";
 import AIModels from "@/pages/ai-models";
+import InvestorReports from "@/pages/investor/reports";
 import Community from "@/pages/community";
 import Docs from "@/pages/docs";
 import Webinars from "@/pages/webinars";
@@ -293,6 +294,7 @@ function Router() {
             <Route path="/data-provider/data/catalogs" component={DataProviderDataCatalogs} />
             <Route path="/data-provider/data/metadata" component={DataProviderDataMetadata} />
             <Route path="/data-provider/data/versioning" component={DataProviderDataVersioning} />
+            <Route path="/investor/reports" component={InvestorReports} />
             <Route path="/data-provider/enhanced" component={DataProviderEnhanced} />
             <Route path="/developer/learning" component={DeveloperLearningPage} />
             <Route path="/developer/portfolio" component={DeveloperPortfolioOverview} />
