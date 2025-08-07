@@ -173,8 +173,9 @@ import SupportDashboard from "@/pages/support-dashboard";
 
 
 function Router() {
-  const { isAuthenticated, isLoading, user, hasCompletedProfile } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
+  // Show loading only for initial auth check
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
