@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Users, 
   MessageSquare, 
@@ -39,7 +40,63 @@ import Layout from "@/components/layout/Layout";
 export default function InvestorCollaboration() {
   const [activeTab, setActiveTab] = useState("groups");
   const [newGroupOpen, setNewGroupOpen] = useState(false);
+  const [findPartnersOpen, setFindPartnersOpen] = useState(false);
+  const [messageTeamOpen, setMessageTeamOpen] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [partnerFilters, setPartnerFilters] = useState({
+    location: "",
+    experience: "",
+    investment_range: "",
+    expertise: ""
+  });
+  const { toast } = useToast();
+
+  // Sample partner data for Find Partners feature
+  const potentialPartners = [
+    {
+      id: 1,
+      name: "Alex Thompson",
+      title: "Senior Portfolio Manager",
+      location: "New York, NY",
+      experience: "8 years",
+      investment_range: "$100K - $1M",
+      expertise: ["AI Trading", "Risk Management", "Quantitative Analysis"],
+      rating: 4.8,
+      connections: 156,
+      active_projects: 3,
+      portfolio_return: "24.5%",
+      verified: true
+    },
+    {
+      id: 2,
+      name: "Maria Garcia",
+      title: "Fintech Investment Analyst",
+      location: "San Francisco, CA",
+      experience: "6 years",
+      investment_range: "$50K - $500K",
+      expertise: ["ESG Investing", "Blockchain", "Machine Learning"],
+      rating: 4.9,
+      connections: 203,
+      active_projects: 2,
+      portfolio_return: "19.2%",
+      verified: true
+    },
+    {
+      id: 3,
+      name: "James Wilson",
+      title: "Algorithmic Trading Specialist",
+      location: "London, UK",
+      experience: "12 years",
+      investment_range: "$250K - $2M",
+      expertise: ["High-Frequency Trading", "Market Making", "Derivatives"],
+      rating: 4.7,
+      connections: 98,
+      active_projects: 5,
+      portfolio_return: "31.8%",
+      verified: true
+    }
+  ];
 
   // Sample collaboration data for investors
   const investmentGroups = [
@@ -182,6 +239,29 @@ export default function InvestorCollaboration() {
     }
   };
 
+  const handleSendMessage = (groupId: number) => {
+    toast({
+      title: "Message Sent",
+      description: "Your message has been sent to the team successfully.",
+    });
+    setMessageTeamOpen(false);
+  };
+
+  const handleConnectPartner = (partnerId: number) => {
+    toast({
+      title: "Connection Request Sent",
+      description: "Your connection request has been sent successfully.",
+    });
+  };
+
+  const filteredPartners = potentialPartners.filter(partner => {
+    const matchesSearch = partner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         partner.expertise.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesLocation = !partnerFilters.location || partner.location.includes(partnerFilters.location);
+    const matchesExperience = !partnerFilters.experience || partner.experience.includes(partnerFilters.experience);
+    return matchesSearch && matchesLocation && matchesExperience;
+  });
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -258,10 +338,148 @@ export default function InvestorCollaboration() {
                 </div>
               </DialogContent>
             </Dialog>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              Find Partners
-            </Button>
+            <Dialog open={findPartnersOpen} onOpenChange={setFindPartnersOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Search className="h-4 w-4" />
+                  Find Partners
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Find Investment Partners</DialogTitle>
+                  <DialogDescription>
+                    Search and connect with potential investment partners based on your criteria.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-6">
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Search by name, expertise, or skills..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Select value={partnerFilters.location} onValueChange={(value) => setPartnerFilters({...partnerFilters, location: value})}>
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Location" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Locations</SelectItem>
+                          <SelectItem value="New York">New York</SelectItem>
+                          <SelectItem value="San Francisco">San Francisco</SelectItem>
+                          <SelectItem value="London">London</SelectItem>
+                          <SelectItem value="Singapore">Singapore</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={partnerFilters.experience} onValueChange={(value) => setPartnerFilters({...partnerFilters, experience: value})}>
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Experience" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Experience</SelectItem>
+                          <SelectItem value="1-3">1-3 years</SelectItem>
+                          <SelectItem value="4-7">4-7 years</SelectItem>
+                          <SelectItem value="8+">8+ years</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {filteredPartners.map((partner) => (
+                      <Card key={partner.id} className="hover:shadow-lg transition-shadow">
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-12 w-12">
+                                <AvatarFallback>
+                                  {partner.name.split(' ').map(n => n[0]).join('')}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                  {partner.name}
+                                  {partner.verified && (
+                                    <Badge variant="secondary" className="text-xs">Verified</Badge>
+                                  )}
+                                </CardTitle>
+                                <CardDescription>{partner.title}</CardDescription>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center gap-1">
+                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                <span className="font-medium">{partner.rating}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Location:</span>
+                                <p className="font-medium">{partner.location}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Experience:</span>
+                                <p className="font-medium">{partner.experience}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Investment Range:</span>
+                                <p className="font-medium">{partner.investment_range}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Portfolio Return:</span>
+                                <p className="font-medium text-green-600">{partner.portfolio_return}</p>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <span className="text-sm text-muted-foreground">Expertise:</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {partner.expertise.map((skill) => (
+                                  <Badge key={skill} variant="outline" className="text-xs">
+                                    {skill}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            <div className="flex justify-between items-center pt-2">
+                              <div className="text-xs text-muted-foreground">
+                                {partner.connections} connections • {partner.active_projects} active projects
+                              </div>
+                              <div className="flex gap-2">
+                                <Button variant="outline" size="sm">
+                                  <MessageSquare className="h-4 w-4 mr-1" />
+                                  Message
+                                </Button>
+                                <Button size="sm" onClick={() => handleConnectPartner(partner.id)}>
+                                  <UserPlus className="h-4 w-4 mr-1" />
+                                  Connect
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  {filteredPartners.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">No partners found matching your criteria.</p>
+                      <p className="text-sm text-muted-foreground mt-1">Try adjusting your search filters.</p>
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -343,13 +561,20 @@ export default function InvestorCollaboration() {
                           <span className="ml-1 font-medium">{group.leader}</span>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedGroup(group);
+                              setMessageTeamOpen(true);
+                            }}
+                          >
                             <MessageSquare className="h-4 w-4 mr-1" />
-                            Discussion
+                            Message Team
                           </Button>
                           <Button variant="outline" size="sm">
                             <FileText className="h-4 w-4 mr-1" />
-                            Details
+                            View Details
                           </Button>
                         </div>
                       </div>
@@ -549,6 +774,59 @@ export default function InvestorCollaboration() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Message Team Dialog */}
+        <Dialog open={messageTeamOpen} onOpenChange={setMessageTeamOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Message Team</DialogTitle>
+              <DialogDescription>
+                {selectedGroup ? `Send a message to ${selectedGroup.name} team members` : "Send a message to team members"}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="message-subject">Subject</Label>
+                <Input id="message-subject" placeholder="Enter message subject" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="message-content">Message</Label>
+                <Textarea 
+                  id="message-content" 
+                  placeholder="Type your message here..." 
+                  rows={6}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Recipients</Label>
+                <div className="border rounded-lg p-3 bg-muted/50">
+                  <div className="text-sm text-muted-foreground mb-2">Team Members:</div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedGroup && (
+                      <>
+                        <Badge variant="outline">{selectedGroup.leader} (Lead)</Badge>
+                        <Badge variant="outline">All Members ({selectedGroup.members})</Badge>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="urgent" className="rounded" />
+                <Label htmlFor="urgent" className="text-sm">Mark as urgent</Label>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <Button variant="outline" onClick={() => setMessageTeamOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => handleSendMessage(selectedGroup?.id)}>
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Send Message
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
