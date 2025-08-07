@@ -39,6 +39,61 @@
   --info: hsl(214, 100%, 61%);
 }
 
+/* Mobile Navigation Styles */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Enhanced mobile tab styles */
+@media (max-width: 768px) {
+  .mobile-tab-active {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mobile-tab-inactive {
+    background: transparent;
+    color: var(--muted-foreground);
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-tab-inactive:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .mobile-nav-container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+  }
+  
+  .dark .mobile-nav-container {
+    background: rgba(0, 0, 0, 0.95);
+  }
+  
+  /* Ensure content doesn't get hidden behind fixed mobile nav */
+  .mobile-content-padding {
+    padding-bottom: 80px;
+  }
+}
+
+/* Touch-friendly mobile buttons */
+@media (max-width: 768px) and (pointer: coarse) {
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
 .dark {
   --background: hsl(222, 84%, 4.9%);
   --foreground: hsl(210, 40%, 98%);

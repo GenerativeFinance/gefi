@@ -1,4 +1,5 @@
 import Layout from "@/components/layout/Layout";
+import ContextualMobileNav from "@/components/layout/contextual-mobile-nav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -272,6 +273,9 @@ export default function WalletPage() {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Mobile Navigation for Wallet */}
+        <ContextualMobileNav context="portfolio" />
+        
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>

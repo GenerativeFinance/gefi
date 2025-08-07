@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import Layout from "@/components/layout/Layout";
+import ContextualMobileNav from "@/components/layout/contextual-mobile-nav";
 import { 
   Bot, 
   Star, 
@@ -97,6 +98,9 @@ export default function AIModels() {
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-6">
         <div className="max-w-7xl mx-auto space-y-8">
+          {/* Mobile Navigation for AI Models */}
+          <ContextualMobileNav context="models" />
+          
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>

@@ -12,17 +12,40 @@ import {
   Store, 
   DollarSign,
   LogOut,
-  User
+  User,
+  Bot,
+  Activity,
+  BarChart3,
+  Network,
+  Code,
+  Database,
+  Users,
+  Settings as SettingsIcon,
+  Wallet,
+  HelpCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navigationItems = [
   { path: "/", label: "Dashboard", icon: TrendingUp },
   { path: "/portfolio", label: "Portfolio", icon: PieChart },
-  { path: "/marketplace", label: "Marketplace", icon: Store, badge: "New" },
+  { path: "/ai-models", label: "AI Models", icon: Bot, badge: "New" },
+  { path: "/marketplace", label: "Marketplace", icon: Store },
+  { path: "/wallet", label: "Wallet", icon: Wallet },
+];
+
+const moreNavigationItems = [
   { path: "/reports", label: "Reports", icon: FileText },
   { path: "/risk-management", label: "Risk", icon: Shield },
+  { path: "/backtesting", label: "Backtesting", icon: BarChart3 },
+  { path: "/federated-learning", label: "FL Network", icon: Network },
+  { path: "/trading-bots", label: "Trading Bots", icon: Activity },
+  { path: "/developer", label: "Developer", icon: Code },
+  { path: "/data-provider", label: "Data Provider", icon: Database },
+  { path: "/collaboration", label: "Collaboration", icon: Users },
+  { path: "/settings", label: "Settings", icon: SettingsIcon },
   { path: "/pricing", label: "Pricing", icon: DollarSign },
+  { path: "/help", label: "Help & Support", icon: HelpCircle },
 ];
 
 export default function MobileNav() {
@@ -95,28 +118,54 @@ export default function MobileNav() {
               </div>
 
               <div className="space-y-2">
-                {navigationItems.map((item) => {
-                  const IconComponent = item.icon;
-                  const isActive = location === item.path;
-                  
-                  return (
-                    <Link key={item.path} href={item.path}>
-                      <Button
-                        variant={isActive ? "secondary" : "ghost"}
-                        className="w-full justify-start gap-3"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <IconComponent className="h-5 w-5" />
-                        <span>{item.label}</span>
-                        {item.badge && (
-                          <Badge className="ml-auto bg-primary text-primary-foreground">
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </Button>
-                    </Link>
-                  );
-                })}
+                {/* Primary Navigation Items */}
+                <div className="mb-4">
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2 px-2">Main</h3>
+                  {navigationItems.map((item) => {
+                    const IconComponent = item.icon;
+                    const isActive = location === item.path;
+                    
+                    return (
+                      <Link key={item.path} href={item.path}>
+                        <Button
+                          variant={isActive ? "secondary" : "ghost"}
+                          className="w-full justify-start gap-3"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <IconComponent className="h-5 w-5" />
+                          <span>{item.label}</span>
+                          {item.badge && (
+                            <Badge className="ml-auto bg-primary text-primary-foreground">
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </Button>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* More Navigation Items */}
+                <div className="mb-4">
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2 px-2">More Features</h3>
+                  {moreNavigationItems.map((item) => {
+                    const IconComponent = item.icon;
+                    const isActive = location === item.path;
+                    
+                    return (
+                      <Link key={item.path} href={item.path}>
+                        <Button
+                          variant={isActive ? "secondary" : "ghost"}
+                          className="w-full justify-start gap-3"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <IconComponent className="h-5 w-5" />
+                          <span>{item.label}</span>
+                        </Button>
+                      </Link>
+                    );
+                  })}
+                </div>
 
                 <div className="my-4 border-t border-border" />
 

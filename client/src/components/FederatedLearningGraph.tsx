@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ContextualMobileNav from "@/components/layout/contextual-mobile-nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -365,7 +366,11 @@ export default function FederatedLearningGraph() {
   }, []);
 
   return (
-    <Card>
+    <div className="space-y-4">
+      {/* Mobile Navigation for FL Network */}
+      <ContextualMobileNav context="network" />
+      
+      <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -574,5 +579,6 @@ export default function FederatedLearningGraph() {
         </Dialog>
       </CardContent>
     </Card>
+    </div>
   );
 }

@@ -63,6 +63,7 @@ import BotFunding from "@/pages/bot-funding";
 import UserAccess from "@/pages/user-access";
 import Billing from "@/pages/billing";
 import Storage from "@/pages/storage";
+import MobileDemo from "@/pages/mobile-demo";
 import ApiAccess from "@/pages/api-access";
 
 
@@ -222,6 +223,7 @@ function Router() {
             <Route path="/profile/:userType/:userId" component={UserProfile} />
             <Route path="/settings" component={Settings} />
             <Route path="/wallet" component={Wallet} />
+            <Route path="/mobile-demo" component={MobileDemo} />
             <Route path="/profile-setup" component={ProfileSetup} />
             <Route path="/user-access" component={UserAccess} />
             <Route path="/billing" component={Billing} />
