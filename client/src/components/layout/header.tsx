@@ -545,6 +545,12 @@ export default function Header() {
                         Settings
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/wallet" className="flex items-center">
+                        <Wallet className="mr-2 h-4 w-4" />
+                        Wallet
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {/* Dashboard Mode - Only for Admin and Moderator users */}
                     {((user as any)?.role === 'admin' || (user as any)?.role === 'moderator') && (

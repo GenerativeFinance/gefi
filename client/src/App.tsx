@@ -25,6 +25,7 @@ import PrivacyPolicy from "@/pages/privacy-policy";
 
 import UserProfile from "@/pages/user-profile";
 import Settings from "@/pages/settings";
+import Wallet from "@/pages/wallet";
 import DeveloperDashboard from "@/pages/developer-dashboard";
 import DeveloperMarketplace from "@/pages/developer-marketplace";
 import BacktestingEnvironment from "@/pages/backtesting";
@@ -216,6 +217,7 @@ function Router() {
             <Route path="/profile" component={MyProfile} />
             <Route path="/profile/:userType/:userId" component={UserProfile} />
             <Route path="/settings" component={Settings} />
+            <Route path="/wallet" component={Wallet} />
             <Route path="/profile-setup" component={ProfileSetup} />
             <Route path="/user-access" component={UserAccess} />
             <Route path="/billing" component={Billing} />
