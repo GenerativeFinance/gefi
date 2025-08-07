@@ -170,13 +170,17 @@ export async function setupMultiAuth(app: Express) {
   );
   app.get('/api/auth/google/callback', 
     passport.authenticate('google', { 
-      failureRedirect: '/login-failed?provider=google',
+      failureRedirect: '/login?error=google_auth_failed',
       session: true
     }),
     (req, res) => {
-      console.log('✅ Google OAuth callback successful, user authenticated:', req.user);
-      // Custom redirect logic to ensure single-window experience
-      res.redirect('/');
+      if (req.user) {
+        console.log('✅ Google OAuth callback successful, user authenticated:', req.user);
+        res.redirect('/');
+      } else {
+        console.log('❌ Google OAuth callback failed - no user in session');
+        res.redirect('/login?error=auth_failed');
+      }
     }
   );
 
@@ -189,11 +193,16 @@ export async function setupMultiAuth(app: Express) {
   );
   app.get('/api/auth/github/callback',
     passport.authenticate('github', {
-      failureRedirect: '/login-failed'
+      failureRedirect: '/login?error=github_auth_failed'
     }),
     (req, res) => {
-      // Custom redirect logic to ensure single-window experience
-      res.redirect('/');
+      if (req.user) {
+        console.log('✅ GitHub OAuth callback successful, user authenticated:', req.user);
+        res.redirect('/');
+      } else {
+        console.log('❌ GitHub OAuth callback failed - no user in session');
+        res.redirect('/login?error=auth_failed');
+      }
     }
   );
 
@@ -208,11 +217,16 @@ export async function setupMultiAuth(app: Express) {
   );
   app.get('/api/auth/linkedin/callback',
     passport.authenticate('linkedin', {
-      failureRedirect: '/login-failed?provider=linkedin'
+      failureRedirect: '/login?error=linkedin_auth_failed'
     }),
     (req, res) => {
-      console.log('✅ LinkedIn OAuth callback successful, user authenticated:', req.user);
-      res.redirect('/');
+      if (req.user) {
+        console.log('✅ LinkedIn OAuth callback successful, user authenticated:', req.user);
+        res.redirect('/');
+      } else {
+        console.log('❌ LinkedIn OAuth callback failed - no user in session');
+        res.redirect('/login?error=auth_failed');
+      }
     }
   );
 
