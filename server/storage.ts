@@ -306,7 +306,11 @@ export class DatabaseStorage implements IStorage {
         
         if (!user) {
           // If insert was skipped due to conflict, fetch the existing user
-          return await this.getUser(userData.id!) || await this.getUserByEmail(userData.email!);
+          const existingUser = userData.id ? await this.getUser(userData.id) : null;
+          if (existingUser) return existingUser;
+          const emailUser = userData.email ? await this.getUserByEmail(userData.email) : null;
+          if (emailUser) return emailUser;
+          throw new Error('Failed to create or retrieve user');
         }
         
         return user;
@@ -386,7 +390,7 @@ export class DatabaseStorage implements IStorage {
       }
     } catch (error) {
       console.error("Error creating/updating user profile:", error);
-      throw new Error(`Failed to create/update profile: ${error.message}`);
+      throw new Error(error instanceof Error ? error.message : 'Unknown profile error');
     }
   }
 
@@ -546,16 +550,16 @@ export class DatabaseStorage implements IStorage {
   // AI Models operations
   async getAllAiModels(): Promise<AiModel[]> {
     const models = await db
-      .select({
-        ...aiModels,
-        subcategory: aiModelSubcategories.name,
-      })
+      .select()
       .from(aiModels)
       .leftJoin(aiModelSubcategories, eq(aiModels.subcategoryId, aiModelSubcategories.id))
       .where(eq(aiModels.isActive, true))
       .orderBy(desc(aiModels.rating));
     
-    return models as AiModel[];
+    return models.map(row => ({
+      ...row.ai_models,
+      subcategory: row.ai_model_subcategories?.name || null
+    })) as AiModel[];
   }
 
   async getAiModel(id: number): Promise<AiModel | undefined> {
@@ -597,7 +601,7 @@ export class DatabaseStorage implements IStorage {
       .select({
         modelId: userModelSubscriptions.modelId,
         status: userModelSubscriptions.status,
-        subscriptionDate: userModelSubscriptions.subscriptionDate,
+        createdAt: userModelSubscriptions.createdAt,
         isActive: userModelSubscriptions.isActive,
       })
       .from(userModelSubscriptions)
@@ -1144,7 +1148,7 @@ export class DatabaseStorage implements IStorage {
     
     // Update the funding raised amount
     const request = await this.getBotFundingRequest(contribution.requestId);
-    if (request) {
+    if (request && request.fundingRaised) {
       const newRaised = parseFloat(request.fundingRaised) + parseFloat(contribution.amount);
       await db.update(botFundingRequests)
         .set({ 
@@ -1215,17 +1219,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDatasets(providerId?: number, category?: string): Promise<Dataset[]> {
-    let query = db.select().from(datasets);
-    
-    if (providerId) {
-      query = query.where(eq(datasets.providerId, providerId));
+    if (providerId && category) {
+      return await db.select().from(datasets)
+        .where(and(
+          eq(datasets.providerId, providerId),
+          eq(datasets.category, category)
+        ))
+        .orderBy(desc(datasets.createdAt));
+    } else if (providerId) {
+      return await db.select().from(datasets)
+        .where(eq(datasets.providerId, providerId))
+        .orderBy(desc(datasets.createdAt));
+    } else if (category) {
+      return await db.select().from(datasets)
+        .where(eq(datasets.category, category))
+        .orderBy(desc(datasets.createdAt));
+    } else {
+      return await db.select().from(datasets)
+        .orderBy(desc(datasets.createdAt));
     }
-    
-    if (category) {
-      query = query.where(eq(datasets.category, category));
-    }
-    
-    return await query.orderBy(desc(datasets.createdAt));
   }
 
   async getDatasetById(id: number): Promise<Dataset | undefined> {
@@ -1253,13 +1265,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDatasetUsage(datasetId: number, userId?: string): Promise<DatasetUsage[]> {
-    let query = db.select().from(datasetUsage).where(eq(datasetUsage.datasetId, datasetId));
-    
     if (userId) {
-      query = query.where(eq(datasetUsage.userId, userId));
+      return await db.select().from(datasetUsage)
+        .where(and(
+          eq(datasetUsage.datasetId, datasetId),
+          eq(datasetUsage.userId, userId)
+        ))
+        .orderBy(desc(datasetUsage.createdAt));
+    } else {
+      return await db.select().from(datasetUsage)
+        .where(eq(datasetUsage.datasetId, datasetId))
+        .orderBy(desc(datasetUsage.createdAt));
     }
-    
-    return await query.orderBy(desc(datasetUsage.timestamp));
   }
 
   // Dataset subscription operations
@@ -1308,17 +1325,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDataCollaborations(providerId?: number, developerId?: string): Promise<DataCollaboration[]> {
-    let query = db.select().from(dataCollaborations);
-    
-    if (providerId) {
-      query = query.where(eq(dataCollaborations.providerId, providerId));
+    if (providerId && developerId) {
+      return await db.select().from(dataCollaborations)
+        .where(and(
+          eq(dataCollaborations.providerId, providerId),
+          eq(dataCollaborations.modelDeveloperId, developerId)
+        ))
+        .orderBy(desc(dataCollaborations.createdAt));
+    } else if (providerId) {
+      return await db.select().from(dataCollaborations)
+        .where(eq(dataCollaborations.providerId, providerId))
+        .orderBy(desc(dataCollaborations.createdAt));
+    } else if (developerId) {
+      return await db.select().from(dataCollaborations)
+        .where(eq(dataCollaborations.modelDeveloperId, developerId))
+        .orderBy(desc(dataCollaborations.createdAt));
+    } else {
+      return await db.select().from(dataCollaborations)
+        .orderBy(desc(dataCollaborations.createdAt));
     }
-    
-    if (developerId) {
-      query = query.where(eq(dataCollaborations.modelDeveloperId, developerId));
-    }
-    
-    return await query.orderBy(desc(dataCollaborations.createdAt));
   }
 
   async updateDataCollaboration(id: number, updates: Partial<InsertDataCollaboration>): Promise<DataCollaboration> {

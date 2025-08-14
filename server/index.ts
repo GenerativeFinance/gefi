@@ -43,8 +43,19 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    // Log the error for debugging
+    console.error('Express error handler:', {
+      status,
+      message,
+      stack: err.stack
+    });
+
+    // Send error response to client
+    if (!res.headersSent) {
+      res.status(status).json({ message });
+    }
+    
+    // Don't re-throw the error - this causes infinite loops
   });
 
   // importantly only setup vite in development and after
