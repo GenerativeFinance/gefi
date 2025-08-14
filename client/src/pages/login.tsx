@@ -29,7 +29,7 @@ export default function Login() {
         </div>
 
         {/* Login Card */}
-        <Card className="border border-border/50 shadow-lg">
+        <Card className="border border-border shadow-lg bg-card">
           <CardHeader className="text-center">
             <CardTitle>Sign In</CardTitle>
             <CardDescription>
@@ -41,7 +41,7 @@ export default function Login() {
             <Button
               onClick={() => handleLogin('google')}
               disabled={loading !== null}
-              className="w-full h-12 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 flex items-center justify-center space-x-3 disabled:opacity-50"
+              className="w-full h-12 hover:bg-accent hover:text-accent-foreground border-border flex items-center justify-center space-x-3 disabled:opacity-50"
               variant="outline"
             >
               {loading === 'google' ? (
@@ -56,7 +56,8 @@ export default function Login() {
             <Button
               onClick={() => handleLogin('github')}
               disabled={loading !== null}
-              className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center space-x-3 disabled:opacity-50"
+              className="w-full h-12 hover:bg-accent hover:text-accent-foreground border-border flex items-center justify-center space-x-3 disabled:opacity-50"
+              variant="outline"
             >
               {loading === 'github' ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -70,12 +71,13 @@ export default function Login() {
             <Button
               onClick={() => handleLogin('linkedin')}
               disabled={loading !== null}
-              className="w-full h-12 bg-blue-700 hover:bg-blue-800 text-white flex items-center justify-center space-x-3 disabled:opacity-50"
+              className="w-full h-12 hover:bg-accent hover:text-accent-foreground border-border flex items-center justify-center space-x-3 disabled:opacity-50"
+              variant="outline"
             >
               {loading === 'linkedin' ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                <FaLinkedin className="h-5 w-5" />
+                <FaLinkedin className="h-5 w-5 text-blue-600" />
               )}
               <span>{loading === 'linkedin' ? 'Connecting...' : 'Continue with LinkedIn'}</span>
             </Button>

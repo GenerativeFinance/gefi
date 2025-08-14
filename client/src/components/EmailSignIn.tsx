@@ -77,18 +77,18 @@ export default function EmailSignIn({ onSwitchToSignup, onSwitchToOAuth }: Email
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+        <Card className="w-full max-w-md shadow-2xl border border-border bg-card">
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <Mail className="w-8 h-8 text-white" />
+            <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center">
+              <Mail className="w-8 h-8 text-primary-foreground" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold text-foreground">
               Welcome Back
             </CardTitle>
             <CardDescription className="text-lg">
@@ -101,10 +101,10 @@ export default function EmailSignIn({ onSwitchToSignup, onSwitchToOAuth }: Email
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center space-x-2"
+                className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center space-x-2"
               >
-                <AlertCircle className="w-5 h-5 text-red-500" />
-                <p className="text-sm text-red-700 dark:text-red-300">{errors.general}</p>
+                <AlertCircle className="w-5 h-5 text-destructive" />
+                <p className="text-sm text-destructive">{errors.general}</p>
               </motion.div>
             )}
 
@@ -112,33 +112,33 @@ export default function EmailSignIn({ onSwitchToSignup, onSwitchToOAuth }: Email
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`pl-10 ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
+                    className={`pl-10 ${errors.email ? 'border-destructive focus:border-destructive' : ''}`}
                     autoComplete="email"
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-sm text-red-500">{errors.email}</p>
+                  <p className="text-sm text-destructive">{errors.email}</p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`pl-10 pr-10 ${errors.password ? 'border-red-500 focus:border-red-500' : ''}`}
+                    className={`pl-10 pr-10 ${errors.password ? 'border-destructive focus:border-destructive' : ''}`}
                     autoComplete="current-password"
                   />
                   <Button
@@ -149,14 +149,14 @@ export default function EmailSignIn({ onSwitchToSignup, onSwitchToOAuth }: Email
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="w-4 h-4 text-gray-400" />
+                      <EyeOff className="w-4 h-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="w-4 h-4 text-gray-400" />
+                      <Eye className="w-4 h-4 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-red-500">{errors.password}</p>
+                  <p className="text-sm text-destructive">{errors.password}</p>
                 )}
               </div>
 
@@ -164,7 +164,7 @@ export default function EmailSignIn({ onSwitchToSignup, onSwitchToOAuth }: Email
                 <Button
                   type="button"
                   variant="link"
-                  className="px-0 text-sm text-blue-600 hover:text-blue-700"
+                  className="px-0 text-sm text-primary hover:text-primary/80"
                   onClick={() => {
                     // Handle forgot password
                     toast({
@@ -179,7 +179,7 @@ export default function EmailSignIn({ onSwitchToSignup, onSwitchToOAuth }: Email
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -200,7 +200,7 @@ export default function EmailSignIn({ onSwitchToSignup, onSwitchToOAuth }: Email
               <Separator className="my-4" />
               
               <div className="text-center space-y-2">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   Or continue with
                 </p>
                 <Button
@@ -214,12 +214,12 @@ export default function EmailSignIn({ onSwitchToSignup, onSwitchToOAuth }: Email
               </div>
 
               <div className="text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   Don't have an account?{' '}
                   <Button
                     type="button"
                     variant="link"
-                    className="px-0 text-blue-600 hover:text-blue-700"
+                    className="px-0 text-primary hover:text-primary/80"
                     onClick={onSwitchToSignup}
                   >
                     Sign up with our AI assistant
