@@ -56,8 +56,19 @@ export default function MobileNav() {
   const { user, isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/logout', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      if (response.ok) {
+        window.location.href = '/login';
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/login';
+    }
   };
 
   if (!isAuthenticated) return null;
