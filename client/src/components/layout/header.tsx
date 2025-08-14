@@ -646,7 +646,7 @@ export default function Header() {
                 </DropdownMenu>
               ) : (
                 <Button asChild variant="default">
-                  <a href="/api/login">Sign in</a>
+                  <Link href="/login">Sign in</Link>
                 </Button>
               )}
 

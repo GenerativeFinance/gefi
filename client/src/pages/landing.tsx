@@ -32,7 +32,7 @@ export default function Landing() {
               <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
             </nav>
             <Button 
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => window.location.href = '/login'}
               className="gradient-primary hover:opacity-90"
             >
               Sign In
