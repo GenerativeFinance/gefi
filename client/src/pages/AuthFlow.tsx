@@ -79,13 +79,13 @@ export default function AuthFlow() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+        <Card className="w-full max-w-md shadow-2xl border border-border bg-card">
           <CardHeader className="text-center space-y-4">
             {authMode === 'oauth' && (
               <Button
@@ -98,10 +98,10 @@ export default function AuthFlow() {
               </Button>
             )}
             
-            <div className="mx-auto w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <Bot className="w-10 h-10 text-white" />
+            <div className="mx-auto w-20 h-20 bg-primary rounded-full flex items-center justify-center">
+              <Bot className="w-10 h-10 text-primary-foreground" />
             </div>
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl font-bold text-foreground">
               Welcome to GeFi
             </CardTitle>
             <CardDescription className="text-lg">
@@ -111,7 +111,7 @@ export default function AuthFlow() {
               }
             </CardDescription>
             {authMode === 'welcome' && (
-              <Badge variant="secondary" className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 dark:from-blue-900 dark:to-purple-900 dark:text-blue-200">
+              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
                 New Enhanced Authentication
               </Badge>
             )}
@@ -128,24 +128,24 @@ export default function AuthFlow() {
                   className="space-y-4"
                 >
                   {/* AI Chatbot Signup - Featured Option */}
-                  <Card className="border-2 border-gradient-to-r from-blue-200 to-purple-200 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
+                  <Card className="border-2 border-primary/20 bg-primary/5">
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3 mb-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                          <Bot className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                          <Bot className="w-5 h-5 text-primary-foreground" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-blue-800 dark:text-blue-200">AI Assistant Signup</h3>
-                          <p className="text-sm text-blue-600 dark:text-blue-300">Personalized account creation</p>
+                          <h3 className="font-semibold text-foreground">AI Assistant Signup</h3>
+                          <p className="text-sm text-muted-foreground">Personalized account creation</p>
                         </div>
-                        <Badge className="ml-auto bg-gradient-to-r from-green-500 to-emerald-600 text-white">Recommended</Badge>
+                        <Badge className="ml-auto bg-green-600 text-white">Recommended</Badge>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                      <p className="text-sm text-muted-foreground mb-3">
                         Let our AI assistant guide you through creating your personalized account with intelligent questions.
                       </p>
                       <Button 
                         onClick={() => setAuthMode('chatbot-signup')}
-                        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                       >
                         <Bot className="w-4 h-4 mr-2" />
                         Start with AI Assistant
@@ -157,12 +157,12 @@ export default function AuthFlow() {
                   <Button
                     variant="outline"
                     onClick={() => setAuthMode('email-signin')}
-                    className="w-full justify-start h-12 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-blue-200 dark:border-blue-800"
+                    className="w-full justify-start h-12 hover:bg-accent hover:text-accent-foreground border-border"
                   >
-                    <Mail className="w-5 h-5 mr-3 text-blue-600" />
+                    <Mail className="w-5 h-5 mr-3 text-primary" />
                     <div className="text-left">
                       <div className="font-medium">Sign in with Email</div>
-                      <div className="text-xs text-gray-500">Already have an account?</div>
+                      <div className="text-xs text-muted-foreground">Already have an account?</div>
                     </div>
                   </Button>
 
@@ -170,7 +170,7 @@ export default function AuthFlow() {
                   <Button
                     variant="outline"
                     onClick={() => setAuthMode('oauth')}
-                    className="w-full justify-start h-12 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="w-full justify-start h-12 hover:bg-accent hover:text-accent-foreground border-border"
                   >
                     <div className="flex -space-x-1 mr-3">
                       <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
@@ -185,7 +185,7 @@ export default function AuthFlow() {
                     </div>
                     <div className="text-left">
                       <div className="font-medium">OAuth Providers</div>
-                      <div className="text-xs text-gray-500">Google, GitHub, LinkedIn</div>
+                      <div className="text-xs text-muted-foreground">Google, GitHub, LinkedIn</div>
                     </div>
                   </Button>
                 </motion.div>
@@ -202,7 +202,7 @@ export default function AuthFlow() {
                   <Button
                     onClick={() => handleOAuthLogin('google')}
                     variant="outline"
-                    className="w-full justify-start h-12 hover:bg-red-50 border-red-200 text-red-700 hover:text-red-800"
+                    className="w-full justify-start h-12 hover:bg-accent hover:text-accent-foreground border-border"
                     disabled={isLoading}
                   >
                     <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center mr-3">
@@ -214,17 +214,17 @@ export default function AuthFlow() {
                   <Button
                     onClick={() => handleOAuthLogin('github')}
                     variant="outline"
-                    className="w-full justify-start h-12 hover:bg-gray-50 border-gray-200 text-gray-700 hover:text-gray-800"
+                    className="w-full justify-start h-12 hover:bg-accent hover:text-accent-foreground border-border"
                     disabled={isLoading}
                   >
-                    <Github className="w-5 h-5 mr-3 text-gray-800" />
+                    <Github className="w-5 h-5 mr-3" />
                     Continue with GitHub
                   </Button>
 
                   <Button
                     onClick={() => handleOAuthLogin('linkedin')}
                     variant="outline"
-                    className="w-full justify-start h-12 hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800"
+                    className="w-full justify-start h-12 hover:bg-accent hover:text-accent-foreground border-border"
                     disabled={isLoading}
                   >
                     <Linkedin className="w-5 h-5 mr-3 text-blue-600" />
@@ -235,7 +235,7 @@ export default function AuthFlow() {
                     <Button
                       variant="ghost"
                       onClick={() => setAuthMode('email-signin')}
-                      className="text-sm text-gray-600 hover:text-gray-800"
+                      className="text-sm text-muted-foreground hover:text-foreground"
                     >
                       Or sign in with email
                     </Button>
@@ -246,11 +246,11 @@ export default function AuthFlow() {
 
             {/* Footer */}
             <div className="pt-6 text-center space-y-2">
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 By continuing, you agree to our{' '}
-                <a href="/terms-of-service" className="text-blue-600 hover:underline">Terms of Service</a>{' '}
+                <a href="/terms-of-service" className="text-primary hover:underline">Terms of Service</a>{' '}
                 and{' '}
-                <a href="/privacy-policy" className="text-blue-600 hover:underline">Privacy Policy</a>
+                <a href="/privacy-policy" className="text-primary hover:underline">Privacy Policy</a>
               </p>
             </div>
           </CardContent>
