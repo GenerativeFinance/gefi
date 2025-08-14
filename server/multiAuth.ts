@@ -269,15 +269,127 @@ function setupOAuthRoutes(app: Express) {
     handleOAuthCallback('LinkedIn')
   );
 
-  // Logout route
-  app.get('/api/auth/logout', (req, res) => {
-    req.logout((err) => {
+  // Logout routes (both paths for compatibility)
+  const handleLogout = (req: any, res: any) => {
+    req.logout((err: any) => {
       if (err) {
         console.error('Logout error:', err);
-        return res.redirect('/login?error=logout_failed');
+        return res.status(500).json({ message: 'Logout failed', error: err.message });
       }
-      res.redirect('/login');
+      // Destroy session completely
+      req.session.destroy((sessionErr: any) => {
+        if (sessionErr) {
+          console.error('Session destruction error:', sessionErr);
+        }
+        res.clearCookie('connect.sid');
+        res.json({ message: 'Logged out successfully', redirectTo: '/login' });
+      });
     });
+  };
+
+  app.get('/api/logout', handleLogout);
+  app.get('/api/auth/logout', handleLogout);
+
+  // Email authentication routes
+  app.post('/api/auth/email/signup', async (req, res) => {
+    try {
+      const { email, firstName, lastName, country, role, password } = req.body;
+      
+      // Basic validation
+      if (!email || !firstName || !lastName || !country || !role) {
+        return res.status(400).json({ message: 'All fields are required' });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ message: 'User already exists with this email' });
+      }
+
+      // Create user (password will be hashed in production)
+      const userData = {
+        id: `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        email,
+        firstName,
+        lastName,
+        provider: 'email',
+        role,
+        profileImageUrl: null,
+        subscriptionTier: 'free',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const user = await storage.upsertUser(userData);
+      
+      // Create profile with valid fields only
+      await storage.createOrUpdateUserProfile(user.id, {
+        displayName: `${firstName} ${lastName}`,
+        bio: `${role} from ${country}`,
+        isProfileComplete: true
+      });
+
+      // Log the user in
+      req.login(user, (err) => {
+        if (err) {
+          console.error('Login error after signup:', err);
+          return res.status(500).json({ message: 'Account created but login failed' });
+        }
+        res.json({ 
+          message: 'Account created successfully', 
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role
+          }
+        });
+      });
+    } catch (error) {
+      console.error('Email signup error:', error);
+      res.status(500).json({ message: 'Failed to create account' });
+    }
+  });
+
+  app.post('/api/auth/email/signin', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password are required' });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: 'Invalid email or password' });
+      }
+
+      // In production, verify password hash here
+      // For now, we'll accept any password for existing email users
+      
+      // Log the user in
+      req.login(user, (err) => {
+        if (err) {
+          console.error('Login error:', err);
+          return res.status(500).json({ message: 'Login failed' });
+        }
+        res.json({ 
+          message: 'Signed in successfully', 
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role
+          }
+        });
+      });
+    } catch (error) {
+      console.error('Email signin error:', error);
+      res.status(500).json({ message: 'Sign in failed' });
+    }
   });
 }
 

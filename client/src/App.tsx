@@ -11,7 +11,7 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import AnalyticsDashboard from "@/pages/analytics-dashboard";
-import Login from "@/pages/login";
+import AuthFlow from "@/pages/AuthFlow";
 import LoginFailed from "@/pages/login-failed";
 import Portfolio from "@/pages/portfolio";
 import Reports from "@/pages/reports";
@@ -187,7 +187,7 @@ function Router() {
   return (
     <Switch>
       {/* Public routes - always available */}
-      <Route path="/login" component={Login} />
+      <Route path="/login" component={AuthFlow} />
       <Route path="/login-failed" component={LoginFailed} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
