@@ -622,11 +622,25 @@ export default function Header() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <a href="/api/logout" className="flex items-center">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Sign out
-                      </a>
+                    <DropdownMenuItem 
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/logout', {
+                            method: 'GET',
+                            credentials: 'include'
+                          });
+                          if (response.ok) {
+                            window.location.href = '/login';
+                          }
+                        } catch (error) {
+                          console.error('Logout error:', error);
+                          window.location.href = '/login';
+                        }
+                      }}
+                      className="flex items-center cursor-pointer"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
