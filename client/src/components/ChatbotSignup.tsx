@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Bot, User, Mail, MapPin, Briefcase, ArrowRight, Check, X } from 'lucide-react';
+import { Bot, User, Mail, MapPin, Briefcase, ArrowRight, Check, X, Calendar, Clock, Video } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChatMessage {
@@ -47,6 +47,8 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
   const [userData, setUserData] = useState<Partial<UserData>>({});
   const [isTyping, setIsTyping] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [showDemoBooking, setShowDemoBooking] = useState(false);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
   const steps = [
     {
@@ -149,7 +151,7 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
     // Show typing indicator
     setIsTyping(true);
     
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsTyping(false);
       
       if (currentStep < steps.length - 1) {
@@ -163,16 +165,81 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
         }
       } else {
         // Complete signup
-        addBotMessage("Excellent! Your account is being created. Welcome to GeFi! 🎉");
-        setTimeout(() => {
-          onComplete(newUserData as UserData);
-        }, 2000);
+        setIsCreatingAccount(true);
+        addBotMessage("Excellent! Creating your account now...");
+        
+        // Create account via API
+        try {
+          const response = await fetch('/api/auth/email/signup', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              ...newUserData,
+              password: 'temp-password' // In production, use secure password generation
+            }),
+          });
+
+          if (response.ok) {
+            addBotMessage("🎉 Your account has been created successfully! Welcome to GeFi!");
+            setTimeout(() => {
+              addBotMessage("Before you dive in, would you like to book a personalized demo session with our team? We can show you around the platform and answer any questions!");
+              setShowDemoBooking(true);
+            }, 2000);
+          } else {
+            const errorData = await response.json();
+            addBotMessage(`❌ Sorry, there was an error creating your account: ${errorData.message}`);
+          }
+        } catch (error) {
+          addBotMessage("❌ Sorry, there was an error creating your account. Please try again.");
+        }
+        setIsCreatingAccount(false);
       }
     }, 1500);
   };
 
   const handleOptionSelect = (option: string) => {
     handleSubmit(option);
+  };
+
+  const handleDemoBooking = async (eventType: string) => {
+    try {
+      const response = await fetch('/api/calendly/schedule-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventType,
+          userEmail: userData.email,
+          userName: `${userData.firstName} ${userData.lastName}`,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        addBotMessage("Perfect! Opening your personalized scheduling link...");
+        // Open Calendly link in new tab
+        window.open(data.scheduling_url, '_blank');
+        setTimeout(() => {
+          addBotMessage("You're all set! Feel free to close this window and explore your new GeFi account. Welcome aboard! 🚀");
+          setTimeout(() => onComplete(userData as UserData), 3000);
+        }, 2000);
+      } else {
+        addBotMessage("Sorry, there was an issue generating the booking link. You can always book a demo later from your dashboard!");
+        setTimeout(() => onComplete(userData as UserData), 2000);
+      }
+    } catch (error) {
+      console.error('Demo booking error:', error);
+      addBotMessage("Sorry, there was an issue with the booking system. You can always book a demo later from your dashboard!");
+      setTimeout(() => onComplete(userData as UserData), 2000);
+    }
+  };
+
+  const handleSkipDemo = () => {
+    addBotMessage("No problem! You can always book a demo later from your dashboard. Welcome to GeFi! 🚀");
+    setTimeout(() => onComplete(userData as UserData), 2000);
   };
 
   return (
@@ -339,6 +406,80 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
                 )}
               </div>
             </div>
+          )}
+
+          {/* Demo Booking Options */}
+          {showDemoBooking && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+                  Book Your Personal Demo
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Choose the session that works best for you
+                </p>
+              </div>
+
+              <div className="grid gap-3">
+                {/* Platform Demo Option */}
+                <Button
+                  onClick={() => handleDemoBooking('platform-demo')}
+                  className="h-auto p-4 flex-col items-start text-left bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+                >
+                  <div className="flex items-center w-full justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                        <Video className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="font-semibold">Platform Demo</div>
+                        <div className="text-sm opacity-90">30 minutes</div>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
+                  <p className="text-sm opacity-90 mt-2">
+                    Quick overview of GeFi's key features and capabilities
+                  </p>
+                </Button>
+
+                {/* Onboarding Call Option */}
+                <Button
+                  onClick={() => handleDemoBooking('onboarding')}
+                  variant="outline"
+                  className="h-auto p-4 flex-col items-start text-left border-2 border-blue-200 hover:bg-blue-50 dark:border-blue-700 dark:hover:bg-blue-900/20"
+                >
+                  <div className="flex items-center w-full justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                        <Calendar className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-800 dark:text-white">Personal Onboarding</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">45 minutes</div>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                    Personalized session to set up your account and create your first strategy
+                  </p>
+                </Button>
+
+                {/* Skip Option */}
+                <Button
+                  onClick={handleSkipDemo}
+                  variant="ghost"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                >
+                  Skip for now - I'll explore on my own
+                </Button>
+              </div>
+            </motion.div>
           )}
         </CardContent>
       </Card>
