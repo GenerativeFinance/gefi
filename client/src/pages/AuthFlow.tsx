@@ -6,10 +6,11 @@ import { Bot, Mail, Github, Linkedin, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ChatbotSignup from '@/components/ChatbotSignup';
 import EmailSignIn from '@/components/EmailSignIn';
+import EmailSignup from '@/components/EmailSignup';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
-type AuthMode = 'welcome' | 'chatbot-signup' | 'email-signin' | 'oauth';
+type AuthMode = 'welcome' | 'chatbot-signup' | 'email-signup' | 'email-signin' | 'oauth';
 
 interface UserData {
   email: string;
@@ -69,10 +70,19 @@ export default function AuthFlow() {
     return <ChatbotSignup onComplete={handleChatbotSignupComplete} />;
   }
 
+  if (authMode === 'email-signup') {
+    return (
+      <EmailSignup 
+        onSwitchToSignin={() => setAuthMode('email-signin')}
+        onSwitchToOAuth={() => setAuthMode('oauth')}
+      />
+    );
+  }
+
   if (authMode === 'email-signin') {
     return (
       <EmailSignIn 
-        onSwitchToSignup={() => setAuthMode('chatbot-signup')}
+        onSwitchToSignup={() => setAuthMode('email-signup')}
         onSwitchToOAuth={() => setAuthMode('oauth')}
       />
     );

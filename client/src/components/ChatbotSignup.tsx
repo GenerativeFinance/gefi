@@ -49,6 +49,9 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
   const [showOptions, setShowOptions] = useState(false);
   const [showDemoBooking, setShowDemoBooking] = useState(false);
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [emailVerificationStep, setEmailVerificationStep] = useState<'none' | 'sending' | 'sent' | 'verifying' | 'verified'>('none');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [demoVerificationCode, setDemoVerificationCode] = useState(''); // For demo purposes
 
   const steps = [
     {
@@ -139,6 +142,30 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
       return;
     }
 
+    // Special handling for email field - check for duplicates
+    if (currentStepData.field === 'email') {
+      try {
+        const response = await fetch('/api/auth/check-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: inputValue }),
+        });
+
+        const data = await response.json();
+        
+        if (data.exists) {
+          addBotMessage("Sorry, this email is already registered. Please use a different email address or sign in with your existing account.");
+          return;
+        }
+      } catch (error) {
+        console.error('Email check error:', error);
+        addBotMessage("Unable to verify email availability. Please try again.");
+        return;
+      }
+    }
+
     // Add user message
     addUserMessage(inputValue);
     setCurrentInput('');
@@ -164,37 +191,39 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
           setShowOptions(steps[nextStep].type === 'select');
         }
       } else {
-        // Complete signup
-        setIsCreatingAccount(true);
-        addBotMessage("Excellent! Creating your account now...");
+        // Complete signup - but first verify email
+        addBotMessage("Perfect! Before I create your account, I need to verify your email address for security.");
+        setEmailVerificationStep('sending');
         
-        // Create account via API
         try {
-          const response = await fetch('/api/auth/email/signup', {
+          const response = await fetch('/api/auth/send-verification', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              ...newUserData,
-              password: 'temp-password' // In production, use secure password generation
+              email: newUserData.email,
+              firstName: newUserData.firstName,
+              lastName: newUserData.lastName
             }),
           });
 
+          const data = await response.json();
+          
           if (response.ok) {
-            addBotMessage("🎉 Your account has been created successfully! Welcome to GeFi!");
-            setTimeout(() => {
-              addBotMessage("Before you dive in, would you like to book a personalized demo session with our team? We can show you around the platform and answer any questions!");
-              setShowDemoBooking(true);
-            }, 2000);
+            setEmailVerificationStep('sent');
+            setDemoVerificationCode(data.verificationCode); // For demo purposes
+            addBotMessage(`I've sent a 6-digit verification code to ${newUserData.email}. Please enter the code to continue.`);
+            addBotMessage(`For demo purposes, your verification code is: ${data.verificationCode}`);
           } else {
-            const errorData = await response.json();
-            addBotMessage(`❌ Sorry, there was an error creating your account: ${errorData.message}`);
+            addBotMessage("Sorry, I couldn't send the verification email. Please try again.");
+            setEmailVerificationStep('none');
           }
         } catch (error) {
-          addBotMessage("❌ Sorry, there was an error creating your account. Please try again.");
+          console.error('Verification send error:', error);
+          addBotMessage("Sorry, there was an issue sending the verification email. Please try again.");
+          setEmailVerificationStep('none');
         }
-        setIsCreatingAccount(false);
       }
     }, 1500);
   };
@@ -240,6 +269,71 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
   const handleSkipDemo = () => {
     addBotMessage("No problem! You can always book a demo later from your dashboard. Welcome to GeFi! 🚀");
     setTimeout(() => onComplete(userData as UserData), 2000);
+  };
+
+  const handleVerificationCodeSubmit = async (code: string) => {
+    if (!code || code.length !== 6) {
+      addBotMessage("Please enter a valid 6-digit verification code.");
+      return;
+    }
+
+    setEmailVerificationStep('verifying');
+    addUserMessage(code);
+    
+    try {
+      const response = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userData.email,
+          code: code
+        }),
+      });
+
+      if (response.ok) {
+        setEmailVerificationStep('verified');
+        addBotMessage("✅ Email verified successfully! Now creating your account...");
+        
+        // Create account
+        setIsCreatingAccount(true);
+        try {
+          const signupResponse = await fetch('/api/auth/email/signup', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              ...userData,
+              password: 'temp-password' // In production, use secure password generation
+            }),
+          });
+
+          if (signupResponse.ok) {
+            addBotMessage("🎉 Your account has been created successfully! Welcome to GeFi!");
+            setTimeout(() => {
+              addBotMessage("Before you dive in, would you like to book a personalized demo session with our team? We can show you around the platform and answer any questions!");
+              setShowDemoBooking(true);
+            }, 2000);
+          } else {
+            const errorData = await signupResponse.json();
+            addBotMessage(`❌ Sorry, there was an error creating your account: ${errorData.message}`);
+          }
+        } catch (error) {
+          addBotMessage("❌ Sorry, there was an error creating your account. Please try again.");
+        }
+        setIsCreatingAccount(false);
+      } else {
+        const errorData = await response.json();
+        addBotMessage(`❌ ${errorData.message}`);
+        setEmailVerificationStep('sent'); // Allow retry
+      }
+    } catch (error) {
+      console.error('Verification error:', error);
+      addBotMessage("❌ Sorry, there was an error verifying your email. Please try again.");
+      setEmailVerificationStep('sent'); // Allow retry
+    }
   };
 
   return (
@@ -337,7 +431,7 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
           </div>
 
           {/* Input Area */}
-          {currentStep < steps.length - 1 && (
+          {currentStep < steps.length - 1 && emailVerificationStep === 'none' && (
             <div className="space-y-4">
               {showOptions ? (
                 <div className="grid grid-cols-2 gap-2">
@@ -372,6 +466,73 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
                   </Button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Email Verification Input */}
+          {emailVerificationStep === 'sent' && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                  Enter the 6-digit verification code sent to your email
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <Input
+                  type="text"
+                  placeholder="000000"
+                  value={verificationCode}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setVerificationCode(value);
+                  }}
+                  onKeyPress={(e) => e.key === 'Enter' && verificationCode.length === 6 && handleVerificationCodeSubmit(verificationCode)}
+                  className="flex-1 text-center text-lg font-mono tracking-widest"
+                  autoFocus
+                  maxLength={6}
+                />
+                <Button 
+                  onClick={() => handleVerificationCodeSubmit(verificationCode)} 
+                  disabled={verificationCode.length !== 6 || emailVerificationStep === 'verifying'}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                >
+                  {emailVerificationStep === 'verifying' ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+              <div className="text-center">
+                <Button
+                  variant="ghost"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/auth/send-verification', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          email: userData.email,
+                          firstName: userData.firstName,
+                          lastName: userData.lastName
+                        }),
+                      });
+                      const data = await response.json();
+                      if (response.ok) {
+                        setDemoVerificationCode(data.verificationCode);
+                        addBotMessage(`New verification code sent! For demo: ${data.verificationCode}`);
+                      }
+                    } catch (error) {
+                      addBotMessage("Sorry, couldn't resend the code. Please try again.");
+                    }
+                  }}
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                >
+                  Resend Code
+                </Button>
+              </div>
             </div>
           )}
 
