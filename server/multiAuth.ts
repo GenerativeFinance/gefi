@@ -294,10 +294,104 @@ function setupOAuthRoutes(app: Express) {
   app.get('/api/logout', handleLogout);
   app.get('/api/auth/logout', handleLogout);
 
+  // Email verification endpoint
+  app.post('/api/auth/check-email', async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ 
+          message: 'This email is already registered. Please use a different email or sign in instead.',
+          exists: true 
+        });
+      }
+
+      res.json({ message: 'Email is available', exists: false });
+    } catch (error) {
+      console.error('Email check error:', error);
+      res.status(500).json({ message: 'Failed to check email availability' });
+    }
+  });
+
+  // Send email verification
+  app.post('/api/auth/send-verification', async (req, res) => {
+    try {
+      const { email, firstName, lastName } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+      }
+
+      // Generate verification code
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Store verification code (in production, use Redis or database with expiration)
+      // For now, we'll store in memory with 15-minute expiration
+      global.verificationCodes = global.verificationCodes || {};
+      global.verificationCodes[email] = {
+        code: verificationCode,
+        expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+        userData: { email, firstName, lastName }
+      };
+
+      // In production, send actual email here
+      console.log(`📧 Verification code for ${email}: ${verificationCode}`);
+      
+      // For demo purposes, return the code (remove in production)
+      res.json({ 
+        message: 'Verification code sent successfully',
+        // Remove this line in production:
+        verificationCode: verificationCode 
+      });
+    } catch (error) {
+      console.error('Send verification error:', error);
+      res.status(500).json({ message: 'Failed to send verification email' });
+    }
+  });
+
+  // Verify email code
+  app.post('/api/auth/verify-email', async (req, res) => {
+    try {
+      const { email, code } = req.body;
+      
+      if (!email || !code) {
+        return res.status(400).json({ message: 'Email and verification code are required' });
+      }
+
+      const storedData = global.verificationCodes?.[email];
+      if (!storedData) {
+        return res.status(400).json({ message: 'No verification code found for this email' });
+      }
+
+      if (Date.now() > storedData.expires) {
+        delete global.verificationCodes[email];
+        return res.status(400).json({ message: 'Verification code has expired' });
+      }
+
+      if (storedData.code !== code) {
+        return res.status(400).json({ message: 'Invalid verification code' });
+      }
+
+      // Mark email as verified
+      storedData.verified = true;
+      
+      res.json({ message: 'Email verified successfully' });
+    } catch (error) {
+      console.error('Email verification error:', error);
+      res.status(500).json({ message: 'Failed to verify email' });
+    }
+  });
+
   // Email authentication routes
   app.post('/api/auth/email/signup', async (req, res) => {
     try {
-      const { email, firstName, lastName, country, role, password } = req.body;
+      const { email, firstName, lastName, country, role, password, verificationCode } = req.body;
       
       // Basic validation
       if (!email || !firstName || !lastName || !country || !role) {
@@ -307,7 +401,16 @@ function setupOAuthRoutes(app: Express) {
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
-        return res.status(409).json({ message: 'User already exists with this email' });
+        return res.status(409).json({ 
+          message: 'This email is already registered. Please use a different email or sign in instead.',
+          emailExists: true 
+        });
+      }
+
+      // Verify email verification code
+      const storedData = global.verificationCodes?.[email];
+      if (!storedData || !storedData.verified) {
+        return res.status(400).json({ message: 'Email verification required' });
       }
 
       // Create user (password will be hashed in production)
@@ -334,6 +437,9 @@ function setupOAuthRoutes(app: Express) {
       });
 
       // Log the user in
+      // Clean up verification code
+      delete global.verificationCodes[email];
+
       req.login(user, (err) => {
         if (err) {
           console.error('Login error after signup:', err);
@@ -404,10 +510,24 @@ function setupOAuthRoutes(app: Express) {
  * @returns Express middleware function
  */
 function handleOAuthCallback(providerName: string) {
-  return (req: any, res: any) => {
+  return async (req: any, res: any) => {
     if (req.user) {
       console.log(`✅ ${providerName} OAuth callback successful, user authenticated:`, req.user);
-      res.redirect('/');
+      
+      // Check for duplicate email during OAuth signup
+      if (req.user.email) {
+        try {
+          const existingUser = await storage.getUserByEmail(req.user.email);
+          if (existingUser && existingUser.id !== req.user.id) {
+            console.log(`⚠️ Duplicate email detected during ${providerName} OAuth:`, req.user.email);
+            return res.redirect('/login?error=email_already_exists&message=This email is already registered with another account');
+          }
+        } catch (error) {
+          console.error('Error checking for duplicate email during OAuth:', error);
+        }
+      }
+      
+      res.redirect('/?auth=success');
     } else {
       console.log(`❌ ${providerName} OAuth callback failed - no user in session`);
       res.redirect('/login?error=auth_failed');
