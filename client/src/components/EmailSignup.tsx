@@ -19,7 +19,7 @@ const COUNTRY_OPTIONS = [
 ];
 
 const ROLE_OPTIONS = [
-  'Developer', 'Investor', 'Data Provider', 'Trader', 'Analyst', 'Student', 'Other'
+  'Developer', 'Investor', 'Data Provider', 'Regulator', 'Trader', 'Analyst', 'Student', 'Other'
 ];
 
 export default function EmailSignup({ onSwitchToSignin, onSwitchToOAuth }: EmailSignupProps) {
@@ -173,12 +173,20 @@ export default function EmailSignup({ onSwitchToSignin, onSwitchToOAuth }: Email
       newErrors.firstName = 'First name is required';
     } else if (formData.firstName.trim().length < 2) {
       newErrors.firstName = 'First name must be at least 2 characters';
+    } else if (formData.firstName.includes('@')) {
+      newErrors.firstName = 'Please enter a valid first name (no email addresses)';
+    } else if (!/^[a-zA-Z\s\-']+$/.test(formData.firstName.trim())) {
+      newErrors.firstName = 'First name can only contain letters, spaces, hyphens, and apostrophes';
     }
 
     if (!formData.lastName.trim()) {
       newErrors.lastName = 'Last name is required';
     } else if (formData.lastName.trim().length < 2) {
       newErrors.lastName = 'Last name must be at least 2 characters';
+    } else if (formData.lastName.includes('@')) {
+      newErrors.lastName = 'Please enter a valid last name (no email addresses)';
+    } else if (!/^[a-zA-Z\s\-']+$/.test(formData.lastName.trim())) {
+      newErrors.lastName = 'Last name can only contain letters, spaces, hyphens, and apostrophes';
     }
 
     if (!formData.password) {
