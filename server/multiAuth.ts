@@ -20,6 +20,7 @@ import { Strategy as GoogleStrategy, type Profile as GoogleProfile, type VerifyC
 import { Strategy as GitHubStrategy, type Profile as GitHubProfile } from "passport-github2";
 import { Strategy as LinkedInStrategy, type Profile as LinkedInProfile } from "passport-linkedin-oauth2";
 import { storage } from "./storage";
+import fetch from "node-fetch";
 
 // Configuration constants
 const SESSION_TTL = 7 * 24 * 60 * 60 * 1000; // 1 week in milliseconds
@@ -213,6 +214,9 @@ export async function setupMultiAuth(app: Express) {
   // OAuth Routes Configuration
   setupOAuthRoutes(app);
 
+  // Calendly Integration Routes
+  setupCalendlyRoutes(app);
+
   // Development route (remove in production)
   setupDevelopmentRoute(app);
 }
@@ -326,7 +330,7 @@ function setupOAuthRoutes(app: Express) {
       await storage.createOrUpdateUserProfile(user.id, {
         displayName: `${firstName} ${lastName}`,
         bio: `${role} from ${country}`,
-        isProfileComplete: true
+        profileCompleted: true
       });
 
       // Log the user in
@@ -465,3 +469,152 @@ export const isAuthenticated: RequestHandler = (req, res, next) => {
   console.log('🔐 Auth check - user:', req.user);
   res.status(401).json({ message: "Unauthorized" });
 };
+
+/**
+ * Sets up Calendly OAuth and API integration routes
+ * 
+ * @param app - Express application instance
+ */
+function setupCalendlyRoutes(app: Express) {
+  // Helper function to get base URL
+  const getBaseUrl = (req: any): string => {
+    return `${req.protocol}://${req.get('host')}`;
+  };
+
+  // Calendly OAuth initiation
+  app.get('/api/auth/calendly', (req, res) => {
+    const clientId = process.env.CALENDLY_CLIENT_ID;
+    const redirectUri = `${getBaseUrl(req)}/api/auth/calendly/callback`;
+    
+    const authUrl = `https://auth.calendly.com/oauth/authorize?` +
+      `client_id=${clientId}&` +
+      `response_type=code&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `scope=openid profile email read`;
+    
+    res.redirect(authUrl);
+  });
+
+  // Calendly OAuth callback
+  app.get('/api/auth/calendly/callback', async (req, res) => {
+    const { code, error } = req.query;
+    
+    if (error) {
+      console.error('Calendly OAuth error:', error);
+      return res.redirect('/login?error=calendly_auth_failed');
+    }
+
+    try {
+      const tokenResponse = await fetch('https://auth.calendly.com/oauth/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: process.env.CALENDLY_CLIENT_ID!,
+          client_secret: process.env.CALENDLY_CLIENT_SECRET!,
+          redirect_uri: `${getBaseUrl(req)}/api/auth/calendly/callback`,
+          code: code as string,
+        }),
+      });
+
+      const tokenData = await tokenResponse.json();
+      
+      if (!tokenResponse.ok) {
+        throw new Error('Failed to exchange code for token');
+      }
+
+      // Store the access token (you might want to save this to user profile)
+      // For now, we'll just redirect back with success
+      res.redirect('/login?calendly=connected');
+      
+    } catch (error) {
+      console.error('Calendly token exchange error:', error);
+      res.redirect('/login?error=calendly_token_failed');
+    }
+  });
+
+  // Get available event types from Calendly
+  app.get('/api/calendly/event-types', async (req, res) => {
+    try {
+      // In a real implementation, you'd get the user's Calendly access token
+      // For demo purposes, we'll return mock event types
+      const eventTypes = [
+        {
+          uri: "https://api.calendly.com/event_types/DEMO_SESSION",
+          name: "GeFi Platform Demo",
+          description: "30-minute platform demonstration and Q&A session",
+          duration: 30,
+          scheduling_url: "https://calendly.com/gefi-demo/platform-demo"
+        },
+        {
+          uri: "https://api.calendly.com/event_types/ONBOARDING_CALL",
+          name: "Personal Onboarding Call",
+          description: "45-minute personalized onboarding session",
+          duration: 45,
+          scheduling_url: "https://calendly.com/gefi-demo/onboarding"
+        }
+      ];
+
+      res.json({ collection: eventTypes });
+    } catch (error) {
+      console.error('Error fetching Calendly event types:', error);
+      res.status(500).json({ error: 'Failed to fetch event types' });
+    }
+  });
+
+  // Create a scheduling link for a specific event type
+  app.post('/api/calendly/schedule-link', async (req, res) => {
+    try {
+      const { eventType, userEmail, userName } = req.body;
+      
+      // Generate a personalized scheduling link
+      const schedulingLink = `https://calendly.com/gefi-demo/${eventType}?prefill_email=${encodeURIComponent(userEmail)}&prefill_name=${encodeURIComponent(userName)}`;
+      
+      res.json({ 
+        scheduling_url: schedulingLink,
+        message: 'Scheduling link generated successfully'
+      });
+    } catch (error) {
+      console.error('Error creating scheduling link:', error);
+      res.status(500).json({ error: 'Failed to create scheduling link' });
+    }
+  });
+
+  // Webhook endpoint for Calendly events
+  app.post('/api/calendly/webhook', async (req, res) => {
+    try {
+      const signature = req.headers['calendly-webhook-signature'] as string;
+      const payload = JSON.stringify(req.body);
+      
+      // Verify webhook signature (implementation depends on Calendly's signing method)
+      // const isValid = verifyCalendlySignature(payload, signature, process.env.CALENDLY_WEBHOOK_SIGNING_KEY!);
+      
+      // if (!isValid) {
+      //   return res.status(401).json({ error: 'Invalid signature' });
+      // }
+
+      const event = req.body;
+      console.log('Calendly webhook received:', event.event);
+
+      // Handle different event types
+      switch (event.event) {
+        case 'invitee.created':
+          console.log('New booking created:', event.payload);
+          // You can process the booking here (send emails, update database, etc.)
+          break;
+        case 'invitee.canceled':
+          console.log('Booking canceled:', event.payload);
+          break;
+        default:
+          console.log('Unhandled event type:', event.event);
+      }
+
+      res.status(200).json({ received: true });
+    } catch (error) {
+      console.error('Webhook processing error:', error);
+      res.status(500).json({ error: 'Webhook processing failed' });
+    }
+  });
+}
