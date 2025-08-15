@@ -10,6 +10,7 @@ import { registerMarketDataRoutes } from "./marketDataRoutes";
 import { registerDeveloperRoutes } from "./developerRoutes";
 import { registerUtilityRoutes } from "./utilityRoutes";
 import { registerChatbotRoutes } from "./chatbotRoutes";
+import { registerAdminRoutes } from "./adminRoutes";
 import reportRoutes from "../routes/reportRoutes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -34,6 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   console.log("🔧 Registering Utility & Admin APIs...");
   registerUtilityRoutes(app);
+  registerAdminRoutes(app);
 
   console.log("🤖 Registering AI Chatbot APIs...");
   registerChatbotRoutes(app);
