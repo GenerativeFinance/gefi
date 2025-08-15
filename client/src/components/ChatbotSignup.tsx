@@ -29,9 +29,7 @@ const ROLE_OPTIONS = [
   'Investor',
   'Developer',
   'Data Provider',
-  'Regulator',
-  'Admin',
-  'Moderator'
+  'Regulator'
 ];
 
 const COUNTRY_OPTIONS = [
@@ -65,15 +63,31 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
       question: "Great! What's your first name?",
       field: 'firstName',
       type: 'input',
-      validation: (value: string) => value.trim().length >= 2,
-      errorMessage: "First name must be at least 2 characters"
+      validation: (value: string) => {
+        const trimmed = value.trim();
+        if (trimmed.length < 2) return false;
+        // Check if it's an email address
+        if (trimmed.includes('@')) return false;
+        // Basic validation for names (allow letters, spaces, hyphens, apostrophes)
+        if (!/^[a-zA-Z\s\-']+$/.test(trimmed)) return false;
+        return true;
+      },
+      errorMessage: "Please enter a valid first name (no email addresses or special characters)"
     },
     {
       question: "And your last name?",
       field: 'lastName',
       type: 'input',
-      validation: (value: string) => value.trim().length >= 2,
-      errorMessage: "Last name must be at least 2 characters"
+      validation: (value: string) => {
+        const trimmed = value.trim();
+        if (trimmed.length < 2) return false;
+        // Check if it's an email address
+        if (trimmed.includes('@')) return false;
+        // Basic validation for names (allow letters, spaces, hyphens, apostrophes)
+        if (!/^[a-zA-Z\s\-']+$/.test(trimmed)) return false;
+        return true;
+      },
+      errorMessage: "Please enter a valid last name (no email addresses or special characters)"
     },
     {
       question: "Which country are you based in?",
