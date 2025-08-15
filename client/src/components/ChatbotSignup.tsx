@@ -50,6 +50,12 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
   const [emailVerificationStep, setEmailVerificationStep] = useState<'none' | 'sending' | 'sent' | 'verifying' | 'verified'>('none');
   const [verificationCode, setVerificationCode] = useState('');
   const [demoVerificationCode, setDemoVerificationCode] = useState(''); // For demo purposes
+  const [selectedEventType, setSelectedEventType] = useState<string>('');
+  const [availableTimes, setAvailableTimes] = useState<any[]>([]);
+  const [isLoadingTimes, setIsLoadingTimes] = useState(false);
+  const [selectedTime, setSelectedTime] = useState<any>(null);
+  const [isBooking, setIsBooking] = useState(false);
+  const [showTimeSlots, setShowTimeSlots] = useState(false);
 
   const steps = [
     {
@@ -247,36 +253,81 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
   };
 
   const handleDemoBooking = async (eventType: string) => {
+    setSelectedEventType(eventType);
+    setIsLoadingTimes(true);
+    
+    addBotMessage(`Great choice! Let me check available times for your ${eventType === 'platform-demo' ? 'Platform Demo (30 min)' : 'Personal Onboarding (45 min)'} session...`);
+    
     try {
-      const response = await fetch('/api/calendly/schedule-link', {
+      const response = await fetch('/api/calendly/available-times', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           eventType,
-          userEmail: userData.email,
-          userName: `${userData.firstName} ${userData.lastName}`,
+          startDate: new Date().toISOString(),
+          endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Next 7 days
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        addBotMessage("Perfect! Opening your personalized scheduling link...");
-        // Open Calendly link in new tab
-        window.open(data.scheduling_url, '_blank');
-        setTimeout(() => {
-          addBotMessage("You're all set! Feel free to close this window and explore your new GeFi account. Welcome aboard! 🚀");
-          setTimeout(() => onComplete(userData as UserData), 3000);
-        }, 2000);
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setAvailableTimes(data.availableTimes);
+        setShowTimeSlots(true);
+        addBotMessage("Here are the available time slots. Please select one that works best for you:");
       } else {
-        addBotMessage("Sorry, there was an issue generating the booking link. You can always book a demo later from your dashboard!");
+        addBotMessage("Sorry, I couldn't fetch available times right now. You can always book a demo later from your dashboard!");
         setTimeout(() => onComplete(userData as UserData), 2000);
       }
     } catch (error) {
       console.error('Demo booking error:', error);
       addBotMessage("Sorry, there was an issue with the booking system. You can always book a demo later from your dashboard!");
       setTimeout(() => onComplete(userData as UserData), 2000);
+    } finally {
+      setIsLoadingTimes(false);
+    }
+  };
+
+  const handleTimeSlotSelection = async (timeSlot: any) => {
+    setSelectedTime(timeSlot);
+    setIsBooking(true);
+    
+    addUserMessage(`${timeSlot.displayTime}`);
+    addBotMessage("Perfect! Booking your session now...");
+    
+    try {
+      const response = await fetch('/api/calendly/book-appointment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventType: selectedEventType,
+          datetime: timeSlot.datetime,
+          userEmail: userData.email,
+          userName: `${userData.firstName} ${userData.lastName}`,
+          userMessage: `Role: ${userData.role}, Country: ${userData.country}`
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        addBotMessage(`🎉 ${data.confirmationMessage}`);
+        addBotMessage("You're all set! Feel free to explore your new GeFi account. Welcome aboard! 🚀");
+        setTimeout(() => onComplete(userData as UserData), 3000);
+      } else {
+        addBotMessage("Sorry, there was an issue booking your session. You can always book a demo later from your dashboard!");
+        setTimeout(() => onComplete(userData as UserData), 2000);
+      }
+    } catch (error) {
+      console.error('Booking error:', error);
+      addBotMessage("Sorry, there was an issue booking your session. You can always book a demo later from your dashboard!");
+      setTimeout(() => onComplete(userData as UserData), 2000);
+    } finally {
+      setIsBooking(false);
     }
   };
 
@@ -584,7 +635,7 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
           )}
 
           {/* Demo Booking Options */}
-          {showDemoBooking && (
+          {showDemoBooking && !showTimeSlots && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -603,12 +654,17 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
                 {/* Platform Demo Option */}
                 <Button
                   onClick={() => handleDemoBooking('platform-demo')}
+                  disabled={isLoadingTimes}
                   className="h-auto p-4 flex-col items-start text-left bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
                 >
                   <div className="flex items-center w-full justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                        <Video className="w-5 h-5" />
+                        {isLoadingTimes && selectedEventType === 'platform-demo' ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Video className="w-5 h-5" />
+                        )}
                       </div>
                       <div>
                         <div className="font-semibold">Platform Demo</div>
@@ -625,13 +681,18 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
                 {/* Onboarding Call Option */}
                 <Button
                   onClick={() => handleDemoBooking('onboarding')}
+                  disabled={isLoadingTimes}
                   variant="outline"
                   className="h-auto p-4 flex-col items-start text-left border-2 border-blue-200 hover:bg-blue-50 dark:border-blue-700 dark:hover:bg-blue-900/20"
                 >
                   <div className="flex items-center w-full justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                        <Calendar className="w-5 h-5 text-blue-600" />
+                        {isLoadingTimes && selectedEventType === 'onboarding' ? (
+                          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Calendar className="w-5 h-5 text-blue-600" />
+                        )}
                       </div>
                       <div>
                         <div className="font-semibold text-gray-800 dark:text-white">Personal Onboarding</div>
@@ -648,10 +709,84 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
                 {/* Skip Option */}
                 <Button
                   onClick={handleSkipDemo}
+                  disabled={isLoadingTimes}
                   variant="ghost"
                   className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
                 >
                   Skip for now - I'll explore on my own
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Time Slot Selection */}
+          {showTimeSlots && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+                  Select Your Preferred Time
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  {selectedEventType === 'platform-demo' ? 'Platform Demo (30 min)' : 'Personal Onboarding (45 min)'}
+                </p>
+              </div>
+
+              <div className="grid gap-2 max-h-64 overflow-y-auto">
+                {availableTimes.map((timeSlot, index) => (
+                  <Button
+                    key={index}
+                    onClick={() => handleTimeSlotSelection(timeSlot)}
+                    disabled={isBooking}
+                    variant="outline"
+                    className="p-3 justify-between text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 border-gray-200 dark:border-gray-600"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                        <Clock className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-800 dark:text-white">
+                          {timeSlot.displayTime}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {timeSlot.timezone}
+                        </div>
+                      </div>
+                    </div>
+                    {isBooking && selectedTime?.datetime === timeSlot.datetime ? (
+                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <ArrowRight className="w-4 h-4 text-gray-400" />
+                    )}
+                  </Button>
+                ))}
+              </div>
+
+              <div className="flex justify-between pt-2">
+                <Button
+                  onClick={() => {
+                    setShowTimeSlots(false);
+                    setAvailableTimes([]);
+                    setSelectedEventType('');
+                  }}
+                  variant="ghost"
+                  className="text-gray-600 dark:text-gray-300"
+                  disabled={isBooking}
+                >
+                  ← Back to Options
+                </Button>
+                
+                <Button
+                  onClick={handleSkipDemo}
+                  variant="ghost"
+                  className="text-gray-600 dark:text-gray-300"
+                  disabled={isBooking}
+                >
+                  Skip for now
                 </Button>
               </div>
             </motion.div>
