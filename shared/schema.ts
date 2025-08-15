@@ -38,6 +38,11 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   role: varchar("role").default("user"), // user, admin, moderator
   subscriptionTier: varchar("subscription_tier").default("free"),
+  provider: varchar("provider"), // github, google, linkedin, email, chatbot
+  status: varchar("status").default("active"), // active, suspended, pending, banned
+  riskScore: integer("risk_score").default(0),
+  lastLoginAt: timestamp("last_login_at"),
+  totalTrades: integer("total_trades").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

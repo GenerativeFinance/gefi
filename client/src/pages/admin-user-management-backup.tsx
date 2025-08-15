@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -29,19 +29,17 @@ interface UserManagement {
   firstName: string;
   lastName: string;
   userType: string;
-  status: 'active' | 'suspended' | 'pending' | 'banned';
+  status: 'active' | 'suspended' | 'pending' | 'verified';
   verified: boolean;
   lastLogin: string;
   totalTrades: number;
   joinDate: string;
   riskScore: number;
   complianceStatus: string;
-  provider?: string;
-  role?: string;
 }
 
 export default function AdminUserManagement() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
@@ -150,13 +148,13 @@ export default function AdminUserManagement() {
   };
 
   // Filter users based on search and filters
-  const filteredUsers = (users as UserManagement[]).filter((user) => {
+  const filteredUsers = users.filter((user: UserManagement) => {
     const matchesSearch = 
-      user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesUserFilter = userFilter === "all" || user.userType?.toLowerCase() === userFilter.toLowerCase();
+    const matchesUserFilter = userFilter === "all" || user.userType.toLowerCase() === userFilter.toLowerCase();
     const matchesStatusFilter = statusFilter === "all" || user.status === statusFilter;
     
     return matchesSearch && matchesUserFilter && matchesStatusFilter;
@@ -165,38 +163,133 @@ export default function AdminUserManagement() {
   // Calculate stats from real data or use API data
   const stats = userStats || {
     total: users.length,
-    active: users.filter((u: any) => u.status === 'active').length,
-    pending: users.filter((u: any) => u.status === 'pending').length,
-    suspended: users.filter((u: any) => u.status === 'suspended').length,
-    banned: users.filter((u: any) => u.status === 'banned').length
+    active: users.filter((u: UserManagement) => u.status === 'active').length,
+    pending: users.filter((u: UserManagement) => u.status === 'pending').length,
+    suspended: users.filter((u: UserManagement) => u.status === 'suspended').length,
+    banned: users.filter((u: UserManagement) => u.status === 'banned').length
   };
 
-  // Helper functions for badges
+  // Display real users instead of mock data
+  const displayUsers = filteredUsers;
+
+  // Legacy mock data removed - now using real user data from API
+  /* const mockUsers: UserManagement[] = [
+    {
+      id: "github_55703540",
+      email: "alex.johnson@example.com",
+      firstName: "Alex",
+      lastName: "Johnson",
+      userType: "Developer",
+      status: "active",
+      verified: true,
+      lastLogin: "2025-07-14T12:30:00Z",
+      totalTrades: 234,
+      joinDate: "2024-03-15",
+      riskScore: 25,
+      complianceStatus: "compliant"
+    },
+    {
+      id: "google_123456789",
+      email: "sarah.chen@example.com",
+      firstName: "Sarah",
+      lastName: "Chen",
+      userType: "Investor",
+      status: "active",
+      verified: true,
+      lastLogin: "2025-07-14T10:15:00Z",
+      totalTrades: 89,
+      joinDate: "2024-05-22",
+      riskScore: 15,
+      complianceStatus: "compliant"
+    },
+    {
+      id: "linkedin_987654321",
+      email: "mike.rodriguez@example.com",
+      firstName: "Mike",
+      lastName: "Rodriguez",
+      userType: "Data Provider",
+      status: "pending",
+      verified: false,
+      lastLogin: "2025-07-13T16:45:00Z",
+      totalTrades: 12,
+      joinDate: "2025-07-10",
+      riskScore: 45,
+      complianceStatus: "under_review"
+    },
+    {
+      id: "github_111222333",
+      email: "emma.wilson@example.com",
+      firstName: "Emma",
+      lastName: "Wilson",
+      userType: "Regulator",
+      status: "verified",
+      verified: true,
+      lastLogin: "2025-07-14T09:20:00Z",
+      totalTrades: 0,
+      joinDate: "2024-01-15",
+      riskScore: 5,
+      complianceStatus: "compliant"
+    },
+    {
+      id: "google_444555666",
+      email: "david.lee@example.com",
+      firstName: "David",
+      lastName: "Lee",
+      userType: "Investor",
+      status: "suspended",
+      verified: true,
+      lastLogin: "2025-07-12T14:30:00Z",
+      totalTrades: 456,
+      joinDate: "2023-11-08",
+      riskScore: 85,
+      complianceStatus: "flagged"
+    }
+  ];
+
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, any> = {
-      active: { variant: "default", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" },
-      pending: { variant: "secondary", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" },
-      suspended: { variant: "destructive", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" },
-      banned: { variant: "destructive", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" }
+    const variants: Record<string, string> = {
+      active: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+      suspended: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+      verified: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
     };
-    const config = variants[status] || variants.active;
-    return <Badge className={config.color}>{status}</Badge>;
+    return <Badge className={variants[status] || variants.pending}>{status}</Badge>;
   };
 
   const getRiskBadge = (score: number) => {
-    if (score <= 20) return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Low Risk</Badge>;
-    if (score <= 50) return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Medium Risk</Badge>;
+    if (score <= 30) return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Low Risk</Badge>;
+    if (score <= 60) return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Medium Risk</Badge>;
     return <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">High Risk</Badge>;
   };
 
   const getComplianceBadge = (status: string) => {
-    const variants: Record<string, any> = {
-      compliant: { color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" },
-      under_review: { color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" },
-      high_risk: { color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" }
+    const variants: Record<string, string> = {
+      compliant: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      under_review: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+      flagged: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
     };
-    const config = variants[status] || variants.compliant;
-    return <Badge className={config.color}>{status.replace('_', ' ')}</Badge>;
+    return <Badge className={variants[status] || variants.under_review}>{status.replace('_', ' ')}</Badge>;
+  };
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = searchTerm === "" || 
+      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesType = userFilter === "all" || user.userType.toLowerCase() === userFilter.toLowerCase();
+    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+    
+    return matchesSearch && matchesType && matchesStatus;
+  });
+
+  const stats = {
+    totalUsers: users.length,
+    activeUsers: users.filter(u => u.status === 'active').length,
+    pendingUsers: users.filter(u => u.status === 'pending').length,
+    suspendedUsers: users.filter(u => u.status === 'suspended').length,
+    highRiskUsers: users.filter(u => u.riskScore > 60).length,
+    complianceIssues: users.filter(u => u.complianceStatus !== 'compliant').length
   };
 
   return (
@@ -216,14 +309,14 @@ export default function AdminUserManagement() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Users</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.total}</div>
+                <div className="text-2xl font-bold">{stats.totalUsers}</div>
                 <p className="text-xs text-muted-foreground">All registered</p>
               </CardContent>
             </Card>
@@ -234,7 +327,7 @@ export default function AdminUserManagement() {
                 <UserCheck className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+                <div className="text-2xl font-bold text-green-600">{stats.activeUsers}</div>
                 <p className="text-xs text-muted-foreground">Currently active</p>
               </CardContent>
             </Card>
@@ -245,7 +338,7 @@ export default function AdminUserManagement() {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+                <div className="text-2xl font-bold text-yellow-600">{stats.pendingUsers}</div>
                 <p className="text-xs text-muted-foreground">Awaiting verification</p>
               </CardContent>
             </Card>
@@ -256,77 +349,86 @@ export default function AdminUserManagement() {
                 <UserX className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{stats.suspended}</div>
+                <div className="text-2xl font-bold text-red-600">{stats.suspendedUsers}</div>
                 <p className="text-xs text-muted-foreground">Account suspended</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Banned</CardTitle>
+                <CardTitle className="text-sm font-medium">High Risk</CardTitle>
                 <Shield className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{stats.banned}</div>
-                <p className="text-xs text-muted-foreground">Account banned</p>
+                <div className="text-2xl font-bold text-orange-600">{stats.highRiskUsers}</div>
+                <p className="text-xs text-muted-foreground">Risk score &gt;60</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Compliance Issues</CardTitle>
+                <Flag className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">{stats.complianceIssues}</div>
+                <p className="text-xs text-muted-foreground">Need review</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Search and Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Search & Filter Users</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search users..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Select value={userFilter} onValueChange={setUserFilter}>
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue placeholder="All User Types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All User Types</SelectItem>
-                    <SelectItem value="developer">Developer</SelectItem>
-                    <SelectItem value="investor">Investor</SelectItem>
-                    <SelectItem value="data provider">Data Provider</SelectItem>
-                    <SelectItem value="regulator">Regulator</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue placeholder="All Statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="suspended">Suspended</SelectItem>
-                    <SelectItem value="banned">Banned</SelectItem>
-                  </SelectContent>
-                </Select>
+          {/* Filters */}
+          <div className="flex justify-between items-center gap-4">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search users..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8 w-64"
+                />
               </div>
-            </CardContent>
-          </Card>
+              
+              <Select value={userFilter} onValueChange={setUserFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All User Types</SelectItem>
+                  <SelectItem value="investor">Investors</SelectItem>
+                  <SelectItem value="developer">Developers</SelectItem>
+                  <SelectItem value="data provider">Data Providers</SelectItem>
+                  <SelectItem value="regulator">Regulators</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                  <SelectItem value="verified">Verified</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="text-sm text-muted-foreground">
+              Showing {filteredUsers.length} of {users.length} users
+            </div>
+          </div>
 
           {/* Users Table */}
           <Card>
-            <CardHeader>
-              <CardTitle>Users ({filteredUsers.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
+                  <thead className="bg-muted/50">
+                    <tr>
                       <th className="text-left p-4 font-medium">User</th>
                       <th className="text-left p-4 font-medium">Type</th>
                       <th className="text-left p-4 font-medium">Status</th>
@@ -338,13 +440,13 @@ export default function AdminUserManagement() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((user, index) => (
-                      <tr key={user.id} className="border-b hover:bg-muted/50">
+                    {filteredUsers.map((user) => (
+                      <tr key={user.id} className="border-t hover:bg-muted/30">
                         <td className="p-4">
                           <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                               <span className="text-sm font-medium">
-                                {user.firstName?.[0]}{user.lastName?.[0]}
+                                {user.firstName[0]}{user.lastName[0]}
                               </span>
                             </div>
                             <div>
@@ -353,36 +455,34 @@ export default function AdminUserManagement() {
                                 <Mail className="h-3 w-3 mr-1" />
                                 {user.email}
                               </div>
-                              {user.provider && (
-                                <div className="text-xs text-muted-foreground">
-                                  via {user.provider}
-                                </div>
-                              )}
                             </div>
                           </div>
                         </td>
                         <td className="p-4">
-                          <Badge variant="outline">{user.userType || user.role || 'User'}</Badge>
+                          <Badge variant="outline">{user.userType}</Badge>
                         </td>
                         <td className="p-4">
                           {getStatusBadge(user.status)}
                         </td>
                         <td className="p-4">
-                          {getRiskBadge(user.riskScore || 0)}
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium">{user.riskScore}</span>
+                            {getRiskBadge(user.riskScore)}
+                          </div>
                         </td>
                         <td className="p-4">
-                          {getComplianceBadge(user.complianceStatus || 'compliant')}
+                          {getComplianceBadge(user.complianceStatus)}
                         </td>
                         <td className="p-4 text-sm">
                           <div className="flex items-center space-x-1">
                             <Activity className="h-3 w-3 text-muted-foreground" />
-                            <span>{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}</span>
+                            <span>{new Date(user.lastLogin).toLocaleDateString()}</span>
                           </div>
                         </td>
                         <td className="p-4 text-sm">
-                          {user.totalTrades || 0} trades
+                          {user.totalTrades} trades
                           <div className="text-xs text-muted-foreground">
-                            Joined {user.joinDate ? new Date(user.joinDate).toLocaleDateString() : 'Unknown'}
+                            Joined {new Date(user.joinDate).toLocaleDateString()}
                           </div>
                         </td>
                         <td className="p-4">
@@ -390,15 +490,7 @@ export default function AdminUserManagement() {
                             <Button size="sm" variant="outline" title="View Details">
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              title="Change Status"
-                              onClick={() => {
-                                const newStatus = user.status === 'active' ? 'suspended' : 'active';
-                                handleStatusChange(user.id, newStatus);
-                              }}
-                            >
+                            <Button size="sm" variant="outline" title="Edit User">
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button size="sm" variant="outline" title="Flag User">

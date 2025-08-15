@@ -339,6 +339,66 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  // Admin user management methods
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(users.createdAt);
+  }
+
+  async updateUserStatus(id: string, status: string, adminId?: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        status, 
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async updateUserRole(id: string, role: string, adminId?: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        role, 
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async getUserStats(): Promise<{
+    total: number;
+    active: number;
+    pending: number;
+    suspended: number;
+    banned: number;
+    byRole: { role: string; count: number }[];
+  }> {
+    const allUsers = await this.getAllUsers();
+    
+    const stats = {
+      total: allUsers.length,
+      active: allUsers.filter(u => u.status === 'active').length,
+      pending: allUsers.filter(u => u.status === 'pending').length,
+      suspended: allUsers.filter(u => u.status === 'suspended').length,
+      banned: allUsers.filter(u => u.status === 'banned').length,
+      byRole: [] as { role: string; count: number }[]
+    };
+
+    // Count by role
+    const roleMap = new Map<string, number>();
+    allUsers.forEach(user => {
+      const role = user.role || 'user';
+      roleMap.set(role, (roleMap.get(role) || 0) + 1);
+    });
+    
+    stats.byRole = Array.from(roleMap.entries()).map(([role, count]) => ({ role, count }));
+
+    return stats;
+  }
+
   // User Profile operations
   async getUserProfile(userId: string): Promise<UserProfile | undefined> {
     try {
