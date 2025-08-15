@@ -655,6 +655,95 @@ function setupCalendlyRoutes(app: Express) {
     }
   });
 
+  // Get available time slots from Calendly
+  app.post('/api/calendly/available-times', async (req, res) => {
+    try {
+      const { eventType, startDate, endDate } = req.body;
+      
+      // For demo purposes, return mock available times
+      // In production, integrate with Calendly's scheduling API
+      const availableTimes = [
+        {
+          datetime: '2025-08-16T10:00:00Z',
+          displayTime: 'Tomorrow 10:00 AM',
+          timezone: 'EST'
+        },
+        {
+          datetime: '2025-08-16T14:00:00Z',
+          displayTime: 'Tomorrow 2:00 PM',
+          timezone: 'EST'
+        },
+        {
+          datetime: '2025-08-16T16:00:00Z',
+          displayTime: 'Tomorrow 4:00 PM',
+          timezone: 'EST'
+        },
+        {
+          datetime: '2025-08-17T09:00:00Z',
+          displayTime: 'Monday 9:00 AM',
+          timezone: 'EST'
+        },
+        {
+          datetime: '2025-08-17T11:00:00Z',
+          displayTime: 'Monday 11:00 AM',
+          timezone: 'EST'
+        },
+        {
+          datetime: '2025-08-17T15:00:00Z',
+          displayTime: 'Monday 3:00 PM',
+          timezone: 'EST'
+        }
+      ];
+
+      res.json({ 
+        success: true, 
+        availableTimes,
+        eventType: eventType === 'platform-demo' ? 'Platform Demo (30 min)' : 'Personal Onboarding (45 min)'
+      });
+    } catch (error) {
+      console.error('Error fetching available times:', error);
+      res.status(500).json({ success: false, message: 'Failed to fetch available times' });
+    }
+  });
+
+  // Book appointment with Calendly
+  app.post('/api/calendly/book-appointment', async (req, res) => {
+    try {
+      const { eventType, datetime, userEmail, userName, userMessage } = req.body;
+      
+      console.log(`📅 Booking ${eventType} appointment for ${userName} (${userEmail}) at ${datetime}`);
+      
+      // For demo purposes, simulate successful booking
+      // In production, create actual Calendly appointment
+      const bookingId = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Store booking details (in production, save to database)
+      global.calendlyBookings = global.calendlyBookings || {};
+      global.calendlyBookings[bookingId] = {
+        id: bookingId,
+        eventType,
+        datetime,
+        userEmail,
+        userName,
+        userMessage,
+        status: 'confirmed',
+        createdAt: new Date()
+      };
+
+      console.log(`✅ Demo booking created: ${bookingId}`);
+
+      res.json({ 
+        success: true, 
+        bookingId,
+        confirmationMessage: `Your ${eventType} session has been booked for ${datetime}. You'll receive a confirmation email shortly.`,
+        meetingLink: `https://gefi.demo/meeting/${bookingId}` // Demo link
+      });
+    } catch (error) {
+      console.error('Error booking appointment:', error);
+      res.status(500).json({ success: false, message: 'Failed to book appointment' });
+    }
+  });
+
   // Get available event types from Calendly
   app.get('/api/calendly/event-types', async (req, res) => {
     try {
