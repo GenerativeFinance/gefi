@@ -1,4 +1,5 @@
 import { Switch, Route } from "wouter";
+import { lazy, Suspense } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -28,7 +29,7 @@ import Settings from "@/pages/settings";
 import Wallet from "@/pages/wallet";
 import DeveloperDashboard from "@/pages/developer-dashboard";
 import DeveloperMarketplace from "@/pages/developer-marketplace";
-import BacktestingEnvironment from "@/pages/backtesting";
+const BacktestingEnvironment = lazy(() => import("./pages/BacktestingEnvironment"));
 import LiveTradingPage from "@/pages/live-trading";
 import Bounties from "@/pages/bounties";
 import BountyLeaderboard from "@/pages/bounty-leaderboard";
@@ -169,6 +170,7 @@ import DataProviders from "@/pages/data-providers";
 import DeveloperPortfolioOverview from "@/pages/developer/portfolio-overview";
 import DataProviderPortfolioOverview from "@/pages/data-provider/portfolio-overview";
 import SupportDashboard from "@/pages/support-dashboard";
+
 
 
 

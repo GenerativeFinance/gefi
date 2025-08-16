@@ -46,6 +46,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log("📅 Registering Calendly APIs...");
   const { registerCalendlyRoutes } = await import("./calendlyRoutes");
   registerCalendlyRoutes(app);
+  
+  console.log("🔬 Registering Backtesting APIs...");
+  const { registerBacktestingRoutes } = await import("./backtestingRoutes");
+  registerBacktestingRoutes(app);
 
   // ===========================================
   // WebSocket Server Setup
