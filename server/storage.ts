@@ -291,7 +291,9 @@ export class DatabaseStorage implements IStorage {
             firstName: userData.firstName,
             lastName: userData.lastName,
             profileImageUrl: userData.profileImageUrl,
-            updatedAt: new Date() 
+            provider: userData.provider || existingUser.provider || 'email',
+            updatedAt: new Date(),
+            lastLoginAt: new Date()
           })
           .where(eq(users.id, existingUser.id))
           .returning();
@@ -300,7 +302,14 @@ export class DatabaseStorage implements IStorage {
         // Create new user - use insert with onConflictDoNothing to avoid duplicate key errors
         const [user] = await db
           .insert(users)
-          .values(userData)
+          .values({
+            ...userData,
+            provider: userData.provider || 'email',
+            status: 'active',
+            riskScore: 0,
+            lastLoginAt: new Date(),
+            totalTrades: 0
+          })
           .onConflictDoNothing()
           .returning();
         
