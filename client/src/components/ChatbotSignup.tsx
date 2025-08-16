@@ -227,8 +227,9 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
       type: 'multiselect',
       options: AREAS_OF_FOCUS,
       validation: (value: any) => {
-        // For multiselect, value should be an array with at least one item
-        return Array.isArray(value) && value.length > 0;
+        // For multiselect, we don't validate individual selections
+        // Instead, we check if at least one item is selected when continuing
+        return true;
       },
       errorMessage: "Please select at least one area of focus"
     },
@@ -259,7 +260,7 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
     addBotMessage("Welcome to GeFi! I'll help you create your account with just a few questions. 🤖");
     setTimeout(() => {
       addBotMessage(steps[0].question);
-      setShowOptions(steps[0].type === 'select');
+      setShowOptions(steps[0].type === 'select' || steps[0].type === 'multiselect');
     }, 1000);
   }, []);
 
@@ -348,7 +349,6 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
       setUserData(newUserData);
       
       // For multiselect, don't advance automatically - let user continue when ready
-      addUserMessage(inputValue);
       return;
     } else {
       newUserData = { ...userData, [currentStepData.field]: inputValue };
@@ -368,7 +368,7 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
         
         if (nextStep < steps.length) {
           addBotMessage(steps[nextStep].question);
-          setShowOptions(steps[nextStep].type === 'select');
+          setShowOptions(steps[nextStep].type === 'select' || steps[nextStep].type === 'multiselect');
         }
       } else if (currentStepData.type === 'security') {
         // Handle security check
