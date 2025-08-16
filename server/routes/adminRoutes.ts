@@ -15,18 +15,39 @@ const createUserSchema = z.object({
   platformIntent: z.enum(["Buy Models", "Sell/Upload Models", "Both", "Browse/Learn"]).optional()
 });
 
-// Middleware to check admin/moderator permissions
-const requireAdminOrModerator = (req: any, res: any, next: any) => {
+// Middleware to check admin/moderator permissions with enhanced checks
+const requireAdminOrModerator = async (req: any, res: any, next: any) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
   const user = req.user;
-  if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
-    return res.status(403).json({ message: "Access denied. Admin or moderator role required." });
+  if (!user) {
+    return res.status(401).json({ message: "No user session found" });
   }
 
-  next();
+  // Get fresh user data from database to ensure current role/status
+  try {
+    const dbUser = await storage.getUser(user.id);
+    if (!dbUser) {
+      return res.status(401).json({ message: "User not found in database" });
+    }
+
+    // Check if user has admin or moderator role
+    if (dbUser.role !== 'admin' && dbUser.role !== 'moderator') {
+      return res.status(403).json({ 
+        message: "Access denied. Admin or moderator role required.",
+        userRole: dbUser.role 
+      });
+    }
+
+    // Attach fresh user data to request for use in route handlers
+    req.dbUser = dbUser;
+    next();
+  } catch (error) {
+    console.error('Error checking admin permissions:', error);
+    return res.status(500).json({ message: "Permission check failed" });
+  }
 };
 
 export function registerAdminRoutes(app: Express) {
