@@ -112,7 +112,23 @@ export function registerAdminRoutes(app: Express) {
   // Get user statistics (admin/moderator only)
   app.get('/api/admin/users/stats', requireAdminOrModerator, async (req: any, res) => {
     try {
-      const stats = await storage.getUserStats();
+      // Calculate stats directly without relying on getUserStats function
+      const allUsers = await storage.getAllUsers();
+      
+      const stats = {
+        totalUsers: allUsers.length,
+        activeUsers: allUsers.filter(u => u.status === 'active').length,
+        suspendedUsers: allUsers.filter(u => u.status === 'suspended').length,
+        pendingUsers: allUsers.filter(u => u.status === 'pending').length,
+        bannedUsers: allUsers.filter(u => u.status === 'banned').length,
+        chatbotSignups: allUsers.filter(u => u.provider === 'chatbot_signup').length,
+        recentSignups: allUsers.filter(u => {
+          const dayAgo = new Date();
+          dayAgo.setDate(dayAgo.getDate() - 1);
+          return new Date(u.createdAt || '') > dayAgo;
+        }).length
+      };
+      
       res.json(stats);
     } catch (error) {
       console.error('Error fetching user stats:', error);
