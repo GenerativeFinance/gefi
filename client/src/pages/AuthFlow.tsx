@@ -69,7 +69,7 @@ export default function AuthFlow() {
   };
 
   if (authMode === 'chatbot-signup') {
-    return <ChatbotSignup onComplete={handleChatbotSignupComplete} />;
+    return <ChatbotSignup onComplete={handleChatbotSignupComplete} onBack={() => setAuthMode('welcome')} />;
   }
 
   if (authMode === 'email-signup') {
