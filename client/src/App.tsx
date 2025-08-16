@@ -14,6 +14,7 @@ import Home from "@/pages/home";
 import AnalyticsDashboard from "@/pages/analytics-dashboard";
 import AuthFlow from "@/pages/AuthFlow";
 import LoginFailed from "@/pages/login-failed";
+import AccountPending from "@/pages/account-pending";
 import Portfolio from "@/pages/portfolio";
 import Reports from "@/pages/reports";
 import ReportsAll from "@/pages/reports-all";
@@ -191,6 +192,7 @@ function Router() {
       {/* Public routes - always available */}
       <Route path="/login" component={AuthFlow} />
       <Route path="/login-failed" component={LoginFailed} />
+      <Route path="/account-pending" component={AccountPending} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/data-processing-agreement" component={DataProcessingAgreement} />

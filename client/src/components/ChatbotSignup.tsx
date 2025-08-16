@@ -8,6 +8,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Bot, User, Mail, MapPin, Briefcase, ArrowRight, Check, X, Calendar, Clock, Video, ArrowLeft, Search, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'wouter';
 
 interface ChatMessage {
   id: string;
@@ -130,6 +131,7 @@ const SUBSCRIPTION_PREFERENCES = [
 ];
 
 export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (userData: UserData) => void; onBack?: () => void }) {
+  const [, navigate] = useLocation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentInput, setCurrentInput] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
@@ -560,27 +562,21 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
           if (signupResponse.ok) {
             const result = await signupResponse.json();
             
-            // Show comprehensive confirmation message with user details
-            addBotMessage("🎉 Your account has been created successfully! Welcome to GeFi!");
+            // Show account creation success message
+            addBotMessage("🎉 Account created successfully! Your account is now under review.");
             
             setTimeout(() => {
-              let userSummary = `Your details: Email: ${userData.email}, Name: ${userData.firstName} ${userData.lastName}, Role: ${userData.role}, Country: ${userData.country}`;
-              if (userData.experienceLevel) userSummary += `, Experience: ${userData.experienceLevel}`;
-              if (userData.areasOfFocus?.length > 0) userSummary += `, Interests: ${userData.areasOfFocus.join(', ')}`;
-              if (userData.platformIntent) userSummary += `, Intent: ${userData.platformIntent}`;
-              
-              addBotMessage(userSummary);
+              addBotMessage("You'll receive an email confirmation once your account is approved. This typically takes 24-48 hours.");
               
               setTimeout(() => {
-                addBotMessage("Perfect! Now let's get you started with a personalized demo. Would you like to book a free demo session to explore GeFi's AI financial models?");
+                addBotMessage("Redirecting you to your account status page...");
                 
-                // Show demo booking options
+                // Redirect to account pending page after 2 seconds
                 setTimeout(() => {
-                  addBotMessage("Click below to make your choice:");
-                  setTimeout(() => {
-                    setShowDemoBooking(true);
-                  }, 500);
-                }, 1000);
+                  // Store user data in sessionStorage to pass to the pending page
+                  sessionStorage.setItem('pendingUserData', JSON.stringify(userData));
+                  navigate('/account-pending');
+                }, 2000);
               }, 1500);
             }, 2000);
           } else {
