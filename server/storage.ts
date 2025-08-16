@@ -408,6 +408,44 @@ export class DatabaseStorage implements IStorage {
     return stats;
   }
 
+  async updateUserStatus(userId: string, status: string): Promise<User | undefined> {
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set({ 
+          status: status as 'active' | 'suspended' | 'pending' | 'banned',
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      console.log(`Updated user ${userId} status to ${status}`);
+      return updatedUser;
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      throw error;
+    }
+  }
+
+  async updateUserRole(userId: string, role: string): Promise<User | undefined> {
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set({ 
+          role: role,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      console.log(`Updated user ${userId} role to ${role}`);
+      return updatedUser;
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      throw error;
+    }
+  }
+
   // User Profile operations
   async getUserProfile(userId: string): Promise<UserProfile | undefined> {
     try {
