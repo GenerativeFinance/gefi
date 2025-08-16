@@ -2223,3 +2223,9 @@ export type InsertRegulatorCommunication = typeof regulatorCommunications.$infer
 
 export type RegulatoryComplianceReport = typeof regulatoryComplianceReports.$inferSelect;
 export type InsertRegulatoryComplianceReport = typeof regulatoryComplianceReports.$inferInsert;
+
+// User type exports
+export const insertUserSchema = createInsertSchema(users);
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+export type UpsertUser = Partial<InsertUser> & { id: string };

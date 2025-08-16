@@ -70,6 +70,7 @@ async function upsertUser(profile: any, provider: string) {
     firstName: profile.name?.givenName || profile.displayName?.split(' ')[0] || null,
     lastName: profile.name?.familyName || profile.displayName?.split(' ').slice(1).join(' ') || null,
     profileImageUrl: profile.photos?.[0]?.value || null,
+    provider: provider,
   };
   
   return await storage.upsertUser(userData);
