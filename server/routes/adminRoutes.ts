@@ -57,7 +57,14 @@ export function registerAdminRoutes(app: Express) {
         riskScore: user.riskScore || 0,
         complianceStatus: getComplianceStatus(user.riskScore || 0),
         provider: user.provider || 'email',
-        role: user.role || 'user'
+        role: user.role || 'user',
+        // Additional debug info
+        debugInfo: {
+          dbRole: user.role,
+          dbStatus: user.status,
+          dbProvider: user.provider,
+          dbCreatedAt: user.createdAt
+        }
       }));
 
       res.json(transformedUsers);
