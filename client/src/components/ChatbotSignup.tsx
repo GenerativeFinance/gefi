@@ -541,7 +541,7 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
         // Create account
         setIsCreatingAccount(true);
         try {
-          const signupResponse = await fetch('/api/chatbot/signup/complete', {
+          const signupResponse = await fetch('/api/auth/complete-chatbot-signup', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
