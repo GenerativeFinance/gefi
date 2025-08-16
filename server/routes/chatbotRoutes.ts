@@ -335,4 +335,111 @@ export function registerChatbotRoutes(app: Express) {
       res.status(500).json({ error: "Failed to fetch analytics" });
     }
   });
+
+  // Complete chatbot signup - Create actual user account
+  app.post("/api/chatbot/signup/complete", async (req, res) => {
+    try {
+      const { 
+        email, 
+        firstName, 
+        lastName, 
+        country, 
+        role, 
+        phone, 
+        experience, 
+        goals,
+        sessionId 
+      } = req.body;
+
+      // Validate required fields
+      if (!email || !firstName || !lastName) {
+        return res.status(400).json({ 
+          error: "Email, first name, and last name are required" 
+        });
+      }
+
+      // Import storage to create user
+      const { storage } = await import('../storage');
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ 
+          error: "User with this email already exists" 
+        });
+      }
+
+      // Create new user account
+      const userData = {
+        email,
+        firstName,
+        lastName,
+        role: role || 'user',
+        status: 'active' as const,
+        provider: 'chatbot',
+        riskScore: 0,
+        totalTrades: 0,
+        subscriptionTier: 'free' as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLoginAt: new Date()
+      };
+
+      const newUser = await storage.createUser(userData);
+
+      // Create user profile with chatbot data
+      if (newUser) {
+        const profileData = {
+          userId: newUser.id,
+          displayName: `${firstName} ${lastName}`,
+          bio: `Registered via AI Assistant as ${role}`,
+          location: country,
+          phone,
+          experience,
+          goals: goals ? [goals] : [],
+          preferences: {
+            role,
+            registrationSource: 'chatbot',
+            country,
+            experience
+          }
+        };
+
+        await storage.createOrUpdateUserProfile(newUser.id, profileData);
+
+        // Update the chatbot conversation with user ID
+        if (sessionId) {
+          await db
+            .update(chatbotConversations)
+            .set({ 
+              userId: newUser.id,
+              isCompleted: true,
+              updatedAt: new Date()
+            })
+            .where(eq(chatbotConversations.sessionId, sessionId));
+        }
+
+        console.log(`✅ New user created via chatbot: ${email} (${firstName} ${lastName})`);
+
+        res.json({ 
+          success: true, 
+          message: "Account created successfully",
+          user: {
+            id: newUser.id,
+            email: newUser.email,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            role: newUser.role
+          }
+        });
+      }
+
+    } catch (error) {
+      console.error("Error completing chatbot signup:", error);
+      res.status(500).json({ 
+        error: "Failed to create account",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
 }
