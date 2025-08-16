@@ -490,12 +490,12 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
   };
 
   const handleSkipDemo = () => {
-    addBotMessage("Perfect! Your account has been created and is under review. Redirecting you to your account status page...");
+    addBotMessage("Perfect! Your account has been created and is under review. Redirecting you to book a demo...");
     
     setTimeout(() => {
-      // Store user data and redirect
+      // Store user data and redirect to demo booking page
       sessionStorage.setItem('pendingUserData', JSON.stringify(userData));
-      navigate('/account-pending');
+      navigate('/demo-booking');
     }, 2000);
   };
 
@@ -565,11 +565,12 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
               addBotMessage("You'll receive an email confirmation once your account is approved. This typically takes 24-48 hours.");
               
               setTimeout(() => {
-                addBotMessage("Would you like to book a demo while waiting for approval?");
+                addBotMessage("Redirecting you to book a demo while waiting for approval...");
                 
-                // Show demo booking options
+                // Redirect to demo booking page
                 setTimeout(() => {
-                  setShowDemoBooking(true);
+                  sessionStorage.setItem('pendingUserData', JSON.stringify(userData));
+                  navigate('/demo-booking');
                 }, 1000);
               }, 1500);
             }, 2000);

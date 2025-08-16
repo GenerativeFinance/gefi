@@ -16,6 +16,7 @@ import AuthFlow from "@/pages/AuthFlow";
 import LoginFailed from "@/pages/login-failed";
 import AccountPending from "@/pages/account-pending";
 import AccountStatus from "@/pages/account-status";
+import DemoBooking from "@/pages/demo-booking";
 import Portfolio from "@/pages/portfolio";
 import Reports from "@/pages/reports";
 import ReportsAll from "@/pages/reports-all";
@@ -207,6 +208,7 @@ function Router() {
       <Route path="/bug-bounty-program" component={BugBountyProgram} />
       <Route path="/enterprise-sales" component={EnterpriseSales} />
       <Route path="/profile-setup" component={ProfileSetup} />
+      <Route path="/demo-booking" component={DemoBooking} />
       
       {/* Non-active user - redirect to account status */}
       {isNonActiveUser ? (
