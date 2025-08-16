@@ -199,10 +199,19 @@ export async function setupMultiAuth(app: Express) {
 
   passport.deserializeUser(async (user: any, done) => {
     try {
-      // Verify user still exists in database for security
+      // Verify user still exists in database and check their status
       const dbUser = await storage.getUser(user.id);
       if (dbUser) {
-        done(null, user);
+        // Check if user account is active
+        if (dbUser.status !== 'active') {
+          console.log(`🚫 User ${user.id} account status: ${dbUser.status} - access denied`);
+          done(null, false); // Invalidate session for non-active users
+          return;
+        }
+        
+        // Update user object with latest database info
+        const updatedUser = { ...user, ...dbUser };
+        done(null, updatedUser);
       } else {
         // User no longer exists, invalidate session
         done(null, false);
@@ -579,11 +588,37 @@ function setupDevelopmentRoute(app: Express) {
  * @param res - Express response object
  * @param next - Express next function
  */
-export const isAuthenticated: RequestHandler = (req, res, next) => {
-  if (req.isAuthenticated()) {
+export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  if (req.isAuthenticated() && req.user) {
+    const user = req.user as any;
+    
     console.log('🔐 Auth check - isAuthenticated: true');
-    console.log('🔐 Auth check - user:', req.user);
-    return next();
+    console.log('🔐 Auth check - user:', user);
+    
+    // Check user status from database
+    try {
+      const dbUser = await storage.getUser(user.id);
+      if (!dbUser || dbUser.status !== 'active') {
+        console.log(`🚫 Access denied - user status: ${dbUser?.status || 'not found'}`);
+        
+        // Clear the session for non-active users
+        req.logout((err) => {
+          if (err) console.error('Logout error:', err);
+        });
+        
+        return res.status(401).json({ 
+          message: "Account access restricted", 
+          reason: dbUser?.status || 'account_not_found',
+          redirectTo: '/account-status'
+        });
+      }
+      
+      // User is active, allow access
+      return next();
+    } catch (error) {
+      console.error('Error checking user status:', error);
+      return res.status(500).json({ message: "Authentication error" });
+    }
   }
   
   console.log('🔐 Auth check - isAuthenticated: false');

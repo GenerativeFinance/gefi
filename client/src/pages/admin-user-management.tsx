@@ -197,6 +197,24 @@ export default function AdminUserManagement() {
     setIsEditDialogOpen(true);
   };
 
+  // Handle suspend/unsuspend user action
+  const handleSuspendUser = (userToSuspend: UserManagement) => {
+    const newStatus = userToSuspend.status === 'suspended' ? 'active' : 'suspended';
+    const action = newStatus === 'suspended' ? 'suspend' : 'unsuspend';
+    
+    updateStatusMutation.mutate({
+      userId: userToSuspend.id,
+      status: newStatus
+    }, {
+      onSuccess: () => {
+        toast({ 
+          title: `User ${action}ed successfully`,
+          description: `${userToSuspend.firstName} ${userToSuspend.lastName} has been ${action}ed.`
+        });
+      }
+    });
+  };
+
   // Handle save user changes
   const handleSaveUserChanges = () => {
     if (!editingUser) return;
@@ -513,7 +531,13 @@ export default function AdminUserManagement() {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button size="sm" variant="outline" title="Flag User">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              title={user.status === 'suspended' ? 'Unsuspend User' : 'Suspend User'}
+                              onClick={() => handleSuspendUser(user)}
+                              className={user.status === 'suspended' ? 'border-orange-500 text-orange-600 hover:bg-orange-50' : 'hover:bg-red-50 hover:border-red-500 hover:text-red-600'}
+                            >
                               <Flag className="h-4 w-4" />
                             </Button>
                           </div>

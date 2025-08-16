@@ -15,6 +15,7 @@ import AnalyticsDashboard from "@/pages/analytics-dashboard";
 import AuthFlow from "@/pages/AuthFlow";
 import LoginFailed from "@/pages/login-failed";
 import AccountPending from "@/pages/account-pending";
+import AccountStatus from "@/pages/account-status";
 import Portfolio from "@/pages/portfolio";
 import Reports from "@/pages/reports";
 import ReportsAll from "@/pages/reports-all";
@@ -187,12 +188,18 @@ function Router() {
     );
   }
 
+  // Check if user is authenticated but not active
+  const userStatus = (user as any)?.status;
+  const isUserActive = userStatus === 'active';
+  const isNonActiveUser = isAuthenticated && !isUserActive;
+
   return (
     <Switch>
       {/* Public routes - always available */}
       <Route path="/login" component={AuthFlow} />
       <Route path="/login-failed" component={LoginFailed} />
       <Route path="/account-pending" component={AccountPending} />
+      <Route path="/account-status" component={AccountStatus} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/data-processing-agreement" component={DataProcessingAgreement} />
@@ -201,8 +208,12 @@ function Router() {
       <Route path="/enterprise-sales" component={EnterpriseSales} />
       <Route path="/profile-setup" component={ProfileSetup} />
       
-      {/* Protected routes */}
-      {isAuthenticated ? (
+      {/* Non-active user - redirect to account status */}
+      {isNonActiveUser ? (
+        <Route path="*">
+          <AccountStatus />
+        </Route>
+      ) : isAuthenticated ? (
           <>
             <Route path="/" component={Home} />
             <Route path="/home" component={Home} />
