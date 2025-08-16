@@ -119,6 +119,24 @@ const signupCompletionSchema = z.object({
   sessionId: z.string()
 });
 
+// Helper function to map experience level and platform intent to role
+function mapExperienceLevelToRole(experienceLevel: string, platformIntent: string): string {
+  // Map based on experience level and intent
+  if (platformIntent.includes('Sell') || platformIntent.includes('Upload')) {
+    return 'developer';
+  }
+  
+  switch (experienceLevel.toLowerCase()) {
+    case 'expert':
+      return 'analyst';
+    case 'intermediate':
+      return 'trader';
+    case 'beginner':
+    default:
+      return 'investor';
+  }
+}
+
 // Rate limiting for signup endpoints
 const signupLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
@@ -403,6 +421,142 @@ export function registerChatbotRoutes(app: Express) {
     } catch (error) {
       console.error('Email verification error:', error);
       res.status(500).json({ error: 'Failed to verify email' });
+    }
+  });
+
+  // Complete chatbot signup and create account
+  app.post("/api/auth/complete-chatbot-signup", signupLimiter, securityMiddleware, async (req, res) => {
+    try {
+      const {
+        email,
+        firstName,
+        lastName,
+        country,
+        role,
+        company,
+        experienceLevel,
+        areasOfFocus,
+        linkedinProfile,
+        portfolioUrl,
+        preferredModelTypes,
+        platformIntent,
+        subscriptionPreferences,
+        wantsDemo,
+        sessionId
+      } = req.body;
+
+      // Validate required fields
+      if (!email || !firstName || !lastName || !experienceLevel || !platformIntent) {
+        return res.status(400).json({ 
+          error: 'Missing required fields',
+          required: ['email', 'firstName', 'lastName', 'experienceLevel', 'platformIntent']
+        });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ 
+          error: 'An account with this email already exists',
+          suggestion: 'Try signing in instead'
+        });
+      }
+
+      // Generate unique user ID
+      const userId = `signup_${nanoid()}`;
+      
+      // Map experience level to role
+      const userRole = mapExperienceLevelToRole(experienceLevel, platformIntent);
+      
+      // Create user data object
+      const userData = {
+        id: userId,
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+        role: userRole,
+        status: 'pending' as const, // All chatbot signups start as pending
+        provider: 'chatbot_signup',
+        company: company || null,
+        country: country || null,
+        experienceLevel: experienceLevel,
+        platformIntent: platformIntent,
+        profileImageUrl: null,
+        subscriptionTier: 'free' as const,
+        riskScore: 0,
+        totalTrades: 0,
+        areasOfFocus: areasOfFocus || [],
+        preferredModelTypes: preferredModelTypes || [],
+        subscriptionPreferences: subscriptionPreferences || [],
+        linkedinProfile: linkedinProfile || null,
+        portfolioUrl: portfolioUrl || null,
+        wantsDemo: wantsDemo || false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // Create user in database
+      const newUser = await storage.upsertUser(userData);
+      
+      // Create user profile
+      try {
+        await storage.createOrUpdateUserProfile(userId, {
+          displayName: `${firstName} ${lastName}`,
+          bio: `${experienceLevel} level ${userRole}${company ? ` at ${company}` : ''}${country ? ` from ${country}` : ''}`,
+          profileCompleted: true,
+          linkedinProfile: linkedinProfile || null,
+          portfolioUrl: portfolioUrl || null,
+          areasOfFocus: areasOfFocus || [],
+          preferredModelTypes: preferredModelTypes || []
+        });
+      } catch (profileError) {
+        console.error('Failed to create profile for new user:', profileError);
+        // Don't fail the user creation if profile creation fails
+      }
+
+      // Update the conversation record with completion status
+      if (sessionId) {
+        try {
+          await db
+            .update(chatbotConversations)
+            .set({ 
+              accountCreated: true,
+              userId: userId,
+              completedAt: new Date()
+            })
+            .where(eq(chatbotConversations.sessionId, sessionId));
+        } catch (conversationError) {
+          console.error('Failed to update conversation:', conversationError);
+        }
+      }
+
+      console.log(`✅ Chatbot signup completed: ${userId} (${email})`);
+      
+      res.status(201).json({
+        success: true,
+        message: 'Account created successfully! Please check your email for verification.',
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          status: newUser.status,
+          experienceLevel: newUser.experienceLevel,
+          platformIntent: newUser.platformIntent
+        },
+        nextSteps: [
+          'Check your email for account verification',
+          'Complete your profile setup',
+          wantsDemo ? 'Schedule your demo call' : 'Explore the platform'
+        ]
+      });
+      
+    } catch (error) {
+      console.error('Error completing chatbot signup:', error);
+      res.status(500).json({ 
+        error: 'Failed to create account',
+        message: 'Please try again or contact support if the problem persists'
+      });
     }
   });
   // Start new conversation
