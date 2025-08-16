@@ -214,14 +214,14 @@ export default function AdminUserManagement() {
     }
     
     // Update role if changed
-    const normalizedCurrentRole = (editingUser.userType || editingUser.role || "").toLowerCase().replace(/\s+/g, '_');
-    const normalizedNewRole = editForm.userType.toLowerCase().replace(/\s+/g, '_');
+    const currentRole = editingUser.userType || editingUser.role || "User";
+    const newRole = editForm.userType;
     
-    if (normalizedNewRole !== normalizedCurrentRole) {
+    if (newRole !== currentRole) {
       promises.push(
         updateRoleMutation.mutateAsync({
           userId: editingUser.id,
-          role: normalizedNewRole
+          role: newRole
         })
       );
     }
@@ -236,36 +236,15 @@ export default function AdminUserManagement() {
         console.error('Error updating user:', error);
       });
     
-    // Update status if changed
-    if (editForm.status !== editingUser.status) {
-      promises.push(
-        updateStatusMutation.mutateAsync({ 
-          userId: editingUser.id, 
-          status: editForm.status 
-        })
-      );
-    }
-    
-    // Update role if changed
-    const currentRole = editingUser.userType || editingUser.role || "Investor";
-    if (editForm.userType !== currentRole) {
-      promises.push(
-        updateRoleMutation.mutateAsync({ 
-          userId: editingUser.id, 
-          role: editForm.userType 
-        })
-      );
-    }
-    
-    if (promises.length > 0) {
-      Promise.all(promises).then(() => {
+    // Execute all updates
+    Promise.all(promises)
+      .then(() => {
         setIsEditDialogOpen(false);
         setEditingUser(null);
+      })
+      .catch((error) => {
+        console.error('Error updating user:', error);
       });
-    } else {
-      setIsEditDialogOpen(false);
-      setEditingUser(null);
-    }
   };
 
   // Helper functions for UI actions
