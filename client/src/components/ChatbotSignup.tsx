@@ -124,6 +124,12 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
   const [selectedEventType, setSelectedEventType] = useState<string>('');
   const [availableTimes, setAvailableTimes] = useState<any[]>([]);
   const [isLoadingTimes, setIsLoadingTimes] = useState(false);
+  
+  // Security states
+  const [securityCheckStep, setSecurityCheckStep] = useState<'none' | 'asking' | 'verifying' | 'passed' | 'failed'>('none');
+  const [securityAnswer, setSecurityAnswer] = useState('');
+  const [securityAttempts, setSecurityAttempts] = useState(0);
+  const [recaptchaToken, setRecaptchaToken] = useState('');
   const [selectedTime, setSelectedTime] = useState<any>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [showTimeSlots, setShowTimeSlots] = useState(false);
@@ -213,6 +219,13 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
       options: PLATFORM_INTENTS,
       validation: (value: string) => PLATFORM_INTENTS.includes(value),
       errorMessage: "Please select your platform intent"
+    },
+    {
+      question: "For security, please answer: What is 2 + 2?",
+      field: 'securityCheck',
+      type: 'security',
+      validation: (value: string) => ['4', 'four', 'Four', 'FOUR'].includes(value.trim()),
+      errorMessage: "Please enter the correct answer"
     },
     {
       question: "Perfect! Let me create your account now...",
@@ -337,6 +350,56 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
           addBotMessage(steps[nextStep].question);
           setShowOptions(steps[nextStep].type === 'select');
         }
+      } else if (currentStepData.type === 'security') {
+        // Handle security check
+        setSecurityCheckStep('verifying');
+        try {
+          const response = await fetch('/api/chatbot/security-check', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              answer: inputValue,
+              honeypot: '' // Anti-bot honeypot field
+            }),
+          });
+
+          const data = await response.json();
+          
+          if (response.ok && data.success) {
+            setSecurityCheckStep('passed');
+            addBotMessage("Correct! Security check passed. ✅");
+            
+            // Move to next step
+            setTimeout(() => {
+              const nextStep = currentStep + 1;
+              setCurrentStep(nextStep);
+              
+              if (nextStep < steps.length) {
+                addBotMessage(steps[nextStep].question);
+                setShowOptions(steps[nextStep].type === 'select' || steps[nextStep].type === 'multiselect');
+              }
+            }, 1500);
+          } else {
+            setSecurityAttempts(prev => prev + 1);
+            if (securityAttempts >= 1) {
+              setSecurityCheckStep('failed');
+              addBotMessage("Security check failed. Please contact support@gefi.io for assistance.");
+              return;
+            } else {
+              setSecurityCheckStep('asking');
+              addBotMessage("Incorrect answer. Please try again: What is 2 + 2?");
+              setCurrentInput('');
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Security check error:', error);
+          addBotMessage("Security check failed. Please try again.");
+          setSecurityCheckStep('asking');
+          return;
+        }
       } else {
         // Complete signup - but first verify email
         addBotMessage("Perfect! Before I create your account, I need to verify your email address for security.");
@@ -459,7 +522,9 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
             body: JSON.stringify({
               ...userData,
               wantsDemo: false, // Will be handled separately
-              sessionId: Date.now().toString() // Generate session ID
+              sessionId: Date.now().toString(), // Generate session ID
+              recaptchaToken: recaptchaToken, // reCAPTCHA token for bot protection
+              honeypot: '' // Anti-bot honeypot field
             }),
           });
 
@@ -744,23 +809,45 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
                   )}
                 </div>
               ) : (
-                <div className="flex space-x-2">
-                  <Input
-                    type={steps[currentStep].field === 'email' ? 'email' : 'text'}
-                    placeholder={`Enter your ${steps[currentStep].field}...`}
-                    value={currentInput}
-                    onChange={(e) => setCurrentInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-                    className="flex-1"
-                    autoFocus
+                <div className="space-y-4">
+                  <div className="flex space-x-2">
+                    <Input
+                      type={steps[currentStep].field === 'email' ? 'email' : 'text'}
+                      placeholder={
+                        steps[currentStep].type === 'security' 
+                          ? "Enter your answer..." 
+                          : `Enter your ${steps[currentStep].field}...`
+                      }
+                      value={currentInput}
+                      onChange={(e) => setCurrentInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                      className="flex-1"
+                      autoFocus
+                    />
+                    <Button 
+                      onClick={() => handleSubmit()} 
+                      disabled={!currentInput.trim()}
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  {/* Honeypot field - hidden from users */}
+                  <input 
+                    type="text" 
+                    name="honeypot" 
+                    style={{ display: 'none' }} 
+                    tabIndex={-1} 
+                    autoComplete="off"
                   />
-                  <Button 
-                    onClick={() => handleSubmit()} 
-                    disabled={!currentInput.trim()}
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                  >
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
+                  
+                  {/* Security notice */}
+                  {currentStep > 0 && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                      🔒 For security, we validate all inputs. Avoid sharing sensitive info.
+                    </div>
+                  )}
                 </div>
               )}
             </div>

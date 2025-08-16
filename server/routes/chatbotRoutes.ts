@@ -7,6 +7,98 @@ import { eq, and, desc } from "drizzle-orm";
 import { AIChatbotService, USER_PROFILES } from "../services/aiChatbotService";
 import { storage } from "../storage";
 import fetch from 'node-fetch';
+import rateLimit from 'express-rate-limit';
+
+// Security utilities for AI Assistant Signup
+class SecurityService {
+  // Anti-prompt injection patterns
+  private static suspiciousPatterns = [
+    /ignore\s+instructions?/i,
+    /system\s+prompt/i,
+    /forget\s+(all|everything|previous)/i,
+    /<script[^>]*>/i,
+    /\{.*\}/,
+    /\[.*\]/,
+    /delete\s+(database|table|user)/i,
+    /admin\s+(access|rights|privileges)/i,
+    /sql\s+(drop|delete|insert|update)/i,
+    /javascript:/i,
+    /eval\s*\(/i,
+    /exec\s*\(/i,
+    /setTimeout\s*\(/i,
+    /setInterval\s*\(/i
+  ];
+
+  static sanitizeInput(input: string): { clean: string; isSuspicious: boolean } {
+    if (!input || typeof input !== 'string') {
+      return { clean: '', isSuspicious: false };
+    }
+
+    const isSuspicious = this.suspiciousPatterns.some(pattern => pattern.test(input));
+    
+    // Clean input by removing suspicious patterns
+    let clean = input
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/javascript:/gi, '') // Remove javascript protocols
+      .replace(/[\{\}\[\]]/g, '') // Remove brackets
+      .trim();
+
+    // Limit length
+    if (clean.length > 500) {
+      clean = clean.substring(0, 500);
+    }
+
+    return { clean, isSuspicious };
+  }
+
+  static async verifyRecaptcha(token: string): Promise<boolean> {
+    if (!process.env.GOOGLE_RECAPTCHA_SECRET) {
+      console.warn('reCAPTCHA secret not configured');
+      return true; // Allow in development
+    }
+
+    try {
+      const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `secret=${process.env.GOOGLE_RECAPTCHA_SECRET}&response=${token}`
+      });
+
+      const data = await response.json() as any;
+      return data.success && data.score >= 0.5;
+    } catch (error) {
+      console.error('reCAPTCHA verification error:', error);
+      return false;
+    }
+  }
+
+  static async logSecurityEvent(type: string, details: any, ip?: string) {
+    try {
+      await db.insert(chatbotConversations).values({
+        userId: null,
+        sessionId: `security_${nanoid()}`,
+        userProfile: 'security_log',
+        messages: [{
+          role: 'system',
+          content: `Security Event: ${type}`,
+          timestamp: new Date().toISOString()
+        }],
+        profileConfidence: '0',
+        currentQuestionIndex: -1,
+        completedQuestions: [],
+        userGoals: [],
+        preferences: {
+          type,
+          details,
+          ip,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('Failed to log security event:', error);
+    }
+  }
+}
 
 // Enhanced signup completion schema
 const signupCompletionSchema = z.object({
@@ -27,12 +119,72 @@ const signupCompletionSchema = z.object({
   sessionId: z.string()
 });
 
+// Rate limiting for signup endpoints
+const signupLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 5, // Limit each IP to 5 requests per windowMs
+  message: { error: 'Too many signup attempts. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 export function registerChatbotRoutes(app: Express) {
   
-  // Enhanced signup completion endpoint - the key improvement
-  app.post("/api/chatbot/signup/complete", async (req, res) => {
+  // Security middleware for signup routes
+  const securityMiddleware = async (req: any, res: any, next: any) => {
+    const ip = req.ip || req.connection.remoteAddress;
+    
+    // Check honeypot field
+    if (req.body.honeypot && req.body.honeypot.trim() !== '') {
+      await SecurityService.logSecurityEvent('honeypot_triggered', { body: req.body }, ip);
+      return res.status(400).json({ error: 'Bot detected. Please try again.' });
+    }
+
+    // Verify reCAPTCHA if provided
+    if (req.body.recaptchaToken) {
+      const isValidRecaptcha = await SecurityService.verifyRecaptcha(req.body.recaptchaToken);
+      if (!isValidRecaptcha) {
+        await SecurityService.logSecurityEvent('recaptcha_failed', { token: req.body.recaptchaToken }, ip);
+        return res.status(400).json({ error: 'Bot detected. Please try again.' });
+      }
+    }
+
+    next();
+  };
+
+  // Enhanced signup completion endpoint with security
+  app.post("/api/chatbot/signup/complete", signupLimiter, securityMiddleware, async (req, res) => {
     try {
-      const validatedData = signupCompletionSchema.parse(req.body);
+      const ip = req.ip || req.connection.remoteAddress;
+      
+      // Sanitize all input fields
+      const sanitizedBody = { ...req.body };
+      let hasSuspiciousInput = false;
+      
+      for (const [key, value] of Object.entries(sanitizedBody)) {
+        if (typeof value === 'string') {
+          const { clean, isSuspicious } = SecurityService.sanitizeInput(value);
+          sanitizedBody[key] = clean;
+          if (isSuspicious) {
+            hasSuspiciousInput = true;
+            await SecurityService.logSecurityEvent('suspicious_input', { 
+              field: key, 
+              original: value, 
+              cleaned: clean 
+            }, ip);
+          }
+        }
+      }
+      
+      // Block if suspicious input detected
+      if (hasSuspiciousInput) {
+        return res.status(400).json({ 
+          error: 'Invalid input detected. Please try again.',
+          code: 'SUSPICIOUS_INPUT'
+        });
+      }
+      
+      const validatedData = signupCompletionSchema.parse(sanitizedBody);
       
       // Generate unique user ID
       const userId = `signup_${nanoid(10)}`;
@@ -165,8 +317,36 @@ export function registerChatbotRoutes(app: Express) {
     }
   }
 
-  // Email verification endpoints
-  app.post("/api/auth/check-email", async (req, res) => {
+  // Security test question endpoint
+  app.post("/api/chatbot/security-check", signupLimiter, async (req, res) => {
+    try {
+      const { answer } = req.body;
+      const { clean, isSuspicious } = SecurityService.sanitizeInput(answer);
+      
+      if (isSuspicious) {
+        const ip = req.ip || req.connection.remoteAddress;
+        await SecurityService.logSecurityEvent('security_check_suspicious', { answer }, ip);
+        return res.status(400).json({ error: 'Invalid input detected.' });
+      }
+      
+      // Simple math check: "What is 2 + 2?"
+      const correctAnswers = ['4', 'four', 'Four', 'FOUR'];
+      const isCorrect = correctAnswers.includes(clean.trim());
+      
+      if (!isCorrect) {
+        const ip = req.ip || req.connection.remoteAddress;
+        await SecurityService.logSecurityEvent('security_check_failed', { answer: clean }, ip);
+      }
+      
+      res.json({ success: isCorrect });
+    } catch (error) {
+      console.error('Security check error:', error);
+      res.status(500).json({ error: 'Security check failed' });
+    }
+  });
+
+  // Email verification endpoints with security
+  app.post("/api/auth/check-email", signupLimiter, securityMiddleware, async (req, res) => {
     try {
       const { email } = req.body;
       
@@ -183,7 +363,7 @@ export function registerChatbotRoutes(app: Express) {
     }
   });
 
-  app.post("/api/auth/send-verification", async (req, res) => {
+  app.post("/api/auth/send-verification", signupLimiter, securityMiddleware, async (req, res) => {
     try {
       const { email, firstName, lastName } = req.body;
       
@@ -205,7 +385,7 @@ export function registerChatbotRoutes(app: Express) {
     }
   });
 
-  app.post("/api/auth/verify-email", async (req, res) => {
+  app.post("/api/auth/verify-email", signupLimiter, securityMiddleware, async (req, res) => {
     try {
       const { email, code } = req.body;
       
