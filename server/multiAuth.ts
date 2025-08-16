@@ -598,8 +598,30 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     // Check user status from database
     try {
       const dbUser = await storage.getUser(user.id);
-      if (!dbUser || dbUser.status !== 'active') {
-        console.log(`🚫 Access denied - user status: ${dbUser?.status || 'not found'}`);
+      if (!dbUser) {
+        console.log(`🚫 Access denied - user not found`);
+        req.logout((err) => {
+          if (err) console.error('Logout error:', err);
+        });
+        return res.status(401).json({ 
+          message: "Account not found", 
+          redirectTo: '/login'
+        });
+      }
+
+      // Admin override: Allow admins to access admin routes even if suspended 
+      // This prevents admin lockout scenarios
+      const isAdminRoute = req.path.startsWith('/api/admin');
+      const isAdminUser = dbUser.role === 'admin';
+      
+      if (isAdminRoute && isAdminUser) {
+        console.log(`🔧 Admin override: allowing admin access to ${req.path}`);
+        return next();
+      }
+      
+      // For non-admin routes or non-admin users, check status normally
+      if (dbUser.status !== 'active') {
+        console.log(`🚫 Access denied - user status: ${dbUser.status}`);
         
         // Clear the session for non-active users
         req.logout((err) => {
@@ -608,7 +630,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
         
         return res.status(401).json({ 
           message: "Account access restricted", 
-          reason: dbUser?.status || 'account_not_found',
+          reason: dbUser.status,
           redirectTo: '/account-status'
         });
       }
