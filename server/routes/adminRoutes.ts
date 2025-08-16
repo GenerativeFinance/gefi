@@ -119,26 +119,27 @@ export function registerAdminRoutes(app: Express) {
         'user', 'admin', 'moderator', 'developer', 'data_provider', 'regulator',
         // Financial Professional roles
         'investor', 'portfolio_manager', 'fund_manager', 'wealth_manager', 
-        'wealth_manager_/_financial_advisor', 'trader', 'analyst', 'analyst_(equity_/_credit_/_quant)',
+        'wealth_manager_financial_advisor', 'trader', 'analyst', 'analyst_equity_credit_quant',
         'risk_manager', 'treasury_manager', 'institutional_allocator', 'venture_capitalist', 
         'private_equity_partner', 'angel_investor', 'family_office_representative', 
         'corporate_finance_executive'
       ];
       
-      const normalizedRole = role.toLowerCase().replace(/\s+/g, '_').replace(/[()]/g, '');
-      console.log('Attempting to update role:', role, '-> normalized:', normalizedRole);
+      // Map user type to internal role
+      const roleFromUserType = mapUserTypeToRole(role);
+      console.log('Attempting to update role:', role, '-> internal role:', roleFromUserType);
       
-      if (!validRoles.includes(normalizedRole)) {
+      if (!validRoles.includes(roleFromUserType)) {
         console.log('Invalid role. Valid roles are:', validRoles);
         return res.status(400).json({ 
           message: 'Invalid role value',
           received: role,
-          normalized: normalizedRole,
+          mapped: roleFromUserType,
           validRoles: validRoles
         });
       }
 
-      const updatedUser = await storage.updateUserRole(id, normalizedRole, req.user.id);
+      const updatedUser = await storage.updateUserRole(id, roleFromUserType, req.user.id);
       res.json({ 
         message: 'User role updated successfully', 
         user: {
@@ -247,14 +248,64 @@ export function registerAdminRoutes(app: Express) {
   });
 }
 
-// Helper functions
+// Helper function to map role to user type for display
 function mapRoleToUserType(role?: string): string {
-  switch (role) {
-    case 'admin': return 'Admin';
-    case 'moderator': return 'Moderator';
-    case 'user': return 'Investor';
-    default: return 'User';
-  }
+  if (!role) return 'User';
+  
+  const roleMap: Record<string, string> = {
+    'admin': 'Admin',
+    'moderator': 'Moderator', 
+    'developer': 'Developer',
+    'data_provider': 'Data Provider',
+    'regulator': 'Regulator',
+    'investor': 'Investor',
+    'portfolio_manager': 'Portfolio Manager',
+    'fund_manager': 'Fund Manager',
+    'wealth_manager': 'Wealth Manager',
+    'wealth_manager_financial_advisor': 'Wealth Manager / Financial Advisor',
+    'trader': 'Trader',
+    'analyst': 'Analyst',
+    'analyst_equity_credit_quant': 'Analyst (Equity / Credit / Quant)',
+    'risk_manager': 'Risk Manager',
+    'treasury_manager': 'Treasury Manager',
+    'institutional_allocator': 'Institutional Allocator',
+    'venture_capitalist': 'Venture Capitalist',
+    'private_equity_partner': 'Private Equity Partner',
+    'angel_investor': 'Angel Investor',
+    'family_office_representative': 'Family Office Representative',
+    'corporate_finance_executive': 'Corporate Finance Executive'
+  };
+  
+  return roleMap[role.toLowerCase()] || 'User';
+}
+
+// Helper function to map user type to role for storage
+function mapUserTypeToRole(userType: string): string {
+  const userTypeMap: Record<string, string> = {
+    'Admin': 'admin',
+    'Moderator': 'moderator',
+    'Developer': 'developer',
+    'Data Provider': 'data_provider',
+    'Regulator': 'regulator',
+    'Investor': 'investor',
+    'Portfolio Manager': 'portfolio_manager',
+    'Fund Manager': 'fund_manager',
+    'Wealth Manager': 'wealth_manager',
+    'Wealth Manager / Financial Advisor': 'wealth_manager_financial_advisor',
+    'Trader': 'trader',
+    'Analyst': 'analyst',
+    'Analyst (Equity / Credit / Quant)': 'analyst_equity_credit_quant',
+    'Risk Manager': 'risk_manager',
+    'Treasury Manager': 'treasury_manager',
+    'Institutional Allocator': 'institutional_allocator',
+    'Venture Capitalist': 'venture_capitalist',
+    'Private Equity Partner': 'private_equity_partner',
+    'Angel Investor': 'angel_investor',
+    'Family Office Representative': 'family_office_representative',
+    'Corporate Finance Executive': 'corporate_finance_executive'
+  };
+  
+  return userTypeMap[userType] || 'user';
 }
 
 function getComplianceStatus(riskScore: number): string {

@@ -60,6 +60,37 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/theme/theme-provider";
 import { useQuery } from "@tanstack/react-query";
 
+// Helper function to map role to user type for display
+const mapRoleToUserType = (role?: string): string => {
+  if (!role) return 'User';
+  
+  const roleMap: Record<string, string> = {
+    'admin': 'Admin',
+    'moderator': 'Moderator', 
+    'developer': 'Developer',
+    'data_provider': 'Data Provider',
+    'regulator': 'Regulator',
+    'investor': 'Investor',
+    'portfolio_manager': 'Portfolio Manager',
+    'fund_manager': 'Fund Manager',
+    'wealth_manager': 'Wealth Manager',
+    'wealth_manager_financial_advisor': 'Wealth Manager / Financial Advisor',
+    'trader': 'Trader',
+    'analyst': 'Analyst',
+    'analyst_equity_credit_quant': 'Analyst (Equity / Credit / Quant)',
+    'risk_manager': 'Risk Manager',
+    'treasury_manager': 'Treasury Manager',
+    'institutional_allocator': 'Institutional Allocator',
+    'venture_capitalist': 'Venture Capitalist',
+    'private_equity_partner': 'Private Equity Partner',
+    'angel_investor': 'Angel Investor',
+    'family_office_representative': 'Family Office Representative',
+    'corporate_finance_executive': 'Corporate Finance Executive'
+  };
+  
+  return roleMap[role.toLowerCase()] || 'User';
+};
+
 export default function Header() {
   const [location, navigate] = useLocation();
   const { user } = useAuth();
@@ -530,6 +561,9 @@ export default function Header() {
                         <p className="w-[200px] truncate text-sm text-muted-foreground">
                           {(user as any)?.email || 'No email provided'}
                         </p>
+                        <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 w-fit">
+                          {mapRoleToUserType((user as any)?.role)}
+                        </div>
                       </div>
                     </div>
                     <DropdownMenuSeparator />
