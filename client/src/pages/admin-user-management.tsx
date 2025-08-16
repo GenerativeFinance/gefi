@@ -351,7 +351,7 @@ export default function AdminUserManagement() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.total}</div>
+                <div className="text-2xl font-bold">{stats?.total || users.length}</div>
                 <p className="text-xs text-muted-foreground">All registered</p>
               </CardContent>
             </Card>
@@ -362,7 +362,9 @@ export default function AdminUserManagement() {
                 <UserCheck className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {stats?.active || users.filter((u: any) => u.status === 'active').length}
+                </div>
                 <p className="text-xs text-muted-foreground">Currently active</p>
               </CardContent>
             </Card>
@@ -373,7 +375,9 @@ export default function AdminUserManagement() {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {stats?.pending || users.filter((u: any) => u.status === 'pending').length}
+                </div>
                 <p className="text-xs text-muted-foreground">Awaiting verification</p>
               </CardContent>
             </Card>
@@ -384,7 +388,9 @@ export default function AdminUserManagement() {
                 <UserX className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{stats.suspended}</div>
+                <div className="text-2xl font-bold text-red-600">
+                  {stats?.suspended || users.filter((u: any) => u.status === 'suspended').length}
+                </div>
                 <p className="text-xs text-muted-foreground">Account suspended</p>
               </CardContent>
             </Card>
@@ -395,7 +401,9 @@ export default function AdminUserManagement() {
                 <Shield className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{stats.banned}</div>
+                <div className="text-2xl font-bold text-red-600">
+                  {stats?.banned || users.filter((u: any) => u.status === 'banned').length}
+                </div>
                 <p className="text-xs text-muted-foreground">Account banned</p>
               </CardContent>
             </Card>
