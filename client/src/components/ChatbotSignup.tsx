@@ -3,7 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Bot, User, Mail, MapPin, Briefcase, ArrowRight, Check, X, Calendar, Clock, Video } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Bot, User, Mail, MapPin, Briefcase, ArrowRight, Check, X, Calendar, Clock, Video, ArrowLeft, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChatMessage {
@@ -27,9 +30,26 @@ interface UserData {
 
 const ROLE_OPTIONS = [
   'Investor',
-  'Developer',
+  'Developer', 
   'Data Provider',
   'Regulator'
+];
+
+const INVESTOR_ROLES = [
+  'Investor',
+  'Portfolio Manager',
+  'Fund Manager', 
+  'Wealth Manager / Financial Advisor',
+  'Trader',
+  'Analyst (Equity / Credit / Quant)',
+  'Risk Manager',
+  'Treasury Manager',
+  'Institutional Allocator',
+  'Venture Capitalist',
+  'Private Equity Partner',
+  'Angel Investor',
+  'Family Office Representative',
+  'Corporate Finance Executive'
 ];
 
 const COUNTRY_OPTIONS = [
@@ -38,7 +58,7 @@ const COUNTRY_OPTIONS = [
   'Sweden', 'Other'
 ];
 
-export default function ChatbotSignup({ onComplete }: { onComplete: (userData: UserData) => void }) {
+export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (userData: UserData) => void; onBack?: () => void }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentInput, setCurrentInput] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
@@ -56,6 +76,8 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
   const [selectedTime, setSelectedTime] = useState<any>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [showTimeSlots, setShowTimeSlots] = useState(false);
+  const [roleSearchOpen, setRoleSearchOpen] = useState(false);
+  const [roleSearchValue, setRoleSearchValue] = useState('');
 
   const steps = [
     {
@@ -403,6 +425,20 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+      {/* Back Navigation Button */}
+      {onBack && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          className="fixed top-4 left-4 z-10 flex items-center gap-2"
+          title="Back to authentication options"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">Back</span>
+        </Button>
+      )}
+
       <Card className="w-full max-w-2xl shadow-2xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -499,17 +535,81 @@ export default function ChatbotSignup({ onComplete }: { onComplete: (userData: U
           {currentStep < steps.length - 1 && emailVerificationStep === 'none' && (
             <div className="space-y-4">
               {showOptions ? (
-                <div className="grid grid-cols-2 gap-2">
-                  {steps[currentStep].options?.map((option) => (
-                    <Button
-                      key={option}
-                      variant="outline"
-                      onClick={() => handleOptionSelect(option)}
-                      className="text-left justify-start hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:border-blue-300"
-                    >
-                      {option}
-                    </Button>
-                  ))}
+                <div className="space-y-4">
+                  {/* Role Selection with Special Handling for Investor */}
+                  {steps[currentStep].field === 'role' ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {ROLE_OPTIONS.map((role) => (
+                        role === 'Investor' ? (
+                          <Popover key={role} open={roleSearchOpen} onOpenChange={setRoleSearchOpen}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="h-auto p-4 flex-col items-start text-left hover:bg-white hover:text-black dark:hover:bg-white dark:hover:text-black transition-colors"
+                              >
+                                <div className="font-semibold">{role}</div>
+                                <div className="text-sm text-gray-600 dark:text-gray-300">Financial professional</div>
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80 p-0" align="start">
+                              <Command>
+                                <CommandInput 
+                                  placeholder="Search investor roles..." 
+                                  value={roleSearchValue}
+                                  onValueChange={setRoleSearchValue}
+                                />
+                                <CommandList>
+                                  <CommandEmpty>No roles found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {INVESTOR_ROLES.map((investorRole) => (
+                                      <CommandItem
+                                        key={investorRole}
+                                        value={investorRole}
+                                        onSelect={() => {
+                                          handleOptionSelect(investorRole);
+                                          setRoleSearchOpen(false);
+                                          setRoleSearchValue('');
+                                        }}
+                                      >
+                                        {investorRole}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        ) : (
+                          <Button
+                            key={role}
+                            onClick={() => handleOptionSelect(role)}
+                            variant="outline"
+                            className="h-auto p-4 flex-col items-start text-left hover:bg-white hover:text-black dark:hover:bg-white dark:hover:text-black transition-colors"
+                          >
+                            <div className="font-semibold">{role}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                              {role === 'Developer' && 'Build AI models'}
+                              {role === 'Data Provider' && 'Supply data sets'}
+                              {role === 'Regulator' && 'Compliance oversight'}
+                            </div>
+                          </Button>
+                        )
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {steps[currentStep].options?.map((option) => (
+                        <Button
+                          key={option}
+                          variant="outline"
+                          onClick={() => handleOptionSelect(option)}
+                          className="text-left justify-start hover:bg-white hover:text-black dark:hover:bg-white dark:hover:text-black transition-colors"
+                        >
+                          {option}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex space-x-2">
