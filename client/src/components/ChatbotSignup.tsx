@@ -383,53 +383,58 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
         }
       } else if (currentStepData.type === 'security') {
         // Handle security check
-        setSecurityCheckStep('verifying');
-        try {
-          const response = await fetch('/api/chatbot/security-check', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-              answer: inputValue,
-              honeypot: '' // Anti-bot honeypot field
-            }),
-          });
-
-          const data = await response.json();
+        if (inputValue.trim() === '4') {
+          setSecurityCheckStep('passed');
+          addBotMessage("Correct! Security check passed. ✅");
           
-          if (response.ok && data.success) {
-            setSecurityCheckStep('passed');
-            addBotMessage("Correct! Security check passed. ✅");
+          // Complete signup - start email verification
+          setTimeout(() => {
+            addBotMessage("Perfect! Before I create your account, I need to verify your email address for security.");
+            setEmailVerificationStep('sending');
             
-            // Move to next step
-            setTimeout(() => {
-              const nextStep = currentStep + 1;
-              setCurrentStep(nextStep);
-              
-              if (nextStep < steps.length) {
-                addBotMessage(steps[nextStep].question);
-                setShowOptions(steps[nextStep].type === 'select' || steps[nextStep].type === 'multiselect');
+            setTimeout(async () => {
+              try {
+                const response = await fetch('/api/auth/send-verification', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    email: newUserData.email,
+                    firstName: newUserData.firstName,
+                    lastName: newUserData.lastName
+                  }),
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                  setEmailVerificationStep('sent');
+                  setDemoVerificationCode(data.verificationCode); // For demo purposes
+                  addBotMessage(`I've sent a 6-digit verification code to ${newUserData.email}. Please enter the code to continue.`);
+                  addBotMessage(`For demo purposes, your verification code is: ${data.verificationCode}`);
+                } else {
+                  addBotMessage("Sorry, I couldn't send the verification email. Please try again.");
+                  setEmailVerificationStep('none');
+                }
+              } catch (error) {
+                console.error('Verification send error:', error);
+                addBotMessage("Sorry, there was an issue sending the verification email. Please try again.");
+                setEmailVerificationStep('none');
               }
-            }, 1500);
+            }, 1000);
+          }, 1500);
+        } else {
+          setSecurityAttempts(prev => prev + 1);
+          if (securityAttempts >= 1) {
+            setSecurityCheckStep('failed');
+            addBotMessage("Security check failed. Please contact support@gefi.io for assistance.");
+            return;
           } else {
-            setSecurityAttempts(prev => prev + 1);
-            if (securityAttempts >= 1) {
-              setSecurityCheckStep('failed');
-              addBotMessage("Security check failed. Please contact support@gefi.io for assistance.");
-              return;
-            } else {
-              setSecurityCheckStep('asking');
-              addBotMessage("Incorrect answer. Please try again: What is 2 + 2?");
-              setCurrentInput('');
-              return;
-            }
+            addBotMessage("Incorrect answer. Please try again: What is 2 + 2?");
+            setCurrentInput('');
+            return;
           }
-        } catch (error) {
-          console.error('Security check error:', error);
-          addBotMessage("Security check failed. Please try again.");
-          setSecurityCheckStep('asking');
-          return;
         }
       } else {
         // Complete signup - but first verify email
