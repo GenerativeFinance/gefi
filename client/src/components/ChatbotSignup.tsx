@@ -73,16 +73,36 @@ const EXPERIENCE_LEVELS = [
 ];
 
 const AREAS_OF_FOCUS = [
-  'DeFi',
-  'Crypto',
-  'Stocks',
-  'Bonds',
-  'Risk Assessment',
-  'Predictive Analytics',
-  'Ethical AI Finance',
-  'Portfolio Optimization',
-  'Market Analysis',
-  'Trading Algorithms'
+  'Investment Banking',
+  'Private Equity (PE)',
+  'Venture Capital (VC)',
+  'Asset Management',
+  'Wealth Management / Private Banking',
+  'Hedge Funds',
+  'Equities (Stocks & Trading)',
+  'Fixed Income (Bonds, Debt Markets)',
+  'Commodities & Precious Metals',
+  'Foreign Exchange (FX / Currencies)',
+  'Derivatives & Structured Products',
+  'Mergers & Acquisitions (M&A)',
+  'Corporate Finance',
+  'Real Estate Finance & REITs',
+  'Sustainable Finance / ESG Investing',
+  'Impact Investing',
+  'Fintech & Digital Banking',
+  'Blockchain & Crypto Assets',
+  'DeFi (Decentralized Finance)',
+  'Quantitative Finance & Algorithmic Trading',
+  'Risk Management',
+  'Insurance & Actuarial Science',
+  'Financial Planning & Personal Finance',
+  'Pension Funds & Retirement Planning',
+  'Treasury & Cash Management',
+  'Tax Advisory & Structuring',
+  'Financial Regulation & Compliance',
+  'Accounting & Audit',
+  'Economic Research & Policy',
+  'Philanthropy & Family Office Advisory'
 ];
 
 const PREFERRED_MODEL_TYPES = [
