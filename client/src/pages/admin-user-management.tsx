@@ -4,6 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { 
   Users, 
   Search,
@@ -47,6 +57,14 @@ export default function AdminUserManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [userFilter, setUserFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  
+  // Edit user modal states
+  const [editingUser, setEditingUser] = useState<UserManagement | null>(null);
+  const [editForm, setEditForm] = useState({
+    status: "",
+    userType: "",
+  });
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Fetch real users from API
   const { data: users = [], isLoading, error } = useQuery({
@@ -139,6 +157,83 @@ export default function AdminUserManagement() {
       });
     }
   });
+
+  // Available user types for editing
+  const userTypes = [
+    "Investor",
+    "Portfolio Manager", 
+    "Fund Manager",
+    "Wealth Manager / Financial Advisor",
+    "Trader",
+    "Analyst (Equity / Credit / Quant)",
+    "Risk Manager",
+    "Treasury Manager", 
+    "Institutional Allocator",
+    "Venture Capitalist",
+    "Private Equity Partner",
+    "Angel Investor",
+    "Family Office Representative",
+    "Corporate Finance Executive",
+    "Developer",
+    "Data Provider",
+    "Regulator"
+  ];
+
+  // Available statuses for editing
+  const statusOptions = [
+    { value: "active", label: "Active", description: "Currently active" },
+    { value: "pending", label: "Pending", description: "Awaiting verification" },
+    { value: "suspended", label: "Suspended", description: "Account suspended" },
+    { value: "banned", label: "Banned", description: "Account banned" }
+  ];
+
+  // Handle edit user action
+  const handleEditUser = (userToEdit: UserManagement) => {
+    setEditingUser(userToEdit);
+    setEditForm({
+      status: userToEdit.status,
+      userType: userToEdit.userType || userToEdit.role || "Investor",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  // Handle save user changes
+  const handleSaveUserChanges = () => {
+    if (!editingUser) return;
+    
+    const promises = [];
+    
+    // Update status if changed
+    if (editForm.status !== editingUser.status) {
+      promises.push(
+        updateStatusMutation.mutateAsync({ 
+          userId: editingUser.id, 
+          status: editForm.status 
+        })
+      );
+    }
+    
+    // Update role if changed
+    const currentRole = editingUser.userType || editingUser.role || "Investor";
+    if (editForm.userType !== currentRole) {
+      promises.push(
+        updateRoleMutation.mutateAsync({ 
+          userId: editingUser.id, 
+          role: editForm.userType 
+        })
+      );
+    }
+    
+    if (promises.length > 0) {
+      Promise.all(promises).then(() => {
+        setIsEditDialogOpen(false);
+        setEditingUser(null);
+      });
+    } else {
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+    }
+  };
 
   // Helper functions for UI actions
   const handleStatusChange = (userId: string, newStatus: string) => {
@@ -393,11 +488,8 @@ export default function AdminUserManagement() {
                             <Button 
                               size="sm" 
                               variant="outline" 
-                              title="Change Status"
-                              onClick={() => {
-                                const newStatus = user.status === 'active' ? 'suspended' : 'active';
-                                handleStatusChange(user.id, newStatus);
-                              }}
+                              title="Edit User"
+                              onClick={() => handleEditUser(user)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -414,6 +506,90 @@ export default function AdminUserManagement() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Edit User Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+              <DialogDescription>
+                Update user status and type for {editingUser?.firstName} {editingUser?.lastName}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="status" className="text-right">
+                  Status
+                </Label>
+                <div className="col-span-3">
+                  <Select
+                    value={editForm.status}
+                    onValueChange={(value) => setEditForm(prev => ({ ...prev, status: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{status.label}</span>
+                            <span className="text-xs text-muted-foreground">{status.description}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="userType" className="text-right">
+                  Type
+                </Label>
+                <div className="col-span-3">
+                  <Select
+                    value={editForm.userType}
+                    onValueChange={(value) => setEditForm(prev => ({ ...prev, userType: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select user type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {userTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsEditDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="button" 
+                onClick={handleSaveUserChanges}
+                disabled={updateStatusMutation.isPending || updateRoleMutation.isPending}
+              >
+                {(updateStatusMutation.isPending || updateRoleMutation.isPending) ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

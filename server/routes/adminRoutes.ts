@@ -171,6 +171,60 @@ export function registerAdminRoutes(app: Express) {
       res.status(500).json({ message: 'Failed to fetch user details' });
     }
   });
+
+  // Update user status
+  app.put('/api/admin/users/:userId/status', requireAdminOrModerator, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { status } = req.body;
+
+      if (!['active', 'pending', 'suspended', 'banned'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status value' });
+      }
+
+      await storage.updateUserStatus(userId, status);
+      
+      res.json({ 
+        message: 'User status updated successfully',
+        userId,
+        status 
+      });
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update user role/type
+  app.put('/api/admin/users/:userId/role', requireAdminOrModerator, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { role } = req.body;
+
+      const validRoles = [
+        "Investor", "Portfolio Manager", "Fund Manager", "Wealth Manager / Financial Advisor",
+        "Trader", "Analyst (Equity / Credit / Quant)", "Risk Manager", "Treasury Manager", 
+        "Institutional Allocator", "Venture Capitalist", "Private Equity Partner", 
+        "Angel Investor", "Family Office Representative", "Corporate Finance Executive",
+        "Developer", "Data Provider", "Regulator"
+      ];
+
+      if (!validRoles.includes(role)) {
+        return res.status(400).json({ message: 'Invalid role value' });
+      }
+
+      await storage.updateUserRole(userId, role);
+      
+      res.json({ 
+        message: 'User role updated successfully',
+        userId,
+        role 
+      });
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
 }
 
 // Helper functions
