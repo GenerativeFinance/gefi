@@ -16,6 +16,27 @@ const requireAdminOrModerator = (req: any, res: any, next: any) => {
 };
 
 export function registerAdminRoutes(app: Express) {
+  // Get admin statistics (admin/moderator only)
+  app.get('/api/admin/stats', requireAdminOrModerator, async (req: any, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const stats = {
+        totalUsers: users.length,
+        activeModels: 0, // No fictional data - will be real when implemented
+        totalRevenue: 0, // No fictional data - will be real when implemented  
+        pendingReviews: 0, // No fictional data - will be real when implemented
+        securityAlerts: 0, // No fictional data - will be real when implemented
+        supportTickets: 0, // No fictional data - will be real when implemented
+        complianceRate: 0, // No fictional data - will be real when implemented
+        resolutionRate: 0 // No fictional data - will be real when implemented
+      };
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+      res.status(500).json({ message: 'Failed to fetch admin statistics' });
+    }
+  });
+
   // Get all users (admin/moderator only)
   app.get('/api/admin/users', requireAdminOrModerator, async (req: any, res) => {
     try {

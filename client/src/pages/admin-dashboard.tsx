@@ -26,6 +26,7 @@ import {
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/hooks/useAuth";
 import Layout from "@/components/layout/Layout";
 
 interface AdminStats {
@@ -89,123 +90,59 @@ interface SupportTicket {
 }
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [userFilter, setUserFilter] = useState("all");
   const [contentFilter, setContentFilter] = useState("all");
   const [alertFilter, setAlertFilter] = useState("all");
   const [ticketFilter, setTicketFilter] = useState("all");
 
-  // Mock data - in real implementation, these would come from API calls
-  const adminStats: AdminStats = {
-    totalUsers: 15847,
-    activeModels: 234,
-    totalRevenue: 683000,
-    pendingReviews: 23,
-    securityAlerts: 5,
-    supportTickets: 18,
-    complianceRate: 87.3,
-    resolutionRate: 94.2
+  // Fetch real admin statistics and users from API
+  const { data: adminStatsData } = useQuery({
+    queryKey: ['/api/admin/stats'],
+    queryFn: () => fetch('/api/admin/stats', { credentials: 'include' }).then(res => res.json()),
+    enabled: !!user && (user.role === 'admin' || user.role === 'moderator')
+  });
+
+  const { data: realUsers = [] } = useQuery({
+    queryKey: ['/api/admin/users'],
+    enabled: !!user && (user.role === 'admin' || user.role === 'moderator')
+  });
+
+  // Use real data or provide fallback zeros (no fictional data)
+  const adminStats: AdminStats = adminStatsData || {
+    totalUsers: realUsers.length || 0,
+    activeModels: 0,
+    totalRevenue: 0,
+    pendingReviews: 0,
+    securityAlerts: 0,
+    supportTickets: 0,
+    complianceRate: 0,
+    resolutionRate: 0
   };
 
-  const users: UserManagement[] = [
-    {
-      id: "github_55703540",
-      email: "developer@example.com",
-      firstName: "Alex",
-      lastName: "Johnson",
-      userType: "Developer",
-      status: "active",
-      verified: true,
-      lastLogin: "2025-07-14T12:30:00Z",
-      totalTrades: 234,
-      joinDate: "2024-03-15"
-    },
-    {
-      id: "google_123456789",
-      email: "investor@example.com",
-      firstName: "Sarah",
-      lastName: "Chen",
-      userType: "Investor",
-      status: "active",
-      verified: true,
-      lastLogin: "2025-07-14T10:15:00Z",
-      totalTrades: 89,
-      joinDate: "2024-05-22"
-    }
-  ];
+  // Use only real users from database
+  const users: UserManagement[] = realUsers.map((user: any) => ({
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    userType: user.userType || user.role || 'User',
+    status: user.status,
+    verified: user.verified,
+    lastLogin: user.lastLogin || '',
+    totalTrades: user.totalTrades || 0,
+    joinDate: user.joinDate || ''
+  })) || [];
 
-  const moderationItems: ContentModerationItem[] = [
-    {
-      id: 1,
-      type: "ai_model",
-      title: "Quantum Risk Predictor",
-      submittedBy: "QuantumFinance Labs",
-      status: "pending",
-      priority: "high",
-      submittedAt: "2025-07-14T08:30:00Z",
-      flaggedReason: "Performance claims need verification"
-    },
-    {
-      id: 2,
-      type: "dataset",
-      title: "Market Sentiment Data 2024",
-      submittedBy: "DataProvider Corp",
-      status: "flagged",
-      priority: "medium",
-      submittedAt: "2025-07-13T15:20:00Z",
-      flaggedReason: "Licensing documentation incomplete"
-    }
-  ];
+  // No fictional data - will show real moderation items when implemented
+  const moderationItems: ContentModerationItem[] = [];
 
-  const securityAlerts: SecurityAlert[] = [
-    {
-      id: 1,
-      type: "suspicious_login",
-      severity: "high",
-      description: "Multiple failed login attempts from unusual IP address",
-      userId: "github_55703540",
-      timestamp: "2025-07-14T11:45:00Z",
-      status: "investigating"
-    },
-    {
-      id: 2,
-      type: "unusual_activity",
-      severity: "medium",
-      description: "Unusual trading pattern detected",
-      userId: "google_123456789",
-      timestamp: "2025-07-14T09:15:00Z",
-      status: "open"
-    }
-  ];
+  // No fictional data - will show real security alerts when implemented
+  const securityAlerts: SecurityAlert[] = [];
 
-  const supportTickets: SupportTicket[] = [
-    {
-      id: 1,
-      ticketNumber: "GF-2025-001",
-      userId: "github_55703540",
-      userName: "Alex Johnson",
-      category: "dispute",
-      subject: "Model performance not as advertised",
-      priority: "high",
-      status: "in_progress",
-      isLegalDispute: false,
-      disputeAmount: 2999.99,
-      createdAt: "2025-07-13T14:30:00Z",
-      lastResponseAt: "2025-07-14T09:00:00Z"
-    },
-    {
-      id: 2,
-      ticketNumber: "GF-2025-002",
-      userId: "google_123456789",
-      userName: "Sarah Chen",
-      category: "technical",
-      subject: "Unable to access subscribed model",
-      priority: "medium",
-      status: "waiting_response",
-      isLegalDispute: false,
-      createdAt: "2025-07-14T10:15:00Z"
-    }
-  ];
+  // No fictional data - will show real support tickets when implemented
+  const supportTickets: SupportTicket[] = [];
 
   const getStatusBadge = (status: string, type: 'user' | 'content' | 'alert' | 'ticket' = 'user') => {
     const variants: Record<string, string> = {
