@@ -81,12 +81,28 @@ export default function AdminUserManagement() {
   });
 
   // Fetch real users from API
-  const { data: users = [], isLoading, error } = useQuery({
+  const { data: users = [], isLoading, error } = useQuery<UserManagement[]>({
     queryKey: ['/api/admin/users'],
     enabled: !!user && (user.role === 'admin' || user.role === 'moderator')
   });
 
-  const { data: userStats } = useQuery({
+  const { data: userStats = {
+    totalUsers: 0,
+    activeUsers: 0,
+    suspendedUsers: 0,
+    pendingUsers: 0,
+    bannedUsers: 0,
+    chatbotSignups: 0,
+    recentSignups: 0
+  } } = useQuery<{
+    totalUsers: number;
+    activeUsers: number;
+    suspendedUsers: number;
+    pendingUsers: number;
+    bannedUsers: number;
+    chatbotSignups: number;
+    recentSignups: number;
+  }>({
     queryKey: ['/api/admin/users/stats'],
     enabled: !!user && (user.role === 'admin' || user.role === 'moderator')
   });
@@ -395,7 +411,7 @@ export default function AdminUserManagement() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats?.total || users.length}</div>
+                <div className="text-2xl font-bold">{userStats.totalUsers || users.length}</div>
                 <p className="text-xs text-muted-foreground">All registered</p>
               </CardContent>
             </Card>
@@ -407,7 +423,7 @@ export default function AdminUserManagement() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  {stats?.active || users.filter((u: any) => u.status === 'active').length}
+                  {userStats.activeUsers || users.filter(u => u.status === 'active').length}
                 </div>
                 <p className="text-xs text-muted-foreground">Currently active</p>
               </CardContent>
@@ -420,7 +436,7 @@ export default function AdminUserManagement() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-yellow-600">
-                  {stats?.pending || users.filter((u: any) => u.status === 'pending').length}
+                  {userStats.pendingUsers || users.filter(u => u.status === 'pending').length}
                 </div>
                 <p className="text-xs text-muted-foreground">Awaiting verification</p>
               </CardContent>
@@ -433,7 +449,7 @@ export default function AdminUserManagement() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-600">
-                  {stats?.suspended || users.filter((u: any) => u.status === 'suspended').length}
+                  {userStats.suspendedUsers || users.filter(u => u.status === 'suspended').length}
                 </div>
                 <p className="text-xs text-muted-foreground">Account suspended</p>
               </CardContent>
@@ -446,7 +462,7 @@ export default function AdminUserManagement() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-600">
-                  {stats?.banned || users.filter((u: any) => u.status === 'banned').length}
+                  {userStats.bannedUsers || users.filter(u => u.status === 'banned').length}
                 </div>
                 <p className="text-xs text-muted-foreground">Account banned</p>
               </CardContent>
