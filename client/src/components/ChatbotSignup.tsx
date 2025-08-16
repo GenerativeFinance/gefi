@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Bot, User, Mail, MapPin, Briefcase, ArrowRight, Check, X, Calendar, Clock, Video, ArrowLeft, Search } from 'lucide-react';
+import { Bot, User, Mail, MapPin, Briefcase, ArrowRight, Check, X, Calendar, Clock, Video, ArrowLeft, Search, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChatMessage {
@@ -386,28 +386,58 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
         // Create account
         setIsCreatingAccount(true);
         try {
-          const signupResponse = await fetch('/api/auth/email/signup', {
+          const signupResponse = await fetch('/api/chatbot/signup/complete', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               ...userData,
-              password: 'temp-password' // In production, use secure password generation
+              sessionId: Date.now().toString() // Generate session ID
             }),
           });
 
           if (signupResponse.ok) {
+            const result = await signupResponse.json();
             addBotMessage("🎉 Your account has been created successfully! Welcome to GeFi!");
             setTimeout(() => {
-              addBotMessage("Before you dive in, would you like to book a personalized demo session with our team? We can show you around the platform and answer any questions!");
-              setShowDemoBooking(true);
+              addBotMessage("Perfect! Now let's get you started with a personalized demo. You can book a session directly with our team:");
+              
+              // Add Calendly booking message with direct link
+              setTimeout(() => {
+                addBotMessage(
+                  <div className="space-y-3">
+                    <p className="text-gray-700 dark:text-gray-300">
+                      Click the link below to schedule your 30-minute demo session:
+                    </p>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                      <a 
+                        href="https://calendly.com/generativefinance/30min" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-semibold"
+                      >
+                        <Calendar className="w-4 h-4" />
+                        <span>Book Your Personal Demo (30 min)</span>
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                        Opens in a new window • Free consultation
+                      </p>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      Or you can always access this link later from your dashboard. We're excited to show you what GeFi can do for your financial goals!
+                    </p>
+                  </div>
+                );
+              }, 1000);
             }, 2000);
           } else {
             const errorData = await signupResponse.json();
-            addBotMessage(`❌ Sorry, there was an error creating your account: ${errorData.message}`);
+            addBotMessage(`❌ Sorry, there was an error creating your account: ${errorData.message || errorData.error}`);
           }
         } catch (error) {
+          console.error('Signup error:', error);
           addBotMessage("❌ Sorry, there was an error creating your account. Please try again.");
         }
         setIsCreatingAccount(false);
