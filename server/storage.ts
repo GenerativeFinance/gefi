@@ -350,7 +350,15 @@ export class DatabaseStorage implements IStorage {
 
   // Admin user management methods
   async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(users.createdAt);
+    try {
+      const result = await db.select().from(users).orderBy(users.createdAt);
+      console.log('getAllUsers result count:', result.length);
+      console.log('Sample user:', result[0] ? JSON.stringify(result[0], null, 2) : 'No users found');
+      return result;
+    } catch (error) {
+      console.error('Error in getAllUsers:', error);
+      throw error;
+    }
   }
 
   async updateUserStatus(id: string, status: string, adminId?: string): Promise<User> {

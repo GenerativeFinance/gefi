@@ -230,28 +230,32 @@ export function registerChatbotRoutes(app: Express) {
         }
       }
       
-      // Save chatbot conversation record
-      await db.insert(chatbotConversations).values({
-        userId: userId,
-        sessionId: validatedData.sessionId,
-        userProfile: validatedData.role,
-        messages: [
-          {
-            role: 'assistant',
-            content: 'Signup completed successfully',
-            timestamp: new Date().toISOString()
-          }
-        ],
-        profileConfidence: '1.0',
-        currentQuestionIndex: 999, // Completed
-        completedQuestions: ['email', 'firstName', 'lastName', 'country', 'role'],
-        userGoals: validatedData.areasOfFocus || [],
-        preferences: {
-          experienceLevel: validatedData.experienceLevel,
-          platformIntent: validatedData.platformIntent,
-          preferredModelTypes: validatedData.preferredModelTypes
-        },
-      });
+      // Save chatbot conversation record (with correct column names)
+      try {
+        await db.insert(chatbotConversations).values({
+          userId: userId,
+          sessionId: validatedData.sessionId,
+          userProfile: validatedData.role,
+          messages: [
+            {
+              role: 'assistant',
+              content: 'Signup completed successfully',
+              timestamp: new Date().toISOString()
+            }
+          ],
+          currentQuestionIndex: 999, // Completed
+          completedQuestions: ['email', 'firstName', 'lastName', 'country', 'role'],
+          userGoals: validatedData.areasOfFocus || [],
+          preferences: {
+            experienceLevel: validatedData.experienceLevel,
+            platformIntent: validatedData.platformIntent,
+            preferredModelTypes: validatedData.preferredModelTypes
+          },
+        });
+      } catch (conversationError) {
+        console.error('Failed to save conversation, but user created:', conversationError);
+        // Don't fail the signup if conversation save fails
+      }
       
       // Return success response
       res.json({
