@@ -146,15 +146,15 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
   const [selectedEventType, setSelectedEventType] = useState<string>('');
   const [availableTimes, setAvailableTimes] = useState<any[]>([]);
   const [isLoadingTimes, setIsLoadingTimes] = useState(false);
+  const [showTimeSlots, setShowTimeSlots] = useState(false);
+  const [isBooking, setIsBooking] = useState(false);
+  const [selectedTime, setSelectedTime] = useState<any>(null);
   
   // Security states
   const [securityCheckStep, setSecurityCheckStep] = useState<'none' | 'asking' | 'verifying' | 'passed' | 'failed'>('none');
   const [securityAnswer, setSecurityAnswer] = useState('');
   const [securityAttempts, setSecurityAttempts] = useState(0);
   const [recaptchaToken, setRecaptchaToken] = useState('');
-  const [selectedTime, setSelectedTime] = useState<any>(null);
-  const [isBooking, setIsBooking] = useState(false);
-  const [showTimeSlots, setShowTimeSlots] = useState(false);
   const [roleSearchOpen, setRoleSearchOpen] = useState(false);
   const [roleSearchValue, setRoleSearchValue] = useState('');
 
@@ -473,49 +473,45 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
     handleSubmit(option);
   };
 
-  const handleDemoBooking = (wantsDemo: boolean) => {
-    setShowDemoBooking(false);
+  const handleDemoBooking = (eventType: string) => {
+    setSelectedEventType(eventType);
+    setIsLoadingTimes(true);
     
-    if (wantsDemo) {
-      addBotMessage("Excellent! I'll set up your demo booking right now...");
+    // Simulate loading times and redirect to Calendly
+    setTimeout(() => {
+      setIsLoadingTimes(false);
+      // Open Calendly link directly
+      window.open('https://calendly.com/generativefinance/30min', '_blank');
       
-      setTimeout(() => {
-        addBotMessage(
-          <div className="space-y-3">
-            <p className="text-gray-700 dark:text-gray-300">
-              Click the link below to schedule your 30-minute demo session:
-            </p>
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-              <a 
-                href="https://calendly.com/generativefinance/30min" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-semibold"
-              >
-                <Calendar className="w-4 h-4" />
-                <span>Book Your Personal Demo (30 min)</span>
-                <ExternalLink className="w-4 h-4" />
-              </a>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                Opens in a new window • Free consultation
-              </p>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              We're excited to show you what GeFi can do for your financial goals!
-            </p>
-          </div>
-        );
-        
-        setTimeout(() => {
-          addBotMessage("You're all set! Feel free to explore your new GeFi account. Welcome aboard!");
-          setTimeout(() => onComplete(userData as UserData), 3000);
-        }, 2000);
-      }, 1500);
-    } else {
-      addBotMessage("No problem! You can always book a demo later from your dashboard. Welcome to GeFi!");
-      setTimeout(() => onComplete(userData as UserData), 2000);
-    }
+      // Continue with account creation flow
+      addBotMessage("Great! I've opened the demo booking page. Meanwhile, let me complete your account setup...");
+      handleSkipDemo();
+    }, 1500);
   };
+
+  const handleSkipDemo = () => {
+    addBotMessage("Perfect! Your account has been created and is under review. Redirecting you to your account status page...");
+    
+    setTimeout(() => {
+      // Store user data and redirect
+      sessionStorage.setItem('pendingUserData', JSON.stringify(userData));
+      navigate('/account-pending');
+    }, 2000);
+  };
+
+  const handleTimeSlotSelection = (timeSlot: any) => {
+    setSelectedTime(timeSlot);
+    setIsBooking(true);
+    
+    // Simulate booking and redirect
+    setTimeout(() => {
+      setIsBooking(false);
+      window.open('https://calendly.com/generativefinance/30min', '_blank');
+      handleSkipDemo();
+    }, 1500);
+  };
+
+
 
   const handleVerificationCodeSubmit = async (code: string) => {
     if (!code || code.length !== 6) {
@@ -569,14 +565,12 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
               addBotMessage("You'll receive an email confirmation once your account is approved. This typically takes 24-48 hours.");
               
               setTimeout(() => {
-                addBotMessage("Redirecting you to your account status page...");
+                addBotMessage("Would you like to book a demo while waiting for approval?");
                 
-                // Redirect to account pending page after 2 seconds
+                // Show demo booking options
                 setTimeout(() => {
-                  // Store user data in sessionStorage to pass to the pending page
-                  sessionStorage.setItem('pendingUserData', JSON.stringify(userData));
-                  navigate('/account-pending');
-                }, 2000);
+                  setShowDemoBooking(true);
+                }, 1000);
               }, 1500);
             }, 2000);
           } else {
@@ -902,10 +896,10 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
                 />
                 <Button 
                   onClick={() => handleVerificationCodeSubmit(verificationCode)} 
-                  disabled={verificationCode.length !== 6 || emailVerificationStep === 'verifying'}
+                  disabled={verificationCode.length !== 6}
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                 >
-                  {emailVerificationStep === 'verifying' ? (
+                  {emailVerificationStep === 'verifying' || isCreatingAccount ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <Check className="w-4 h-4" />
