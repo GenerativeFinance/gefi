@@ -66,6 +66,20 @@ export default function AdminUserManagement() {
   });
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
+  // Add user modal states
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [addForm, setAddForm] = useState({
+    email: "",
+    firstName: "",
+    lastName: "",
+    userType: "Investor",
+    status: "active",
+    company: "",
+    country: "",
+    experienceLevel: "Beginner",
+    platformIntent: "Buy Models"
+  });
+
   // Fetch real users from API
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['/api/admin/users'],
@@ -152,6 +166,36 @@ export default function AdminUserManagement() {
     onError: (error) => {
       toast({ 
         title: "Error updating user role", 
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: "destructive" 
+      });
+    }
+  });
+
+  const addUserMutation = useMutation({
+    mutationFn: async (userData: typeof addForm) => {
+      return apiRequest('POST', '/api/admin/users', userData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users/stats'] });
+      toast({ title: "User created successfully" });
+      setIsAddDialogOpen(false);
+      setAddForm({
+        email: "",
+        firstName: "",
+        lastName: "",
+        userType: "Investor",
+        status: "active",
+        company: "",
+        country: "",
+        experienceLevel: "Beginner",
+        platformIntent: "Buy Models"
+      });
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Error creating user", 
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: "destructive" 
       });
@@ -334,7 +378,10 @@ export default function AdminUserManagement() {
               <h1 className="text-3xl font-bold">User Management</h1>
               <p className="text-muted-foreground mt-2">Manage and monitor all platform users</p>
             </div>
-            <Button className="bg-primary text-primary-foreground">
+            <Button 
+              className="bg-primary text-primary-foreground"
+              onClick={() => setIsAddDialogOpen(true)}
+            >
               <Users className="h-4 w-4 mr-2" />
               Add User
             </Button>
@@ -550,6 +597,176 @@ export default function AdminUserManagement() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Add User Dialog */}
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add New User</DialogTitle>
+              <DialogDescription>
+                Create a new user account for the GeFi platform
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              {/* Basic Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name *</Label>
+                  <Input
+                    id="firstName"
+                    value={addForm.firstName}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, firstName: e.target.value }))}
+                    placeholder="Enter first name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Input
+                    id="lastName"
+                    value={addForm.lastName}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, lastName: e.target.value }))}
+                    placeholder="Enter last name"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={addForm.email}
+                  onChange={(e) => setAddForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="Enter email address"
+                />
+              </div>
+
+              {/* User Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="userType">User Type *</Label>
+                  <Select
+                    value={addForm.userType}
+                    onValueChange={(value) => setAddForm(prev => ({ ...prev, userType: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select user type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {userTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status">Account Status *</Label>
+                  <Select
+                    value={addForm.status}
+                    onValueChange={(value) => setAddForm(prev => ({ ...prev, status: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{status.label}</span>
+                            <span className="text-xs text-muted-foreground">{status.description}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Additional Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company</Label>
+                  <Input
+                    id="company"
+                    value={addForm.company}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, company: e.target.value }))}
+                    placeholder="Enter company name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    value={addForm.country}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, country: e.target.value }))}
+                    placeholder="Enter country"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="experienceLevel">Experience Level</Label>
+                  <Select
+                    value={addForm.experienceLevel}
+                    onValueChange={(value) => setAddForm(prev => ({ ...prev, experienceLevel: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select experience level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Beginner">Beginner</SelectItem>
+                      <SelectItem value="Intermediate">Intermediate</SelectItem>
+                      <SelectItem value="Expert">Expert</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="platformIntent">Platform Intent</Label>
+                  <Select
+                    value={addForm.platformIntent}
+                    onValueChange={(value) => setAddForm(prev => ({ ...prev, platformIntent: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select platform intent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Buy Models">Buy Models</SelectItem>
+                      <SelectItem value="Sell/Upload Models">Sell/Upload Models</SelectItem>
+                      <SelectItem value="Both">Both</SelectItem>
+                      <SelectItem value="Browse/Learn">Browse/Learn</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsAddDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="button" 
+                onClick={() => addUserMutation.mutate(addForm)}
+                disabled={addUserMutation.isPending || !addForm.email || !addForm.firstName || !addForm.lastName}
+              >
+                {addUserMutation.isPending ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create User'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Edit User Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
