@@ -36,7 +36,7 @@ Preferred communication style: Simple, everyday language.
 - **Reporting & Analytics**: AI-generated market analysis, automated financial reporting, compliance tracking, custom dashboards.
 - **Web3 & DeFi Integration**: Wallet connectivity, crypto holdings, DeFi positions, multi-chain support.
 - **Smart Contracts**: Transparent revenue sharing and crowdfunding using Solidity.
-- **Backtesting Environment**: Advanced interface for AI model development with performance metrics and historical data integration.
+- **Advanced Backtesting Environment**: Comprehensive testing platform for AI financial models with historical data analysis, performance metrics (Sharpe ratio, max drawdown, volatility, win rate), risk analysis (VaR, expected shortfall), trade tracking, and visual performance charts. Supports multiple data sources (Yahoo Finance, Alpha Vantage, IEX Cloud, Quandl) and configurable risk parameters.
 - **Real-time Trading Platform**: Live market data via WebSockets, order management (market, limit, stop), position tracking.
 - **Sentiment Visualizer**: AI-powered sentiment analysis across various asset classes with real-time updates.
 - **Comprehensive User Profiles**: Role-specific profiles (Developer, Investor, Data Provider, Regulator, Admin, Moderator) with detailed information, performance metrics, and activity tracking.
