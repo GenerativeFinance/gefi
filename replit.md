@@ -44,6 +44,14 @@ Preferred communication style: Simple, everyday language.
 - **AI Chatbot System**: Intelligent conversation management with user profile detection, personalized recommendations, and adaptive questioning.
 - **Advanced Data Provider Tools**: Dataset upload/management, financial tracking, collaboration platforms, compliance tools, and advanced trend analysis.
 
+## Recent Updates (August 16, 2025)
+
+### Account Creation & Calendly Integration
+- **Chatbot Signup Account Creation**: Fully implemented `/api/auth/complete-chatbot-signup` endpoint that processes user preferences (experience level, platform intent, areas of focus) and creates pending accounts with proper role mapping (Expert → analyst, Intermediate → trader, Beginner → investor).
+- **Calendly Demo Booking Integration**: Created `/demo-booking` page that redirects users to https://calendly.com/generativefinance after account creation, allowing them to schedule demos while waiting for account approval.
+- **User Preference Processing**: Enhanced chatbot signup flow to capture and store comprehensive user data including finance areas of interest, company information, and platform usage intentions.
+- **Pending Account Workflow**: All chatbot signups now create accounts with 'pending' status requiring admin approval before activation.
+
 ## External Dependencies
 
 - **@neondatabase/serverless**: PostgreSQL database connectivity
