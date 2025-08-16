@@ -120,11 +120,7 @@ export default function AuthFlow() {
                 : 'Your AI-Powered Financial Platform'
               }
             </CardDescription>
-            {authMode === 'welcome' && (
-              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
-                New Enhanced Authentication
-              </Badge>
-            )}
+            
           </CardHeader>
 
           <CardContent className="space-y-4">
