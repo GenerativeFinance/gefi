@@ -29,13 +29,13 @@ interface UserData {
 }
 
 const ROLE_OPTIONS = [
-  'Investor',
+  'Financial Professional',
   'Developer', 
   'Data Provider',
   'Regulator'
 ];
 
-const INVESTOR_ROLES = [
+const FINANCIAL_PROFESSIONAL_ROLES = [
   'Investor',
   'Portfolio Manager',
   'Fund Manager', 
@@ -130,7 +130,10 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
       field: 'role',
       type: 'select',
       options: ROLE_OPTIONS,
-      validation: (value: string) => ROLE_OPTIONS.includes(value),
+      validation: (value: string) => {
+        // Allow main roles or any of the financial professional sub-roles
+        return ROLE_OPTIONS.includes(value) || FINANCIAL_PROFESSIONAL_ROLES.includes(value);
+      },
       errorMessage: "Please select a valid role"
     },
     {
@@ -570,7 +573,7 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
                   {steps[currentStep].field === 'role' ? (
                     <div className="grid grid-cols-2 gap-2">
                       {ROLE_OPTIONS.map((role) => (
-                        role === 'Investor' ? (
+                        role === 'Financial Professional' ? (
                           <Popover key={role} open={roleSearchOpen} onOpenChange={setRoleSearchOpen}>
                             <PopoverTrigger asChild>
                               <Button
@@ -578,30 +581,30 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
                                 className="h-auto p-4 flex-col items-start text-left hover:bg-white hover:text-black dark:hover:bg-white dark:hover:text-black transition-colors"
                               >
                                 <div className="font-semibold">{role}</div>
-                                <div className="text-sm text-gray-600 dark:text-gray-300">Financial professional</div>
+                                <div className="text-sm text-gray-600 dark:text-gray-300">Investment & finance</div>
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-80 p-0" align="start">
                               <Command>
                                 <CommandInput 
-                                  placeholder="Search investor roles..." 
+                                  placeholder="Search finance roles..." 
                                   value={roleSearchValue}
                                   onValueChange={setRoleSearchValue}
                                 />
                                 <CommandList>
                                   <CommandEmpty>No roles found.</CommandEmpty>
                                   <CommandGroup>
-                                    {INVESTOR_ROLES.map((investorRole) => (
+                                    {FINANCIAL_PROFESSIONAL_ROLES.map((financialRole) => (
                                       <CommandItem
-                                        key={investorRole}
-                                        value={investorRole}
+                                        key={financialRole}
+                                        value={financialRole}
                                         onSelect={() => {
-                                          handleOptionSelect(investorRole);
+                                          handleOptionSelect(financialRole);
                                           setRoleSearchOpen(false);
                                           setRoleSearchValue('');
                                         }}
                                       >
-                                        {investorRole}
+                                        {financialRole}
                                       </CommandItem>
                                     ))}
                                   </CommandGroup>
