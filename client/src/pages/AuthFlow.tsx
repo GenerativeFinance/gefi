@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bot, Mail, Github, Linkedin, ArrowLeft } from 'lucide-react';
+import { Bot, Mail, Github, Linkedin, ArrowLeft, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'wouter';
 import ChatbotSignup from '@/components/ChatbotSignup';
 import EmailSignIn from '@/components/EmailSignIn';
 import EmailSignup from '@/components/EmailSignup';
@@ -23,6 +24,7 @@ interface UserData {
 export default function AuthFlow() {
   const [authMode, setAuthMode] = useState<AuthMode>('welcome');
   const [isLoading, setIsLoading] = useState(false);
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const handleChatbotSignupComplete = async (userData: UserData) => {
@@ -90,6 +92,18 @@ export default function AuthFlow() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      {/* Back to Home Button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setLocation('/')}
+        className="fixed top-4 left-4 z-10 flex items-center gap-2"
+        title="Back to Home"
+      >
+        <Home className="w-4 h-4" />
+        <span className="hidden sm:inline">Home</span>
+      </Button>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
