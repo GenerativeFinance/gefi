@@ -323,10 +323,16 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
       }
     }
 
-    // Add user message
-    addUserMessage(inputValue);
+    // Add user message (except for multiselect which handles this separately)
+    if (currentStepData.type !== 'multiselect') {
+      addUserMessage(inputValue);
+    }
     setCurrentInput('');
-    setShowOptions(false);
+    
+    // Only hide options for non-multiselect
+    if (currentStepData.type !== 'multiselect') {
+      setShowOptions(false);
+    }
 
     // Update user data
     let newUserData;
@@ -347,6 +353,9 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
         };
       }
       setUserData(newUserData);
+      
+      // Keep options visible for multiselect
+      setShowOptions(true);
       
       // For multiselect, don't advance automatically - let user continue when ready
       return;
