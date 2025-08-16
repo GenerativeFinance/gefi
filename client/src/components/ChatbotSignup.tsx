@@ -200,7 +200,10 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
       field: 'areasOfFocus',
       type: 'multiselect',
       options: AREAS_OF_FOCUS,
-      validation: (value: string[]) => Array.isArray(value) && value.length > 0,
+      validation: (value: any) => {
+        // For multiselect, value should be an array with at least one item
+        return Array.isArray(value) && value.length > 0;
+      },
       errorMessage: "Please select at least one area of focus"
     },
     {
@@ -309,6 +312,11 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
           [currentStepData.field]: [...currentValues, inputValue] 
         };
       }
+      setUserData(newUserData);
+      
+      // For multiselect, don't advance automatically - let user continue when ready
+      addUserMessage(inputValue);
+      return;
     } else {
       newUserData = { ...userData, [currentStepData.field]: inputValue };
     }
@@ -674,6 +682,51 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
                           </Button>
                         )
                       ))}
+                    </div>
+                  ) : steps[currentStep].type === 'multiselect' ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-2">
+                        {steps[currentStep].options?.map((option) => {
+                          const isSelected = (userData[steps[currentStep].field as keyof UserData] as string[] || []).includes(option);
+                          return (
+                            <Button
+                              key={option}
+                              variant={isSelected ? "default" : "outline"}
+                              onClick={() => handleOptionSelect(option)}
+                              className={`text-left justify-start transition-colors ${
+                                isSelected 
+                                  ? "bg-blue-600 text-white hover:bg-blue-700" 
+                                  : "hover:bg-white hover:text-black dark:hover:bg-white dark:hover:text-black"
+                              }`}
+                            >
+                              {isSelected && <Check className="w-4 h-4 mr-2" />}
+                              {option}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      {(userData[steps[currentStep].field as keyof UserData] as string[] || []).length > 0 && (
+                        <div className="flex justify-center">
+                          <Button
+                            onClick={() => {
+                              // Move to next step
+                              const nextStep = currentStep + 1;
+                              setCurrentStep(nextStep);
+                              setShowOptions(false);
+                              
+                              setTimeout(() => {
+                                if (nextStep < steps.length) {
+                                  addBotMessage(steps[nextStep].question);
+                                  setShowOptions(steps[nextStep].type === 'select' || steps[nextStep].type === 'multiselect');
+                                }
+                              }, 1000);
+                            }}
+                            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2"
+                          >
+                            Continue <ArrowRight className="w-4 h-4 ml-2" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
