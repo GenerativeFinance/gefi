@@ -127,7 +127,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<UpsertUser>): Promise<User>;
-  
+
   // User Profile operations
   getUserProfile(userId: string): Promise<UserProfile | undefined>;
   createOrUpdateUserProfile(userId: string, profile: Partial<InsertUserProfile>): Promise<UserProfile>;
@@ -138,14 +138,14 @@ export interface IStorage {
   getUserPublications(userId: string): Promise<any[]>;
   getUserReviews(userId: string): Promise<any[]>;
   getUserStats(userId: string): Promise<any>;
-  
+
   // Portfolio operations
   getUserPortfolio(userId: string): Promise<Portfolio | undefined>;
   createPortfolio(portfolio: InsertPortfolio): Promise<Portfolio>;
   updatePortfolio(portfolioId: number, updates: Partial<InsertPortfolio>): Promise<Portfolio>;
   getPortfolioAssets(portfolioId: number): Promise<PortfolioAsset[]>;
   getPortfolioAiModels(portfolioId: number): Promise<PortfolioAiModel[]>;
-  
+
   // AI Models operations
   getAllAiModels(): Promise<AiModel[]>;
   getAiModel(id: number): Promise<AiModel | undefined>;
@@ -153,7 +153,7 @@ export interface IStorage {
   getUserModelSubscriptions(userId: string): Promise<UserModelSubscription[]>;
   subscribeToModel(subscription: InsertUserModelSubscription): Promise<UserModelSubscription>;
   getUserAiModels(userId: string): Promise<AiModel[]>;
-  
+
   // AI Model Categories operations
   getAiModelCategories(): Promise<AiModelCategory[]>;
   createAiModelCategory(category: InsertAiModelCategory): Promise<AiModelCategory>;
@@ -174,20 +174,20 @@ export interface IStorage {
     financialInstrument?: string;
     tags?: string[];
   }): Promise<AiModel[]>;
-  
+
   // Market insights operations
   getLatestMarketInsights(): Promise<MarketInsight[]>;
   createMarketInsight(insight: InsertMarketInsight): Promise<MarketInsight>;
-  
+
   // Risk alerts operations
   getUserRiskAlerts(userId: string): Promise<RiskAlert[]>;
   createRiskAlert(alert: InsertRiskAlert): Promise<RiskAlert>;
   markAlertAsRead(alertId: number): Promise<void>;
-  
+
   // Reports operations
   getUserReports(userId: string): Promise<Report[]>;
   createReport(report: InsertReport): Promise<Report>;
-  
+
   // Compliance operations
   getComplianceFrameworks(): Promise<ComplianceFramework[]>;
   createComplianceFramework(framework: InsertComplianceFramework): Promise<ComplianceFramework>;
@@ -202,56 +202,56 @@ export interface IStorage {
   updateRiskLimit(limitId: number, updates: Partial<InsertRiskLimit>): Promise<RiskLimit>;
   getUserComplianceDocuments(userId: string): Promise<ComplianceDocument[]>;
   createComplianceDocument(document: InsertComplianceDocument): Promise<ComplianceDocument>;
-  
+
   // Comments and ratings operations
   getModelComments(modelId: number): Promise<ModelComment[]>;
   createModelComment(comment: InsertModelComment): Promise<ModelComment>;
   getModelRatings(modelId: number): Promise<ModelRating[]>;
   createModelRating(rating: InsertModelRating): Promise<ModelRating>;
-  
+
   // Developer Models operations
   getAllDeveloperModels(): Promise<DeveloperModel[]>;
   getDeveloperModels(...statuses: string[]): Promise<DeveloperModel[]>;
   getDeveloperModel(id: number): Promise<DeveloperModel | undefined>;
   getDeveloperModelCategories(): Promise<string[]>;
   updateDeveloperModelFunding(modelId: number, newAmount: string): Promise<void>;
-  
+
   // Model Funding operations
   createModelFunding(funding: InsertModelFunding): Promise<ModelFunding>;
   getUserModelFunding(userId: string): Promise<ModelFunding[]>;
-  
+
   // Web3 Wallet operations
   getUserWallets(userId: string): Promise<Web3Wallet[]>;
   getWallet(walletId: number): Promise<Web3Wallet | undefined>;
   addWallet(wallet: InsertWeb3Wallet): Promise<Web3Wallet>;
   updateWallet(walletId: number, updates: Partial<InsertWeb3Wallet>): Promise<Web3Wallet>;
   removeWallet(walletId: number): Promise<void>;
-  
+
   // Crypto Holdings operations
   getWalletHoldings(walletId: number): Promise<CryptoHolding[]>;
   getUserCryptoHoldings(userId: string): Promise<CryptoHolding[]>;
   addCryptoHolding(holding: InsertCryptoHolding): Promise<CryptoHolding>;
   updateCryptoHolding(holdingId: number, updates: Partial<InsertCryptoHolding>): Promise<CryptoHolding>;
   removeCryptoHolding(holdingId: number): Promise<void>;
-  
+
   // DeFi Positions operations
   getWalletDefiPositions(walletId: number): Promise<DefiPosition[]>;
   getUserDefiPositions(userId: string): Promise<DefiPosition[]>;
   addDefiPosition(position: InsertDefiPosition): Promise<DefiPosition>;
   updateDefiPosition(positionId: number, updates: Partial<InsertDefiPosition>): Promise<DefiPosition>;
   removeDefiPosition(positionId: number): Promise<void>;
-  
+
   // DeFi Transactions operations
   getWalletTransactions(walletId: number, limit?: number): Promise<DefiTransaction[]>;
   getUserTransactions(userId: string, limit?: number): Promise<DefiTransaction[]>;
   addTransaction(transaction: InsertDefiTransaction): Promise<DefiTransaction>;
-  
+
   // Yield Farming operations
   getWalletYieldPositions(walletId: number): Promise<YieldFarmingPosition[]>;
   getUserYieldPositions(userId: string): Promise<YieldFarmingPosition[]>;
   addYieldPosition(position: InsertYieldFarmingPosition): Promise<YieldFarmingPosition>;
   updateYieldPosition(positionId: number, updates: Partial<InsertYieldFarmingPosition>): Promise<YieldFarmingPosition>;
-  
+
   // NFT Holdings operations
   getWalletNFTs(walletId: number): Promise<NftHolding[]>;
   getUserNFTs(userId: string): Promise<NftHolding[]>;
@@ -306,13 +306,13 @@ export class DatabaseStorage implements IStorage {
             ...userData,
             provider: userData.provider || 'email',
             status: 'active',
-            riskScore: 0,
+            riskscore: 0,
             lastLoginAt: new Date(),
             totalTrades: 0
           })
           .onConflictDoNothing()
           .returning();
-        
+
         if (!user) {
           // If insert was skipped due to conflict, fetch the existing user
           const existingUser = userData.id ? await this.getUser(userData.id) : null;
@@ -321,7 +321,7 @@ export class DatabaseStorage implements IStorage {
           if (emailUser) return emailUser;
           throw new Error('Failed to create or retrieve user');
         }
-        
+
         return user;
       }
     } catch (error) {
@@ -386,7 +386,7 @@ export class DatabaseStorage implements IStorage {
     byRole: { role: string; count: number }[];
   }> {
     const allUsers = await this.getAllUsers();
-    
+
     const stats = {
       total: allUsers.length,
       active: allUsers.filter(u => u.status === 'active').length,
@@ -402,7 +402,7 @@ export class DatabaseStorage implements IStorage {
       const role = user.role || 'user';
       roleMap.set(role, (roleMap.get(role) || 0) + 1);
     });
-    
+
     stats.byRole = Array.from(roleMap.entries()).map(([role, count]) => ({ role, count }));
 
     return stats;
@@ -427,10 +427,10 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log("Attempting to create/update profile for user:", userId);
       console.log("Profile data:", profile);
-      
+
       // First check if profile already exists
       const existingProfile = await this.getUserProfile(userId);
-      
+
       if (existingProfile) {
         console.log("Profile exists, updating...");
         const [userProfile] = await db
@@ -624,7 +624,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(aiModelSubcategories, eq(aiModels.subcategoryId, aiModelSubcategories.id))
       .where(eq(aiModels.isActive, true))
       .orderBy(desc(aiModels.rating));
-    
+
     return models.map(row => ({
       ...row.ai_models,
       subcategory: row.ai_model_subcategories?.name || null
@@ -684,7 +684,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     const modelIds = subscriptions.map(s => s.modelId);
-    
+
     const models = await db
       .select()
       .from(aiModels)
@@ -908,41 +908,41 @@ export class DatabaseStorage implements IStorage {
     tags?: string[];
   }): Promise<AiModel[]> {
     let query = db.select().from(aiModels).where(eq(aiModels.isActive, true));
-    
+
     const conditions = [eq(aiModels.isActive, true)];
-    
+
     if (filters.category) {
       conditions.push(eq(aiModels.categoryId, filters.category));
     }
-    
+
     if (filters.subcategory) {
       conditions.push(eq(aiModels.subcategoryId, filters.subcategory));
     }
-    
+
     if (filters.priceMin !== undefined) {
       conditions.push(gte(aiModels.price, filters.priceMin.toString()));
     }
-    
+
     if (filters.priceMax !== undefined) {
       conditions.push(lte(aiModels.price, filters.priceMax.toString()));
     }
-    
+
     if (filters.riskLevel) {
       conditions.push(eq(aiModels.riskLevel, filters.riskLevel));
     }
-    
+
     if (filters.aiTechnique) {
       conditions.push(eq(aiModels.aiTechnique, filters.aiTechnique));
     }
-    
+
     if (filters.targetUserType) {
       conditions.push(eq(aiModels.targetUserType, filters.targetUserType));
     }
-    
+
     if (filters.financialInstrument) {
       conditions.push(eq(aiModels.financialInstrument, filters.financialInstrument));
     }
-    
+
     return await db.select().from(aiModels)
       .where(and(...conditions))
       .orderBy(desc(aiModels.isFeatured), desc(aiModels.rating));
@@ -958,7 +958,7 @@ export class DatabaseStorage implements IStorage {
     if (statuses.length === 0) {
       return this.getAllDeveloperModels();
     }
-    
+
     return await db.select().from(developerModels)
       .where(inArray(developerModels.status, statuses))
       .orderBy(desc(developerModels.createdAt));
@@ -1214,7 +1214,7 @@ export class DatabaseStorage implements IStorage {
     const [newContribution] = await db.insert(botFundingContributions)
       .values(contribution)
       .returning();
-    
+
     // Update the funding raised amount
     const request = await this.getBotFundingRequest(contribution.requestId);
     if (request && request.fundingRaised) {
@@ -1226,7 +1226,7 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(botFundingRequests.id, contribution.requestId));
     }
-    
+
     return newContribution;
   }
 
