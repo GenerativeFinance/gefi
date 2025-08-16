@@ -1,12 +1,226 @@
 import type { Express } from "express";
 import { z } from "zod";
 import { nanoid } from "nanoid";
-import { chatbotConversations, chatbotUserProfiles, chatbotFeedback } from "@shared/schema";
+import { chatbotConversations, chatbotUserProfiles, chatbotFeedback, users } from "@shared/schema";
 import { db } from "../db";
 import { eq, and, desc } from "drizzle-orm";
 import { AIChatbotService, USER_PROFILES } from "../services/aiChatbotService";
+import { storage } from "../storage";
+import fetch from 'node-fetch';
+
+// Enhanced signup completion schema
+const signupCompletionSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  country: z.string().min(1),
+  role: z.string().min(1),
+  company: z.string().optional(),
+  experienceLevel: z.string().optional(),
+  areasOfFocus: z.array(z.string()).optional(),
+  linkedinProfile: z.string().url().optional(),
+  portfolioUrl: z.string().url().optional(),
+  preferredModelTypes: z.array(z.string()).optional(),
+  platformIntent: z.string().optional(),
+  subscriptionPreferences: z.array(z.string()).optional(),
+  wantsDemo: z.boolean().default(false),
+  sessionId: z.string()
+});
 
 export function registerChatbotRoutes(app: Express) {
+  
+  // Enhanced signup completion endpoint - the key improvement
+  app.post("/api/chatbot/signup/complete", async (req, res) => {
+    try {
+      const validatedData = signupCompletionSchema.parse(req.body);
+      
+      // Generate unique user ID
+      const userId = `signup_${nanoid(10)}`;
+      
+      // Prepare user data for database
+      const userData = {
+        id: userId,
+        email: validatedData.email,
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        role: validatedData.role.toLowerCase().replace(/\s+/g, '_'),
+        status: 'pending' as const,
+        provider: 'email',
+        profileImageUrl: null,
+        subscriptionTier: 'free',
+        // Enhanced profile fields
+        company: validatedData.company || null,
+        country: validatedData.country,
+        experienceLevel: validatedData.experienceLevel || null,
+        areasOfFocus: validatedData.areasOfFocus || [],
+        linkedinProfile: validatedData.linkedinProfile || null,
+        portfolioUrl: validatedData.portfolioUrl || null,
+        preferredModelTypes: validatedData.preferredModelTypes || [],
+        platformIntent: validatedData.platformIntent || null,
+        subscriptionPreferences: validatedData.subscriptionPreferences || [],
+      };
+      
+      // Save user to database
+      const [newUser] = await db.insert(users).values(userData).returning();
+      
+      // Handle Calendly booking if requested
+      let calendlyBookingUrl = null;
+      if (validatedData.wantsDemo) {
+        try {
+          calendlyBookingUrl = await createCalendlySchedulingLink(
+            validatedData.email,
+            `${validatedData.firstName} ${validatedData.lastName}`,
+            validatedData.role
+          );
+        } catch (calendlyError) {
+          console.error('Calendly booking error:', calendlyError);
+          // Continue without blocking signup if Calendly fails
+        }
+      }
+      
+      // Save chatbot conversation record
+      await db.insert(chatbotConversations).values({
+        userId: userId,
+        sessionId: validatedData.sessionId,
+        userProfile: validatedData.role,
+        messages: [
+          {
+            role: 'assistant',
+            content: 'Signup completed successfully',
+            timestamp: new Date().toISOString()
+          }
+        ],
+        profileConfidence: '1.0',
+        currentQuestionIndex: 999, // Completed
+        completedQuestions: ['email', 'firstName', 'lastName', 'country', 'role'],
+        userGoals: validatedData.areasOfFocus || [],
+        preferences: {
+          experienceLevel: validatedData.experienceLevel,
+          platformIntent: validatedData.platformIntent,
+          preferredModelTypes: validatedData.preferredModelTypes
+        },
+      });
+      
+      // Return success response
+      res.json({
+        success: true,
+        message: 'Account created successfully',
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          role: newUser.role
+        },
+        calendlyBookingUrl,
+        confirmationMessage: calendlyBookingUrl 
+          ? `Your demo session booking link: ${calendlyBookingUrl}`
+          : 'Account created successfully! You can book a demo anytime from your dashboard.'
+      });
+      
+    } catch (error) {
+      console.error('Signup completion error:', error);
+      res.status(400).json({ 
+        error: 'Failed to complete signup',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Calendly scheduling link creation
+  async function createCalendlySchedulingLink(email: string, name: string, role: string): Promise<string> {
+    if (!process.env.CALENDLY_CLIENT_ID || !process.env.CALENDLY_CLIENT_SECRET) {
+      throw new Error('Calendly credentials not configured');
+    }
+    
+    try {
+      // Create scheduling link using Calendly API
+      const response = await fetch('https://api.calendly.com/scheduling_links', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.CALENDLY_CLIENT_SECRET}`, // Using client secret as API key
+        },
+        body: JSON.stringify({
+          max_event_count: 1,
+          owner: `https://api.calendly.com/users/${process.env.CALENDLY_CLIENT_ID}`, // Owner URI
+          owner_type: 'User'
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Calendly API error:', response.status, errorText);
+        // Return direct Calendly link as fallback
+        return 'https://calendly.com/generativefinance/30min';
+      }
+      
+      const data = await response.json() as any;
+      return data.resource?.booking_url || 'https://calendly.com/generativefinance/30min';
+      
+    } catch (error) {
+      console.error('Calendly integration error:', error);
+      // Return direct Calendly link as fallback
+      return 'https://calendly.com/generativefinance/30min';
+    }
+  }
+
+  // Email verification endpoints
+  app.post("/api/auth/check-email", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+      
+      const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      
+      res.json({ exists: existingUser.length > 0 });
+    } catch (error) {
+      console.error('Email check error:', error);
+      res.status(500).json({ error: 'Failed to check email' });
+    }
+  });
+
+  app.post("/api/auth/send-verification", async (req, res) => {
+    try {
+      const { email, firstName, lastName } = req.body;
+      
+      // Generate 6-digit verification code
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // In a real app, you would send this via email service
+      console.log(`Verification code for ${email}: ${verificationCode}`);
+      
+      // For demo purposes, return the code
+      res.json({ 
+        success: true, 
+        message: 'Verification code sent',
+        verificationCode // Remove this in production
+      });
+    } catch (error) {
+      console.error('Send verification error:', error);
+      res.status(500).json({ error: 'Failed to send verification code' });
+    }
+  });
+
+  app.post("/api/auth/verify-email", async (req, res) => {
+    try {
+      const { email, code } = req.body;
+      
+      // In a real app, you would verify against stored codes
+      // For demo purposes, accept any 6-digit code
+      if (code && code.length === 6) {
+        res.json({ success: true, message: 'Email verified successfully' });
+      } else {
+        res.status(400).json({ error: 'Invalid verification code' });
+      }
+    } catch (error) {
+      console.error('Email verification error:', error);
+      res.status(500).json({ error: 'Failed to verify email' });
+    }
+  });
   // Start new conversation
   app.post("/api/chatbot/conversation", async (req, res) => {
     try {

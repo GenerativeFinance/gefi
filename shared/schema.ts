@@ -45,6 +45,16 @@ export const users = pgTable("users", {
   totalTrades: integer("totaltrades").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  // Enhanced profile fields for AI Assistant Signup
+  company: varchar("company"),
+  country: varchar("country"),
+  experienceLevel: varchar("experience_level"), // Beginner, Intermediate, Expert
+  areasOfFocus: jsonb("areas_of_focus").$type<string[]>().default([]), // DeFi, Crypto, Stocks, etc.
+  linkedinProfile: varchar("linkedin_profile"),
+  portfolioUrl: varchar("portfolio_url"),
+  preferredModelTypes: jsonb("preferred_model_types").$type<string[]>().default([]),
+  platformIntent: varchar("platform_intent"), // Buy Models, Sell/Upload Models, Both, Browse/Learn
+  subscriptionPreferences: jsonb("subscription_preferences").$type<string[]>().default([]),
 });
 
 // AI Chatbot Conversations
