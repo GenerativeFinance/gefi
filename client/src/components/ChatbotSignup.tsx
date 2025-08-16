@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface ChatMessage {
   id: string;
   sender: 'bot' | 'user';
-  message: string;
+  message: string | React.ReactNode;
   timestamp: Date;
   isTyping?: boolean;
 }
@@ -26,6 +26,14 @@ interface UserData {
   company?: string;
   experience?: string;
   interests?: string[];
+  // Enhanced profile fields
+  experienceLevel?: string;
+  areasOfFocus?: string[];
+  linkedinProfile?: string;
+  portfolioUrl?: string;
+  preferredModelTypes?: string[];
+  platformIntent?: string;
+  subscriptionPreferences?: string[];
 }
 
 const ROLE_OPTIONS = [
@@ -56,6 +64,49 @@ const COUNTRY_OPTIONS = [
   'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 
   'Japan', 'Australia', 'Singapore', 'Switzerland', 'Netherlands',
   'Sweden', 'Other'
+];
+
+const EXPERIENCE_LEVELS = [
+  'Beginner',
+  'Intermediate', 
+  'Expert'
+];
+
+const AREAS_OF_FOCUS = [
+  'DeFi',
+  'Crypto',
+  'Stocks',
+  'Bonds',
+  'Risk Assessment',
+  'Predictive Analytics',
+  'Ethical AI Finance',
+  'Portfolio Optimization',
+  'Market Analysis',
+  'Trading Algorithms'
+];
+
+const PREFERRED_MODEL_TYPES = [
+  'Predictive Models',
+  'Optimization Algorithms',
+  'Risk Models',
+  'Sentiment Analysis',
+  'Trading Bots',
+  'Portfolio Management',
+  'Market Forecasting'
+];
+
+const PLATFORM_INTENTS = [
+  'Buy Models',
+  'Sell/Upload Models',
+  'Both',
+  'Browse/Learn'
+];
+
+const SUBSCRIPTION_PREFERENCES = [
+  'Newsletter for Market Trends',
+  'Beta Access to New Models',
+  'Weekly AI Finance Updates',
+  'Monthly Performance Reports'
 ];
 
 export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (userData: UserData) => void; onBack?: () => void }) {
@@ -137,6 +188,30 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
       errorMessage: "Please select a valid role"
     },
     {
+      question: "What's your experience level with AI and finance?",
+      field: 'experienceLevel',
+      type: 'select',
+      options: EXPERIENCE_LEVELS,
+      validation: (value: string) => EXPERIENCE_LEVELS.includes(value),
+      errorMessage: "Please select your experience level"
+    },
+    {
+      question: "What areas of finance interest you most? (Select multiple)",
+      field: 'areasOfFocus',
+      type: 'multiselect',
+      options: AREAS_OF_FOCUS,
+      validation: (value: string[]) => Array.isArray(value) && value.length > 0,
+      errorMessage: "Please select at least one area of focus"
+    },
+    {
+      question: "What's your primary intent on our platform?",
+      field: 'platformIntent',
+      type: 'select',
+      options: PLATFORM_INTENTS,
+      validation: (value: string) => PLATFORM_INTENTS.includes(value),
+      errorMessage: "Please select your platform intent"
+    },
+    {
       question: "Perfect! Let me create your account now...",
       field: 'complete',
       type: 'complete'
@@ -152,7 +227,7 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
     }, 1000);
   }, []);
 
-  const addBotMessage = (message: string, isTyping = false) => {
+  const addBotMessage = (message: string | React.ReactNode, isTyping = false) => {
     const newMessage: ChatMessage = {
       id: `bot-${Date.now()}`,
       sender: 'bot',
@@ -217,7 +292,26 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
     setShowOptions(false);
 
     // Update user data
-    const newUserData = { ...userData, [currentStepData.field]: inputValue };
+    let newUserData;
+    if (currentStepData.type === 'multiselect') {
+      // Handle multi-select fields
+      const currentValues = userData[currentStepData.field as keyof UserData] as string[] || [];
+      if (currentValues.includes(inputValue)) {
+        // Remove if already selected
+        newUserData = { 
+          ...userData, 
+          [currentStepData.field]: currentValues.filter(v => v !== inputValue) 
+        };
+      } else {
+        // Add if not selected
+        newUserData = { 
+          ...userData, 
+          [currentStepData.field]: [...currentValues, inputValue] 
+        };
+      }
+    } else {
+      newUserData = { ...userData, [currentStepData.field]: inputValue };
+    }
     setUserData(newUserData);
 
     // Show typing indicator
@@ -277,88 +371,48 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
     handleSubmit(option);
   };
 
-  const handleDemoBooking = async (eventType: string) => {
-    setSelectedEventType(eventType);
-    setIsLoadingTimes(true);
+  const handleDemoBooking = (wantsDemo: boolean) => {
+    setShowDemoBooking(false);
     
-    addBotMessage(`Great choice! Let me check available times for your ${eventType === 'platform-demo' ? 'Platform Demo (30 min)' : 'Personal Onboarding (45 min)'} session...`);
-    
-    try {
-      const response = await fetch('/api/calendly/available-times', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          eventType,
-          startDate: new Date().toISOString(),
-          endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Next 7 days
-        }),
-      });
-
-      const data = await response.json();
+    if (wantsDemo) {
+      addBotMessage("Excellent! I'll set up your demo booking right now...");
       
-      if (response.ok && data.success) {
-        setAvailableTimes(data.availableTimes);
-        setShowTimeSlots(true);
-        addBotMessage("Here are the available time slots. Please select one that works best for you:");
-      } else {
-        addBotMessage("Sorry, I couldn't fetch available times right now. You can always book a demo later from your dashboard!");
-        setTimeout(() => onComplete(userData as UserData), 2000);
-      }
-    } catch (error) {
-      console.error('Demo booking error:', error);
-      addBotMessage("Sorry, there was an issue with the booking system. You can always book a demo later from your dashboard!");
+      setTimeout(() => {
+        addBotMessage(
+          <div className="space-y-3">
+            <p className="text-gray-700 dark:text-gray-300">
+              Click the link below to schedule your 30-minute demo session:
+            </p>
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+              <a 
+                href="https://calendly.com/generativefinance/30min" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-semibold"
+              >
+                <Calendar className="w-4 h-4" />
+                <span>Book Your Personal Demo (30 min)</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                Opens in a new window • Free consultation
+              </p>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              We're excited to show you what GeFi can do for your financial goals!
+            </p>
+          </div>
+        );
+        
+        setTimeout(() => {
+          addBotMessage("You're all set! Feel free to explore your new GeFi account. Welcome aboard!");
+          setTimeout(() => onComplete(userData as UserData), 3000);
+        }, 2000);
+      }, 1500);
+    } else {
+      addBotMessage("No problem! You can always book a demo later from your dashboard. Welcome to GeFi!");
       setTimeout(() => onComplete(userData as UserData), 2000);
-    } finally {
-      setIsLoadingTimes(false);
     }
-  };
-
-  const handleTimeSlotSelection = async (timeSlot: any) => {
-    setSelectedTime(timeSlot);
-    setIsBooking(true);
-    
-    addUserMessage(`${timeSlot.displayTime}`);
-    addBotMessage("Perfect! Booking your session now...");
-    
-    try {
-      const response = await fetch('/api/calendly/book-appointment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          eventType: selectedEventType,
-          datetime: timeSlot.datetime,
-          userEmail: userData.email,
-          userName: `${userData.firstName} ${userData.lastName}`,
-          userMessage: `Role: ${userData.role}, Country: ${userData.country}`
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (response.ok && data.success) {
-        addBotMessage(`🎉 ${data.confirmationMessage}`);
-        addBotMessage("You're all set! Feel free to explore your new GeFi account. Welcome aboard! 🚀");
-        setTimeout(() => onComplete(userData as UserData), 3000);
-      } else {
-        addBotMessage("Sorry, there was an issue booking your session. You can always book a demo later from your dashboard!");
-        setTimeout(() => onComplete(userData as UserData), 2000);
-      }
-    } catch (error) {
-      console.error('Booking error:', error);
-      addBotMessage("Sorry, there was an issue booking your session. You can always book a demo later from your dashboard!");
-      setTimeout(() => onComplete(userData as UserData), 2000);
-    } finally {
-      setIsBooking(false);
-    }
-  };
-
-  const handleSkipDemo = () => {
-    addBotMessage("No problem! You can always book a demo later from your dashboard. Welcome to GeFi! 🚀");
-    setTimeout(() => onComplete(userData as UserData), 2000);
   };
 
   const handleVerificationCodeSubmit = async (code: string) => {
@@ -396,44 +450,36 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
             },
             body: JSON.stringify({
               ...userData,
+              wantsDemo: false, // Will be handled separately
               sessionId: Date.now().toString() // Generate session ID
             }),
           });
 
           if (signupResponse.ok) {
             const result = await signupResponse.json();
+            
+            // Show comprehensive confirmation message with user details
             addBotMessage("🎉 Your account has been created successfully! Welcome to GeFi!");
+            
             setTimeout(() => {
-              addBotMessage("Perfect! Now let's get you started with a personalized demo. You can book a session directly with our team:");
+              let userSummary = `Your details: Email: ${userData.email}, Name: ${userData.firstName} ${userData.lastName}, Role: ${userData.role}, Country: ${userData.country}`;
+              if (userData.experienceLevel) userSummary += `, Experience: ${userData.experienceLevel}`;
+              if (userData.areasOfFocus?.length > 0) userSummary += `, Interests: ${userData.areasOfFocus.join(', ')}`;
+              if (userData.platformIntent) userSummary += `, Intent: ${userData.platformIntent}`;
               
-              // Add Calendly booking message with direct link
+              addBotMessage(userSummary);
+              
               setTimeout(() => {
-                addBotMessage(
-                  <div className="space-y-3">
-                    <p className="text-gray-700 dark:text-gray-300">
-                      Click the link below to schedule your 30-minute demo session:
-                    </p>
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                      <a 
-                        href="https://calendly.com/generativefinance/30min" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-semibold"
-                      >
-                        <Calendar className="w-4 h-4" />
-                        <span>Book Your Personal Demo (30 min)</span>
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                        Opens in a new window • Free consultation
-                      </p>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      Or you can always access this link later from your dashboard. We're excited to show you what GeFi can do for your financial goals!
-                    </p>
-                  </div>
-                );
-              }, 1000);
+                addBotMessage("Perfect! Now let's get you started with a personalized demo. Would you like to book a free demo session to explore GeFi's AI financial models?");
+                
+                // Show demo booking options
+                setTimeout(() => {
+                  addBotMessage("Click below to make your choice:");
+                  setTimeout(() => {
+                    setShowDemoBooking(true);
+                  }, 500);
+                }, 1000);
+              }, 1500);
             }, 2000);
           } else {
             const errorData = await signupResponse.json();
