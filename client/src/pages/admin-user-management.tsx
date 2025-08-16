@@ -206,6 +206,39 @@ export default function AdminUserManagement() {
     // Update status if changed
     if (editForm.status !== editingUser.status) {
       promises.push(
+        updateStatusMutation.mutateAsync({
+          userId: editingUser.id,
+          status: editForm.status
+        })
+      );
+    }
+    
+    // Update role if changed
+    const normalizedCurrentRole = (editingUser.userType || editingUser.role || "").toLowerCase().replace(/\s+/g, '_');
+    const normalizedNewRole = editForm.userType.toLowerCase().replace(/\s+/g, '_');
+    
+    if (normalizedNewRole !== normalizedCurrentRole) {
+      promises.push(
+        updateRoleMutation.mutateAsync({
+          userId: editingUser.id,
+          role: normalizedNewRole
+        })
+      );
+    }
+    
+    // Execute all updates
+    Promise.all(promises)
+      .then(() => {
+        setIsEditDialogOpen(false);
+        setEditingUser(null);
+      })
+      .catch((error) => {
+        console.error('Error updating user:', error);
+      });
+    
+    // Update status if changed
+    if (editForm.status !== editingUser.status) {
+      promises.push(
         updateStatusMutation.mutateAsync({ 
           userId: editingUser.id, 
           status: editForm.status 

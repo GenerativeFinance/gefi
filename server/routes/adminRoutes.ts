@@ -114,11 +114,31 @@ export function registerAdminRoutes(app: Express) {
         return res.status(403).json({ message: 'Only admins can modify user roles' });
       }
       
-      if (!['user', 'admin', 'moderator'].includes(role)) {
-        return res.status(400).json({ message: 'Invalid role value' });
+      // Extended list of valid roles including financial professional roles
+      const validRoles = [
+        'user', 'admin', 'moderator', 'developer', 'data_provider', 'regulator',
+        // Financial Professional roles
+        'investor', 'portfolio_manager', 'fund_manager', 'wealth_manager', 
+        'wealth_manager_/_financial_advisor', 'trader', 'analyst', 'analyst_(equity_/_credit_/_quant)',
+        'risk_manager', 'treasury_manager', 'institutional_allocator', 'venture_capitalist', 
+        'private_equity_partner', 'angel_investor', 'family_office_representative', 
+        'corporate_finance_executive'
+      ];
+      
+      const normalizedRole = role.toLowerCase().replace(/\s+/g, '_').replace(/[()]/g, '');
+      console.log('Attempting to update role:', role, '-> normalized:', normalizedRole);
+      
+      if (!validRoles.includes(normalizedRole)) {
+        console.log('Invalid role. Valid roles are:', validRoles);
+        return res.status(400).json({ 
+          message: 'Invalid role value',
+          received: role,
+          normalized: normalizedRole,
+          validRoles: validRoles
+        });
       }
 
-      const updatedUser = await storage.updateUserRole(id, role, req.user.id);
+      const updatedUser = await storage.updateUserRole(id, normalizedRole, req.user.id);
       res.json({ 
         message: 'User role updated successfully', 
         user: {
