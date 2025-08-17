@@ -115,6 +115,10 @@ export default function ModelDetail() {
       setLocation('/social-sentiment-trading');
       return;
     }
+    if (idParam === '11') {
+      setLocation('/defi-yield-optimizer');
+      return;
+    }
   }, [idParam, setLocation]);
 
   const { toast } = useToast();
