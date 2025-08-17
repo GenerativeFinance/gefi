@@ -192,10 +192,10 @@ export default function AIModels() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="risk-assessment">Risk Assessment</SelectItem>
-                <SelectItem value="portfolio-optimization">Portfolio Optimization</SelectItem>
-                <SelectItem value="market-prediction">Market Prediction</SelectItem>
-                <SelectItem value="trading-signals">Trading Signals</SelectItem>
+                <SelectItem value="Risk Assessment">Risk Assessment</SelectItem>
+                <SelectItem value="Portfolio Management">Portfolio Management</SelectItem>
+                <SelectItem value="Trading Strategies">Trading Strategies</SelectItem>
+                <SelectItem value="Market Forecasting">Market Forecasting</SelectItem>
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
@@ -246,21 +246,21 @@ export default function AIModels() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Performance</span>
-                      <Badge className={getPerformanceColor(model.performance || 85)}>
-                        {model.performance || 85}%
+                      <Badge className={getPerformanceColor(model.accuracy || model.performance || 85)}>
+                        {model.accuracy || model.performance || 85}%
                       </Badge>
                     </div>
                     
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Monthly Cost</span>
                       <span className="font-semibold">
-                        ${model.pricing?.monthly || 149}/mo
+                        ${model.price || model.pricing?.monthly || 149}/mo
                       </span>
                     </div>
                     
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Subscribers</span>
-                      <span className="text-sm">{model.subscribers || 1247}</span>
+                      <span className="text-sm">{model.monthlySubscribers || model.subscribers || 1247}</span>
                     </div>
                     
                     <div className="flex gap-2 pt-2">
@@ -352,19 +352,107 @@ export default function AIModels() {
                   </h4>
                   <div className="grid grid-cols-3 gap-4 text-sm">
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="font-semibold text-lg text-green-600">{selectedModel.performance || 89}%</div>
+                      <div className="font-semibold text-lg text-green-600">
+                        {selectedModel.performance?.accuracy || selectedModel.accuracy || 89}%
+                      </div>
                       <div className="text-muted-foreground">Accuracy</div>
                     </div>
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="font-semibold text-lg text-blue-600">1.47</div>
+                      <div className="font-semibold text-lg text-blue-600">
+                        {selectedModel.performance?.sharpeRatio || 1.47}
+                      </div>
                       <div className="text-muted-foreground">Sharpe Ratio</div>
                     </div>
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="font-semibold text-lg text-purple-600">8.2%</div>
+                      <div className="font-semibold text-lg text-purple-600">
+                        {selectedModel.performance?.maxDrawdown || 8.2}%
+                      </div>
                       <div className="text-muted-foreground">Max Drawdown</div>
                     </div>
                   </div>
+                  
+                  {/* Extended Performance Metrics for ARIMA/SARIMA Model */}
+                  {selectedModel.performance?.rmse && (
+                    <div className="grid grid-cols-3 gap-4 mt-4 text-sm">
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <div className="font-semibold text-lg text-blue-600">
+                          {selectedModel.performance.rmse}
+                        </div>
+                        <div className="text-muted-foreground">RMSE</div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <div className="font-semibold text-lg text-green-600">
+                          {selectedModel.performance.mae}
+                        </div>
+                        <div className="text-muted-foreground">MAE</div>
+                      </div>
+                      <div className="text-center p-3 bg-orange-50 rounded-lg">
+                        <div className="font-semibold text-lg text-orange-600">
+                          {selectedModel.performance.mape}%
+                        </div>
+                        <div className="text-muted-foreground">MAPE</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
+
+                {/* Technical Specifications for Time Series Models */}
+                {selectedModel.technicalSpecs && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
+                      Technical Specifications
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Model Types</h5>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedModel.technicalSpecs.modelTypes?.map((type: string, idx: number) => (
+                              <Badge key={idx} variant="outline" className="text-xs">
+                                {type}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Forecast Horizons</h5>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedModel.technicalSpecs.forecastHorizons?.map((horizon: string, idx: number) => (
+                              <Badge key={idx} variant="secondary" className="text-xs">
+                                {horizon}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <h5 className="font-medium text-sm mb-2">Visualizations</h5>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {selectedModel.technicalSpecs.visualizations?.map((viz: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3 text-green-500" />
+                              <span>{viz}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <h5 className="font-medium text-sm mb-2">Use Cases</h5>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {selectedModel.useCases?.map((useCase: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-1">
+                              <Target className="h-3 w-3 text-blue-500" />
+                              <span>{useCase}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Recent Activity */}
                 <div className="border-t pt-4">
@@ -417,7 +505,7 @@ export default function AIModels() {
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <span className="text-muted-foreground">Monthly Fee:</span>
-                        <div className="font-medium text-green-600">${selectedModel.pricing?.monthly || 149}/month</div>
+                        <div className="font-medium text-green-600">${selectedModel.price || selectedModel.pricing?.monthly || 149}/month</div>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Developer Share:</span>

@@ -81,6 +81,89 @@ export const aiModelsData = [
     lastUpdated: "2025-07-12T09:30:00Z"
   },
   {
+    id: 5,
+    name: "Forecasting Time Series Model (ARIMA/SARIMA + ML Enhancements)",
+    description: "Advanced time series forecasting model combining classical ARIMA/SARIMA methods with machine learning enhancements. Features interactive visualization, automated parameter tuning, and scenario testing for financial markets.",
+    category: "Market Forecasting",
+    subcategory: "Time Series Analysis",
+    creator: "QuantumForecast Labs",
+    rating: 4.9,
+    totalRatings: 245,
+    price: "399.99",
+    monthlySubscribers: 890,
+    accuracy: 92.5,
+    riskLevel: "Medium",
+    aiTechnique: "ARIMA/SARIMA + ML",
+    targetUserType: "Quant Analysts",
+    financialInstrument: "Multi-Asset",
+    tags: ["Time Series", "ARIMA", "SARIMA", "Forecasting", "ML Enhancement", "Scenario Testing"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      scenarioTesting: true,
+      autoParameterTuning: true,
+      residualDiagnostics: true,
+      exogenousVariables: true,
+      confidenceIntervals: true
+    },
+    performance: {
+      accuracy: 92.5,
+      sharpeRatio: 2.2,
+      maxDrawdown: 6.8,
+      annualReturn: 15.4,
+      winRate: 78.3,
+      rmse: 0.045,
+      mae: 0.032,
+      mape: 2.1
+    },
+    dataRequirements: [
+      "Historical Price Data", 
+      "Trading Volume", 
+      "Economic Indicators (Optional)", 
+      "Interest Rates (Optional)",
+      "GDP Data (Optional)",
+      "CPI Data (Optional)"
+    ],
+    supportedRegions: ["US", "EU", "Asia-Pacific", "Global"],
+    complianceFrameworks: ["SEC", "MiFID II", "GDPR", "Basel III"],
+    minInvestment: "2500.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2024-08-01T09:00:00Z",
+    lastUpdated: "2025-08-17T10:00:00Z",
+    technicalSpecs: {
+      modelTypes: ["ARIMA", "SARIMA", "Auto-ARIMA", "Hybrid (ARIMA + ML)"],
+      frequencies: ["Daily", "Weekly", "Monthly", "Quarterly"],
+      forecastHorizons: ["1 week", "1 month", "3 months", "6 months", "1 year"],
+      hyperparameters: {
+        arimaOrders: "Auto-tuning (p,d,q)",
+        seasonalOrders: "Auto-tuning (P,D,Q,s)",
+        exogenousFactors: "Configurable",
+        mlEnhancements: "Neural Networks, Random Forest, XGBoost"
+      },
+      visualizations: [
+        "Interactive Time Series Charts",
+        "Forecast vs Actual Overlays", 
+        "Confidence Interval Bands",
+        "Residual Diagnostic Plots",
+        "ACF/PACF Correlation Plots",
+        "Feature Importance (ML components)"
+      ],
+      exportFormats: ["CSV", "Excel", "JSON", "PDF Reports", "PNG Charts"]
+    },
+    useCases: [
+      "Stock Price Forecasting",
+      "Commodity Price Prediction", 
+      "Currency Exchange Rate Forecasting",
+      "Economic Indicator Prediction",
+      "Portfolio Value Projection",
+      "Risk Scenario Analysis"
+    ]
+  },
+  {
     id: 3,
     name: "Real-Time Risk Analyzer",
     description: "AI-powered real-time risk assessment and monitoring system that identifies potential portfolio risks and provides proactive alerts to minimize losses.",
