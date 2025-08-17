@@ -55,6 +55,10 @@ export default function ModelDetail() {
       window.location.href = '/esg-geospatial-commodities';
       return;
     }
+    if (idParam === '6') {
+      window.location.href = '/algorithmic-hft-trading';
+      return;
+    }
   }, [idParam]);
 
   // Fetch model
