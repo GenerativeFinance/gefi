@@ -272,9 +272,11 @@ export default function AIModels() {
                         size="sm" 
                         className="flex-1"
                         onClick={() => {
-                          // Navigate to individual model page for forecasting model
+                          // Navigate to individual model pages for specialized models
                           if (model.id === 5) {
                             window.location.href = '/forecasting-model';
+                          } else if (model.id === 9) {
+                            window.location.href = '/hrp-portfolio-optimization';
                           } else {
                             setSelectedModel(model);
                             setModelDetailsOpen(true);

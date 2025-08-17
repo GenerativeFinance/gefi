@@ -651,5 +651,111 @@ export const aiModelsData = [
     isActive: true,
     createdAt: "2024-08-10T11:20:00Z",
     lastUpdated: "2025-07-08T14:15:00Z"
+  },
+  {
+    id: 9,
+    name: "Portfolio Optimization & HRP (AI-Enhanced)",
+    description: "Advanced portfolio optimization using Hierarchical Risk Parity with AI adjustments. Balances quant insights with executive clarity through intelligent asset allocation and risk decomposition.",
+    category: "Portfolio Management",
+    subcategory: "Asset Allocation",
+    creator: "QuantAllocation AI",
+    rating: 4.8,
+    totalRatings: 312,
+    price: "549.99",
+    monthlySubscribers: 1456,
+    accuracy: 93.2,
+    riskLevel: "Medium",
+    aiTechnique: "Hierarchical Risk Parity + Machine Learning",
+    targetUserType: "Portfolio Managers",
+    financialInstrument: "Multi-Asset",
+    tags: ["Portfolio Optimization", "HRP", "Risk Parity", "AI Allocation", "Asset Management"],
+    features: {
+      hierarchicalRiskParity: true,
+      aiAdjustments: true,
+      correlationAnalysis: true,
+      scenarioSimulation: true,
+      riskDecomposition: true,
+      factorExposure: true,
+      monteCarlo: true,
+      exportReporting: true
+    },
+    performance: {
+      accuracy: 93.2,
+      sharpeRatio: 2.3,
+      maxDrawdown: 6.8,
+      annualReturn: 16.4,
+      informationRatio: 1.9,
+      calmarRatio: 2.4
+    },
+    dataRequirements: ["Portfolio Holdings", "Asset Returns", "Volatility Data", "Correlation Matrices", "Macro Factors"],
+    supportedRegions: ["US", "EU", "Asia-Pacific", "Global"],
+    complianceFrameworks: ["MiFID II", "UCITS", "ERISA", "GDPR"],
+    minInvestment: "50000.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2024-11-20T14:30:00Z",
+    lastUpdated: "2025-08-17T12:00:00Z",
+    hrpSpecifications: {
+      clusteringMethods: ["Ward linkage", "Complete linkage", "Average linkage"],
+      distanceMetrics: ["Euclidean", "Correlation-based", "Custom risk distance"],
+      allocationMethods: ["Equal risk contribution", "Inverse variance", "AI-adjusted weights"],
+      riskBudgeting: {
+        assetLevel: "Individual asset risk contributions",
+        sectorLevel: "Sector-based risk allocation",
+        factorLevel: "Factor exposure risk budgets"
+      }
+    },
+    aiAdjustmentFeatures: {
+      macroFactors: ["Inflation expectations", "Interest rate changes", "GDP growth", "Currency movements"],
+      sentimentFactors: ["Market sentiment", "VIX levels", "Credit spreads", "Momentum signals"],
+      esgIntegration: ["ESG scores", "Climate risk", "Sustainability metrics", "Regulatory ESG requirements"],
+      marketRegimes: ["Bull market", "Bear market", "High volatility", "Low volatility", "Recession", "Recovery"]
+    },
+    optimizationConstraints: {
+      weightConstraints: {
+        minWeight: "Configurable minimum allocation per asset",
+        maxWeight: "Configurable maximum allocation per asset",
+        sectorLimits: "Sector-based allocation limits"
+      },
+      riskConstraints: {
+        maxVaR: "Maximum Value at Risk threshold",
+        maxTracking: "Maximum tracking error vs benchmark",
+        concentrationLimits: "Maximum concentration in single positions"
+      },
+      liquidityConstraints: {
+        minimumLiquidity: "Required daily trading volume",
+        maxIlliquid: "Maximum allocation to illiquid assets"
+      }
+    },
+    visualizationFeatures: {
+      allocationCharts: ["Sunburst chart", "Treemap", "Pie charts", "Waterfall charts"],
+      riskVisualization: ["Dendrogram", "Correlation heatmap", "Risk contribution charts", "Factor exposure plots"],
+      performanceCharts: ["Efficient frontier", "Return attribution", "Drawdown analysis", "Rolling performance"],
+      scenarioAnalysis: ["Monte Carlo fan charts", "Stress test results", "What-if scenarios", "Regime analysis"]
+    },
+    reportingCapabilities: {
+      portfolioReports: ["Allocation summary", "Risk analysis", "Performance attribution", "Compliance check"],
+      clientReporting: ["Executive summary", "Risk-return analysis", "Benchmark comparison", "ESG reporting"],
+      regulatoryReports: ["Risk disclosures", "Concentration reports", "Liquidity assessments", "Stress test results"],
+      customReports: ["API-generated reports", "Automated scheduling", "Multi-format export", "Branded templates"]
+    },
+    integrationCapabilities: {
+      dataProviders: ["Bloomberg", "Refinitiv", "MSCI", "FactSet", "Yahoo Finance", "Alpha Vantage"],
+      portfolioSystems: ["Charles River", "SimCorp", "Aladdin", "Eagle PACE", "Geneva"],
+      riskSystems: ["RiskMetrics", "Barra", "MSCI RiskManager", "Axioma"],
+      tradingSystems: ["OMS integration", "EMS connectivity", "FIX protocol", "API endpoints"]
+    },
+    useCases: [
+      "Institutional Portfolio Optimization",
+      "Pension Fund Asset Allocation",
+      "Multi-Asset Portfolio Management", 
+      "Risk Budgeting and Control",
+      "Factor-Based Investing",
+      "ESG-Integrated Portfolios",
+      "Liability-Driven Investing",
+      "Multi-Manager Portfolio Construction",
+      "Dynamic Asset Allocation",
+      "Tail Risk Hedging"
+    ]
   }
 ];
