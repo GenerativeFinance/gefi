@@ -82,20 +82,20 @@ export default function AlgorithmicHFTTrading() {
 
   return (
     <Layout>
-      <div className="container mx-auto p-6 max-w-7xl">
+      <div className="container mx-auto p-3 md:p-6 max-w-7xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Brain className="h-8 w-8 text-blue-600" />
+            <h1 className="text-xl md:text-3xl font-bold flex items-center gap-2">
+              <Brain className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
               Algorithmic & High-Frequency Trading
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-sm md:text-base text-muted-foreground mt-1">
               Deep Q-Networks for intelligent decision-making in milliseconds
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <Badge variant={isLive ? "default" : "secondary"} className="px-3 py-1">
+          <div className="flex items-center gap-2 md:gap-4">
+            <Badge variant={isLive ? "default" : "secondary"} className="px-2 md:px-3 py-1 text-xs md:text-sm">
               {isLive ? (
                 <><Activity className="h-3 w-3 mr-1" /> LIVE</>
               ) : (
@@ -105,16 +105,19 @@ export default function AlgorithmicHFTTrading() {
             <Button 
               onClick={() => setIsLive(!isLive)}
               variant={isLive ? "destructive" : "default"}
+              size="sm"
+              className="text-sm"
             >
-              {isLive ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
-              {isLive ? "Stop Trading" : "Start Trading"}
+              {isLive ? <Pause className="h-4 w-4 mr-1 md:mr-2" /> : <Play className="h-4 w-4 mr-1 md:mr-2" />}
+              <span className="hidden md:inline">{isLive ? "Stop Trading" : "Start Trading"}</span>
+              <span className="md:hidden">{isLive ? "Stop" : "Start"}</span>
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
           {/* Left Sidebar - Input Panel */}
-          <div className="col-span-3 space-y-4">
+          <div className="lg:col-span-3 space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -189,7 +192,7 @@ export default function AlgorithmicHFTTrading() {
           </div>
 
           {/* Main Dashboard - Center Panel */}
-          <div className="col-span-6 space-y-4">
+          <div className="lg:col-span-6 space-y-4">
             {/* Market View */}
             <Card>
               <CardHeader>
@@ -224,7 +227,7 @@ export default function AlgorithmicHFTTrading() {
             </Card>
 
             {/* Performance Metrics */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -286,7 +289,7 @@ export default function AlgorithmicHFTTrading() {
                 <CardTitle>Strategy Performance Metrics</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {performanceMetrics.map((metric, index) => (
                     <div key={index} className="text-center">
                       <div className="flex items-center justify-center gap-1 mb-1">
@@ -306,7 +309,7 @@ export default function AlgorithmicHFTTrading() {
           </div>
 
           {/* Right Sidebar - Insights Panel */}
-          <div className="col-span-3 space-y-4">
+          <div className="lg:col-span-3 space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
