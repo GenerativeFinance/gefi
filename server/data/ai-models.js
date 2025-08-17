@@ -300,6 +300,152 @@ export const aiModelsData = [
     ]
   },
   {
+    id: 7,
+    name: "ESG & Alternative Data Models (AI Climate Risk Models)",
+    description: "Advanced AI-powered ESG scoring and climate risk assessment platform featuring satellite data integration, carbon footprint analysis, and regulatory compliance tracking with real-time sustainability insights.",
+    category: "ESG & Sustainability",
+    subcategory: "Climate Risk Assessment",
+    creator: "GreenFinance AI Labs",
+    rating: 4.7,
+    totalRatings: 156,
+    price: "699.99",
+    monthlySubscribers: 432,
+    accuracy: 91.3,
+    riskLevel: "Low",
+    aiTechnique: "Machine Learning + NLP",
+    targetUserType: "ESG Analysts",
+    financialInstrument: "Portfolio Holdings",
+    tags: ["ESG Scoring", "Climate Risk", "Sustainability", "Alternative Data", "Satellite Imagery", "Carbon Footprint"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      satelliteData: true,
+      carbonTracking: true,
+      regulatoryCompliance: true,
+      scenarioTesting: true,
+      executiveReporting: true
+    },
+    performance: {
+      accuracy: 91.3,
+      esgCorrelation: 0.89,
+      climateAccuracy: 0.87,
+      dataFreshness: "24h",
+      coverageGlobal: "95%",
+      regulatoryCompliance: "100%"
+    },
+    dataRequirements: [
+      "Portfolio Holdings (ISIN/Ticker)",
+      "ESG Reports & Filings",
+      "Climate Data & Emissions",
+      "Satellite Imagery",
+      "Social Media Sentiment",
+      "News & Media Coverage",
+      "Regulatory Filings",
+      "Financial Statements"
+    ],
+    supportedRegions: ["Global", "EU", "US", "Asia-Pacific", "Emerging Markets"],
+    complianceFrameworks: ["EU Taxonomy", "SFDR", "TCFD", "SASB", "GRI", "CDP", "UN SDG"],
+    minInvestment: "50000.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2024-07-20T09:15:00Z",
+    lastUpdated: "2025-08-17T10:35:00Z",
+    technicalSpecs: {
+      modelTypes: ["ESG Scoring Model", "Climate Risk Model", "Carbon Footprint Analysis", "Sentiment Analysis"],
+      dataSources: ["MSCI ESG", "Sustainalytics", "CDP Climate", "Satellite Data", "Regulatory Filings"],
+      aiTechniques: ["Natural Language Processing", "Computer Vision", "Time Series Analysis", "Geospatial Analysis"],
+      esgComponents: {
+        environmental: "Carbon Emissions, Water Usage, Waste Management, Biodiversity Impact",
+        social: "Labor Practices, Human Rights, Community Impact, Product Safety",
+        governance: "Board Composition, Executive Compensation, Anti-Corruption, Transparency"
+      },
+      climateRiskTypes: [
+        "Physical Risk (Floods, Droughts, Extreme Weather)",
+        "Transition Risk (Carbon Tax, Stranded Assets)",
+        "Regulatory Risk (Policy Changes)",
+        "Reputational Risk (ESG Controversies)"
+      ],
+      scenarioModeling: [
+        "1.5°C Pathway (Paris Agreement)",
+        "2°C Warming Scenario",
+        "Business as Usual (3°C+)",
+        "Net Zero by 2050",
+        "Delayed Transition Scenario"
+      ],
+      alternativeDataSources: [
+        "Satellite Imagery (Deforestation, Emissions)",
+        "Social Media Sentiment Analysis",
+        "Supply Chain Mapping",
+        "Carbon Intensity Monitoring",
+        "Water Stress Analysis",
+        "Biodiversity Impact Assessment"
+      ],
+      outputFormats: ["Executive Reports", "Regulatory Filings", "Portfolio Analytics", "Risk Dashboards"]
+    },
+    uiComponents: {
+      inputPanel: [
+        "ESG Report Upload Interface",
+        "API Connector Configuration (MSCI, CDP)",
+        "Portfolio Holdings Input",
+        "Sector/Region Filters",
+        "Model Selection (ESG vs Climate)"
+      ],
+      mainDashboard: [
+        "Portfolio ESG Score Gauge (AAA-CCC)",
+        "Climate Risk Heatmap (Global/Regional)",
+        "Alternative Data Visualizations",
+        "Satellite Imagery Integration",
+        "Scenario Stress Testing Interface",
+        "Carbon Footprint Tracking"
+      ],
+      insightsPanel: [
+        "Company-Level ESG Breakdown Table",
+        "Top ESG Risk Drivers Chart",
+        "Sector & Geographic Exposure",
+        "Regulatory Compliance Dashboard",
+        "Carbon Neutrality Progress",
+        "ESG Controversy Alerts"
+      ],
+      executiveReporting: [
+        "AI-Generated ESG Reports",
+        "Executive Summary Dashboards",
+        "Regulatory Compliance Reports",
+        "Sustainability Goal Tracking",
+        "Board-Ready Presentations"
+      ]
+    },
+    sustainabilityMetrics: {
+      carbonIntensity: "tCO2e per $M invested",
+      waterFootprint: "Liters per $1000 invested",
+      wasteGeneration: "Tons per $M revenue",
+      biodiversityImpact: "Species threat score",
+      socialImpact: "Community benefit index",
+      governanceScore: "Transparency rating (0-100)"
+    },
+    regulatoryAlignment: {
+      euTaxonomy: "Article 6, 8, 9 Classification",
+      sfdr: "Principal Adverse Impact Indicators",
+      tcfd: "Climate-related Financial Disclosures",
+      sasb: "Sustainability Accounting Standards",
+      unsdg: "UN Sustainable Development Goals"
+    },
+    useCases: [
+      "Portfolio ESG Assessment",
+      "Climate Risk Stress Testing",
+      "Regulatory Compliance Reporting",
+      "Sustainable Investment Screening",
+      "Carbon Footprint Monitoring",
+      "ESG Controversy Detection",
+      "Supply Chain Risk Analysis",
+      "Green Taxonomy Alignment",
+      "Executive ESG Reporting",
+      "Sustainability Goal Tracking"
+    ]
+  },
+  {
     id: 3,
     name: "Real-Time Risk Analyzer",
     description: "AI-powered real-time risk assessment and monitoring system that identifies potential portfolio risks and provides proactive alerts to minimize losses.",
