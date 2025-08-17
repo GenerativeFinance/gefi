@@ -73,6 +73,7 @@ import ServerManagement from "@/pages/server-management";
 import ApiAccess from "@/pages/api-access";
 import ForecastingModel from "@/pages/forecasting-model";
 import HRPPortfolioOptimization from "@/pages/hrp-portfolio-optimization";
+import DeFiAnomalyDetection from "@/pages/defi-anomaly-detection";
 import ReportGenerator from "@/pages/reports";
 
 
@@ -278,6 +279,7 @@ function Router() {
             <Route path="/ai-models" component={AIModels} />
             <Route path="/forecasting-model" component={ForecastingModel} />
             <Route path="/hrp-portfolio-optimization" component={HRPPortfolioOptimization} />
+            <Route path="/defi-anomaly-detection" component={DeFiAnomalyDetection} />
             <Route path="/risk-distribution" component={RiskDistribution} />
             <Route path="/rebalance-actions" component={RebalanceActions} />
             <Route path="/current-risk-assessment" component={CurrentRiskAssessment} />

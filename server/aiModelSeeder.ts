@@ -314,6 +314,19 @@ export const AI_MODEL_CATEGORIES = [
       { name: "Investor Behavior", description: "Investor sentiment and behavior pattern analysis", sortOrder: 3 },
       { name: "Market Trend Analysis", description: "Market trend sentiment and momentum analysis", sortOrder: 4 }
     ]
+  },
+  {
+    name: "DeFi & Blockchain",
+    description: "Decentralized Finance and blockchain-based financial models",
+    icon: "Coins",
+    sortOrder: 15,
+    subcategories: [
+      { name: "On-chain Anomaly Detection", description: "Detection of rug pulls, flash-loan attacks, and wash trading", sortOrder: 1 },
+      { name: "Liquidity Mining Optimization", description: "Yield farming and liquidity provision optimization", sortOrder: 2 },
+      { name: "Smart Contract Security", description: "Smart contract risk assessment and security auditing", sortOrder: 3 },
+      { name: "DeFi Protocol Analysis", description: "Protocol health monitoring and risk assessment", sortOrder: 4 },
+      { name: "Cross-chain Analytics", description: "Multi-blockchain analysis and arbitrage opportunities", sortOrder: 5 }
+    ]
   }
 ];
 
@@ -335,7 +348,7 @@ export class AiModelSeeder {
             // Category already exists, get it
             const categories = await storage.getAiModelCategories();
             category = categories.find(c => c.name === categoryInfo.name);
-            console.log(`Category already exists: ${category.name}`);
+            console.log(`Category already exists: ${category?.name}`);
           } else {
             console.error(`Error creating category ${categoryInfo.name}:`, error);
             continue;
