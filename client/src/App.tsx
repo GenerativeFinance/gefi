@@ -286,6 +286,7 @@ function Router() {
             <Route path="/portfolio-performance" component={PortfolioPerformance} />
             <Route path="/investor-dashboard" component={InvestorDashboard} />
             <Route path="/my-subscriptions" component={MySubscriptions} />
+            <Route path="/model-funding" component={ModelFunding} />
             <Route path="/developers" component={Developers} />
             <Route path="/data-providers" component={DataProviders} />
             <Route path="/categories" component={Categories} />

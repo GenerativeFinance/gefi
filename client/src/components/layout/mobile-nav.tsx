@@ -36,6 +36,8 @@ const navigationItems = [
 ];
 
 const moreNavigationItems = [
+  { path: "/my-subscriptions", label: "Model Subscriptions", icon: Bot },
+  { path: "/model-funding", label: "Fund Models", icon: DollarSign },
   { path: "/reports", label: "Reports", icon: FileText },
   { path: "/risk-management", label: "Risk", icon: Shield },
   { path: "/backtesting", label: "Backtesting", icon: BarChart3 },

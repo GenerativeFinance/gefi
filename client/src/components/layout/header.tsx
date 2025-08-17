@@ -172,12 +172,13 @@ export default function Header() {
       ];
     }
     
-    if (location.includes('funding')) {
+    if (location.includes('funding') || location.includes('my-subscriptions')) {
       return [
         { name: "Overview", href: "/", icon: BarChart3 },
+        { name: "Model Subscriptions", href: "/my-subscriptions", icon: Bot },
+        { name: "Fund Models", href: "/model-funding", icon: CircleDollarSign },
         { name: "Funding Hub", href: "/funding", icon: Building },
         { name: "Bot Funding", href: "/bot-funding", icon: DollarSign },
-        { name: "AI Model Funding", href: "/model-funding", icon: CircleDollarSign },
         { name: "Bounty Funding", href: "/bounty-funding", icon: Target }
       ];
     }

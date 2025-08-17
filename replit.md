@@ -44,13 +44,20 @@ Preferred communication style: Simple, everyday language.
 - **AI Chatbot System**: Intelligent conversation management with user profile detection, personalized recommendations, and adaptive questioning.
 - **Advanced Data Provider Tools**: Dataset upload/management, financial tracking, collaboration platforms, compliance tools, and advanced trend analysis.
 
-## Recent Updates (August 16, 2025)
+## Recent Updates (August 17, 2025)
 
 ### Account Creation & Calendly Integration
 - **Chatbot Signup Account Creation**: Fully implemented `/api/auth/complete-chatbot-signup` endpoint that processes user preferences (experience level, platform intent, areas of focus) and creates pending accounts with proper role mapping (Expert → analyst, Intermediate → trader, Beginner → investor).
 - **Calendly Demo Booking Integration**: Created `/demo-booking` page that redirects users to https://calendly.com/generativefinance after account creation, allowing them to schedule demos while waiting for account approval.
 - **User Preference Processing**: Enhanced chatbot signup flow to capture and store comprehensive user data including finance areas of interest, company information, and platform usage intentions.
 - **Pending Account Workflow**: All chatbot signups now create accounts with 'pending' status requiring admin approval before activation.
+
+### Model Subscription & Funding Features
+- **Model Subscription Management**: Added comprehensive subscription system with `/my-subscriptions` page for users to manage AI model subscriptions, including pause, resume, and cancel functionality.
+- **Fund Models Platform**: Enhanced `/model-funding` page with full funding request management, contribution tracking, and investment opportunities for AI financial models.
+- **Navigation Updates**: Added "Model Subscriptions" and "Fund Models" to mobile and desktop navigation menus for easy access.
+- **Database Schema**: Created model_subscriptions, model_funding_requests, and model_funding_contributions tables to support subscription and funding operations.
+- **API Endpoints**: Implemented RESTful APIs for subscription management (`/api/my-subscriptions`, `/api/subscriptions/:id/:action`) and funding operations.
 
 ## External Dependencies
 
