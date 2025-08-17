@@ -215,6 +215,80 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
     };
   }, []);
 
+  /**
+   * createPendingAccount - Centralized account creation logic
+   * Posts to /api/chatbot/signup/complete (canonical endpoint)
+   * On success: stores pending user info in sessionStorage and redirects to /account-pending
+   */
+  const createPendingAccount = async (data: Partial<UserData>) => {
+    setIsCreatingAccount(true);
+    try {
+      const sessionIdToUse = typeof window !== "undefined"
+        ? sessionStorage.getItem("chatbot_session_id") || crypto.randomUUID()
+        : crypto.randomUUID();
+
+      const payload = {
+        ...data,
+        wantsDemo: true, // Default to true for demo intent
+        sessionId: sessionIdToUse,
+        recaptchaToken: recaptchaToken || "",
+        honeypot: "",
+      };
+
+      const response = await fetch("/api/chatbot/signup/complete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+
+        // Persist minimal user info for AccountPending page
+        const pendingUserData = {
+          id: result?.id || data.email || null,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          role: data.role || "user",
+          company: data.company,
+          experienceLevel: data.experienceLevel,
+          ...result,
+        };
+
+        try {
+          sessionStorage.setItem("pendingUserData", JSON.stringify(pendingUserData));
+        } catch (e) {
+          console.warn("Could not persist pending user data to sessionStorage", e);
+        }
+
+        addBotMessage("🎉 Account created successfully! Your account is now pending approval.");
+        addBotMessage("You'll receive an email once your account is approved. In the meantime, you can schedule a demo.");
+
+        // Redirect to account pending page
+        setTimeout(() => {
+          navigate("/account-pending");
+        }, 900);
+      } else {
+        let errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          // ignore parse error
+        }
+        addBotMessage(`❌ Sorry, there was an error creating your account: ${errorMessage}`);
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      addBotMessage("❌ Sorry, there was an error creating your account. Please try again.");
+    } finally {
+      setIsCreatingAccount(false);
+    }
+  };
+
   const steps = [
     {
       question: "Hello! I'm GeFi AI, your personal assistant for setting up your account. What's your email address?",
@@ -479,49 +553,11 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
             
             setTimeout(async () => {
               try {
-                const signupResponse = await fetch('/api/auth/complete-chatbot-signup', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    ...newUserData,
-                    wantsDemo: false, // Will be handled separately
-                    sessionId: crypto.randomUUID(), // Use proper UUID instead of timestamp
-                    recaptchaToken: recaptchaToken || '', // Use actual token if available
-                    honeypot: '' // Anti-bot honeypot field
-                  }),
-                });
-
-                if (signupResponse.ok) {
-                  const result = await signupResponse.json();
-                  setAccountCreated(true);
-                  setIsCreatingAccount(false);
-                  
-                  addBotMessage("🎉 Account created successfully! Your account is now pending approval.");
-                  
-                  setTimeout(() => {
-                    addBotMessage("You'll receive an email confirmation once your account is approved. This typically takes 24-48 hours.");
-                    
-                    setTimeout(() => {
-                      addBotMessage("Would you like to book a demo session with our team? This can help accelerate your approval process.");
-                      setShowDemoBooking(true);
-                    }, 1500);
-                  }, 2000);
-                } else {
-                  let errorMessage = 'Unknown error occurred';
-                  try {
-                    const errorData = await signupResponse.json();
-                    errorMessage = errorData.message || errorData.error || `Server error: ${signupResponse.status}`;
-                  } catch (parseError) {
-                    errorMessage = `Server error: ${signupResponse.status} ${signupResponse.statusText}`;
-                  }
-                  addBotMessage(`❌ Sorry, there was an error creating your account: ${errorMessage}`);
-                  setIsCreatingAccount(false);
-                }
+                // Use centralized account creation function
+                await createPendingAccount(newUserData);
+                return; // Exit early since createPendingAccount handles the flow
               } catch (error) {
                 console.error('Signup error:', error);
-                addBotMessage("❌ Sorry, there was an error creating your account. Please try again.");
                 setIsCreatingAccount(false);
               }
             }, 1000);
@@ -690,57 +726,8 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
         setEmailVerificationStep('verified');
         addBotMessage("✅ Email verified successfully! Now creating your account...");
         
-        // Create account
-        setIsCreatingAccount(true);
-        try {
-          const signupResponse = await fetch('/api/auth/complete-chatbot-signup', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              ...userData,
-              wantsDemo: false, // Will be handled separately
-              sessionId: crypto.randomUUID(), // Use proper UUID for session ID
-              recaptchaToken: recaptchaToken, // reCAPTCHA token for bot protection
-              honeypot: '' // Anti-bot honeypot field
-            }),
-          });
-
-          if (signupResponse.ok) {
-            const result = await signupResponse.json();
-            
-            // Show account creation success message
-            addBotMessage("🎉 Account created successfully! Your account is now under review.");
-            
-            setTimeout(() => {
-              addBotMessage("You'll receive an email confirmation once your account is approved. This typically takes 24-48 hours.");
-              
-              setTimeout(() => {
-                addBotMessage("Redirecting you to book a demo while waiting for approval...");
-                
-                // Redirect to demo booking page
-                setTimeout(() => {
-                  sessionStorage.setItem('pendingUserData', JSON.stringify(userData));
-                  navigate('/demo-booking');
-                }, 1000);
-              }, 1500);
-            }, 2000);
-          } else {
-            let errorMessage = 'Unknown error occurred';
-            try {
-              const errorData = await signupResponse.json();
-              errorMessage = errorData.message || errorData.error || `Server error: ${signupResponse.status}`;
-            } catch (parseError) {
-              errorMessage = `Server error: ${signupResponse.status} ${signupResponse.statusText}`;
-            }
-            addBotMessage(`❌ Sorry, there was an error creating your account: ${errorMessage}`);
-          }
-        } catch (error) {
-          console.error('Signup error:', error);
-          addBotMessage("❌ Sorry, there was an error creating your account. Please try again.");
-        }
-        setIsCreatingAccount(false);
+        // Use centralized account creation function
+        await createPendingAccount(userData);
       } else {
         let errorMessage = 'Verification failed';
         try {

@@ -94,6 +94,14 @@ Preferred communication style: Simple, everyday language.
 - **Enhanced Error Handling**: Added comprehensive error handling for model detail loading with improved user experience and diagnostic feedback
 - **Route Integration**: Fully integrated profile compatibility routes into the main server routing system with proper initialization and registration
 
+### ChatBot Signup Endpoint Standardization (August 17, 2025)
+- **Centralized Account Creation**: Added createPendingAccount function to ChatbotSignup component for standardized account creation flow
+- **Canonical Endpoint Usage**: Updated all signup flows to use /api/chatbot/signup/complete (server's canonical endpoint) for consistent processing
+- **Auth Compatibility Route**: Created authCompat.ts providing legacy support for /api/auth/complete-chatbot-signup endpoint by forwarding to canonical route
+- **SessionStorage Integration**: Enhanced pending user data persistence in sessionStorage for seamless /account-pending page transitions
+- **Error Handling Standardization**: Unified error handling across all chatbot signup paths with consistent user feedback messaging
+- **Server Route Registration**: Fully integrated auth compatibility routes into main server routing system with proper initialization logging
+
 ## External Dependencies
 
 - **@neondatabase/serverless**: PostgreSQL database connectivity
