@@ -327,6 +327,19 @@ export const AI_MODEL_CATEGORIES = [
       { name: "DeFi Protocol Analysis", description: "Protocol health monitoring and risk assessment", sortOrder: 4 },
       { name: "Cross-chain Analytics", description: "Multi-blockchain analysis and arbitrage opportunities", sortOrder: 5 }
     ]
+  },
+  {
+    name: "ESG & Sustainability",
+    description: "Environmental, Social, and Governance investment and risk models",
+    icon: "Leaf",
+    sortOrder: 16,
+    subcategories: [
+      { name: "Climate Risk", description: "Climate change impact and transition risk assessment", sortOrder: 1 },
+      { name: "ESG Scoring", description: "Environmental, social, and governance scoring models", sortOrder: 2 },
+      { name: "Sustainable Investing", description: "Sustainable and responsible investment strategies", sortOrder: 3 },
+      { name: "Carbon Footprint", description: "Carbon emission tracking and reduction models", sortOrder: 4 },
+      { name: "Green Finance", description: "Green bonds and sustainable finance instruments", sortOrder: 5 }
+    ]
   }
 ];
 
@@ -395,6 +408,9 @@ export class AiModelSeeder {
       const riskCategory = categories.find(c => c.name === "Risk Assessment");
       const tradingCategory = categories.find(c => c.name === "Trading Strategies");
       const portfolioCategory = categories.find(c => c.name === "Portfolio Management");
+      const defiCategory = categories.find(c => c.name === "DeFi & Blockchain");
+      const esgCategory = categories.find(c => c.name === "ESG & Sustainability");
+      const forecastingCategory = categories.find(c => c.name === "Financial Forecasting");
       
       if (!riskCategory || !tradingCategory || !portfolioCategory) {
         throw new Error("Required categories not found for sample models");
@@ -404,6 +420,9 @@ export class AiModelSeeder {
       const creditRiskSub = subcategories.find(s => s.name === "Credit Risk");
       const algoTradingSub = subcategories.find(s => s.name === "Algorithmic Trading");
       const assetAllocationSub = subcategories.find(s => s.name === "Asset Allocation");
+      const yieldOptimizationSub = subcategories.find(s => s.name === "Liquidity Mining Optimization");
+      const climateRiskSub = subcategories.find(s => s.name === "Climate Risk"); 
+      const timeSeriesSub = subcategories.find(s => s.name === "Time Series Analysis");
       
       const sampleModels = [
         {
