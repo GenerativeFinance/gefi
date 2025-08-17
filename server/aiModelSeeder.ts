@@ -847,6 +847,46 @@ export class AiModelSeeder {
           isActive: true
         },
         {
+          name: "ESG & Geospatial AI Commodities Forecasting",
+          description: "Intelligence dashboard combining satellite imagery analysis with commodity price forecasting. Features real-time geospatial monitoring, climate risk assessment, and ESG compliance tracking for commodities markets.",
+          category: "ESG & Sustainability",
+          categoryId: esgCategory.id,
+          subcategoryId: climateRiskSub?.id,
+          price: "899.00",
+          rating: "4.7",
+          totalRatings: 142,
+          creator: "GeoIntel Analytics",
+          tags: ["satellite-imagery", "geospatial-ai", "commodities", "esg-compliance", "climate-risk"],
+          aiTechnique: "Computer Vision + CNN",
+          targetUserType: "Commodity Traders",
+          financialInstrument: "Commodities",
+          riskLevel: "Medium",
+          minInvestment: "75000.00",
+          dataRequirements: ["satellite_imagery", "weather_data", "commodity_prices", "supply_chain_data"],
+          supportedRegions: ["Global"],
+          complianceFrameworks: ["TCFD", "EU Taxonomy", "SASB"],
+          features: {
+            "satellite_monitoring": true,
+            "climate_risk_assessment": true,
+            "supply_chain_tracking": true,
+            "esg_compliance_monitoring": true,
+            "real_time_alerts": true,
+            "scenario_modeling": true
+          },
+          performance: {
+            "forecast_accuracy": 84.7,
+            "satellite_coverage_km2": 510000000,
+            "climate_prediction_precision": 89.3,
+            "supply_disruption_detection": 92.1,
+            "esg_risk_identification": 87.6,
+            "alert_lead_time_hours": 48,
+            "commodity_correlation": 0.78,
+            "seasonal_adjustment_accuracy": 91.4
+          },
+          isFeatured: true,
+          isActive: true
+        },
+        {
           name: "Aggressive Growth",
           description: "High-performance growth-oriented AI model targeting maximum capital appreciation through technology stocks, emerging markets, and momentum strategies. Utilizes advanced pattern recognition for growth opportunities.",
           category: "Trading Strategies", 
