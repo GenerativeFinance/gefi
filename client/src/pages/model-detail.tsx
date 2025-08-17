@@ -127,6 +127,10 @@ export default function ModelDetail() {
       setLocation('/gru-forecasting');
       return;
     }
+    if (idParam === '14') {
+      setLocation('/esg-geospatial-commodities');
+      return;
+    }
   }, [idParam, setLocation]);
 
   const { toast } = useToast();

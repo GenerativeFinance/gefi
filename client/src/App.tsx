@@ -78,6 +78,7 @@ import SocialSentimentTrading from "@/pages/social-sentiment-trading";
 import DeFiYieldOptimizer from "@/pages/defi-yield-optimizer";
 import ESGClimateRisk from "@/pages/esg-climate-risk";
 import GRUForecasting from "@/pages/gru-forecasting";
+import ESGGeospatialCommodities from "@/pages/esg-geospatial-commodities";
 import ReportGenerator from "@/pages/reports";
 
 
@@ -288,6 +289,7 @@ function Router() {
             <Route path="/defi-yield-optimizer" component={DeFiYieldOptimizer} />
             <Route path="/esg-climate-risk" component={ESGClimateRisk} />
             <Route path="/gru-forecasting" component={GRUForecasting} />
+            <Route path="/esg-geospatial-commodities" component={ESGGeospatialCommodities} />
             <Route path="/risk-distribution" component={RiskDistribution} />
             <Route path="/rebalance-actions" component={RebalanceActions} />
             <Route path="/current-risk-assessment" component={CurrentRiskAssessment} />
