@@ -40,6 +40,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log("🤖 Registering AI Chatbot APIs...");
   registerChatbotRoutes(app);
 
+  // Register auth compatibility routes
+  console.log("🔄 Registering Auth Compatibility APIs...");
+  const registerAuthCompat = (await import("./authCompat")).default;
+  registerAuthCompat(app);
+
   console.log("📄 Registering Report APIs...");
   app.use("/api", reportRoutes);
   
