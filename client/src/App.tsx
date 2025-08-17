@@ -76,6 +76,7 @@ import HRPPortfolioOptimization from "@/pages/hrp-portfolio-optimization";
 import DeFiAnomalyDetection from "@/pages/defi-anomaly-detection";
 import SocialSentimentTrading from "@/pages/social-sentiment-trading";
 import DeFiYieldOptimizer from "@/pages/defi-yield-optimizer";
+import ESGClimateRisk from "@/pages/esg-climate-risk";
 import ReportGenerator from "@/pages/reports";
 
 
@@ -284,6 +285,7 @@ function Router() {
             <Route path="/defi-anomaly-detection" component={DeFiAnomalyDetection} />
             <Route path="/social-sentiment-trading" component={SocialSentimentTrading} />
             <Route path="/defi-yield-optimizer" component={DeFiYieldOptimizer} />
+            <Route path="/esg-climate-risk" component={ESGClimateRisk} />
             <Route path="/risk-distribution" component={RiskDistribution} />
             <Route path="/rebalance-actions" component={RebalanceActions} />
             <Route path="/current-risk-assessment" component={CurrentRiskAssessment} />

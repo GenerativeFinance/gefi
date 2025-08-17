@@ -767,6 +767,46 @@ export class AiModelSeeder {
           isActive: true
         },
         {
+          name: "ESG & Climate Risk Intelligence (Satellite AI)",
+          description: "Advanced climate risk assessment using satellite imagery analysis and AI. Combines physical and transition risk modeling with regulatory compliance tracking for sustainable investing.",
+          category: "ESG & Sustainability",
+          categoryId: esgCategory.id,
+          subcategoryId: climateRiskSub?.id,
+          price: "799.00",
+          rating: "4.8",
+          totalRatings: 96,
+          creator: "ClimateIntel Analytics",
+          tags: ["climate-risk", "satellite-imagery", "esg-compliance", "regulatory-tracking", "sustainability"],
+          aiTechnique: "Computer Vision + NLP",
+          targetUserType: "Asset Managers",
+          financialInstrument: "Multi-Asset",
+          riskLevel: "Medium",
+          minInvestment: "50000.00",
+          dataRequirements: ["satellite_imagery", "climate_data", "regulatory_filings", "esg_scores"],
+          supportedRegions: ["Global"],
+          complianceFrameworks: ["TCFD", "EU Taxonomy", "SASB", "SFDR"],
+          features: {
+            "satellite_analysis": true,
+            "climate_scenario_modeling": true,
+            "regulatory_compliance_tracking": true,
+            "physical_risk_assessment": true,
+            "transition_risk_modeling": true,
+            "esg_opportunity_identification": true
+          },
+          performance: {
+            "climate_prediction_accuracy": 91.7,
+            "regulatory_compliance_score": 94.2,
+            "risk_identification_precision": 87.8,
+            "satellite_coverage_km2": 148000000,
+            "scenario_confidence": 89.4,
+            "alert_lead_time_days": 14,
+            "esg_score_correlation": 0.82,
+            "carbon_footprint_accuracy": 93.6
+          },
+          isFeatured: true,
+          isActive: true
+        },
+        {
           name: "Aggressive Growth",
           description: "High-performance growth-oriented AI model targeting maximum capital appreciation through technology stocks, emerging markets, and momentum strategies. Utilizes advanced pattern recognition for growth opportunities.",
           category: "Trading Strategies", 
