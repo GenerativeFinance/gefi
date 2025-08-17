@@ -111,6 +111,10 @@ export default function ModelDetail() {
       setLocation('/defi-anomaly-detection');
       return;
     }
+    if (idParam === '6') {
+      setLocation('/social-sentiment-trading');
+      return;
+    }
   }, [idParam, setLocation]);
 
   const { toast } = useToast();
