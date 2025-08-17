@@ -91,7 +91,7 @@ export default function Documentation() {
   ];
 
   const getLevelColor = (level: string) => {
-    switch (level.toLowerCase()) {
+    switch ((level ?? '').toLowerCase()) {
       case 'beginner':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
       case 'intermediate':

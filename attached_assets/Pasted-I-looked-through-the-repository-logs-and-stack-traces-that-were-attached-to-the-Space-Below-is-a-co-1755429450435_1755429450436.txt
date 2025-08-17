@@ -1,0 +1,157 @@
+I looked through the repository logs and stack traces that were attached to the Space. Below is a concise diagnosis and a prioritized list of fixes you can apply right away. I reference the files and stack traces that appeared in the logs (these come from the attached_assets search results in the repository).
+
+Summary of top runtime errors found
+- ReferenceError: Can't find variable: CheckCircle
+  - Seen at: header.tsx (stack: getSubmenuItems → Header)
+  - Likely cause: an icon or component named CheckCircle is referenced but not imported or imported under a different name.
+
+- ReferenceError: Can't find variable: DataProviderEnhanced
+  - Seen at: dataset-overview.tsx (DatasetOverview)
+  - Likely cause: a component or variable is referenced but either not exported from its module or import path is wrong / name mismatch.
+
+- TypeError: undefined is not an object (evaluating 'riskLevel.toLowerCase')
+  - Stack traces show multiple places where a string method is called on a possibly undefined value.
+  - Likely cause: data is missing or not yet loaded; code assumes a string exists.
+
+- TypeError: undefined is not an object (evaluating 'adminData.systemMonitoring.serverUptime')
+  - Seen at: AdminProfile.tsx
+  - Likely cause: adminData or nested object is undefined; missing null checks.
+
+- Errors in ModelDetail component causing whole app render failure
+  - Seen at: model-detail.tsx (ModelDetail)
+  - Likely cause: similar — assuming data exists before it does or a bad import/use.
+
+- Repeated "Error — WebSocket connection to wss://..." messages
+  - This is Vite's HMR websocket trying to connect (common on Replit/remote environments). Usually non-fatal but noisy.
+
+Immediate fixes (high priority)
+1) Fix missing icon / component imports (header.tsx)
+- Find where CheckCircle is used in src/components/header.tsx and add the correct import. The repository seems to use icon libraries in other places — pick the same library to keep consistency.
+- Example options (choose the one used elsewhere):
+
+If the repo uses lucide-react:
+```tsx
+import { CheckCircle } from 'lucide-react';
+```
+
+If the repo uses react-icons:
+```tsx
+import { FiCheckCircle as CheckCircle } from 'react-icons/fi';
+```
+
+Or if it was intended to come from an internal component file, update the import path:
+```tsx
+import CheckCircle from '../icons/CheckCircle'; // adjust path/name as needed
+```
+
+2) Fix missing DataProviderEnhanced import / export
+- Search for "DataProviderEnhanced" to find where it should be exported. If the file exported a differently-named component, align the import name. If the export is missing, export it.
+- As a temporary guard to avoid crashing while you fix import: early-return if undefined:
+```tsx
+if (!DataProviderEnhanced) {
+  console.error('DataProviderEnhanced not found — check import/exports');
+  return null; // or fallback UI
+}
+```
+
+3) Defensive checks for undefined values (riskLevel, adminData)
+- Anywhere you call .toLowerCase() on a prop or value that may be undefined, replace with safe guards:
+
+Replace
+```ts
+riskLevel.toLowerCase()
+```
+with
+```ts
+(riskLevel ?? '').toLowerCase()
+// or
+riskLevel?.toLowerCase() ?? ''
+```
+
+- Replace adminData.systemMonitoring.serverUptime with optional chaining and a default:
+```ts
+const uptime = adminData?.systemMonitoring?.serverUptime ?? 'N/A';
+```
+
+4) Wrap App in an Error Boundary (prevents the entire UI from crashing and surfaces errors)
+- Add a small ErrorBoundary and wrap <App /> at the root. Example file to add:
+
+```tsx name=client/src/components/ErrorBoundary.tsx
+import React from 'react';
+
+type Props = { children: React.ReactNode };
+type State = { hasError: boolean; error?: Error | null };
+
+export default class ErrorBoundary extends React.Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: any) {
+    // Report to logging service here if desired
+    console.error('Uncaught error:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 24 }}>
+          <h2>Something went wrong</h2>
+          <p>Please reload the page or contact the developer. Error: {this.state.error?.message}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+```
+
+Then wrap the app in main.tsx (or wherever App is mounted):
+
+```tsx name=client/src/main.tsx
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+import ErrorBoundary from './components/ErrorBoundary';
+
+createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  </React.StrictMode>
+);
+```
+
+This prevents a single component error from bringing down the entire app and makes debugging easier.
+
+5) Fix ModelDetail and other data-dependent components
+- Add loading / null-check paths. Example pattern:
+```tsx
+if (isLoading) return <LoadingSpinner />;
+if (!model) return <div>No model found</div>;
+
+// safe use of model.*
+```
+
+6) Vite / WebSocket messages
+- Those messages are usually from Vite HMR trying to connect to the dev server's websocket. On Replit you may see failures depending on networking. This is generally not the cause of the React runtime errors you’re seeing — they just clutter the console. If you need to silence them, you can configure Vite server settings when possible, but I would fix the runtime ReferenceError/TypeErrors first.
+
+Suggested debugging checklist (do these in order)
+1. grep / search for "CheckCircle" and "DataProviderEnhanced" to find their usage and imports.
+2. Add the missing import(s) or correct the export name(s).
+3. Add optional chaining / defaulting where external or async data is used (.toLowerCase, nested object access).
+4. Add ErrorBoundary to avoid full-app crashes while iterating.
+5. Run dev server, reproduce pages (Header, ModelDetail, AdminProfile, DatasetOverview) and check console for remaining errors.
+6. If still failing, post a small repro (file snippets or the component code for the failing components) and I can produce exact patch PRs.
+
+Would you like me to:
+- create a PR that adds the ErrorBoundary and the defensive checks in the most-impacted files (Header, ModelDetail, AdminProfile, DatasetOverview)? (I can prepare patch files.)
+- or search the repo and fix the specific import names (CheckCircle, DataProviderEnhanced) for you?
+
+If you want me to implement changes I can create the specific file edits (ErrorBoundary + main wrapper + small defensive edits) and show them as patches. Which would you prefer?

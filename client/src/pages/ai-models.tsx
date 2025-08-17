@@ -37,11 +37,11 @@ export default function AIModels() {
   const [selectedModel, setSelectedModel] = useState<any>(null);
   const [modelDetailsOpen, setModelDetailsOpen] = useState(false);
 
-  const { data: aiModels = [], isLoading } = useQuery({
+  const { data: aiModels = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/ai-models"]
   });
 
-  const { data: userModels = [], isLoading: userModelsLoading } = useQuery({
+  const { data: userModels = [], isLoading: userModelsLoading } = useQuery<any[]>({
     queryKey: ["/api/portfolio/ai-models"]
   });
 
@@ -765,7 +765,7 @@ export default function AIModels() {
                             {Object.entries(selectedModel.regulatoryAlignment || {}).map(([key, value], idx) => (
                               <div key={idx} className="flex items-center gap-1">
                                 <CheckCircle className="h-3 w-3 text-green-500" />
-                                <span>{key.toUpperCase()}: {typeof value === 'string' ? value.substring(0, 30) + '...' : value}</span>
+                                <span>{key.toUpperCase()}: {typeof value === 'string' ? value.substring(0, 30) + '...' : String(value)}</span>
                               </div>
                             ))}
                           </div>

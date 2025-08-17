@@ -51,7 +51,7 @@ export default function RiskDistribution({ assets }: RiskDistributionProps) {
 }
 
 function getColorForAssetType(assetType: string) {
-  switch (assetType.toLowerCase()) {
+  switch ((assetType ?? '').toLowerCase()) {
     case 'stocks':
       return 'from-primary to-blue-500';
     case 'bonds':

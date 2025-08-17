@@ -256,7 +256,7 @@ export default function DataProviderAIMarketplace() {
   };
 
   const getDemandColor = (level: string) => {
-    switch (level.toLowerCase()) {
+    switch ((level ?? '').toLowerCase()) {
       case "very high": return "bg-red-100 text-red-800";
       case "high": return "bg-orange-100 text-orange-800";
       case "medium": return "bg-yellow-100 text-yellow-800";
@@ -266,7 +266,7 @@ export default function DataProviderAIMarketplace() {
   };
 
   const getPartnerTypeColor = (type: string) => {
-    switch (type.toLowerCase()) {
+    switch ((type ?? '').toLowerCase()) {
       case "ai developer": return "bg-blue-100 text-blue-800";
       case "data provider": return "bg-green-100 text-green-800";
       case "investor": return "bg-purple-100 text-purple-800";
