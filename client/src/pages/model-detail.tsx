@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -84,6 +84,7 @@ export default function ModelDetail() {
   // try both route patterns (support legacy and current routes)
   const [, paramsModel] = useRoute("/model/:id");
   const [, paramsMarketplace] = useRoute("/marketplace/:id");
+  const [, setLocation] = useLocation();
 
   // resolve id from route params or fallback to parsing pathname
   const resolvedIdFromRoute = paramsModel?.id ?? paramsMarketplace?.id;
@@ -95,6 +96,22 @@ export default function ModelDetail() {
     : undefined;
 
   const idParam = resolvedIdFromRoute ?? idFromPathname;
+
+  // Special case redirects to specialized model pages
+  useEffect(() => {
+    if (idParam === '5') {
+      setLocation('/forecasting-model');
+      return;
+    }
+    if (idParam === '9') {
+      setLocation('/hrp-portfolio-optimization');
+      return;
+    }
+    if (idParam === '10') {
+      setLocation('/defi-anomaly-detection');
+      return;
+    }
+  }, [idParam, setLocation]);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
