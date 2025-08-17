@@ -59,6 +59,10 @@ export default function ModelDetail() {
       window.location.href = '/algorithmic-hft-trading';
       return;
     }
+    if (idParam === '5') {
+      window.location.href = '/fraud-detection-bayesian';
+      return;
+    }
   }, [idParam]);
 
   // Fetch model
