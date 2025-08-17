@@ -749,17 +749,17 @@ export default function ModelDetail() {
                   </CardHeader>
                   <CardContent>
                     <div className="relative h-64 flex items-center justify-center">
-                      <div className="relative">
+                      <div className="relative w-48 h-48">
                         <Doughnut 
                           data={generateGaugeData(95, 'Accuracy')} 
                           options={gaugeOptions} 
-                          width={200} 
-                          height={200}
+                          width={192} 
+                          height={192}
                         />
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="text-center">
-                            <div className="text-3xl font-bold text-green-600">95%</div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">Accuracy</div>
+                          <div className="text-center mt-8">
+                            <div className="text-2xl font-bold text-green-600 mb-1">95%</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">Accuracy</div>
                           </div>
                         </div>
                       </div>
