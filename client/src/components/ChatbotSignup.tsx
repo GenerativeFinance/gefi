@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -135,22 +135,23 @@ const SUBSCRIPTION_PREFERENCES = [
 const generateCaptcha = () => {
   const operations = [
     () => {
-      const a = Math.floor(Math.random() * 10) + 1;
-      const b = Math.floor(Math.random() * 10) + 1;
+      // More varied arithmetic to avoid predictable patterns
+      const a = Math.floor(Math.random() * 15) + 1;
+      const b = Math.floor(Math.random() * 15) + 1;
       return { question: `What is ${a} + ${b}?`, answer: (a + b).toString() };
     },
     () => {
-      const a = Math.floor(Math.random() * 15) + 5;
-      const b = Math.floor(Math.random() * 5) + 1;
+      const a = Math.floor(Math.random() * 20) + 10;
+      const b = Math.floor(Math.random() * 8) + 1;
       return { question: `What is ${a} - ${b}?`, answer: (a - b).toString() };
     },
     () => {
-      const a = Math.floor(Math.random() * 6) + 2;
-      const b = Math.floor(Math.random() * 6) + 2;
+      const a = Math.floor(Math.random() * 8) + 2;
+      const b = Math.floor(Math.random() * 8) + 2;
       return { question: `What is ${a} × ${b}?`, answer: (a * b).toString() };
     },
     () => {
-      const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+      const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'black', 'white', 'pink', 'brown'];
       const color = colors[Math.floor(Math.random() * colors.length)];
       return { question: `What color is "${color}"?`, answer: color };
     },
@@ -158,6 +159,16 @@ const generateCaptcha = () => {
       const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
       const day = days[Math.floor(Math.random() * days.length)];
       return { question: `What day comes after ${day}?`, answer: days[(days.indexOf(day) + 1) % 7] };
+    },
+    () => {
+      const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      const num = numbers[Math.floor(Math.random() * numbers.length)];
+      return { question: `Type the number that comes after ${num}`, answer: (num + 1).toString() };
+    },
+    () => {
+      const words = ['cat', 'dog', 'bird', 'fish', 'tree', 'book', 'car', 'house'];
+      const word = words[Math.floor(Math.random() * words.length)];
+      return { question: `Type the word: ${word}`, answer: word };
     }
   ];
   
@@ -194,6 +205,15 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
   const [roleSearchValue, setRoleSearchValue] = useState('');
   const [captcha, setCaptcha] = useState(generateCaptcha());
   const [accountCreated, setAccountCreated] = useState(false);
+  
+  // Cleanup handling for race conditions
+  const isMountedRef = useRef(true);
+  
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const steps = [
     {
@@ -467,9 +487,9 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
                   body: JSON.stringify({
                     ...newUserData,
                     wantsDemo: false, // Will be handled separately
-                    sessionId: Date.now().toString(),
-                    recaptchaToken: '', // Already passed security check
-                    honeypot: ''
+                    sessionId: crypto.randomUUID(), // Use proper UUID instead of timestamp
+                    recaptchaToken: recaptchaToken || '', // Use actual token if available
+                    honeypot: '' // Anti-bot honeypot field
                   }),
                 });
 
@@ -489,8 +509,14 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
                     }, 1500);
                   }, 2000);
                 } else {
-                  const errorData = await signupResponse.json();
-                  addBotMessage(`❌ Sorry, there was an error creating your account: ${errorData.message || errorData.error}`);
+                  let errorMessage = 'Unknown error occurred';
+                  try {
+                    const errorData = await signupResponse.json();
+                    errorMessage = errorData.message || errorData.error || `Server error: ${signupResponse.status}`;
+                  } catch (parseError) {
+                    errorMessage = `Server error: ${signupResponse.status} ${signupResponse.statusText}`;
+                  }
+                  addBotMessage(`❌ Sorry, there was an error creating your account: ${errorMessage}`);
                   setIsCreatingAccount(false);
                 }
               } catch (error) {
@@ -501,16 +527,19 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
             }, 1000);
           }, 1500);
         } else {
-          setSecurityAttempts(prev => prev + 1);
-          if (securityAttempts >= 1) {
+          // Fix stale state bug by using the updated value directly
+          const newAttemptCount = securityAttempts + 1;
+          setSecurityAttempts(newAttemptCount);
+          
+          if (newAttemptCount >= 2) { // Allow 2 attempts instead of 1
             setSecurityCheckStep('failed');
-            addBotMessage("Security check failed. Please contact support@gefi.io for assistance.");
+            addBotMessage("Security check failed after multiple attempts. Please contact support@gefi.io for assistance.");
             return;
           } else {
-            // Generate new captcha and ask again
+            // Generate new captcha for each failure
             const newCaptcha = generateCaptcha();
             setCaptcha(newCaptcha);
-            addBotMessage(`Incorrect answer. Please try again: ${newCaptcha.question}`);
+            addBotMessage(`Incorrect answer. Please try again (${newAttemptCount}/2): ${newCaptcha.question}`);
             setCurrentInput('');
             return;
           }
@@ -539,7 +568,10 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
             setEmailVerificationStep('sent');
             setDemoVerificationCode(data.verificationCode); // For demo purposes
             addBotMessage(`I've sent a 6-digit verification code to ${newUserData.email}. Please enter the code to continue.`);
-            addBotMessage(`For demo purposes, your verification code is: ${data.verificationCode}`);
+            // Only show verification code in development
+            if (import.meta.env.DEV || import.meta.env.VITE_DEBUG_VERIFICATION === 'true') {
+              addBotMessage(`For demo purposes, your verification code is: ${data.verificationCode}`);
+            }
           } else {
             addBotMessage("Sorry, I couldn't send the verification email. Please try again.");
             setEmailVerificationStep('none');
@@ -566,8 +598,16 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
       setIsLoadingTimes(false);
       setShowDemoBooking(false);
       
-      // Open Calendly link directly
-      window.open('https://calendly.com/generativefinance/30min', '_blank');
+      // Open Calendly link with prefilled information
+      const prefillParams = new URLSearchParams({
+        'name': `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+        'email': userData.email || '',
+        'a1': userData.company || '',
+        'a2': userData.role || '',
+        'a3': userData.experienceLevel || ''
+      });
+      const calendlyUrl = `https://calendly.com/generativefinance/30min?${prefillParams.toString()}`;
+      window.open(calendlyUrl, '_blank');
       
       addBotMessage("Perfect! I've opened the demo booking page in a new tab. You can schedule your session there.");
       
@@ -609,7 +649,16 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
     // Simulate booking and redirect
     setTimeout(() => {
       setIsBooking(false);
-      window.open('https://calendly.com/generativefinance/30min', '_blank');
+      // Open Calendly link with prefilled information
+      const prefillParams = new URLSearchParams({
+        'name': `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+        'email': userData.email || '',
+        'a1': userData.company || '',
+        'a2': userData.role || '',
+        'a3': userData.experienceLevel || ''
+      });
+      const calendlyUrl = `https://calendly.com/generativefinance/30min?${prefillParams.toString()}`;
+      window.open(calendlyUrl, '_blank');
       handleSkipDemo();
     }, 1500);
   };
@@ -652,7 +701,7 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
             body: JSON.stringify({
               ...userData,
               wantsDemo: false, // Will be handled separately
-              sessionId: Date.now().toString(), // Generate session ID
+              sessionId: crypto.randomUUID(), // Use proper UUID for session ID
               recaptchaToken: recaptchaToken, // reCAPTCHA token for bot protection
               honeypot: '' // Anti-bot honeypot field
             }),
@@ -678,8 +727,14 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
               }, 1500);
             }, 2000);
           } else {
-            const errorData = await signupResponse.json();
-            addBotMessage(`❌ Sorry, there was an error creating your account: ${errorData.message || errorData.error}`);
+            let errorMessage = 'Unknown error occurred';
+            try {
+              const errorData = await signupResponse.json();
+              errorMessage = errorData.message || errorData.error || `Server error: ${signupResponse.status}`;
+            } catch (parseError) {
+              errorMessage = `Server error: ${signupResponse.status} ${signupResponse.statusText}`;
+            }
+            addBotMessage(`❌ Sorry, there was an error creating your account: ${errorMessage}`);
           }
         } catch (error) {
           console.error('Signup error:', error);
@@ -687,8 +742,14 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
         }
         setIsCreatingAccount(false);
       } else {
-        const errorData = await response.json();
-        addBotMessage(`❌ ${errorData.message}`);
+        let errorMessage = 'Verification failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || 'Invalid verification code';
+        } catch (parseError) {
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        }
+        addBotMessage(`❌ ${errorMessage}`);
         setEmailVerificationStep('sent'); // Allow retry
       }
     } catch (error) {
@@ -1006,7 +1067,7 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
                   disabled={verificationCode.length !== 6}
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                 >
-                  {emailVerificationStep === 'verifying' || isCreatingAccount ? (
+                  {emailVerificationStep === 'verifying' || emailVerificationStep === 'sent' && isCreatingAccount ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <Check className="w-4 h-4" />
