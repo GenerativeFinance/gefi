@@ -164,6 +164,142 @@ export const aiModelsData = [
     ]
   },
   {
+    id: 6,
+    name: "Risk Management & Credit Models (Deep Neural Networks for PD/LGD)",
+    description: "Advanced deep neural network models for credit risk assessment, featuring PD (Probability of Default) and LGD (Loss Given Default) modeling with explainable AI and real-time stress testing capabilities.",
+    category: "Risk Assessment",
+    subcategory: "Credit Risk",
+    creator: "CreditRisk AI Labs",
+    rating: 4.8,
+    totalRatings: 187,
+    price: "599.99",
+    monthlySubscribers: 543,
+    accuracy: 94.7,
+    riskLevel: "Low",
+    aiTechnique: "Deep Neural Networks",
+    targetUserType: "Risk Managers",
+    financialInstrument: "Credit Products",
+    tags: ["Credit Risk", "PD Modeling", "LGD Estimation", "Deep Learning", "XAI", "Basel III"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      explainableAI: true,
+      stressTesting: true,
+      portfolioAnalysis: true,
+      borrowerLevelRisk: true,
+      regulatoryCompliance: true
+    },
+    performance: {
+      accuracy: 94.7,
+      auc: 0.92,
+      precision: 0.89,
+      recall: 0.91,
+      f1Score: 0.90,
+      rmse: 0.067,
+      mae: 0.043,
+      rSquared: 0.87
+    },
+    dataRequirements: [
+      "Borrower Demographics",
+      "Credit Bureau Data", 
+      "Income Verification",
+      "Employment History",
+      "Debt-to-Income Ratios",
+      "Collateral Valuations",
+      "Payment History",
+      "Economic Indicators"
+    ],
+    supportedRegions: ["US", "EU", "UK", "Canada", "Australia"],
+    complianceFrameworks: ["Basel III", "CCAR", "CECL", "IFRS 9", "GDPR", "Fair Credit Reporting Act"],
+    minInvestment: "25000.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2024-06-15T14:30:00Z",
+    lastUpdated: "2025-08-17T10:30:00Z",
+    technicalSpecs: {
+      modelTypes: ["Deep Neural Networks", "Logistic Regression", "Random Forest", "Gradient Boosting"],
+      targetVariables: ["PD (Probability of Default)", "LGD (Loss Given Default)", "EAD (Exposure at Default)"],
+      architectures: ["Feedforward DNN", "LSTM", "Transformer", "Ensemble Methods"],
+      hyperparameters: {
+        layers: "3-8 hidden layers",
+        neurons: "64-512 per layer", 
+        activation: "ReLU, Sigmoid, Tanh",
+        optimizer: "Adam, SGD, RMSprop",
+        learningRate: "0.001-0.1 (adaptive)"
+      },
+      featureEngineering: [
+        "Income-to-Debt Ratios",
+        "Credit Utilization Metrics",
+        "Payment Behavior Patterns",
+        "Collateral Risk Scores",
+        "Macroeconomic Indicators",
+        "Industry Risk Factors"
+      ],
+      explainabilityTools: [
+        "SHAP (Shapley Values)",
+        "LIME (Local Interpretable Model)",
+        "Feature Importance Rankings",
+        "Partial Dependence Plots",
+        "Individual Prediction Explanations",
+        "Global Model Behavior Analysis"
+      ],
+      stressTestingScenarios: [
+        "Economic Recession Simulation",
+        "Interest Rate Shock",
+        "Unemployment Rate Changes",
+        "Industry-Specific Downturns",
+        "Housing Market Volatility",
+        "Regulatory Environment Changes"
+      ],
+      dataConnectors: ["Banking Core Systems", "Credit Bureaus", "Economic Data APIs", "Real Estate APIs"],
+      exportFormats: ["Excel", "CSV", "JSON", "PDF Reports", "API Endpoints"]
+    },
+    uiComponents: {
+      inputPanel: [
+        "Data Upload Interface",
+        "API Connector Configuration",
+        "Model Selection Options",
+        "Feature Selection Checkboxes",
+        "Hyperparameter Tuning Controls"
+      ],
+      mainDashboard: [
+        "Risk Heatmap Visualization",
+        "PD Distribution Histogram", 
+        "Credit Scoring Scatter Plot",
+        "ROC Curve & AUC Display",
+        "Confusion Matrix",
+        "Model Performance Metrics"
+      ],
+      insightsPanel: [
+        "Borrower-Level Risk Table",
+        "SHAP Explanation Charts",
+        "Top Risk Drivers Analysis",
+        "Portfolio Risk Pie Chart",
+        "Stress Testing Sliders",
+        "Dynamic Risk Updates"
+      ],
+      exportReporting: [
+        "Automated Risk Reports",
+        "Excel/CSV Export",
+        "API Integration",
+        "Regulatory Compliance Reports"
+      ]
+    },
+    useCases: [
+      "Consumer Credit Underwriting",
+      "Mortgage Risk Assessment", 
+      "Corporate Credit Analysis",
+      "Portfolio Risk Management",
+      "Regulatory Capital Calculation",
+      "Early Warning Systems",
+      "Collection Strategy Optimization",
+      "Pricing Model Development"
+    ]
+  },
+  {
     id: 3,
     name: "Real-Time Risk Analyzer",
     description: "AI-powered real-time risk assessment and monitoring system that identifies potential portfolio risks and provides proactive alerts to minimize losses.",
