@@ -67,7 +67,7 @@ export default function AIMarketplace() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [, setLocation] = useLocation();
+  const [, navigate] = useLocation();
 
   // Fetch recommendations
   const { data: recommendations = [], isLoading: isLoadingRecs } = useQuery({
@@ -149,7 +149,7 @@ export default function AIMarketplace() {
     }
     
     // Navigate to canonical model detail route using wouter
-    setLocation(`/model/${model.id}`);
+    navigate(`/model/${model.id}`);
   };
 
   const handleLike = (model: any) => {

@@ -23,7 +23,8 @@ describe("ModelDetail id param resolution & query enabling", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // default mock returns ok response with JSON body
-    mockApiRequest.mockImplementation(async (url: string, method = "GET") => {
+    // apiRequest(method, url, ...)
+    mockApiRequest.mockImplementation(async (method: string, url: string) => {
       // return a Response-like object for most tests
       return {
         ok: true,
@@ -45,7 +46,7 @@ describe("ModelDetail id param resolution & query enabling", () => {
     );
 
     await waitFor(() => {
-      expect(mockApiRequest).toHaveBeenCalledWith("/api/ai-models/5", "GET");
+      expect(mockApiRequest).toHaveBeenCalledWith("GET", "/api/ai-models/5");
     });
 
     // basic smoke: model title rendered
@@ -65,7 +66,7 @@ describe("ModelDetail id param resolution & query enabling", () => {
     );
 
     await waitFor(() => {
-      expect(mockApiRequest).toHaveBeenCalledWith("/api/ai-models/7", "GET");
+      expect(mockApiRequest).toHaveBeenCalledWith("GET", "/api/ai-models/7");
     });
 
     await waitFor(() => {
@@ -84,7 +85,7 @@ describe("ModelDetail id param resolution & query enabling", () => {
     );
 
     await waitFor(() => {
-      expect(mockApiRequest).toHaveBeenCalledWith("/api/ai-models/9", "GET");
+      expect(mockApiRequest).toHaveBeenCalledWith("GET", "/api/ai-models/9");
     });
 
     await waitFor(() => {
