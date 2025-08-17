@@ -58,6 +58,14 @@ Preferred communication style: Simple, everyday language.
 - **Schema Enhancements**: Updated reports database schema with PDF URL tracking, error handling, and status management
 - **Activity Tracking**: Added recent activity indicators and system status displays in footer for operational transparency
 
+### Model Navigation Testing & Standardization (August 17, 2025)
+- **Added Integration Tests**: Created comprehensive test suite for ModelDetail component verifying id parameter resolution from multiple route patterns (/model/:id, /marketplace/:id, /models/:id)
+- **Standardized Navigation**: Updated header search and marketplace cards to navigate to canonical /model/:id route using wouter navigation
+- **Special Case Redirects**: Preserved existing special-case redirects for forecasting (model ID 5) and HRP portfolio optimization (model ID 9) pages
+- **Test Dependencies**: Installed @testing-library/react, @testing-library/jest-dom, and @types/jest for robust component testing
+- **Route Compatibility**: Enhanced ModelDetail component to support legacy route patterns while standardizing on /model/:id for new navigation
+- **Error Handling**: Improved test mocking with proper TypeScript support and error handling for API responses
+
 ### Account Creation & Calendly Integration
 - **Chatbot Signup Account Creation**: Fully implemented `/api/auth/complete-chatbot-signup` endpoint that processes user preferences (experience level, platform intent, areas of focus) and creates pending accounts with proper role mapping (Expert → analyst, Intermediate → trader, Beginner → investor).
 - **Calendly Demo Booking Integration**: Created `/demo-booking` page that redirects users to https://calendly.com/generativefinance after account creation, allowing them to schedule demos while waiting for account approval.

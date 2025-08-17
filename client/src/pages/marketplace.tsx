@@ -138,6 +138,17 @@ export default function AIMarketplace() {
       sessionDuration: Math.floor(Math.random() * 120) + 30,
       clickDepth: 1 
     });
+    
+    // Special case redirects for models with custom pages
+    if (model.id === 5) {
+      window.location.href = "/forecasting-model";
+      return;
+    } else if (model.id === 9) {
+      window.location.href = "/hrp-portfolio-optimization";
+      return;
+    }
+    
+    // Navigate to canonical model detail route using wouter
     setLocation(`/model/${model.id}`);
   };
 
