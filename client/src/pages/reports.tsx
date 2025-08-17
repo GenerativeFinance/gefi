@@ -1,312 +1,225 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Download, Clock, CheckCircle, XCircle, BarChart3, TrendingUp, PieChart, Activity } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { FileText, Download, Eye, Calendar, TrendingUp, Shield, AlertTriangle, Users, DollarSign } from 'lucide-react';
+import { Link } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
+
+interface Report {
+  id: string;
+  title: string;
+  type: string;
+  status: 'generated' | 'pending' | 'failed';
+  lastUpdated: string;
+  description: string;
+}
 
 export default function Reports() {
-  const [reportType, setReportType] = useState('');
-  const [reportTitle, setReportTitle] = useState('');
-  const [reportDescription, setReportDescription] = useState('');
-  const [generating, setGenerating] = useState(false);
-  const [generatedReports, setGeneratedReports] = useState<any[]>([]);
-  const { toast } = useToast();
+  // Fetch reports data
+  const { data: reports = [], isLoading } = useQuery({
+    queryKey: ['/api/reports'],
+    enabled: true
+  });
 
-  const reportTypes = [
-    { value: 'portfolio_performance', label: 'Portfolio Performance Report', icon: BarChart3 },
-    { value: 'risk_assessment', label: 'Risk Assessment Report', icon: Activity },
-    { value: 'market_analysis', label: 'Market Analysis Report', icon: TrendingUp },
-    { value: 'compliance', label: 'Compliance Report', icon: FileText },
-    { value: 'allocation', label: 'Asset Allocation Report', icon: PieChart }
+  const reportCategories = [
+    {
+      title: 'Performance Reports',
+      description: 'Track portfolio performance and returns',
+      icon: TrendingUp,
+      color: 'blue',
+      reports: [
+        { id: '1', title: 'Monthly Performance Summary', type: 'performance', status: 'generated' as const, lastUpdated: '2024-01-15', description: 'Comprehensive portfolio performance analysis' },
+        { id: '2', title: 'Q4 2023 Portfolio Review', type: 'performance', status: 'generated' as const, lastUpdated: '2024-01-10', description: 'Quarterly performance and allocation review' }
+      ]
+    },
+    {
+      title: 'Risk Assessment',
+      description: 'Monitor risk metrics and exposure',
+      icon: Shield,
+      color: 'red',
+      reports: [
+        { id: '3', title: 'Risk Compliance Report', type: 'risk', status: 'generated' as const, lastUpdated: '2024-01-12', description: 'Current risk exposure and compliance status' },
+        { id: '4', title: 'Stress Test Results', type: 'risk', status: 'pending' as const, lastUpdated: '2024-01-14', description: 'Portfolio stress testing under market scenarios' }
+      ]
+    },
+    {
+      title: 'Regulatory Compliance',
+      description: 'Compliance and audit reports',
+      icon: AlertTriangle,
+      color: 'yellow',
+      reports: [
+        { id: '5', title: 'SEC Filing Summary', type: 'compliance', status: 'generated' as const, lastUpdated: '2024-01-08', description: 'Regulatory filing requirements summary' }
+      ]
+    },
+    {
+      title: 'Client Reports',
+      description: 'Client-facing performance summaries',
+      icon: Users,
+      color: 'green',
+      reports: [
+        { id: '6', title: 'Client Portfolio Summary', type: 'client', status: 'generated' as const, lastUpdated: '2024-01-16', description: 'Monthly client portfolio overview' }
+      ]
+    }
   ];
 
-  const generateSampleData = (type: string) => {
-    const baseData = {
-      generatedAt: new Date().toLocaleDateString(),
-      dateRange: {
-        start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-        end: new Date().toLocaleDateString()
-      },
-      keyMetrics: {
-        metrics: [
-          { label: 'Total Return', value: '+12.5%' },
-          { label: 'Sharpe Ratio', value: '1.42' },
-          { label: 'Max Drawdown', value: '-8.3%' },
-          { label: 'Volatility', value: '15.2%' }
-        ]
-      },
-      executiveSummary: {
-        content: `This report provides a comprehensive analysis of portfolio performance for the period ${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString()} to ${new Date().toLocaleDateString()}. Key highlights include strong risk-adjusted returns and effective diversification strategies.`
-      },
-      highlights: {
-        items: [
-          'Portfolio outperformed benchmark by 3.2%',
-          'Risk metrics remain within acceptable ranges',
-          'Diversification strategy effectively reduced volatility',
-          'ESG criteria integration showing positive impact'
-        ]
-      },
-      charts: [
-        {
-          title: 'Portfolio Performance Over Time',
-          description: 'Cumulative returns compared to benchmark performance.',
-          image: 'data:image/svg+xml;base64,' + btoa(`
-            <svg width="600" height="300" xmlns="http://www.w3.org/2000/svg">
-              <rect width="600" height="300" fill="#f8fafc"/>
-              <line x1="50" y1="250" x2="550" y2="50" stroke="#6a5af9" stroke-width="3"/>
-              <line x1="50" y1="250" x2="550" y2="120" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5"/>
-              <text x="300" y="280" text-anchor="middle" font-family="Arial" font-size="14" fill="#374151">Portfolio vs Benchmark Performance</text>
-              <text x="30" y="30" font-family="Arial" font-size="12" fill="#6b7280">Returns (%)</text>
-            </svg>
-          `),
-          insights: {
-            items: [
-              'Consistent outperformance vs benchmark',
-              'Lower volatility during market downturns',
-              'Strong momentum in growth sectors'
-            ]
-          }
-        }
-      ],
-      dataTables: [
-        {
-          title: 'Top Holdings Analysis',
-          description: 'Detailed breakdown of largest portfolio positions.',
-          tableHtml: `
-            <table>
-              <thead>
-                <tr>
-                  <th>Asset</th>
-                  <th>Weight</th>
-                  <th>Return (30d)</th>
-                  <th>Risk Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>Tech Growth Fund</td><td>22.5%</td><td>+15.2%</td><td>Medium</td></tr>
-                <tr><td>ESG Bond Fund</td><td>18.0%</td><td>+3.8%</td><td>Low</td></tr>
-                <tr><td>Emerging Markets</td><td>12.3%</td><td>+8.9%</td><td>High</td></tr>
-                <tr><td>Real Estate ETF</td><td>10.1%</td><td>+6.4%</td><td>Medium</td></tr>
-              </tbody>
-            </table>
-          `
-        }
-      ]
-    };
-
-    return baseData;
-  };
-
-  const handleGenerateReport = async () => {
-    if (!reportType || !reportTitle) {
-      toast({
-        title: "Missing Information",
-        description: "Please select a report type and enter a title.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setGenerating(true);
-    try {
-      const sampleData = generateSampleData(reportType);
-      
-      const response = await apiRequest('POST', '/api/reports/generate', {
-        type: reportType,
-        title: reportTitle,
-        description: reportDescription,
-        data: sampleData,
-        templateId: 'executive-report'
-      });
-
-      const result = await response.json();
-      
-      if (response.ok) {
-        toast({
-          title: "Report Generated",
-          description: "Your report has been generated successfully!",
-        });
-        
-        setGeneratedReports(prev => [...prev, result]);
-        setReportTitle('');
-        setReportDescription('');
-        setReportType('');
-      } else {
-        throw new Error(result.message || 'Failed to generate report');
-      }
-    } catch (error) {
-      console.error('Report generation error:', error);
-      toast({
-        title: "Generation Failed",
-        description: "Failed to generate report. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setGenerating(false);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'generated': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+      case 'failed': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }
   };
 
-  const handleDownloadReport = (reportId: string) => {
-    window.open(`/api/reports/${reportId}/download`, '_blank');
+  const getCategoryColor = (color: string) => {
+    switch (color) {
+      case 'blue': return 'text-blue-600 bg-blue-100 dark:bg-blue-900 dark:text-blue-300';
+      case 'red': return 'text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-300';
+      case 'yellow': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-300';
+      case 'green': return 'text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-300';
+      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-900 dark:text-gray-300';
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            AI Report Generator
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Generate comprehensive financial reports with AI-powered analytics
-          </p>
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Reports Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
+              Access and manage your financial reports across all categories
+            </p>
+          </div>
+          <div className="flex space-x-3">
+            <Link href="/reports/all">
+              <Button variant="outline" className="flex items-center space-x-2">
+                <FileText className="w-4 h-4" />
+                <span>View All Reports</span>
+              </Button>
+            </Link>
+            <Button className="flex items-center space-x-2">
+              <Download className="w-4 h-4" />
+              <span>Generate Report</span>
+            </Button>
+          </div>
         </div>
 
-        {/* Report Generation Form */}
+        {/* Report Categories Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {reportCategories.map((category, index) => {
+            const IconComponent = category.icon;
+            return (
+              <Card key={index} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-3 rounded-lg ${getCategoryColor(category.color)}`}>
+                        <IconComponent className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">{category.title}</CardTitle>
+                        <CardDescription>{category.description}</CardDescription>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      {category.reports.length} reports
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {category.reports.map((report) => (
+                      <div 
+                        key={report.id} 
+                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <h4 className="font-medium text-sm text-gray-900 dark:text-white">
+                            {report.title}
+                          </h4>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {report.description}
+                          </p>
+                          <div className="flex items-center space-x-3 mt-2">
+                            <Badge 
+                              className={`text-xs ${getStatusColor(report.status)}`}
+                              variant="secondary"
+                            >
+                              {report.status}
+                            </Badge>
+                            <span className="text-xs text-gray-400 flex items-center space-x-1">
+                              <Calendar className="w-3 h-3" />
+                              <span>{new Date(report.lastUpdated).toLocaleDateString()}</span>
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2 ml-4">
+                          <Button variant="ghost" size="sm">
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          {report.status === 'generated' && (
+                            <Button variant="ghost" size="sm">
+                              <Download className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 pt-3 border-t">
+                    <Link href={`/reports/${category.title.toLowerCase().replace(/\s+/g, '-')}`}>
+                      <Button variant="outline" size="sm" className="w-full">
+                        View All {category.title}
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Quick Actions */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <FileText className="w-5 h-5" />
-              <span>Generate New Report</span>
+              <DollarSign className="w-5 h-5" />
+              <span>Quick Actions</span>
             </CardTitle>
             <CardDescription>
-              Create professional financial reports with customizable data and insights
+              Common report generation and management tasks
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="reportType">Report Type</Label>
-                <Select value={reportType} onValueChange={setReportType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select report type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {reportTypes.map(type => {
-                      const Icon = type.icon;
-                      return (
-                        <SelectItem key={type.value} value={type.value}>
-                          <div className="flex items-center space-x-2">
-                            <Icon className="w-4 h-4" />
-                            <span>{type.label}</span>
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="reportTitle">Report Title</Label>
-                <Input
-                  id="reportTitle"
-                  value={reportTitle}
-                  onChange={(e) => setReportTitle(e.target.value)}
-                  placeholder="e.g., Q4 2024 Portfolio Performance"
-                />
-              </div>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button variant="outline" className="h-20 flex flex-col space-y-2">
+                <TrendingUp className="w-6 h-6" />
+                <span>Monthly Performance</span>
+              </Button>
+              <Button variant="outline" className="h-20 flex flex-col space-y-2">
+                <Shield className="w-6 h-6" />
+                <span>Risk Analysis</span>
+              </Button>
+              <Button variant="outline" className="h-20 flex flex-col space-y-2">
+                <Users className="w-6 h-6" />
+                <span>Client Summary</span>
+              </Button>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="reportDescription">Description (Optional)</Label>
-              <Textarea
-                id="reportDescription"
-                value={reportDescription}
-                onChange={(e) => setReportDescription(e.target.value)}
-                placeholder="Brief description of the report purpose and scope..."
-                rows={3}
-              />
-            </div>
-
-            <Button 
-              onClick={handleGenerateReport}
-              disabled={generating || !reportType || !reportTitle}
-              className="w-full"
-            >
-              {generating ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Generating Report...
-                </>
-              ) : (
-                <>
-                  <FileText className="w-4 h-4 mr-2" />
-                  Generate Report
-                </>
-              )}
-            </Button>
           </CardContent>
         </Card>
-
-        {/* Generated Reports */}
-        {generatedReports.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Generated Reports</CardTitle>
-              <CardDescription>
-                Download and manage your generated reports
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {generatedReports.map((report, index) => (
-                  <div 
-                    key={report.reportId}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900 dark:text-white">
-                          Report #{index + 1}
-                        </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Generated on {new Date().toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3">
-                      <Badge 
-                        variant={report.status === 'completed' ? 'default' : 'secondary'}
-                        className="flex items-center space-x-1"
-                      >
-                        {report.status === 'completed' ? (
-                          <CheckCircle className="w-3 h-3" />
-                        ) : report.status === 'failed' ? (
-                          <XCircle className="w-3 h-3" />
-                        ) : (
-                          <Clock className="w-3 h-3" />
-                        )}
-                        <span className="capitalize">{report.status}</span>
-                      </Badge>
-                      
-                      {report.status === 'completed' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownloadReport(report.reportId)}
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          Download PDF
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );

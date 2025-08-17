@@ -46,15 +46,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates (August 17, 2025)
 
-### PDF Report Generation System (August 17, 2025)
-- **Comprehensive Report Generation**: Implemented full PDF report generation system using Puppeteer and Mustache templates
+### PDF Report Generation System & UI Restoration (August 17, 2025)
+- **Fixed ES Modules Issue**: Resolved `__dirname is not defined` error by implementing proper ES modules compatibility with fileURLToPath
+- **Restored Original Reports Dashboard**: Implemented comprehensive reports dashboard with categorized view (Performance, Risk Assessment, Regulatory Compliance, Client Reports)
 - **Professional Templates**: Created executive-style HTML templates with branded styling, charts, data tables, and key metrics
 - **Report API Endpoints**: Added complete API system for report generation, download, and status checking (`/api/reports/generate`, `/api/reports/:id/download`)
-- **Frontend Report Interface**: Built professional report generation page with form controls, real-time status tracking, and download management
-- **Worker System**: Created background report processing system in `server/workers/reportGenerator.ts` for handling PDF generation
+- **Enhanced UI Navigation**: Added submenu structure with "View All Reports" and quick action buttons for common report types
+- **Worker System**: Created background report processing system in `server/workers/reportGenerator.ts` with proper Node.js ES modules support
 - **Executive-Quality Output**: Reports include cover pages, executive summaries, data visualizations, and comprehensive financial analysis sections
 - **Schema Enhancements**: Updated reports database schema with PDF URL tracking, error handling, and status management
-- **Integration Tests**: Maintained comprehensive test coverage for chatbot signup and report generation functionality
+- **Database Migration**: Created migration file for reports table with proper indexing and documentation
 
 ### Account Creation & Calendly Integration
 - **Chatbot Signup Account Creation**: Fully implemented `/api/auth/complete-chatbot-signup` endpoint that processes user preferences (experience level, platform intent, areas of focus) and creates pending accounts with proper role mapping (Expert → analyst, Intermediate → trader, Beginner → investor).

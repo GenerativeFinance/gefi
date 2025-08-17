@@ -1,10 +1,15 @@
 import path from 'path';
 import fs from 'fs/promises';
+import { fileURLToPath } from 'url';
 import puppeteer from 'puppeteer';
 import Mustache from 'mustache';
 import { db } from '../db';
 import { reports } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+
+// Fix for ES modules - __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export interface ReportJobPayload {
   reportId: string;
