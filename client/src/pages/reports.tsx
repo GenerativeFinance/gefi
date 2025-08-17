@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Download, Eye, Calendar, TrendingUp, Shield, AlertTriangle, Users, DollarSign } from 'lucide-react';
 import { Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
+import Layout from '@/components/layout/Layout';
 
 interface Report {
   id: string;
@@ -84,56 +85,42 @@ export default function Reports() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Enhanced Header with breadcrumb navigation */}
-      <div className="border-b bg-white dark:bg-gray-950 shadow-sm">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="space-y-1">
-              {/* Breadcrumb */}
-              <nav className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                <Link href="/home" className="hover:text-gray-700 dark:hover:text-gray-300">
-                  Dashboard
-                </Link>
-                <span>/</span>
-                <span className="text-gray-900 dark:text-white font-medium">Reports</span>
-              </nav>
-              
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <FileText className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                </div>
-                Reports Dashboard
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300 max-w-2xl">
-                Access and manage your financial reports across all categories. Generate, download, and analyze comprehensive portfolio insights.
-              </p>
+    <Layout>
+      <div className="container mx-auto py-8 px-4">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3 mb-2">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+              <FileText className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             </div>
-            
-            <div className="flex flex-wrap items-center gap-3">
-              <Link href="/reports/all">
-                <Button variant="outline" className="flex items-center space-x-2">
-                  <FileText className="w-4 h-4" />
-                  <span>View All Reports</span>
-                </Button>
-              </Link>
-              <Button className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700">
-                <Download className="w-4 h-4" />
-                <span>Generate Report</span>
+            Reports Dashboard
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 max-w-2xl mb-4">
+            Access and manage your financial reports across all categories. Generate, download, and analyze comprehensive portfolio insights.
+          </p>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/reports/all">
+              <Button variant="outline" className="flex items-center space-x-2">
+                <FileText className="w-4 h-4" />
+                <span>View All Reports</span>
               </Button>
-            </div>
+            </Link>
+            <Button className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700">
+              <Download className="w-4 h-4" />
+              <span>Generate Report</span>
+            </Button>
           </div>
         </div>
-      </div>
-
-      <div className="container mx-auto py-8 px-4">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Report Categories Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -210,75 +197,6 @@ export default function Reports() {
           </Card>
         </div>
       </div>
-
-      {/* Enhanced Footer */}
-      <footer className="border-t bg-white dark:bg-gray-950 mt-16">
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Report Types</h3>
-              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <li><Link href="/reports/performance" className="hover:text-gray-900 dark:hover:text-white">Performance Reports</Link></li>
-                <li><Link href="/reports/risk" className="hover:text-gray-900 dark:hover:text-white">Risk Assessment</Link></li>
-                <li><Link href="/reports/compliance" className="hover:text-gray-900 dark:hover:text-white">Regulatory Compliance</Link></li>
-                <li><Link href="/reports/client" className="hover:text-gray-900 dark:hover:text-white">Client Reports</Link></li>
-              </ul>
-            </div>
-            
-            <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Quick Actions</h3>
-              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <li><Link href="/reports/generate" className="hover:text-gray-900 dark:hover:text-white">Generate New Report</Link></li>
-                <li><Link href="/reports/scheduled" className="hover:text-gray-900 dark:hover:text-white">Scheduled Reports</Link></li>
-                <li><Link href="/reports/templates" className="hover:text-gray-900 dark:hover:text-white">Report Templates</Link></li>
-                <li><Link href="/reports/archive" className="hover:text-gray-900 dark:hover:text-white">Report Archive</Link></li>
-              </ul>
-            </div>
-            
-            <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Support</h3>
-              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <li><Link href="/docs/reports" className="hover:text-gray-900 dark:hover:text-white">Documentation</Link></li>
-                <li><Link href="/support" className="hover:text-gray-900 dark:hover:text-white">Contact Support</Link></li>
-                <li><Link href="/tutorials/reports" className="hover:text-gray-900 dark:hover:text-white">Video Tutorials</Link></li>
-                <li><Link href="/api/reports/docs" className="hover:text-gray-900 dark:hover:text-white">API Reference</Link></li>
-              </ul>
-            </div>
-            
-            <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Recent Activity</h3>
-              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <li className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>Portfolio Report Generated</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span>Risk Analysis Updated</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  <span>Compliance Review Pending</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              © 2025 GeFi Reports. Last updated: {new Date().toLocaleDateString()}
-            </p>
-            <div className="flex items-center space-x-4 mt-4 md:mt-0">
-              <Badge variant="secondary" className="text-xs">
-                System Status: Operational
-              </Badge>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                Next scheduled report: Tomorrow 9:00 AM
-              </span>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </Layout>
   );
 }
