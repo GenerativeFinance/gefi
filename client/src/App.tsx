@@ -73,6 +73,7 @@ import ServerManagement from "@/pages/server-management";
 import ApiAccess from "@/pages/api-access";
 import ForecastingModel from "@/pages/forecasting-model";
 import HRPPortfolioOptimization from "@/pages/hrp-portfolio-optimization";
+import ReportGenerator from "@/pages/reports";
 
 
 import ProfileSetup from "@/pages/profile-setup";
@@ -227,7 +228,7 @@ function Router() {
             <Route path="/portfolio/risk-distribution" component={RiskDistribution} />
             <Route path="/portfolio/rebalance" component={RebalanceActions} />
             <Route path="/risk-management/assessment" component={RiskAssessment} />
-            <Route path="/reports" component={Reports} />
+            <Route path="/reports" component={ReportGenerator} />
             <Route path="/reports/all" component={ReportsAll} />
             <Route path="/alerts/all" component={AlertsAll} />
             <Route path="/risk-management" component={RiskManagement} />

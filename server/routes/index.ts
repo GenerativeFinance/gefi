@@ -11,7 +11,7 @@ import { registerDeveloperRoutes } from "./developerRoutes";
 import { registerUtilityRoutes } from "./utilityRoutes";
 import { registerChatbotRoutes } from "./chatbotRoutes";
 import { registerAdminRoutes } from "./adminRoutes";
-import reportRoutes from "../routes/reportRoutes";
+import { registerReportRoutes } from "./reportRoutes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware setup
@@ -46,7 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerAuthCompat(app);
 
   console.log("📄 Registering Report APIs...");
-  app.use("/api", reportRoutes);
+  registerReportRoutes(app);
   
   console.log("📅 Registering Calendly APIs...");
   const { registerCalendlyRoutes } = await import("./calendlyRoutes");
