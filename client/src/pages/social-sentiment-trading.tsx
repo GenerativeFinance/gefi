@@ -134,48 +134,49 @@ export default function SocialSentimentTrading() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6 p-3 md:p-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setLocation('/ai-models')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 self-start"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to AI Models
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <MessageSquare className="w-8 h-8 text-blue-600" />
+              <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <MessageSquare className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
                 Social Sentiment Trading Intelligence
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-1">
+              <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 mt-1">
                 Real-time social media sentiment analysis using LSTMs and Transformers for trading signals
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+          <div className="flex items-center gap-2 md:gap-3">
+            <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs md:text-sm">
               <Activity className="w-3 h-3 mr-1" />
               Live Stream Active
             </Badge>
             <Button
               variant={isRealTime ? "destructive" : "default"}
               onClick={() => setIsRealTime(!isRealTime)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-sm"
+              size="sm"
             >
-              {isRealTime ? <RefreshCw className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
+              <RefreshCw className="w-4 h-4" />
               {isRealTime ? 'Stop Stream' : 'Start Stream'}
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Left Sidebar - Input Panel */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-4 md:space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -308,13 +309,13 @@ export default function SocialSentimentTrading() {
           </div>
 
           {/* Center Panel - Main Dashboard */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 md:space-y-6">
             <Tabs defaultValue="sentiment" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="sentiment">Sentiment Timeline</TabsTrigger>
-                <TabsTrigger value="keywords">Keywords</TabsTrigger>
-                <TabsTrigger value="comparison">Asset Comparison</TabsTrigger>
-                <TabsTrigger value="forecast">Market Impact</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">
+                <TabsTrigger value="sentiment" className="text-xs md:text-sm">Sentiment Timeline</TabsTrigger>
+                <TabsTrigger value="keywords" className="text-xs md:text-sm">Keywords</TabsTrigger>
+                <TabsTrigger value="comparison" className="text-xs md:text-sm">Asset Comparison</TabsTrigger>
+                <TabsTrigger value="forecast" className="text-xs md:text-sm">Market Impact</TabsTrigger>
               </TabsList>
 
               <TabsContent value="sentiment" className="space-y-4">
@@ -326,7 +327,7 @@ export default function SocialSentimentTrading() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-64 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-center border-2 border-dashed">
+                    <div className="h-48 md:h-64 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-center border-2 border-dashed">
                       <div className="text-center">
                         <LineChart className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                         <div className="text-sm text-gray-600 dark:text-gray-400">

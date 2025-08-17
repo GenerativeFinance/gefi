@@ -127,43 +127,46 @@ export default function FraudDetectionBayesian() {
 
   return (
     <Layout>
-      <div className="container mx-auto p-6 max-w-7xl">
+      <div className="container mx-auto p-3 md:p-6 max-w-7xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Shield className="h-8 w-8 text-red-600" />
+            <h1 className="text-xl md:text-3xl font-bold flex items-center gap-2">
+              <Shield className="h-6 w-6 md:h-8 md:w-8 text-red-600" />
               Fraud Detection & Anomaly Analysis
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-sm md:text-base text-muted-foreground mt-1">
               Bayesian Inference models for real-time fraud detection and risk control
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <Badge variant={isRealTime ? "default" : "secondary"} className="px-3 py-1">
+          <div className="flex flex-wrap items-center gap-2 md:gap-4">
+            <Badge variant={isRealTime ? "default" : "secondary"} className="px-2 md:px-3 py-1 text-xs md:text-sm">
               {isRealTime ? (
                 <><Activity className="h-3 w-3 mr-1" /> LIVE</>
               ) : (
                 <><Pause className="h-3 w-3 mr-1" /> PAUSED</>
               )}
             </Badge>
-            <Badge variant="destructive" className="px-3 py-1">
+            <Badge variant="destructive" className="px-2 md:px-3 py-1 text-xs md:text-sm">
               <AlertTriangle className="h-3 w-3 mr-1" />
               {alertCount} Alerts
             </Badge>
             <Button 
               onClick={() => setIsRealTime(!isRealTime)}
               variant={isRealTime ? "destructive" : "default"}
+              size="sm"
+              className="text-sm"
             >
-              {isRealTime ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
-              {isRealTime ? "Stop Monitoring" : "Start Monitoring"}
+              {isRealTime ? <Pause className="h-4 w-4 mr-1 md:mr-2" /> : <Play className="h-4 w-4 mr-1 md:mr-2" />}
+              <span className="hidden md:inline">{isRealTime ? "Stop Monitoring" : "Start Monitoring"}</span>
+              <span className="md:hidden">{isRealTime ? "Stop" : "Start"}</span>
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
           {/* Left Sidebar - Input Panel */}
-          <div className="col-span-3 space-y-4">
+          <div className="lg:col-span-3 space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -273,7 +276,7 @@ export default function FraudDetectionBayesian() {
           </div>
 
           {/* Main Dashboard - Center Panel */}
-          <div className="col-span-6 space-y-4">
+          <div className="lg:col-span-6 space-y-4">
             {/* Live Transaction Stream */}
             <Card>
               <CardHeader>
@@ -313,7 +316,7 @@ export default function FraudDetectionBayesian() {
             </Card>
 
             {/* Probability Distribution & Heatmap */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -361,7 +364,7 @@ export default function FraudDetectionBayesian() {
                 <CardTitle>Risk Portfolio Summary</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {riskMetrics.map((metric, index) => (
                     <div key={index} className="text-center">
                       <div className="font-semibold text-lg">{metric.value}</div>
@@ -401,7 +404,7 @@ export default function FraudDetectionBayesian() {
           </div>
 
           {/* Right Sidebar - Insights Panel */}
-          <div className="col-span-3 space-y-4">
+          <div className="lg:col-span-3 space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">

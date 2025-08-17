@@ -187,47 +187,50 @@ export default function ESGGeospatialCommodities() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6 p-3 md:p-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setLocation('/ai-models')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 self-start"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to AI Models
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Satellite className="w-8 h-8 text-green-600" />
+              <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Satellite className="w-6 h-6 md:w-8 md:h-8 text-green-600" />
                 ESG & Geospatial AI Commodities Forecasting
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-1">
+              <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 mt-1">
                 Intelligence dashboard combining satellite imagery analysis with commodity price forecasting
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge variant={isAnalyzing ? "default" : "secondary"} className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
+            <Badge variant={isAnalyzing ? "default" : "secondary"} className="flex items-center gap-1 text-xs md:text-sm px-2">
               {isAnalyzing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Eye className="w-3 h-3" />}
-              {isAnalyzing ? 'Analyzing Imagery...' : 'Ready for Analysis'}
+              <span className="hidden md:inline">{isAnalyzing ? 'Analyzing Imagery...' : 'Ready for Analysis'}</span>
+              <span className="md:hidden">{isAnalyzing ? 'Analyzing...' : 'Ready'}</span>
             </Badge>
             <Button
               variant={isAnalyzing ? "destructive" : "default"}
               onClick={() => setIsAnalyzing(!isAnalyzing)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-sm"
+              size="sm"
             >
               {isAnalyzing ? <RefreshCw className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
-              {isAnalyzing ? 'Stop Analysis' : 'Start Analysis'}
+              <span className="hidden md:inline">{isAnalyzing ? 'Stop Analysis' : 'Start Analysis'}</span>
+              <span className="md:hidden">{isAnalyzing ? 'Stop' : 'Start'}</span>
             </Button>
           </div>
         </div>
 
         {/* Commodity Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
           {commodities.map((commodity) => (
             <Card 
               key={commodity.id} 

@@ -191,47 +191,50 @@ export default function HRPPortfolioOptimization() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6 p-3 md:p-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setLocation('/ai-models')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 self-start"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to AI Models
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <TreePine className="w-8 h-8 text-green-600" />
+              <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <TreePine className="w-6 h-6 md:w-8 md:h-8 text-green-600" />
                 Portfolio Optimization & HRP (AI-Enhanced)
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-1">
+              <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 mt-1">
                 Advanced portfolio optimization using Hierarchical Risk Parity with AI adjustments
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge variant={isOptimizing ? "default" : "secondary"} className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
+            <Badge variant={isOptimizing ? "default" : "secondary"} className="flex items-center gap-1 text-xs md:text-sm px-2">
               {isOptimizing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
-              {isOptimizing ? 'Optimizing...' : 'Portfolio Ready'}
+              <span className="hidden md:inline">{isOptimizing ? 'Optimizing...' : 'Portfolio Ready'}</span>
+              <span className="md:hidden">{isOptimizing ? 'Optimizing...' : 'Ready'}</span>
             </Badge>
             <Button
               variant={isOptimizing ? "destructive" : "default"}
               onClick={() => setIsOptimizing(!isOptimizing)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-sm"
+              size="sm"
             >
               {isOptimizing ? <RefreshCw className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
-              {isOptimizing ? 'Stop Optimization' : 'Optimize Portfolio'}
+              <span className="hidden md:inline">{isOptimizing ? 'Stop Optimization' : 'Optimize Portfolio'}</span>
+              <span className="md:hidden">{isOptimizing ? 'Stop' : 'Start'}</span>
             </Button>
           </div>
         </div>
 
         {/* Performance Metrics Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-green-600">{performanceMetrics.expectedReturn}%</div>
