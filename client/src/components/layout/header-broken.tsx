@@ -58,7 +58,8 @@ export default function Header() {
   const handleSearchSelect = (modelId: number) => {
     setSearchOpen(false);
     setSearchQuery("");
-    navigate(`/marketplace?model=${modelId}`);
+    // Navigate to canonical model detail route
+    navigate(`/model/${modelId}`);
   };
 
   // Determine dashboard mode based on current route
