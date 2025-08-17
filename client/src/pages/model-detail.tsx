@@ -123,6 +123,10 @@ export default function ModelDetail() {
       setLocation('/esg-climate-risk');
       return;
     }
+    if (idParam === '13') {
+      setLocation('/gru-forecasting');
+      return;
+    }
   }, [idParam, setLocation]);
 
   const { toast } = useToast();

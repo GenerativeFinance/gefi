@@ -807,6 +807,46 @@ export class AiModelSeeder {
           isActive: true
         },
         {
+          name: "Advanced GRU Time Series Forecasting",
+          description: "State-of-the-art Gated Recurrent Unit model for financial time series prediction. Features sequence forecasting, uncertainty quantification, and comprehensive model diagnostics with real-time training monitoring.",
+          category: "Forecasting",
+          categoryId: forecastingCategory.id,
+          subcategoryId: timeSeriesSub?.id,
+          price: "449.00",
+          rating: "4.6",
+          totalRatings: 203,
+          creator: "DeepSequence Labs",
+          tags: ["gru", "time-series", "deep-learning", "forecasting", "uncertainty-quantification"],
+          aiTechnique: "Gated Recurrent Units",
+          targetUserType: "Quantitative Analysts",
+          financialInstrument: "Multi-Asset",
+          riskLevel: "Medium",
+          minInvestment: "15000.00",
+          dataRequirements: ["price_data", "volume_data", "technical_indicators", "macro_variables"],
+          supportedRegions: ["Global"],
+          complianceFrameworks: ["SEC", "MiFID II"],
+          features: {
+            "sequence_forecasting": true,
+            "uncertainty_bands": true,
+            "model_comparison": true,
+            "real_time_training": true,
+            "feature_importance": true,
+            "residual_analysis": true
+          },
+          performance: {
+            "rmse": 2.34,
+            "mae": 1.78,
+            "mape": 3.45,
+            "r2_score": 0.924,
+            "direction_accuracy": 76.8,
+            "training_convergence": 94.2,
+            "forecast_horizon_days": 30,
+            "feature_stability": 89.6
+          },
+          isFeatured: false,
+          isActive: true
+        },
+        {
           name: "Aggressive Growth",
           description: "High-performance growth-oriented AI model targeting maximum capital appreciation through technology stocks, emerging markets, and momentum strategies. Utilizes advanced pattern recognition for growth opportunities.",
           category: "Trading Strategies", 
