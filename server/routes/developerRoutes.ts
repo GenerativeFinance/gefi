@@ -592,4 +592,90 @@ export function registerDeveloperRoutes(app: Express) {
     }
   });
 
+  // Model Subscription Management APIs
+  // Get user's model subscriptions
+  app.get('/api/my-subscriptions', isAuthenticated, async (req: any, res) => {
+    try {
+      // For now, return the mock data from the frontend
+      // In a real app, this would query the database
+      const mockSubscriptions = [
+        {
+          id: 1,
+          modelId: 1,
+          modelName: "Quantum Risk Predictor",
+          developerName: "AI Solutions Inc.",
+          price: 299,
+          billingCycle: "monthly",
+          status: "active",
+          nextBilling: "2025-08-02",
+          subscribedDate: "2025-07-02",
+          performance: "+24.8%",
+          category: "Risk Management"
+        },
+        {
+          id: 2,
+          modelId: 2,
+          modelName: "Smart Portfolio Optimizer",
+          developerName: "FinTech Innovations",
+          price: 199,
+          billingCycle: "monthly",
+          status: "active",
+          nextBilling: "2025-08-05",
+          subscribedDate: "2025-06-15",
+          performance: "+18.3%",
+          category: "Portfolio Management"
+        }
+      ];
+      
+      res.json(mockSubscriptions);
+    } catch (error) {
+      console.error('Error fetching user subscriptions:', error);
+      res.status(500).json({ message: 'Failed to fetch subscriptions' });
+    }
+  });
+
+  // Update subscription status (pause, resume, cancel)
+  app.post('/api/subscriptions/:id/:action', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id, action } = req.params;
+      
+      // In a real app, this would update the database
+      const mockResponse = {
+        id: parseInt(id),
+        action,
+        status: action === 'pause' ? 'paused' : action === 'resume' ? 'active' : 'cancelled',
+        message: `Subscription ${action}d successfully`
+      };
+      
+      res.json(mockResponse);
+    } catch (error) {
+      console.error(`Error ${req.params.action} subscription:`, error);
+      res.status(500).json({ message: `Failed to ${req.params.action} subscription` });
+    }
+  });
+
+  // Create new model subscription
+  app.post('/api/my-subscriptions', isAuthenticated, async (req: any, res) => {
+    try {
+      const { modelId, subscriptionType, price } = req.body;
+      
+      // In a real app, this would create a new subscription in the database
+      const newSubscription = {
+        id: Math.floor(Math.random() * 10000),
+        modelId,
+        userId: req.user.id,
+        subscriptionType: subscriptionType || 'monthly',
+        price,
+        status: 'active',
+        startDate: new Date().toISOString(),
+        nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      };
+      
+      res.status(201).json(newSubscription);
+    } catch (error) {
+      console.error('Error creating subscription:', error);
+      res.status(500).json({ message: 'Failed to create subscription' });
+    }
+  });
+
 }
