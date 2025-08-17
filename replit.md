@@ -59,6 +59,14 @@ Preferred communication style: Simple, everyday language.
 - **Database Schema**: Created model_subscriptions, model_funding_requests, and model_funding_contributions tables to support subscription and funding operations.
 - **API Endpoints**: Implemented RESTful APIs for subscription management (`/api/my-subscriptions`, `/api/subscriptions/:id/:action`) and funding operations.
 
+### Portfolio Optimization & HRP AI Model (August 17, 2025)
+- **New AI Model Added**: Portfolio Optimization & Asset Allocation (Hierarchical Risk Parity with AI adjustments) - Model ID 9
+- **Specialized Lightbox Page**: Created comprehensive `/hrp-portfolio-optimization` page with advanced portfolio management interface
+- **HRP Algorithm Features**: Hierarchical Risk Parity with AI-enhanced asset allocation, correlation analysis, and risk decomposition
+- **Interactive Dashboard**: Multi-tab interface with allocation visualization, correlation matrices, performance metrics, and scenario analysis
+- **Executive-Friendly Design**: Balanced quant insights with clear executive-level reporting and visualization
+- **Route Integration**: Added specialized route handling in AI marketplace for direct navigation to HRP optimization interface
+
 ## External Dependencies
 
 - **@neondatabase/serverless**: PostgreSQL database connectivity
