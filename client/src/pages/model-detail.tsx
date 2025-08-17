@@ -81,7 +81,21 @@ import {
 } from "lucide-react";
 
 export default function ModelDetail() {
-  const [, params] = useRoute("/marketplace/:id");
+  // try both route patterns (support legacy and current routes)
+  const [, paramsModel] = useRoute("/model/:id");
+  const [, paramsMarketplace] = useRoute("/marketplace/:id");
+
+  // resolve id from route params or fallback to parsing pathname
+  const resolvedIdFromRoute = paramsModel?.id ?? paramsMarketplace?.id;
+  const idFromPathname = typeof window !== "undefined"
+    ? (() => {
+        const m = window.location.pathname.match(/\/(?:model|marketplace)\/([^/]+)/);
+        return m ? m[1] : undefined;
+      })()
+    : undefined;
+
+  const idParam = resolvedIdFromRoute ?? idFromPathname;
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTimePeriod, setSelectedTimePeriod] = useState("1year");
@@ -93,17 +107,20 @@ export default function ModelDetail() {
   const [animationSpeed, setAnimationSpeed] = useState(1000);
 
   const { data: model, isLoading, error } = useQuery({
-    queryKey: ['/api/ai-models', params?.id],
+    queryKey: ['/api/ai-models', idParam],
     queryFn: async () => {
-      const response = await apiRequest(`/api/ai-models/${params?.id}`, 'GET');
+      if (!idParam) throw new Error("No model id provided");
+      const response = await apiRequest(`/api/ai-models/${idParam}`, 'GET');
       return response.json();
     },
-    enabled: !!params?.id,
+    enabled: !!idParam,
+    retry: false,
   });
 
   const subscribeMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest(`/api/ai-models/${params?.id}/subscribe`, 'POST', {});
+      if (!idParam) throw new Error("No model id provided");
+      const response = await apiRequest(`/api/ai-models/${idParam}/subscribe`, 'POST', {});
       return response.json();
     },
     onSuccess: () => {
@@ -133,6 +150,19 @@ export default function ModelDetail() {
   const handleSubscribe = () => {
     subscribeMutation.mutate();
   };
+
+  useEffect(() => {
+    if (error) {
+      console.error("Error loading model:", error);
+      // show a toast for non-404 errors (queryFn will throw if fetch failed)
+      if ((error as any)?.message) {
+        toast({
+          title: "Failed to load model",
+          description: String((error as any).message),
+        });
+      }
+    }
+  }, [error, toast]);
 
   const formatCurrency = (amount: number | string) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;

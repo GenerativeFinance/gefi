@@ -51,6 +51,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerBacktestingRoutes } = await import("./backtestingRoutes");
   registerBacktestingRoutes(app);
 
+  // Register profile compatibility routes
+  console.log("👤 Registering Profile Compatibility APIs...");
+  const registerProfileCompatibilityRoutes = (await import("./profileCompat")).default;
+  const { storage } = await import("../storage");
+  registerProfileCompatibilityRoutes(app, storage);
+
   // ===========================================
   // WebSocket Server Setup
   // ===========================================

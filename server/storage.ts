@@ -266,6 +266,47 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  // Profile compatibility methods
+  async getUserById(id: string): Promise<User | null> {
+    const user = await this.getUser(id);
+    return user || null;
+  }
+
+  async getUserByProviderId(provider: string, rawId: string): Promise<User | null> {
+    try {
+      // Try to find user by provider and providerId
+      const [user] = await db.select().from(users).where(
+        and(eq(users.provider, provider), eq(users.providerId, rawId))
+      );
+      return user || null;
+    } catch (error) {
+      console.warn("getUserByProviderId failed:", error);
+      return null;
+    }
+  }
+
+  async findUser(query: any): Promise<User | null> {
+    try {
+      let whereCondition;
+      
+      if (query.id) {
+        whereCondition = eq(users.id, query.id);
+      } else if (query.email) {
+        whereCondition = eq(users.email, query.email);
+      } else if (query.provider && query.providerId) {
+        whereCondition = and(eq(users.provider, query.provider), eq(users.providerId, query.providerId));
+      } else {
+        return null;
+      }
+
+      const [user] = await db.select().from(users).where(whereCondition);
+      return user || null;
+    } catch (error) {
+      console.warn("findUser failed:", error);
+      return null;
+    }
+  }
+
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
