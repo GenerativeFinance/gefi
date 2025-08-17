@@ -119,6 +119,10 @@ export default function ModelDetail() {
       setLocation('/defi-yield-optimizer');
       return;
     }
+    if (idParam === '12') {
+      setLocation('/esg-climate-risk');
+      return;
+    }
   }, [idParam, setLocation]);
 
   const { toast } = useToast();
