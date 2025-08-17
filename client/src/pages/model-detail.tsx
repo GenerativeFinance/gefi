@@ -95,7 +95,7 @@ export default function ModelDetail() {
   const { data: model, isLoading, error } = useQuery({
     queryKey: ['/api/ai-models', params?.id],
     queryFn: async () => {
-      const response = await apiRequest(`/api/ai-models/${params?.id}`);
+      const response = await apiRequest(`/api/ai-models/${params?.id}`, 'GET');
       return response.json();
     },
     enabled: !!params?.id,
@@ -103,9 +103,7 @@ export default function ModelDetail() {
 
   const subscribeMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest(`/api/ai-models/${params?.id}/subscribe`, {
-        method: 'POST'
-      });
+      const response = await apiRequest(`/api/ai-models/${params?.id}/subscribe`, 'POST', {});
       return response.json();
     },
     onSuccess: () => {

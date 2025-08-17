@@ -234,7 +234,7 @@ export default function DeveloperCollaborationResources() {
   };
 
   const getTypeIcon = (type: string) => {
-    switch (type.toLowerCase()) {
+    switch ((type ?? '').toLowerCase()) {
       case 'pdf': return <FileText className="h-4 w-4" />;
       case 'html': return <Globe className="h-4 w-4" />;
       case 'json': return <FileCode className="h-4 w-4" />;

@@ -210,7 +210,7 @@ export default function ModelCard({ model, featured = false }: ModelCardProps) {
   });
 
   const getModelIcon = (category: string) => {
-    switch (category.toLowerCase()) {
+    switch ((category ?? '').toLowerCase()) {
       case 'risk':
         return Shield;
       case 'portfolio':
@@ -225,7 +225,7 @@ export default function ModelCard({ model, featured = false }: ModelCardProps) {
   };
 
   const getIconColor = (category: string) => {
-    switch (category.toLowerCase()) {
+    switch ((category ?? '').toLowerCase()) {
       case 'risk':
         return 'from-red-500 to-orange-500';
       case 'portfolio':

@@ -124,7 +124,7 @@ export default function Strategies() {
   };
 
   const getRiskColor = (risk: string) => {
-    switch (risk.toLowerCase()) {
+    switch ((risk ?? '').toLowerCase()) {
       case 'low':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
       case 'medium':
@@ -137,7 +137,7 @@ export default function Strategies() {
   };
 
   const getComplexityColor = (complexity: string) => {
-    switch (complexity.toLowerCase()) {
+    switch ((complexity ?? '').toLowerCase()) {
       case 'beginner':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
       case 'intermediate':
