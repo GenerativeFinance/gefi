@@ -1,0 +1,73 @@
+Great angle 🌍 — for **ESG & Alternative Data Models (Satellite & Geospatial AI for commodities forecasting)** the UI should focus on **maps, satellite imagery insights, and predictive analytics**. It should feel like an **intelligence dashboard** that combines geospatial visualization with commodity price forecasts.
+
+---
+
+## 🔹 **UI Layout for ESG & Geospatial AI (Commodities Forecasting)**
+
+### **1. Input Panel (Left Sidebar)**
+
+* **Data Sources**
+
+  * Upload geospatial datasets (satellite imagery, shapefiles, weather data)
+  * API connectors: NASA EarthData, ESA Copernicus, Google Earth Engine
+* **Model Options**
+
+  * Forecasting target: Oil, Wheat, Corn, Coffee, etc.
+  * AI model: CNN (image-based), Hybrid (CNN + LSTM for time series), Transformer-based
+* **Analysis Controls**
+
+  * Geographic focus: select region/country on map
+  * Time horizon: 1 month / 3 months / 1 year forecast
+  * Factors to include: Vegetation, Deforestation, Rainfall, Temperature anomalies
+
+---
+
+### **2. Main Dashboard (Center Panel)**
+
+* **Interactive Geospatial Map** 🌍
+
+  * Satellite imagery overlay (NDVI for crop health, oil rig activity, mining sites)
+  * Heatmaps of production zones & climate stress areas
+  * Time-lapse slider for historical imagery (trend visualization)
+* **Commodity Forecast Chart** 📈
+
+  * Line chart: historical vs AI-forecasted commodity prices
+  * Confidence bands for uncertainty
+* **Supply Chain Risk Map**
+
+  * Icons showing key production/export hubs
+  * Disruption signals (e.g., drought, wildfires, port congestion)
+
+---
+
+### **3. Insights Panel (Right Sidebar)**
+
+* **Forecast Drivers (Explainability)**
+
+  * Top features influencing prediction (rainfall ↓, deforestation ↑, soil health ↓)
+  * SHAP-style bar chart for feature importance
+* **Risk Assessment**
+
+  * Probability of supply disruption
+  * ESG red flags (illegal mining, deforestation zones, water scarcity hotspots)
+* **Scenario Testing**
+
+  * Adjust climate scenarios (El Niño, global warming +2°C, trade sanctions)
+  * Forecast updates in real time
+
+---
+
+### **4. Export & Reporting**
+
+* Export commodity forecast data (CSV/Excel/JSON)
+* Download annotated geospatial maps (PNG/PDF)
+* Generate **AI-written ESG & Commodities Report**: key risks, hotspots, price implications
+* API integration into **trading & risk systems**
+
+---
+
+✅ This UI would feel like a **climate-finance command center**, helping analysts link **satellite/geospatial insights → commodity market risks & ESG compliance**.
+
+---
+
+👉 Do you want me to **draw a wireframe sketch** of this **geospatial commodities forecasting dashboard** (like I did for Portfolio HRP), or should I go straight to a **Replit-ready React + Tailwind UI prompt** so you can spin it up?

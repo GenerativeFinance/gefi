@@ -727,6 +727,46 @@ export class AiModelSeeder {
           isActive: true
         },
         {
+          name: "DeFi Yield Farming Optimizer (Liquidity Mining)",
+          description: "AI-powered yield farming optimization across DeFi protocols. Uses reinforcement learning to maximize returns while minimizing impermanent loss and smart contract risks across multiple chains.",
+          category: "DeFi & Blockchain",
+          categoryId: defiCategory.id,
+          subcategoryId: yieldOptimizationSub?.id,
+          price: "599.00",
+          rating: "4.7",
+          totalRatings: 142,
+          creator: "YieldMaximizer Labs",
+          tags: ["yield-farming", "liquidity-mining", "defi-optimization", "multi-chain", "impermanent-loss"],
+          aiTechnique: "Reinforcement Learning",
+          targetUserType: "DeFi Investors",
+          financialInstrument: "Cryptocurrencies",
+          riskLevel: "Medium",
+          minInvestment: "25000.00",
+          dataRequirements: ["defi_protocols", "pool_liquidity", "apy_history", "smart_contract_data"],
+          supportedRegions: ["Global"],
+          complianceFrameworks: ["KYC", "AML"],
+          features: {
+            "multi_protocol_optimization": true,
+            "impermanent_loss_protection": true,
+            "auto_rebalancing": true,
+            "risk_adjusted_returns": true,
+            "cross_chain_arbitrage": true,
+            "smart_contract_integration": true
+          },
+          performance: {
+            "accuracy": 89.4,
+            "average_apy": 28.6,
+            "risk_adjusted_return": 23.7,
+            "impermanent_loss_mitigation": 73.2,
+            "protocol_coverage": 15,
+            "auto_compound_efficiency": 94.8,
+            "sharpe_ratio": 1.9,
+            "max_drawdown": 11.4
+          },
+          isFeatured: false,
+          isActive: true
+        },
+        {
           name: "Aggressive Growth",
           description: "High-performance growth-oriented AI model targeting maximum capital appreciation through technology stocks, emerging markets, and momentum strategies. Utilizes advanced pattern recognition for growth opportunities.",
           category: "Trading Strategies", 
