@@ -446,6 +446,173 @@ export const aiModelsData = [
     ]
   },
   {
+    id: 8,
+    name: "NLP Models in Finance (BERT/FinBERT adaptation)",
+    description: "Advanced natural language processing models specifically adapted for financial text analysis, featuring real-time sentiment analysis, entity extraction, and document processing with BERT and FinBERT architectures.",
+    category: "Natural Language Processing",
+    subcategory: "Financial Text Analysis",
+    creator: "FinNLP Research Labs",
+    rating: 4.6,
+    totalRatings: 203,
+    price: "449.99",
+    monthlySubscribers: 678,
+    accuracy: 89.7,
+    riskLevel: "Medium",
+    aiTechnique: "BERT/FinBERT + Transformer Models",
+    targetUserType: "Financial Analysts",
+    financialInstrument: "Text & Documents",
+    tags: ["Sentiment Analysis", "NLP", "BERT", "FinBERT", "Entity Extraction", "Document Analysis"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: false,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      documentProcessing: true,
+      sentimentTracking: true,
+      entityExtraction: true,
+      multilanguageSupport: true,
+      explainableAI: true
+    },
+    performance: {
+      accuracy: 89.7,
+      sentimentAccuracy: 0.92,
+      entityF1Score: 0.88,
+      processingSpeed: "1000 docs/min",
+      languageSupport: "12 languages",
+      responseTime: "< 500ms"
+    },
+    dataRequirements: [
+      "Financial Documents (PDF, DOCX, TXT)",
+      "News Articles & Press Releases",
+      "SEC Filings & Regulatory Documents",
+      "Social Media Posts",
+      "Earnings Call Transcripts",
+      "Research Reports",
+      "Market Commentary",
+      "Financial Forums & Discussions"
+    ],
+    supportedRegions: ["Global", "US", "EU", "Asia-Pacific", "Latin America"],
+    complianceFrameworks: ["GDPR", "SOX", "MiFID II", "Data Privacy Laws"],
+    minInvestment: "15000.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2024-05-10T16:20:00Z",
+    lastUpdated: "2025-08-17T10:40:00Z",
+    technicalSpecs: {
+      modelArchitectures: ["BERT-Base", "BERT-Large", "FinBERT", "RoBERTa", "DistilBERT"],
+      nlpCapabilities: ["Sentiment Analysis", "Named Entity Recognition", "Topic Classification", "Document Summarization"],
+      textProcessingFeatures: [
+        "Multi-document Analysis",
+        "Real-time Sentiment Tracking",
+        "Cross-document Entity Linking",
+        "Financial Term Recognition",
+        "Risk Signal Detection",
+        "Opportunity Identification"
+      ],
+      sentimentGranularity: [
+        "Document-level Sentiment",
+        "Paragraph-level Analysis", 
+        "Sentence-level Scoring",
+        "Entity-specific Sentiment",
+        "Time-series Sentiment Tracking"
+      ],
+      entityTypes: [
+        "Company Names & Tickers",
+        "Person Names & Executives",
+        "Financial Instruments",
+        "Economic Indicators",
+        "Geographic Locations",
+        "Regulatory Bodies"
+      ],
+      dataConnectors: ["Bloomberg Terminal", "Reuters", "SEC EDGAR", "Yahoo Finance", "Twitter API"],
+      outputFormats: ["JSON", "CSV", "Annotated PDF", "Executive Reports", "API Responses"]
+    },
+    uiComponents: {
+      inputPanel: [
+        "Document Upload Interface (PDF, DOCX, TXT)",
+        "Text Paste & Edit Area",
+        "API News Feed Connectors",
+        "Model Selection (BERT/FinBERT)",
+        "Analysis Scope Configuration",
+        "Language Detection & Selection"
+      ],
+      mainDashboard: [
+        "Color-coded Sentiment Highlighting",
+        "Real-time Sentiment Visualization",
+        "Entity & Keyword Extraction Table",
+        "Financial Term Frequency Analysis",
+        "Sentiment Trend Charts",
+        "Comparative Analysis Interface"
+      ],
+      insightsPanel: [
+        "Risk & Opportunity Flag Detection",
+        "Word Importance Visualization", 
+        "Attention Heatmap Display",
+        "Custom Financial Taxonomy Mapping",
+        "Entity Relationship Networks",
+        "Sentiment Confidence Scores"
+      ],
+      exportReporting: [
+        "Annotated Document Downloads",
+        "Executive Summary Generation",
+        "Sentiment Score Exports",
+        "Entity Analysis Reports",
+        "API Integration Endpoints"
+      ]
+    },
+    nlpAnalysisTypes: {
+      sentimentAnalysis: {
+        types: ["Positive", "Negative", "Neutral", "Mixed"],
+        confidence: "0.0 - 1.0 scale",
+        granularity: "Document, Paragraph, Sentence level"
+      },
+      entityRecognition: {
+        financialEntities: "Companies, Executives, Instruments",
+        geographicEntities: "Countries, Cities, Markets",
+        temporalEntities: "Dates, Time periods, Events"
+      },
+      topicClassification: {
+        categories: ["Earnings", "M&A", "Regulation", "Market Trends", "Risk Factors"],
+        confidence: "Multi-label classification with scores"
+      },
+      documentSummarization: {
+        types: ["Extractive", "Abstractive", "Key Points"],
+        length: "Configurable (50-500 words)"
+      }
+    },
+    riskOpportunitySignals: {
+      riskFlags: [
+        "Bankruptcy mentions",
+        "Lawsuit references", 
+        "Credit downgrades",
+        "Regulatory violations",
+        "Executive departures",
+        "Earnings misses"
+      ],
+      opportunitySignals: [
+        "Strong earnings reports",
+        "Credit upgrades",
+        "M&A activity",
+        "New product launches",
+        "Strategic partnerships",
+        "Market expansion"
+      ]
+    },
+    useCases: [
+      "Financial News Sentiment Analysis",
+      "Earnings Call Transcript Analysis",
+      "SEC Filing Risk Assessment",
+      "Market Commentary Processing",
+      "Social Media Sentiment Tracking",
+      "Research Report Summarization",
+      "Regulatory Document Analysis",
+      "Company Mention Monitoring",
+      "Investment Thesis Validation",
+      "ESG Report Text Mining"
+    ]
+  },
+  {
     id: 3,
     name: "Real-Time Risk Analyzer",
     description: "AI-powered real-time risk assessment and monitoring system that identifies potential portfolio risks and provides proactive alerts to minimize losses.",

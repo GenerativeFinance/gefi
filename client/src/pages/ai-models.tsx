@@ -24,7 +24,10 @@ import {
   Users,
   Clock,
   CheckCircle,
-  Target
+  Target,
+  MessageSquare,
+  AlertTriangle,
+  FileText
 } from "lucide-react";
 
 export default function AIModels() {
@@ -459,6 +462,36 @@ export default function AIModels() {
                       </div>
                     </div>
                   )}
+
+                  {/* Extended Performance Metrics for NLP Models */}
+                  {selectedModel.performance?.sentimentAccuracy && (
+                    <div className="grid grid-cols-4 gap-3 mt-4 text-sm">
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <div className="font-semibold text-lg text-blue-600">
+                          {selectedModel.performance.sentimentAccuracy}
+                        </div>
+                        <div className="text-muted-foreground">Sentiment Accuracy</div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <div className="font-semibold text-lg text-green-600">
+                          {selectedModel.performance.entityF1Score}
+                        </div>
+                        <div className="text-muted-foreground">Entity F1-Score</div>
+                      </div>
+                      <div className="text-center p-3 bg-purple-50 rounded-lg">
+                        <div className="font-semibold text-lg text-purple-600">
+                          {selectedModel.performance.processingSpeed}
+                        </div>
+                        <div className="text-muted-foreground">Processing Speed</div>
+                      </div>
+                      <div className="text-center p-3 bg-orange-50 rounded-lg">
+                        <div className="font-semibold text-lg text-orange-600">
+                          {selectedModel.performance.languageSupport}
+                        </div>
+                        <div className="text-muted-foreground">Languages</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Technical Specifications for Time Series Models */}
@@ -731,6 +764,173 @@ export default function AIModels() {
                               <div key={idx} className="flex items-center gap-1">
                                 <CheckCircle className="h-3 w-3 text-green-500" />
                                 <span>{key.toUpperCase()}: {typeof value === 'string' ? value.substring(0, 30) + '...' : value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* NLP & Text Analysis Model Specifications */}
+                {selectedModel.nlpAnalysisTypes && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      NLP Analysis & Text Processing
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Sentiment Analysis</h5>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span>Types: {selectedModel.nlpAnalysisTypes.sentimentAnalysis?.types?.join(', ')}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span>Confidence: {selectedModel.nlpAnalysisTypes.sentimentAnalysis?.confidence}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                              <span>Granularity: {selectedModel.nlpAnalysisTypes.sentimentAnalysis?.granularity}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Entity Recognition</h5>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3 text-green-500" />
+                              <span>Financial: {selectedModel.nlpAnalysisTypes.entityRecognition?.financialEntities}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3 text-blue-500" />
+                              <span>Geographic: {selectedModel.nlpAnalysisTypes.entityRecognition?.geographicEntities}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3 text-purple-500" />
+                              <span>Temporal: {selectedModel.nlpAnalysisTypes.entityRecognition?.temporalEntities}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-orange-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Topic Classification</h5>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex items-center gap-1">
+                              <Target className="h-3 w-3 text-orange-500" />
+                              <span>Categories: {selectedModel.nlpAnalysisTypes.topicClassification?.categories?.join(', ')}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <BarChart3 className="h-3 w-3 text-orange-600" />
+                              <span>Method: {selectedModel.nlpAnalysisTypes.topicClassification?.confidence}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-3 bg-indigo-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Document Summarization</h5>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3 text-indigo-500" />
+                              <span>Types: {selectedModel.nlpAnalysisTypes.documentSummarization?.types?.join(', ')}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3 text-indigo-600" />
+                              <span>Length: {selectedModel.nlpAnalysisTypes.documentSummarization?.length}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Risk & Opportunity Signals for NLP Models */}
+                {selectedModel.riskOpportunitySignals && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Risk & Opportunity Detection
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-red-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2 flex items-center gap-1">
+                            <AlertTriangle className="h-3 w-3 text-red-500" />
+                            Risk Flags
+                          </h5>
+                          <div className="space-y-1 text-xs">
+                            {selectedModel.riskOpportunitySignals.riskFlags?.map((flag: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                <span>{flag}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2 flex items-center gap-1">
+                            <TrendingUp className="h-3 w-3 text-green-500" />
+                            Opportunity Signals
+                          </h5>
+                          <div className="space-y-1 text-xs">
+                            {selectedModel.riskOpportunitySignals.opportunitySignals?.map((signal: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <span>{signal}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Text Processing Features for NLP Models */}
+                {selectedModel.technicalSpecs?.textProcessingFeatures && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Advanced Text Processing
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <h5 className="font-medium text-sm mb-2">Processing Capabilities</h5>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {selectedModel.technicalSpecs.textProcessingFeatures?.map((feature: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3 text-gray-500" />
+                              <span>{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Model Architectures</h5>
+                          <div className="space-y-1 text-xs">
+                            {selectedModel.technicalSpecs.modelArchitectures?.map((arch: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <span>{arch}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-purple-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Entity Types</h5>
+                          <div className="space-y-1 text-xs">
+                            {selectedModel.technicalSpecs.entityTypes?.map((type: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                <span>{type}</span>
                               </div>
                             ))}
                           </div>
