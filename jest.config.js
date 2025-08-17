@@ -1,16 +1,19 @@
 export default {
-  preset: 'ts-jest/presets/default-esm',
+  preset: 'ts-jest',
   testEnvironment: 'jsdom',
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  globals: {
-    'ts-jest': {
-      useESM: true
-    }
-  },
   moduleNameMapper: {
     '^@shared/(.*)$': '<rootDir>/shared/$1',
     '^@/(.*)$': '<rootDir>/client/src/$1'
   },
+  transform: {
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      useESM: false,
+      tsconfig: {
+        jsx: 'react-jsx'
+      }
+    }]
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   transformIgnorePatterns: [
     'node_modules/(?!(nanoid)/)'
   ],
@@ -19,5 +22,10 @@ export default {
     '<rootDir>/client/src/**/*.test.tsx',
     '<rootDir>/client/src/**/*.test.ts'
   ],
-  setupFilesAfterEnv: ['<rootDir>/client/src/setupTests.ts']
+  setupFilesAfterEnv: ['<rootDir>/client/src/setupTests.ts'],
+  collectCoverageFrom: [
+    'client/src/**/*.{ts,tsx}',
+    'server/**/*.{ts,tsx}',
+    '!**/*.d.ts',
+  ]
 };

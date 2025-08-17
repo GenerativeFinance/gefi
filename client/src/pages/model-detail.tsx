@@ -110,7 +110,7 @@ export default function ModelDetail() {
     queryKey: ['/api/ai-models', idParam],
     queryFn: async () => {
       if (!idParam) throw new Error("No model id provided");
-      const response = await apiRequest(`/api/ai-models/${idParam}`, 'GET');
+      const response = await apiRequest('GET', `/api/ai-models/${idParam}`);
       return response.json();
     },
     enabled: !!idParam,
@@ -120,7 +120,7 @@ export default function ModelDetail() {
   const subscribeMutation = useMutation({
     mutationFn: async () => {
       if (!idParam) throw new Error("No model id provided");
-      const response = await apiRequest(`/api/ai-models/${idParam}/subscribe`, 'POST', {});
+      const response = await apiRequest('POST', `/api/ai-models/${idParam}/subscribe`, {});
       return response.json();
     },
     onSuccess: () => {
