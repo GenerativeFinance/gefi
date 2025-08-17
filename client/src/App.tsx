@@ -71,6 +71,7 @@ import MobileDemo from "@/pages/mobile-demo";
 import WalletManagement from "@/pages/wallet-management";
 import ServerManagement from "@/pages/server-management";
 import ApiAccess from "@/pages/api-access";
+import ForecastingModel from "@/pages/forecasting-model";
 
 
 import ProfileSetup from "@/pages/profile-setup";
@@ -273,6 +274,7 @@ function Router() {
             <Route path="/smart-contracts" component={BlockchainContracts} />
             <Route path="/market-sentiment" component={MarketSentiment} />
             <Route path="/ai-models" component={AIModels} />
+            <Route path="/forecasting-model" component={ForecastingModel} />
             <Route path="/risk-distribution" component={RiskDistribution} />
             <Route path="/rebalance-actions" component={RebalanceActions} />
             <Route path="/current-risk-assessment" component={CurrentRiskAssessment} />

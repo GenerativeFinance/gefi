@@ -269,8 +269,13 @@ export default function AIModels() {
                         size="sm" 
                         className="flex-1"
                         onClick={() => {
-                          setSelectedModel(model);
-                          setModelDetailsOpen(true);
+                          // Navigate to individual model page for forecasting model
+                          if (model.id === 5) {
+                            window.location.href = '/forecasting-model';
+                          } else {
+                            setSelectedModel(model);
+                            setModelDetailsOpen(true);
+                          }
                         }}
                       >
                         <Eye className="h-4 w-4 mr-2" />
@@ -372,7 +377,7 @@ export default function AIModels() {
                   </div>
                   
                   {/* Extended Performance Metrics for ARIMA/SARIMA Model */}
-                  {selectedModel.performance?.rmse && (
+                  {selectedModel.performance?.rmse && !selectedModel.performance?.auc && (
                     <div className="grid grid-cols-3 gap-4 mt-4 text-sm">
                       <div className="text-center p-3 bg-blue-50 rounded-lg">
                         <div className="font-semibold text-lg text-blue-600">
@@ -394,10 +399,40 @@ export default function AIModels() {
                       </div>
                     </div>
                   )}
+                  
+                  {/* Extended Performance Metrics for Credit Risk Models */}
+                  {selectedModel.performance?.auc && (
+                    <div className="grid grid-cols-4 gap-3 mt-4 text-sm">
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <div className="font-semibold text-lg text-blue-600">
+                          {selectedModel.performance.auc}
+                        </div>
+                        <div className="text-muted-foreground">AUC</div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <div className="font-semibold text-lg text-green-600">
+                          {selectedModel.performance.precision}
+                        </div>
+                        <div className="text-muted-foreground">Precision</div>
+                      </div>
+                      <div className="text-center p-3 bg-purple-50 rounded-lg">
+                        <div className="font-semibold text-lg text-purple-600">
+                          {selectedModel.performance.recall}
+                        </div>
+                        <div className="text-muted-foreground">Recall</div>
+                      </div>
+                      <div className="text-center p-3 bg-indigo-50 rounded-lg">
+                        <div className="font-semibold text-lg text-indigo-600">
+                          {selectedModel.performance.f1Score}
+                        </div>
+                        <div className="text-muted-foreground">F1-Score</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Technical Specifications for Time Series Models */}
-                {selectedModel.technicalSpecs && (
+                {selectedModel.technicalSpecs && !selectedModel.uiComponents && (
                   <div className="border-t pt-4">
                     <h4 className="font-semibold mb-3 flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
@@ -449,6 +484,145 @@ export default function AIModels() {
                             </div>
                           ))}
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Credit Risk Model Specifications */}
+                {selectedModel.technicalSpecs && selectedModel.uiComponents && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
+                      Credit Risk Model Architecture
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Model Types</h5>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedModel.technicalSpecs.modelTypes?.map((type: string, idx: number) => (
+                              <Badge key={idx} variant="outline" className="text-xs">
+                                {type}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Target Variables</h5>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedModel.technicalSpecs.targetVariables?.map((target: string, idx: number) => (
+                              <Badge key={idx} variant="secondary" className="text-xs">
+                                {target}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <h5 className="font-medium text-sm mb-2">Explainable AI (XAI) Tools</h5>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {selectedModel.technicalSpecs.explainabilityTools?.map((tool: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3 text-blue-500" />
+                              <span>{tool}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-orange-50 rounded-lg">
+                        <h5 className="font-medium text-sm mb-2">Stress Testing Scenarios</h5>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {selectedModel.technicalSpecs.stressTestingScenarios?.map((scenario: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-1">
+                              <Target className="h-3 w-3 text-orange-500" />
+                              <span>{scenario}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* UI Dashboard Components for Credit Risk Models */}
+                {selectedModel.uiComponents && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      UI Dashboard Components
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Input Panel (Left Sidebar)</h5>
+                          <div className="space-y-1 text-xs">
+                            {selectedModel.uiComponents.inputPanel?.map((component: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3 text-green-500" />
+                                <span>{component}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-purple-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Main Dashboard (Center)</h5>
+                          <div className="space-y-1 text-xs">
+                            {selectedModel.uiComponents.mainDashboard?.map((component: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-1">
+                                <BarChart3 className="h-3 w-3 text-purple-500" />
+                                <span>{component}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-indigo-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Insights Panel (Right)</h5>
+                          <div className="space-y-1 text-xs">
+                            {selectedModel.uiComponents.insightsPanel?.map((component: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-1">
+                                <Target className="h-3 w-3 text-indigo-500" />
+                                <span>{component}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Export & Reporting</h5>
+                          <div className="space-y-1 text-xs">
+                            {selectedModel.uiComponents.exportReporting?.map((component: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-1">
+                                <ExternalLink className="h-3 w-3 text-gray-500" />
+                                <span>{component}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Use Cases Section */}
+                {selectedModel.useCases && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Use Cases & Applications
+                    </h4>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        {selectedModel.useCases?.map((useCase: string, idx: number) => (
+                          <div key={idx} className="flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3 text-green-500" />
+                            <span>{useCase}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
