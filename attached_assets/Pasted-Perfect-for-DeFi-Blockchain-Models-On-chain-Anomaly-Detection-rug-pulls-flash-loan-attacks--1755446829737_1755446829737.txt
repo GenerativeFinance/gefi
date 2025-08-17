@@ -1,0 +1,71 @@
+Perfect — for **DeFi & Blockchain Models (On-chain Anomaly Detection: rug pulls, flash-loan attacks, wash trading)** the UI should be a **real-time security + monitoring dashboard**, almost like a **DeFi “threat radar”**. It needs to highlight **suspicious wallet activity, protocol health, and anomaly alerts** in an intuitive way.
+
+---
+
+## 🔹 **UI Layout for On-Chain Anomaly Detection**
+
+### **1. Input Panel (Left Sidebar)**
+
+* **Data Connections**
+
+  * Wallet/contract monitoring: enter wallet address, token, or protocol name
+  * Chain selection: Ethereum | BSC | Polygon | Solana | Multi-chain toggle
+  * Real-time vs historical analysis switch
+* **Detection Preferences**
+
+  * Choose anomaly focus: Rug pulls | Flash-loan attacks | Wash trading | General anomalies
+  * Sensitivity slider (low = only extreme cases, high = catch smaller suspicious patterns)
+* **Model Options**
+
+  * Select detection model: Isolation Forest | Autoencoder | Graph Neural Network (GNN)
+  * Option for ensemble detection (combine multiple models)
+
+---
+
+### **2. Main Dashboard (Center Panel)**
+
+* **Real-time Attack Monitor**
+
+  * Live feed of transactions flagged as suspicious (address, token, action, risk level)
+  * Timeline chart showing spikes in anomalies
+* **Wallet/Contract Risk Map**
+
+  * Network graph visualization of wallet-to-wallet/token interactions
+  * Highlight red edges for suspicious flows (flash-loan loops, laundering paths)
+* **Protocol Risk Health Score**
+
+  * Gauge/indicator for selected protocol (0 = very high risk, 100 = safe)
+  * Breakdown of risk drivers (liquidity volatility, abnormal withdrawals, wash trading intensity)
+
+---
+
+### **3. Insights Panel (Right Sidebar)**
+
+* **Detailed Alerts Log**
+
+  * Table: Timestamp | Wallet | Token | Suspicious Activity | Model Confidence
+* **Explainability Layer**
+
+  * Heatmap of features that triggered anomaly detection (e.g., sudden liquidity drain, abnormal token minting)
+  * AI narrative: *“Detected potential rug pull: 80% of liquidity withdrawn in 2 min from XYZ pool.”*
+* **Attack Simulation / Stress Test**
+
+  * Replay historical exploits (Uniswap v3 flash loan, Curve pool drains, etc.)
+  * Show model’s predicted detection speed vs actual exploit timeline
+
+---
+
+### **4. Export & Reporting**
+
+* Export flagged transactions list (CSV/JSON)
+* Download network risk graph as PNG/PDF
+* Generate **AI-written Threat Report**: anomalies detected, severity, recommended action
+* Webhook/API integration: send alerts to Discord/Slack/Telegram or monitoring systems
+
+---
+
+✅ This UI acts like a **“DeFi Security Command Center”** — real-time monitoring for anomalies, with **graph-based explainability** so risk managers and DeFi users can actually understand what’s happening.
+
+---
+
+👉 Do you want me to **design this as a wireframe dashboard sketch** (visual blueprint), or should I prepare a **Replit-ready React + Tailwind code prompt** so you can prototype the DeFi Anomaly Detection UI directly?

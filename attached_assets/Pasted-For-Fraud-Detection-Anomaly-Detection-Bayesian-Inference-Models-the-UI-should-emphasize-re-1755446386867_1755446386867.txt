@@ -1,0 +1,76 @@
+For **Fraud Detection & Anomaly Detection (Bayesian Inference Models)** the UI should emphasize **real-time monitoring, anomaly alerts, and explainability**. Unlike portfolio or forecasting dashboards, this needs to feel like a **risk control center** with **alerts, probability heatmaps, and drilldowns**.
+
+---
+
+## 🔹 **UI Layout for Fraud Detection & Anomaly Detection (Bayesian Models)**
+
+### **1. Input Panel (Left Sidebar)**
+
+* **Data Sources**
+
+  * Upload transaction data (CSV/Excel/JSON)
+  * API connectors (payment systems, ERP, banking platforms)
+* **Model Selection**
+
+  * Bayesian Inference (default)
+  * Comparison: Isolation Forest, Autoencoder, GNN
+* **Parameters**
+
+  * Threshold probability for fraud detection (slider: 90–99%)
+  * Batch vs Real-time mode
+  * Filters (transaction type, geography, customer segment)
+
+---
+
+### **2. Main Dashboard (Center Panel)**
+
+* **Live Transaction Stream / Anomaly Alerts**
+
+  * Scrolling feed with ✅ normal vs 🚨 flagged transactions
+  * Color-coded by risk probability (green → low, red → high)
+* **Anomaly Heatmap**
+
+  * Geographic fraud map (hotspots by country/region)
+  * Heatmap of unusual merchant/customer activity
+* **Probability Distribution View**
+
+  * Bayesian posterior distribution (fraud probability vs normal probability)
+  * Histogram of transaction scores
+* **Network Graph View**
+
+  * Graph visualization of suspicious connections (shared accounts, devices, merchants)
+
+---
+
+### **3. Insights Panel (Right Sidebar)**
+
+* **Fraud Case Drilldown**
+
+  * Transaction ID, Amount, Customer, Merchant, Date/Time
+  * Fraud Probability (e.g., 96.7%)
+  * Model Explanation (top features influencing classification)
+* **Portfolio/Batch Risk Summary**
+
+  * % of transactions flagged
+  * Expected loss estimate
+* **Explainability (Bayesian Reasoning Trace)**
+
+  * Evidence weights contributing to fraud classification
+  * Posterior probability decomposition
+
+---
+
+### **4. Export & Reporting**
+
+* Export flagged transactions to CSV/Excel/JSON
+* Download fraud heatmap as PNG/PDF
+* Generate **AI-written Fraud Report**: risk summary, anomaly clusters, recommendations
+* API webhook to send alerts to fraud monitoring systems
+
+---
+
+✅ This UI gives **analysts real-time fraud detection tools**, while also providing **risk managers aggregated anomaly insights**.
+
+---
+
+👉 Do you want me to **draw a wireframe visualization (like I did for Portfolio HRP)** so you can see the layout of this Fraud Detection UI?
