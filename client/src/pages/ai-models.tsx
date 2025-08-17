@@ -401,7 +401,7 @@ export default function AIModels() {
                   )}
                   
                   {/* Extended Performance Metrics for Credit Risk Models */}
-                  {selectedModel.performance?.auc && (
+                  {selectedModel.performance?.auc && !selectedModel.performance?.esgCorrelation && (
                     <div className="grid grid-cols-4 gap-3 mt-4 text-sm">
                       <div className="text-center p-3 bg-blue-50 rounded-lg">
                         <div className="font-semibold text-lg text-blue-600">
@@ -426,6 +426,36 @@ export default function AIModels() {
                           {selectedModel.performance.f1Score}
                         </div>
                         <div className="text-muted-foreground">F1-Score</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Extended Performance Metrics for ESG Models */}
+                  {selectedModel.performance?.esgCorrelation && (
+                    <div className="grid grid-cols-4 gap-3 mt-4 text-sm">
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <div className="font-semibold text-lg text-green-600">
+                          {selectedModel.performance.esgCorrelation}
+                        </div>
+                        <div className="text-muted-foreground">ESG Correlation</div>
+                      </div>
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <div className="font-semibold text-lg text-blue-600">
+                          {selectedModel.performance.climateAccuracy}
+                        </div>
+                        <div className="text-muted-foreground">Climate Accuracy</div>
+                      </div>
+                      <div className="text-center p-3 bg-orange-50 rounded-lg">
+                        <div className="font-semibold text-lg text-orange-600">
+                          {selectedModel.performance.coverageGlobal}
+                        </div>
+                        <div className="text-muted-foreground">Global Coverage</div>
+                      </div>
+                      <div className="text-center p-3 bg-purple-50 rounded-lg">
+                        <div className="font-semibold text-lg text-purple-600">
+                          {selectedModel.performance.dataFreshness}
+                        </div>
+                        <div className="text-muted-foreground">Data Freshness</div>
                       </div>
                     </div>
                   )}
@@ -599,6 +629,108 @@ export default function AIModels() {
                               <div key={idx} className="flex items-center gap-1">
                                 <ExternalLink className="h-3 w-3 text-gray-500" />
                                 <span>{component}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ESG & Sustainability Model Specifications */}
+                {selectedModel.sustainabilityMetrics && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      ESG & Climate Risk Dashboard
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">ESG Components</h5>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span>Environmental: {selectedModel.technicalSpecs?.esgComponents?.environmental?.substring(0, 40)}...</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span>Social: {selectedModel.technicalSpecs?.esgComponents?.social?.substring(0, 40)}...</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                              <span>Governance: {selectedModel.technicalSpecs?.esgComponents?.governance?.substring(0, 40)}...</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-3 bg-orange-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Climate Risk Types</h5>
+                          <div className="space-y-1 text-xs">
+                            {selectedModel.technicalSpecs?.climateRiskTypes?.map((risk: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-1">
+                                <Target className="h-3 w-3 text-orange-500" />
+                                <span>{risk}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <h5 className="font-medium text-sm mb-2">Alternative Data Sources</h5>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {selectedModel.technicalSpecs?.alternativeDataSources?.map((source: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3 text-blue-500" />
+                              <span>{source}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-indigo-50 rounded-lg">
+                        <h5 className="font-medium text-sm mb-2">Scenario Modeling</h5>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {selectedModel.technicalSpecs?.scenarioModeling?.map((scenario: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-1">
+                              <BarChart3 className="h-3 w-3 text-indigo-500" />
+                              <span>{scenario}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ESG Executive Reporting Features */}
+                {selectedModel.uiComponents?.executiveReporting && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <ExternalLink className="h-4 w-4" />
+                      Executive Reporting & Compliance
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Executive Features</h5>
+                          <div className="space-y-1 text-xs">
+                            {selectedModel.uiComponents.executiveReporting?.map((feature: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3 text-gray-500" />
+                                <span>{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <h5 className="font-medium text-sm mb-2">Regulatory Alignment</h5>
+                          <div className="space-y-1 text-xs">
+                            {Object.entries(selectedModel.regulatoryAlignment || {}).map(([key, value], idx) => (
+                              <div key={idx} className="flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3 text-green-500" />
+                                <span>{key.toUpperCase()}: {typeof value === 'string' ? value.substring(0, 30) + '...' : value}</span>
                               </div>
                             ))}
                           </div>
