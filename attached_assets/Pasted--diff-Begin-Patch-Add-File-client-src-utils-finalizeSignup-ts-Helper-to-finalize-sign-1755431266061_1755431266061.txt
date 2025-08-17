@@ -1,0 +1,236 @@
+```diff
+*** Begin Patch
+*** Add File: client/src/utils/finalizeSignup.ts
++// Helper to finalize signup: call server endpoint, handle Calendly redirect + UI messages
++export async function finalizeSignupAndMaybeBookDemo(userData: any, addBotMessage: (msg: string) => void, navigate: any) {
++  try {
++    addBotMessage("Perfect! Let me create your account now...");
++
++    const body = {
++      ...userData,
++      wantsDemo: !!userData.wantsDemo,
++      sessionId: crypto?.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
++    };
++
++    const resp = await fetch('/api/chatbot/finalize-signup', {
++      method: 'POST',
++      headers: { 'Content-Type': 'application/json' },
++      body: JSON.stringify(body),
++    });
++
++    const data = await resp.json();
++
++    if (!resp.ok) {
++      const errMsg = data?.error || 'Server error creating account';
++      addBotMessage(`❌ Sorry, there was an issue creating your account: ${errMsg}`);
++      return;
++    }
++
++    addBotMessage("🎉 Account created successfully! Your account is now pending approval.");
++    setTimeout(() => {
++      addBotMessage("You'll receive an email confirmation once your account is approved (typically 24-48 hours).");
++    }, 800);
++
++    // Persist pending data for later use (dashboard / booking flow)
++    sessionStorage.setItem('pendingUserData', JSON.stringify(userData));
++
++    // If server returned a Calendly link, open it. Otherwise, if user wanted a demo, open fallback prefilled Calendly.
++    if (data?.calendlyBookingUrl) {
++      setTimeout(() => {
++        addBotMessage("Redirecting you to book a demo now...");
++        window.open(data.calendlyBookingUrl, '_blank', 'noopener,noreferrer');
++        addBotMessage("I've opened the demo booking page in a new tab. You can schedule your session there.");
++      }, 1200);
++    } else if (userData.wantsDemo) {
++      setTimeout(() => {
++        const prefill = new URLSearchParams({
++          name: `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
++          email: userData.email || '',
++          a1: userData.company || '',
++          a2: userData.role || '',
++          a3: (userData.experienceLevel || ''),
++        });
++        const publicUrl = `https://calendly.com/generativefinance/30min?${prefill.toString()}`;
++        window.open(publicUrl, '_blank', 'noopener,noreferrer');
++        addBotMessage("I've opened a demo booking page in a new tab (fallback).");
++      }, 1200);
++    } else {
++      setTimeout(() => {
++        addBotMessage("No problem! You can book a demo later from your account dashboard.");
++      }, 1200);
++    }
++
++    // Final redirect to main platform after giving messages
++    setTimeout(() => {
++      addBotMessage("Redirecting you to our main platform...");
++      setTimeout(() => {
++        navigate('/');
++      }, 1400);
++    }, 3000);
++  } catch (err) {
++    console.error('finalize signup error:', err);
++    addBotMessage("❌ Sorry, there was an unexpected error. Please try again later.");
++  }
++}
++
+*** End Patch
+```
+
+```diff
+*** Begin Patch
+*** Update File: client/src/components/ChatbotSignup.tsx
+@@
+-              setTimeout(() => {
+-                addBotMessage("Redirecting you to book a demo while waiting for approval...");
+-                
+-                // Redirect to demo booking page
+-                setTimeout(() => {
+-                  sessionStorage.setItem('pendingUserData', JSON.stringify(userData));
+-                  navigate('/demo-booking');
+-                }, 1000);
++              setTimeout(() => {
++                addBotMessage("Redirecting you to book a demo while waiting for approval...");
++
++                // Finalize signup on the server and (if requested) handle Calendly booking / redirect.
++                setTimeout(() => {
++                  // Save pending user locally and call server finalize endpoint which will create a pending account
++                  // and optionally create a Calendly scheduling link.
++                  sessionStorage.setItem('pendingUserData', JSON.stringify(userData));
++                  // dynamic import of the helper to avoid circular issues in some bundlers
++                  import('../utils/finalizeSignup').then((m) => {
++                    const finalize = m.finalizeSignupAndMaybeBookDemo;
++                    finalize(userData, addBotMessage, navigate);
++                  }).catch((err) => {
++                    console.error('Failed to load finalize helper:', err);
++                    // Fallback to direct Calendly open if finalize helper can't load
++                    const prefill = new URLSearchParams({
++                      name: `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
++                      email: userData.email || '',
++                      a1: userData.company || '',
++                      a2: userData.role || '',
++                      a3: (userData.experienceLevel || ''),
++                    });
++                    const publicUrl = `https://calendly.com/generativefinance/30min?${prefill.toString()}`;
++                    window.open(publicUrl, '_blank');
++                    addBotMessage("Opened demo booking in a new tab (fallback).");
++                    setTimeout(() => navigate('/'), 1500);
++                  });
++                }, 1000);
++              }, 1000);
+*** End Patch
+```
+
+```diff
+*** Begin Patch
+*** Update File: server/routes/chatbotRoutes.ts
+@@
+   // Calendly scheduling link creation
+   async function createCalendlySchedulingLink(email: string, name: string, role: string): Promise<string> {
+     if (!process.env.CALENDLY_CLIENT_ID || !process.env.CALENDLY_CLIENT_SECRET) {
+       throw new Error('Calendly credentials not configured');
+     }
+@@
+     } catch (error) {
+       console.error('Calendly integration error:', error);
+       // Return direct Calendly link as fallback
+       return 'https://calendly.com/generativefinance/30min';
+     }
+   }
+ 
++  /**
++   * New endpoint: Finalize signup
++   * - Creates a user record with status = 'pending'
++   * - If wantsDemo true, attempts to create a Calendly scheduling link and saves it to the user
++   * - Returns { success, user, calendlyBookingUrl }
++   */
++  app.post('/api/chatbot/finalize-signup', signupLimiter, async (req, res) => {
++    try {
++      const payload = req.body || {};
++      const {
++        firstName,
++        lastName,
++        email,
++        role,
++        company,
++        interests = [],
++        platformIntent = null,
++        wantsDemo = false,
++        conversation = null,
++      } = payload;
++
++      if (!email || !firstName) {
++        return res.status(400).json({ error: 'Missing required fields (firstName, email)' });
++      }
++
++      const userRecord = {
++        first_name: firstName,
++        last_name: lastName,
++        email: String(email).toLowerCase(),
++        role: role || null,
++        organization: company || null,
++        interests: Array.isArray(interests) ? JSON.stringify(interests) : JSON.stringify([]),
++        platform_intent: platformIntent || null,
++        status: 'pending',
++        calendly_booking_url: null,
++        created_at: new Date().toISOString(),
++        updated_at: new Date().toISOString(),
++      };
++
++      // Insert user - adjust to your DB client/schema
++      const [newUser] = await db.insert(users).values(userRecord).returning();
++
++      let calendlyBookingUrl: string | null = null;
++      if (wantsDemo) {
++        try {
++          calendlyBookingUrl = await createCalendlySchedulingLink(email, `${firstName} ${lastName}`, role || '');
++          if (calendlyBookingUrl) {
++            await db.update(users).set({ calendly_booking_url: calendlyBookingUrl, updated_at: new Date().toISOString() }).where({ id: newUser.id });
++          }
++        } catch (calErr) {
++          console.error('Calendly creation failed (non-blocking):', calErr);
++        }
++      }
++
++      if (conversation) {
++        try {
++          await db.insert(chatbotConversations).values({
++            user_id: newUser.id,
++            conversation: JSON.stringify(conversation),
++            created_at: new Date().toISOString(),
++          });
++        } catch (convErr) {
++          console.warn('Failed to save chatbot conversation:', convErr);
++        }
++      }
++
++      res.json({
++        success: true,
++        message: 'Account created and marked as pending approval.',
++        user: {
++          id: newUser.id,
++          firstName: newUser.first_name,
++          lastName: newUser.last_name,
++          email: newUser.email,
++          status: 'pending',
++        },
++        calendlyBookingUrl,
++      });
++    } catch (error) {
++      console.error('finalize-signup error:', error);
++      res.status(500).json({ success: false, error: 'Failed to finalize signup' });
++    }
++  });
++
+*** End Patch
+```
+
+
+Notes and next steps:
+- This patch adds a client utility (client/src/utils/finalizeSignup.ts), updates the Chatbot signup component to call the new finalize endpoint instead of navigating to /demo-booking, and adds a new /api/chatbot/finalize-signup endpoint on the server which creates a pending user and optionally creates & saves a Calendly scheduling link.
+- Review and adapt DB insert/update calls to match your actual DB client/schema (the patch uses the same db helper and tables referenced in the repository).
+- Ensure environment variables are set: CALENDLY_CLIENT_ID (user id) and CALENDLY_CLIENT_SECRET or CALENDLY_API_KEY for the Calendly API bearer token.
+- Run tests and linting; adjust imports/paths if your repo structure differs slightly.
+
+Want me to:
+- open a draft PR with this patch and a brief description, or
+- format these changes as a single git-style patch file you can apply with git am?
