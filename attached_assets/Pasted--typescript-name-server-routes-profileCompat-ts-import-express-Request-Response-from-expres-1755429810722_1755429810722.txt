@@ -1,0 +1,298 @@
+```typescript name=server/routes/profileCompat.ts
+import express, { Request, Response } from "express";
+
+/**
+ * Compatibility routes for profile lookups.
+ *
+ * This router exposes:
+ *  - GET /api/user-profile/:type/:id
+ *  - GET /api/users/:id/profile
+ *
+ * It will try multiple lookup strategies in order to find a user:
+ *  1) Exact id lookup (storage.getUserById or storage.findUser)
+ *  2) Provider-prefixed id (e.g. `${provider}_${rawId}`)
+ *  3) Provider + raw id lookup (storage.getUserByProviderId)
+ *  4) Email lookup (if id looks like an email)
+ *  5) Generic fallback search (storage.findUser / storage.searchUsers / storage.queryUsers)
+ *
+ * The function accepts a `storage` object so it can be registered against your existing storage layer.
+ *
+ * It is intentionally defensive: it checks whether storage exposes helper methods and falls back
+ * to what is available to avoid throwing if a method is absent.
+ */
+
+type StorageLike = {
+  getUserById?: (id: string) => Promise<any | null>;
+  getUserByProviderId?: (provider: string, rawId: string) => Promise<any | null>;
+  getUserByEmail?: (email: string) => Promise<any | null>;
+  findUser?: (query: any) => Promise<any | null>;
+};
+
+function looksLikeEmail(s: string) {
+  return typeof s === "string" && /\S+@\S+\.\S+/.test(s);
+}
+
+export default function registerProfileCompatibilityRoutes(app: express.Express, storage: StorageLike) {
+  const router = express.Router();
+
+  async function tryLookup(providerOrType: string | null, idOrRaw: string): Promise<any | null> {
+    // 1) Exact ID
+    if (storage.getUserById) {
+      try {
+        const u = await storage.getUserById(idOrRaw);
+        if (u) return u;
+      } catch (e) {
+        console.warn("getUserById failed:", e);
+      }
+    }
+
+    // 2) If provider provided, try provider_prefixed id
+    if (providerOrType) {
+      const providerPrefixedId = `${providerOrType}_${idOrRaw}`;
+      if (storage.getUserById) {
+        try {
+          const u = await storage.getUserById(providerPrefixedId);
+          if (u) return u;
+        } catch (e) {
+          console.warn("getUserById(providerPrefixed) failed:", e);
+        }
+      }
+    }
+
+    // 3) Try provider-specific lookup if available (getUserByProviderId)
+    if (providerOrType && storage.getUserByProviderId) {
+      try {
+        const u = await storage.getUserByProviderId(providerOrType, idOrRaw);
+        if (u) return u;
+      } catch (e) {
+        console.warn("getUserByProviderId failed:", e);
+      }
+    }
+
+    // 4) If id looks like an email, try email lookup
+    if (looksLikeEmail(idOrRaw) && storage.getUserByEmail) {
+      try {
+        const u = await storage.getUserByEmail(idOrRaw);
+        if (u) return u;
+      } catch (e) {
+        console.warn("getUserByEmail failed:", e);
+      }
+    }
+
+    // 5) Generic findUser fallback (accepts arbitrary query)
+    if (storage.findUser) {
+      const tries = [
+        { id: idOrRaw },
+        providerOrType ? { id: `${providerOrType}_${idOrRaw}` } : null,
+        providerOrType ? { provider: providerOrType, providerId: idOrRaw } : null,
+        looksLikeEmail(idOrRaw) ? { email: idOrRaw } : null,
+      ].filter(Boolean) as any[];
+
+      for (const q of tries) {
+        try {
+          const u = await storage.findUser(q);
+          if (u) return u;
+        } catch (e) {
+          console.warn("findUser failed for query", q, e);
+        }
+      }
+    }
+
+    // nothing found
+    return null;
+  }
+
+  // Primary canonical route already used by the client
+  router.get("/api/user-profile/:type/:id", async (req: Request, res: Response) => {
+    const { type, id } = req.params;
+    try {
+      const user = await tryLookup(type, id);
+      if (!user) return res.status(404).json({ message: "User not found" });
+      return res.json(user);
+    } catch (err) {
+      console.error("Error in /api/user-profile lookup:", err);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Compatibility route used by older clients/links
+  router.get("/api/users/:id/profile", async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+      // Try raw id first, then attempt to parse provider prefix if present
+      let provider: string | null = null;
+      let rawId = id;
+
+      // If id contains an underscore and looks like provider_prefix, split it
+      const underscoreIndex = id.indexOf("_");
+      if (underscoreIndex > 0) {
+        const possibleProvider = id.substring(0, underscoreIndex);
+        const possibleRaw = id.substring(underscoreIndex + 1);
+        provider = possibleProvider;
+        rawId = possibleRaw;
+      }
+
+      // 1) try exact id first (including cases where db stores full id)
+      let user = await tryLookup(null, id);
+      if (!user && provider) {
+        // If not found yet, try provider + rawId strategy
+        user = await tryLookup(provider, rawId);
+      }
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      return res.json(user);
+    } catch (err) {
+      console.error("Error in /api/users/:id/profile lookup:", err);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.use(router);
+}
+```
+
+```tsx name=client/src/components/profile/AdminProfile.tsx
+import React from "react";
+
+/**
+ * AdminProfile component - defensive and resilient rendering.
+ * Accepts props:
+ *  - adminId: string
+ *  - data?: any (optional admin data fetched from the server)
+ *
+ * This updated version tightens defensive checks to avoid runtime errors
+ * when nested adminData fields are missing (e.g., systemMonitoring).
+ */
+
+type AdminProfileProps = {
+  adminId: string;
+  data?: any;
+};
+
+export default function AdminProfile({ adminId, data }: AdminProfileProps) {
+  // Provide a conservative default object so the UI can render without blowing up.
+  const defaultAdminData = {
+    id: adminId,
+    name:
+      adminId === "github_55703540"
+        ? "Guillaume Lauzier"
+        : adminId === "tech-lead"
+        ? "Alex Rodriguez"
+        : "Sarah Johnson",
+    role:
+      adminId === "github_55703540"
+        ? "Platform Administrator"
+        : adminId === "tech-lead"
+        ? "Technical Lead"
+        : "Compliance Administrator",
+    email:
+      adminId === "github_55703540"
+        ? "guillaumelauzier@gmail.com"
+        : adminId === "tech-lead"
+        ? "alex@gefi.com"
+        : "sarah@gefi.com",
+    avatar: `/avatars/${adminId}.png`,
+    verified: true,
+    joinedDate: adminId === "github_55703540" ? "2025-06-28" : "2024-01-15",
+    lastActive: "Active now",
+    systemMonitoring: {
+      serverUptime: null,
+      lastIncident: null,
+    },
+  };
+
+  // Use data if provided, otherwise fall back to defaults.
+  const admin = data ?? defaultAdminData;
+
+  // Defensive extraction with optional chaining and sensible defaults
+  const displayName = admin?.name ?? `${adminId}`;
+  const role = admin?.role ?? "Administrator";
+  const email = admin?.email ?? "Not provided";
+  const avatar = admin?.avatar ?? `/avatars/${adminId}.png`;
+  const verified = Boolean(admin?.verified);
+  const joinedDate = admin?.joinedDate ? new Date(admin.joinedDate).toLocaleDateString() : "Unknown";
+  const lastActive = admin?.lastActive ?? "Unknown";
+
+  // Safe access to nested monitoring properties
+  const serverUptime = admin?.systemMonitoring?.serverUptime ?? "N/A";
+  const lastIncident = admin?.systemMonitoring?.lastIncident ?? "No incidents recorded";
+
+  return (
+    <div className="bg-white dark:bg-gray-900 p-6 rounded-md shadow-sm">
+      <div className="flex items-center space-x-4">
+        <img src={avatar} alt={`${displayName} avatar`} className="w-16 h-16 rounded-full object-cover" />
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{displayName}</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{role}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{email}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Joined: {joinedDate} • Last active: {lastActive}</p>
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded">
+          <h3 className="font-medium text-gray-800 dark:text-gray-200">System Monitoring</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Server Uptime: {String(serverUptime)}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Last Incident: {lastIncident}</p>
+        </div>
+
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded">
+          <h3 className="font-medium text-gray-800 dark:text-gray-200">Status</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            {verified ? (
+              <span className="text-green-600 dark:text-green-400">Verified</span>
+            ) : (
+              <span className="text-yellow-600 dark:text-yellow-400">Unverified</span>
+            )}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+```diff name=server/app-integration.md
+# Integration instructions: register the compatibility routes in your server
+
+Add this line near your routes registration, where you have access to `app` (express instance) and `storage`:
+
+```ts
+import registerProfileCompatibilityRoutes from "./routes/profileCompat";
+
+// after app and storage are available:
+registerProfileCompatibilityRoutes(app, storage);
+```
+
+If your server bootstrapping is in `server/index.ts`, `server/app.ts`, or `server/routes/gefiRoutes.ts`, add the import and call there. The compatibility router checks for a few common storage methods:
+// - getUserById(id)
+// - getUserByProviderId(provider, rawId)
+// - getUserByEmail(email)
+// - findUser(query)
+//
+// If your storage exposes differently-named APIs, adapt the profileCompat.ts `StorageLike` checks or add adapter functions.
+```
+
+Instructions to create the PR locally (commands)
+1. Create a branch:
+   - git checkout -b fix/profile-compat-admin-safety
+2. Add the new file and modified AdminProfile component, commit:
+   - git add server/routes/profileCompat.ts client/src/components/profile/AdminProfile.tsx
+   - git commit -m "Add profile compatibility routes and harden AdminProfile defensive checks"
+3. Push and open PR:
+   - git push origin fix/profile-compat-admin-safety
+   - Open a PR on GitHub from branch fix/profile-compat-admin-safety → main (or your default branch)
+
+Notes, rationale and testing
+- profileCompat.ts provides the new compatibility handlers and is defensive about storage API availability. It tries multiple lookup strategies (exact id, provider_prefixed id, provider-specific lookup, email lookup, generic find).
+- AdminProfile.tsx now uses optional chaining and fallbacks for all nested data accesses (systemMonitoring, joinedDate, etc.) so the component won't throw when fields are missing.
+- After applying changes, restart the server, then:
+  - visit /profile/user/google_115589398411421032318
+  - check server logs for requests to the new endpoints
+  - verify that valid users return data and non-existent users return 404 (which the client UI shows as "User Not Found")
+
+Would you like me to:
+- prepare a GitHub PR description and checklist for you (I can draft the PR body here), or
+- try to open the PR for you if you provide a GitHub OAuth token/permissions (I cannot do that without your credentials)?
