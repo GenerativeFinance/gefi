@@ -119,6 +119,7 @@ const PREFERRED_MODEL_TYPES = [
 const PLATFORM_INTENTS = [
   'Buy Models',
   'Sell/Upload Models',
+  'Fund Models',
   'Both',
   'Browse/Learn'
 ];
@@ -129,6 +130,40 @@ const SUBSCRIPTION_PREFERENCES = [
   'Weekly AI Finance Updates',
   'Monthly Performance Reports'
 ];
+
+// Generate random captcha questions
+const generateCaptcha = () => {
+  const operations = [
+    () => {
+      const a = Math.floor(Math.random() * 10) + 1;
+      const b = Math.floor(Math.random() * 10) + 1;
+      return { question: `What is ${a} + ${b}?`, answer: (a + b).toString() };
+    },
+    () => {
+      const a = Math.floor(Math.random() * 15) + 5;
+      const b = Math.floor(Math.random() * 5) + 1;
+      return { question: `What is ${a} - ${b}?`, answer: (a - b).toString() };
+    },
+    () => {
+      const a = Math.floor(Math.random() * 6) + 2;
+      const b = Math.floor(Math.random() * 6) + 2;
+      return { question: `What is ${a} × ${b}?`, answer: (a * b).toString() };
+    },
+    () => {
+      const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      return { question: `What color is "${color}"?`, answer: color };
+    },
+    () => {
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const day = days[Math.floor(Math.random() * days.length)];
+      return { question: `What day comes after ${day}?`, answer: days[(days.indexOf(day) + 1) % 7] };
+    }
+  ];
+  
+  const operation = operations[Math.floor(Math.random() * operations.length)];
+  return operation();
+};
 
 export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (userData: UserData) => void; onBack?: () => void }) {
   const [, navigate] = useLocation();
@@ -157,6 +192,8 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
   const [recaptchaToken, setRecaptchaToken] = useState('');
   const [roleSearchOpen, setRoleSearchOpen] = useState(false);
   const [roleSearchValue, setRoleSearchValue] = useState('');
+  const [captcha, setCaptcha] = useState(generateCaptcha());
+  const [accountCreated, setAccountCreated] = useState(false);
 
   const steps = [
     {
@@ -244,10 +281,32 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
       errorMessage: "Please select your platform intent"
     },
     {
-      question: "For security, please answer: What is 2 + 2?",
+      question: () => `For security, please answer: ${captcha.question}`,
       field: 'securityCheck',
       type: 'security',
-      validation: (value: string) => ['4', 'four', 'Four', 'FOUR'].includes(value.trim()),
+      validation: (value: string) => {
+        // Support multiple formats for the answer
+        const userAnswer = value.trim().toLowerCase();
+        const correctAnswer = captcha.answer.toLowerCase();
+        
+        // For numeric answers, also accept word forms
+        const numberWords: Record<string, string> = {
+          '0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four',
+          '5': 'five', '6': 'six', '7': 'seven', '8': 'eight', '9': 'nine',
+          '10': 'ten', '11': 'eleven', '12': 'twelve', '13': 'thirteen',
+          '14': 'fourteen', '15': 'fifteen', '16': 'sixteen', '17': 'seventeen',
+          '18': 'eighteen', '19': 'nineteen', '20': 'twenty'
+        };
+        
+        // Check direct match
+        if (userAnswer === correctAnswer) return true;
+        
+        // Check numeric word equivalents
+        if (numberWords[correctAnswer] && userAnswer === numberWords[correctAnswer]) return true;
+        if (numberWords[userAnswer] && numberWords[userAnswer] === correctAnswer) return true;
+        
+        return false;
+      },
       errorMessage: "Please enter the correct answer"
     },
     {
@@ -261,7 +320,10 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
     // Start conversation
     addBotMessage("Welcome to GeFi! I'll help you create your account with just a few questions. 🤖");
     setTimeout(() => {
-      addBotMessage(steps[0].question);
+      const questionText = typeof steps[0].question === 'function' 
+        ? steps[0].question() 
+        : steps[0].question;
+      addBotMessage(questionText);
       setShowOptions(steps[0].type === 'select' || steps[0].type === 'multiselect');
     }, 1000);
   }, []);
@@ -378,49 +440,63 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
         setCurrentStep(nextStep);
         
         if (nextStep < steps.length) {
-          addBotMessage(steps[nextStep].question);
+          const questionText = typeof steps[nextStep].question === 'function' 
+            ? steps[nextStep].question() 
+            : steps[nextStep].question;
+          addBotMessage(questionText);
           setShowOptions(steps[nextStep].type === 'select' || steps[nextStep].type === 'multiselect');
         }
       } else if (currentStepData.type === 'security') {
-        // Handle security check
-        if (inputValue.trim() === '4') {
+        // Handle security check with dynamic captcha validation
+        if (currentStepData.validation && currentStepData.validation(inputValue)) {
           setSecurityCheckStep('passed');
           addBotMessage("Correct! Security check passed. ✅");
           
-          // Complete signup - start email verification
+          // Complete signup - directly create account
           setTimeout(() => {
-            addBotMessage("Perfect! Before I create your account, I need to verify your email address for security.");
-            setEmailVerificationStep('sending');
+            addBotMessage("Perfect! Let me create your account now...");
+            setIsCreatingAccount(true);
             
             setTimeout(async () => {
               try {
-                const response = await fetch('/api/auth/send-verification', {
+                const signupResponse = await fetch('/api/auth/complete-chatbot-signup', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
                   },
                   body: JSON.stringify({
-                    email: newUserData.email,
-                    firstName: newUserData.firstName,
-                    lastName: newUserData.lastName
+                    ...newUserData,
+                    wantsDemo: false, // Will be handled separately
+                    sessionId: Date.now().toString(),
+                    recaptchaToken: '', // Already passed security check
+                    honeypot: ''
                   }),
                 });
 
-                const data = await response.json();
-                
-                if (response.ok) {
-                  setEmailVerificationStep('sent');
-                  setDemoVerificationCode(data.verificationCode); // For demo purposes
-                  addBotMessage(`I've sent a 6-digit verification code to ${newUserData.email}. Please enter the code to continue.`);
-                  addBotMessage(`For demo purposes, your verification code is: ${data.verificationCode}`);
+                if (signupResponse.ok) {
+                  const result = await signupResponse.json();
+                  setAccountCreated(true);
+                  setIsCreatingAccount(false);
+                  
+                  addBotMessage("🎉 Account created successfully! Your account is now pending approval.");
+                  
+                  setTimeout(() => {
+                    addBotMessage("You'll receive an email confirmation once your account is approved. This typically takes 24-48 hours.");
+                    
+                    setTimeout(() => {
+                      addBotMessage("Would you like to book a demo session with our team? This can help accelerate your approval process.");
+                      setShowDemoBooking(true);
+                    }, 1500);
+                  }, 2000);
                 } else {
-                  addBotMessage("Sorry, I couldn't send the verification email. Please try again.");
-                  setEmailVerificationStep('none');
+                  const errorData = await signupResponse.json();
+                  addBotMessage(`❌ Sorry, there was an error creating your account: ${errorData.message || errorData.error}`);
+                  setIsCreatingAccount(false);
                 }
               } catch (error) {
-                console.error('Verification send error:', error);
-                addBotMessage("Sorry, there was an issue sending the verification email. Please try again.");
-                setEmailVerificationStep('none');
+                console.error('Signup error:', error);
+                addBotMessage("❌ Sorry, there was an error creating your account. Please try again.");
+                setIsCreatingAccount(false);
               }
             }, 1000);
           }, 1500);
@@ -431,7 +507,10 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
             addBotMessage("Security check failed. Please contact support@gefi.io for assistance.");
             return;
           } else {
-            addBotMessage("Incorrect answer. Please try again: What is 2 + 2?");
+            // Generate new captcha and ask again
+            const newCaptcha = generateCaptcha();
+            setCaptcha(newCaptcha);
+            addBotMessage(`Incorrect answer. Please try again: ${newCaptcha.question}`);
             setCurrentInput('');
             return;
           }
@@ -485,23 +564,42 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
     // Simulate loading times and redirect to Calendly
     setTimeout(() => {
       setIsLoadingTimes(false);
+      setShowDemoBooking(false);
+      
       // Open Calendly link directly
       window.open('https://calendly.com/generativefinance/30min', '_blank');
       
-      // Continue with account creation flow
-      addBotMessage("Great! I've opened the demo booking page. Meanwhile, let me complete your account setup...");
-      handleSkipDemo();
+      addBotMessage("Perfect! I've opened the demo booking page in a new tab. You can schedule your session there.");
+      
+      setTimeout(() => {
+        addBotMessage("Thank you for joining GeFi! You'll receive email updates about your account approval and demo session.");
+        
+        setTimeout(() => {
+          addBotMessage("Redirecting you to our main platform...");
+          
+          setTimeout(() => {
+            navigate('/');
+          }, 2000);
+        }, 2000);
+      }, 1500);
     }, 1500);
   };
 
   const handleSkipDemo = () => {
-    addBotMessage("Perfect! Your account has been created and is under review. Redirecting you to book a demo...");
+    setShowDemoBooking(false);
+    addBotMessage("No problem! You can always book a demo later from your account dashboard.");
     
     setTimeout(() => {
-      // Store user data and redirect to demo booking page
-      sessionStorage.setItem('pendingUserData', JSON.stringify(userData));
-      navigate('/demo-booking');
-    }, 2000);
+      addBotMessage("Thank you for joining GeFi! You'll receive email updates about your account approval.");
+      
+      setTimeout(() => {
+        addBotMessage("Redirecting you to our main platform...");
+        
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+      }, 1500);
+    }, 1500);
   };
 
   const handleTimeSlotSelection = (timeSlot: any) => {
@@ -806,7 +904,10 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
                               
                               setTimeout(() => {
                                 if (nextStep < steps.length) {
-                                  addBotMessage(steps[nextStep].question);
+                                  const questionText = typeof steps[nextStep].question === 'function' 
+                                    ? steps[nextStep].question() 
+                                    : steps[nextStep].question;
+                                  addBotMessage(questionText);
                                   setShowOptions(steps[nextStep].type === 'select' || steps[nextStep].type === 'multiselect');
                                 }
                               }, 1000);
