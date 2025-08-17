@@ -74,6 +74,7 @@ import ApiAccess from "@/pages/api-access";
 import ForecastingModel from "@/pages/forecasting-model";
 import HRPPortfolioOptimization from "@/pages/hrp-portfolio-optimization";
 import DeFiAnomalyDetection from "@/pages/defi-anomaly-detection";
+import SocialSentimentTrading from "@/pages/social-sentiment-trading";
 import ReportGenerator from "@/pages/reports";
 
 
@@ -280,6 +281,7 @@ function Router() {
             <Route path="/forecasting-model" component={ForecastingModel} />
             <Route path="/hrp-portfolio-optimization" component={HRPPortfolioOptimization} />
             <Route path="/defi-anomaly-detection" component={DeFiAnomalyDetection} />
+            <Route path="/social-sentiment-trading" component={SocialSentimentTrading} />
             <Route path="/risk-distribution" component={RiskDistribution} />
             <Route path="/rebalance-actions" component={RebalanceActions} />
             <Route path="/current-risk-assessment" component={CurrentRiskAssessment} />
