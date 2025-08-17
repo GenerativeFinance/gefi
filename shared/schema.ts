@@ -356,12 +356,16 @@ export const riskAlerts = pgTable("risk_alerts", {
 });
 
 export const reports = pgTable("reports", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey(), // Changed to text for UUID compatibility
   userId: varchar("user_id").references(() => users.id),
   type: varchar("type").notNull(), // 'monthly_performance', 'risk_compliance', 'portfolio_optimization'
   title: varchar("title").notNull(),
-  status: varchar("status").notNull(), // 'generated', 'pending', 'failed'
-  lastUpdated: timestamp("last_updated").defaultNow(),
+  status: varchar("status").notNull(), // 'pending', 'rendering', 'completed', 'failed'
+  pdfUrl: varchar("pdf_url"), // URL to generated PDF
+  error: text("error"), // Error message if failed
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
   metadata: jsonb("metadata"),
 });
 
