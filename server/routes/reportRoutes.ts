@@ -72,7 +72,8 @@ export function registerReportRoutes(app: Express): void {
 
     try {
       const { reportId } = req.params;
-      const pdfPath = path.join('/tmp', `report-${reportId}.pdf`);
+      const reportsDir = path.join(process.cwd(), 'storage', 'reports');
+      const pdfPath = path.join(reportsDir, `report-${reportId}.pdf`);
       
       // Check if file exists
       try {
@@ -105,7 +106,8 @@ export function registerReportRoutes(app: Express): void {
 
     try {
       const { reportId } = req.params;
-      const pdfPath = path.join('/tmp', `report-${reportId}.pdf`);
+      const reportsDir = path.join(process.cwd(), 'storage', 'reports');
+      const pdfPath = path.join(reportsDir, `report-${reportId}.pdf`);
       
       // Check if file exists
       try {
