@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import Layout from "@/components/layout/Layout";
 import ContextualMobileNav from "@/components/layout/contextual-mobile-nav";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Bot, 
   Star, 
@@ -37,12 +39,69 @@ export default function AIModels() {
   const [selectedModel, setSelectedModel] = useState<any>(null);
   const [modelDetailsOpen, setModelDetailsOpen] = useState(false);
 
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   const { data: aiModels = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/ai-models"]
   });
 
   const { data: userModels = [], isLoading: userModelsLoading } = useQuery<any[]>({
     queryKey: ["/api/portfolio/ai-models"]
+  });
+
+  // Fetch user subscriptions
+  const { data: userSubscriptions = [], isLoading: subscriptionsLoading } = useQuery<any[]>({
+    queryKey: ["/api/my-subscriptions"],
+    queryFn: async () => {
+      const resp = await apiRequest("GET", "/api/my-subscriptions");
+      if (resp && typeof (resp as any).json === "function") {
+        const data = await (resp as any).json();
+        return data.subscriptions || [];
+      }
+      return resp?.subscriptions || [];
+    }
+  });
+
+  // Subscribe mutation
+  const subscribeMutation = useMutation({
+    mutationFn: async (modelId: number) => {
+      const resp = await apiRequest("POST", `/api/ai-models/${modelId}/subscribe`, {});
+      if (resp && typeof (resp as any).json === "function") {
+        return await (resp as any).json();
+      }
+      return resp;
+    },
+    onSuccess: (data: any) => {
+      // If server returned a checkoutUrl, redirect
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+      toast({
+        title: "Subscribed",
+        description: "You have successfully subscribed to this model.",
+      });
+      // Invalidate relevant queries to refresh UI
+      queryClient.invalidateQueries({ queryKey: ["/api/portfolio/ai-models"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ai-models"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-subscriptions"] });
+    },
+    onError: (err: any) => {
+      if (err?.message?.includes("401")) {
+        toast({
+          title: "Unauthorized",
+          description: "You must be logged in to subscribe.",
+          variant: "destructive",
+        });
+        return;
+      }
+      toast({
+        title: "Subscription failed",
+        description: String(err?.message || "Please try again."),
+        variant: "destructive",
+      });
+    },
   });
 
   const filteredModels = aiModels.filter((model: any) => {
@@ -68,7 +127,9 @@ export default function AIModels() {
   });
 
   const isUserSubscribed = (modelId: number) => {
-    return userModels.some((userModel: any) => userModel.aiModelId === modelId);
+    return userSubscriptions.some((subscription: any) => 
+      subscription.modelId === modelId && subscription.status === 'active'
+    );
   };
 
   const getPerformanceColor = (performance: number) => {
@@ -78,7 +139,7 @@ export default function AIModels() {
     return "text-red-600 bg-red-100";
   };
 
-  if (isLoading || userModelsLoading) {
+  if (isLoading || userModelsLoading || subscriptionsLoading) {
     return (
       <Layout>
         <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-6">
@@ -287,12 +348,17 @@ export default function AIModels() {
                         View Details
                       </Button>
                       {!isUserSubscribed(model.id) ? (
-                        <Button size="sm" className="flex-1">
-                          Subscribe
+                        <Button 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => subscribeMutation.mutate(model.id)}
+                          disabled={subscribeMutation.isPending}
+                        >
+                          {subscribeMutation.isPending ? "Subscribing..." : "Subscribe"}
                         </Button>
                       ) : (
-                        <Button variant="secondary" size="sm" className="flex-1">
-                          Manage
+                        <Button variant="secondary" size="sm" className="flex-1" disabled>
+                          Subscribed
                         </Button>
                       )}
                     </div>
@@ -1027,9 +1093,13 @@ export default function AIModels() {
                 <div className="border-t pt-4 flex gap-3">
                   {!isUserSubscribed(selectedModel.id) ? (
                     <>
-                      <Button className="flex-1">
+                      <Button 
+                        className="flex-1"
+                        onClick={() => subscribeMutation.mutate(selectedModel.id)}
+                        disabled={subscribeMutation.isPending}
+                      >
                         <Activity className="h-4 w-4 mr-2" />
-                        Subscribe to Model
+                        {subscribeMutation.isPending ? "Subscribing..." : "Subscribe to Model"}
                       </Button>
                       <Button variant="outline" className="flex-1">
                         <Clock className="h-4 w-4 mr-2" />

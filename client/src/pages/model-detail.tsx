@@ -134,7 +134,11 @@ export default function ModelDetail() {
         title: "Subscribed",
         description: "You have successfully subscribed to this model.",
       });
+      // Invalidate relevant queries to refresh UI
       queryClient.invalidateQueries({ queryKey: ["api", "ai-models", idParam] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ai-models"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/portfolio/ai-models"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-subscriptions"] });
     },
     onError: (err: any) => {
       if (err?.status === 401) {

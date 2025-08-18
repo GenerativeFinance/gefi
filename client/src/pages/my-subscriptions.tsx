@@ -85,10 +85,17 @@ export default function MySubscriptions() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // This would normally fetch from the API
-  const { data: subscriptions = mockSubscriptions, isLoading } = useQuery({
+  // Fetch user subscriptions from API
+  const { data: subscriptions = [], isLoading } = useQuery({
     queryKey: ["/api/my-subscriptions"],
-    queryFn: () => mockSubscriptions // Replace with actual API call
+    queryFn: async () => {
+      const resp = await apiRequest("GET", "/api/my-subscriptions");
+      if (resp && typeof (resp as any).json === "function") {
+        const data = await (resp as any).json();
+        return data.subscriptions || [];
+      }
+      return resp?.subscriptions || [];
+    }
   });
 
   const pauseSubscription = useMutation({

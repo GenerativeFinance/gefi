@@ -60,6 +60,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerBacktestingRoutes } = await import("./backtestingRoutes");
   registerBacktestingRoutes(app);
 
+  console.log("💳 Registering Subscription APIs...");
+  const registerSubscriptionRoutes = (await import("./subscriptions")).default;
+  registerSubscriptionRoutes(app);
+
   // Register profile compatibility routes
   console.log("👤 Registering Profile Compatibility APIs...");
   const registerProfileCompatibilityRoutes = (await import("./profileCompat")).default;
