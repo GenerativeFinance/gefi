@@ -759,6 +759,65 @@ export const aiModelsData = [
     ]
   },
   {
+    id: 12,
+    name: "Market Regime Detector (Ensemble)",
+    description: "Detects market regime shifts using an ensemble of LSTM, Transformer and gradient-boosted models to adapt positioning and risk sizing in multi-asset portfolios.",
+    category: "Market Forecasting",
+    subcategory: "Regime Detection",
+    creator: "RegimeSense AI",
+    rating: 4.7,
+    totalRatings: 156,
+    price: "299.99",
+    monthlySubscribers: 420,
+    accuracy: 91.2,
+    riskLevel: "Medium",
+    aiTechnique: "Ensemble (LSTM + Transformer + XGBoost)",
+    targetUserType: "Portfolio Managers",
+    financialInstrument: "Multi-Asset",
+    tags: ["Market Regimes", "Ensemble", "LSTM", "Transformer", "Trend Detection", "Risk Management"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      explainableAI: true,
+      stressTesting: true,
+      portfolioAnalysis: true
+    },
+    performance: {
+      accuracy: 91.2,
+      auc: 0.89,
+      sharpeRatio: 1.8,
+      maxDrawdown: 6.5,
+      precision: 0.86,
+      recall: 0.88,
+      f1Score: 0.87,
+      responseTime: "< 750ms"
+    },
+    dataRequirements: [
+      "Price Time Series (tick/ohlc)",
+      "Volatility & Implied Volatility",
+      "Macro Indicators",
+      "Liquidity Metrics",
+      "Sentiment Signals"
+    ],
+    supportedRegions: ["Global", "US", "EU", "Asia-Pacific"],
+    complianceFrameworks: ["GDPR", "MiFID II"],
+    minInvestment: "20000.00",
+    isFeatured: false,
+    isActive: true,
+    createdAt: "2025-08-17T09:00:00Z",
+    lastUpdated: "2025-08-17T12:00:00Z",
+    technicalSpecs: {
+      modelTypes: ["LSTM", "Transformer", "Gradient Boosting"],
+      inputWindow: "30d",
+      forecastHorizon: ["1d", "3d", "7d"],
+      visualizations: ["Regime Heatmap", "Probability Time Series", "Position Suggestion Overlays"],
+      exportFormats: ["CSV", "JSON", "PDF"]
+    }
+  },
+  {
     id: 19,
     name: "Advanced Fraud Detection & Anti-Money Laundering (AML) Suite",
     description: "Comprehensive AI-powered fraud detection and AML compliance system featuring real-time transaction monitoring, behavioral analysis, and regulatory reporting with advanced machine learning algorithms.",
