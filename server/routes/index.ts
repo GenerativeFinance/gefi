@@ -37,6 +37,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerUtilityRoutes(app);
   registerAdminRoutes(app);
 
+  console.log("🔍 Registering Search APIs...");
+  const { registerSearchRoutes } = await import("./searchRoutes");
+  registerSearchRoutes(app);
+
   console.log("🤖 Registering AI Chatbot APIs...");
   registerChatbotRoutes(app);
 

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SearchModal } from "@/components/ui/search-modal";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
@@ -92,11 +93,10 @@ const mapRoleToUserType = (role?: string): string => {
 };
 
 export default function Header() {
-  const [location, navigate] = useLocation();
+  const [location] = useLocation();
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
 
@@ -736,93 +736,11 @@ export default function Header() {
         )}
       </header>
 
-      {/* Search Dialog */}
-      <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-        <DialogContent className="max-w-2xl mx-auto mt-20 bg-background/95 backdrop-blur-md border border-border/50">
-          <DialogHeader>
-            <DialogTitle>Search</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            if (searchQuery.trim()) {
-              navigate(`/marketplace?search=${encodeURIComponent(searchQuery.trim())}`);
-              setIsSearchOpen(false);
-              setSearchQuery("");
-            }
-          }}>
-            <div className="space-y-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search across AI models, trading strategies, reports, and more..."
-                  className="pl-10 bg-background/50 border-border/50 focus:bg-background focus:border-border"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && searchQuery.trim()) {
-                      e.preventDefault();
-                      navigate(`/marketplace?search=${encodeURIComponent(searchQuery.trim())}`);
-                      setIsSearchOpen(false);
-                      setSearchQuery("");
-                    }
-                  }}
-                />
-              </div>
-              
-              {/* Quick Search Suggestions */}
-              {searchQuery.length === 0 && (
-                <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground mb-2">Popular searches:</div>
-                  <div className="flex flex-wrap gap-2">
-                    {["Risk Assessment", "Trading Bots", "Portfolio", "Sentiment Analysis", "Backtesting"].map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        type="button"
-                        onClick={() => {
-                          setSearchQuery(suggestion);
-                          navigate(`/marketplace?search=${encodeURIComponent(suggestion)}`);
-                          setIsSearchOpen(false);
-                          setSearchQuery("");
-                        }}
-                        className="px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-full transition-colors"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Search Results Preview */}
-              {searchQuery.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Press Enter to search for "{searchQuery}"</div>
-                  <div className="flex justify-between items-center pt-2 border-t">
-                    <Button
-                      type="submit"
-                      disabled={!searchQuery.trim()}
-                      className="flex-1 mr-2"
-                    >
-                      Search Models
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setIsSearchOpen(false);
-                        setSearchQuery("");
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Advanced Search Modal */}
+      <SearchModal 
+        open={isSearchOpen} 
+        onClose={() => setIsSearchOpen(false)} 
+      />
 
       {/* AI Chatbot Dialog */}
       <AIFinancialChatbot 
