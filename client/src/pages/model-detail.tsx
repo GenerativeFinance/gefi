@@ -235,19 +235,41 @@ export default function ModelDetail() {
     );
   }
 
-  // If no model (404), show not found UI
+  // If no model (404), show not found UI with suggestions
   if (!model) {
     return (
       <Layout>
         <div className="container mx-auto p-6 max-w-7xl">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-600 mb-4">Model Not Found</h1>
-            <p className="text-gray-600 dark:text-gray-400">The requested model could not be found.</p>
-            <div className="mt-6 flex justify-center gap-3">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              The model with ID "{idParam}" could not be found.
+            </p>
+            <div className="bg-muted/30 p-4 rounded-lg mb-6">
+              <p className="text-sm text-muted-foreground mb-3">Available model IDs: 1, 2, 3, 5, 6, 7, 8, 9</p>
+              <p className="text-sm text-muted-foreground">
+                Try visiting one of these models:
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 mt-3">
+                {[1, 2, 3, 5, 6, 7, 8, 9].map((modelId) => (
+                  <Button 
+                    key={modelId}
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => (window.location.href = `/ai-models/${modelId}`)}
+                  >
+                    Model {modelId}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-center gap-3">
               <Button variant="outline" onClick={() => (window.location.href = "/marketplace")}>
                 Browse Marketplace
               </Button>
-              <Button onClick={() => queryClient.invalidateQueries({ queryKey: ["api", "ai-models"] })}>Refresh Models List</Button>
+              <Button onClick={() => (window.location.href = "/ai-models")}>
+                All AI Models
+              </Button>
             </div>
           </div>
         </div>

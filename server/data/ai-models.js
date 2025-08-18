@@ -757,5 +757,109 @@ export const aiModelsData = [
       "Dynamic Asset Allocation",
       "Tail Risk Hedging"
     ]
+  },
+  {
+    id: 19,
+    name: "Advanced Fraud Detection & Anti-Money Laundering (AML) Suite",
+    description: "Comprehensive AI-powered fraud detection and AML compliance system featuring real-time transaction monitoring, behavioral analysis, and regulatory reporting with advanced machine learning algorithms.",
+    category: "Risk Management", 
+    subcategory: "Fraud Detection",
+    creator: "SecureFinance Labs",
+    rating: 4.8,
+    totalRatings: 342,
+    price: "899.99",
+    monthlySubscribers: 567,
+    accuracy: 94.2,
+    riskLevel: "High",
+    aiTechnique: "Ensemble ML + Deep Learning",
+    targetUserType: "Risk Officers",
+    financialInstrument: "All Transaction Types",
+    tags: ["Fraud Detection", "AML", "Transaction Monitoring", "Behavioral Analysis", "Regulatory Compliance", "Real-time"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      behavioralProfiling: true,
+      regulatoryReporting: true,
+      networkAnalysis: true,
+      caseMagagement: true,
+      investigationTools: true
+    },
+    performance: {
+      accuracy: 94.2,
+      falsePositiveRate: 2.1,
+      detectionSpeed: "< 100ms",
+      throughput: "1M+ transactions/hour",
+      precision: 0.93,
+      recall: 0.89,
+      f1Score: 0.91
+    },
+    dataRequirements: [
+      "Transaction Data",
+      "Customer Information", 
+      "Account History",
+      "External Watchlists",
+      "Sanctions Lists",
+      "Geographic Data",
+      "Device & Session Information",
+      "Behavioral Patterns"
+    ],
+    supportedRegions: ["Global", "US", "EU", "Asia-Pacific", "MENA"],
+    complianceFrameworks: ["BSA/AML", "EU 5AMLD", "FATF", "FinCEN", "FCA", "AUSTRAC", "FINTRAC"],
+    minInvestment: "100000.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2024-09-15T08:00:00Z",
+    lastUpdated: "2025-08-18T12:30:00Z",
+    technicalSpecs: {
+      detectionTypes: ["Identity Fraud", "Payment Fraud", "Money Laundering", "Terrorist Financing", "Sanctions Evasion"],
+      mlTechniques: ["Random Forest", "XGBoost", "Neural Networks", "Anomaly Detection", "Graph Analysis"],
+      monitoringCapabilities: [
+        "Real-time Transaction Screening",
+        "Customer Due Diligence (CDD)",
+        "Enhanced Due Diligence (EDD)", 
+        "Ongoing Monitoring",
+        "Suspicious Activity Detection",
+        "Typology-based Detection"
+      ],
+      alertCategories: [
+        "High-Risk Transactions",
+        "Unusual Customer Behavior",
+        "Sanctions Matches",
+        "Politically Exposed Persons (PEP)",
+        "Cross-border Transfers",
+        "Cash Intensive Businesses"
+      ],
+      investigationFeatures: [
+        "Case Management System",
+        "Timeline Reconstruction", 
+        "Network Visualization",
+        "Document Management",
+        "Evidence Collection",
+        "Regulatory Filing Automation"
+      ]
+    },
+    regulatoryFeatures: {
+      sarReporting: "Automated SAR/STR generation and filing",
+      ctrReporting: "Currency Transaction Report automation", 
+      regulatoryUpdates: "Real-time regulatory rule updates",
+      auditTrails: "Complete audit trail and documentation",
+      riskAssessment: "Customer and geographic risk scoring",
+      watchlistManagement: "Dynamic watchlist updates and matching"
+    },
+    useCases: [
+      "Banking Transaction Monitoring",
+      "Credit Card Fraud Detection", 
+      "Wire Transfer Screening",
+      "Digital Payment Fraud Prevention",
+      "Cryptocurrency AML Compliance",
+      "Trade Finance Monitoring",
+      "Insurance Fraud Detection",
+      "Regulatory Compliance Reporting",
+      "Customer Risk Profiling",
+      "Sanctions Screening"
+    ]
   }
 ];
