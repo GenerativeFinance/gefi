@@ -1273,4 +1273,82 @@ export function registerGeFiRoutes(app: Express) {
     }
   });
 
+  // Onchain payment routes
+  app.post('/api/ai-models/:id/onchain-invoice', isAuthenticated, async (req, res) => {
+    try {
+      const modelId = parseInt(req.params.id);
+      const userId = req.user?.claims?.sub;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // In a real implementation, this would:
+      // 1. Fetch the model price from database
+      // 2. Generate a unique invoice ID
+      // 3. Store invoice in database with expiry
+      // 4. Get receiver address from config/database
+      
+      const invoiceId = `inv_${modelId}_${userId}_${Date.now()}`;
+      const receiverAddress = process.env.ONCHAIN_RECEIVER_ADDRESS || "0x742d35Cc6634C0532925a3b8D24b693d54b32625";
+      const amountEth = "0.1"; // Default price - should come from model data
+      
+      res.json({ 
+        success: true,
+        invoiceId,
+        receiverAddress,
+        amountEth,
+        modelId,
+        userId,
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes
+      });
+    } catch (error) {
+      console.error("Error creating onchain invoice:", error);
+      res.status(500).json({ message: "Failed to create onchain invoice" });
+    }
+  });
+
+  app.post('/api/ai-models/:id/verify-onchain', isAuthenticated, async (req, res) => {
+    try {
+      const modelId = parseInt(req.params.id);
+      const userId = req.user?.claims?.sub;
+      const { invoiceId, txHash } = req.body;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (!invoiceId || !txHash) {
+        return res.status(400).json({ message: "Missing invoiceId or txHash" });
+      }
+
+      // In a real implementation, this would:
+      // 1. Validate the invoice exists and belongs to this user
+      // 2. Check the transaction on blockchain using web3/ethers
+      // 3. Verify the transaction amount and recipient
+      // 4. Create subscription record in database
+      // 5. Mark invoice as paid
+      
+      console.log(`Verifying onchain payment: Model ${modelId}, Invoice ${invoiceId}, TX ${txHash}`);
+      
+      // Mock successful verification
+      res.json({ 
+        success: true,
+        message: "Payment verified and subscription activated",
+        subscription: {
+          modelId,
+          userId,
+          status: "active",
+          activatedAt: new Date().toISOString(),
+          txHash,
+          invoiceId
+        }
+      });
+    } catch (error) {
+      console.error("Error verifying onchain payment:", error);
+      res.status(500).json({ message: "Failed to verify onchain payment" });
+    }
+  });
+
 }
