@@ -38,8 +38,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerAdminRoutes(app);
 
   console.log("🔍 Registering Search APIs...");
-  const { registerSearchRoutes } = await import("./searchRoutes");
-  registerSearchRoutes(app);
+  const searchRouter = (await import("./search")).default;
+  app.use("/api/search", searchRouter);
 
   console.log("🤖 Registering AI Chatbot APIs...");
   registerChatbotRoutes(app);
