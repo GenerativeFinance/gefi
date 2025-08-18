@@ -117,7 +117,7 @@ export async function processReportJob(job: ReportJobPayload): Promise<{
 
     if (isProduction && process.env.S3_BUCKET) {
       console.log(`Uploading report ${reportId} to S3...`);
-      const uploadResult = await uploadReportPDF(reportId, pdfBuffer);
+      const uploadResult = await uploadReportPDF(reportId, Buffer.from(pdfBuffer));
       
       if (uploadResult.success) {
         s3Key = uploadResult.s3Key;
