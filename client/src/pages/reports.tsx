@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 import { FileText, Download, Eye, Calendar, TrendingUp, Shield, AlertTriangle, Users, DollarSign } from 'lucide-react';
 import { Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import Layout from '@/components/layout/Layout';
+import { generateAndDownloadReport, type ReportStatusResponse } from '@/utils/downloadReport';
 
 interface Report {
   id: string;
@@ -17,11 +19,60 @@ interface Report {
 }
 
 export default function Reports() {
+  const { toast } = useToast();
+  
   // Fetch reports data
   const { data: reports = [], isLoading } = useQuery({
     queryKey: ['/api/reports'],
     enabled: true
   });
+
+  const handleDownloadReport = async (report: Report) => {
+    try {
+      toast({
+        title: "Generating Report",
+        description: `Generating ${report.title}...`,
+      });
+
+      const result = await generateAndDownloadReport(
+        {
+          type: report.type,
+          title: report.title,
+          data: {
+            user: {
+              firstName: 'User',
+              lastName: ''
+            }
+          },
+          templateId: 'executive-report'
+        },
+        (status: ReportStatusResponse) => {
+          if (status.status === 'processing' && status.progress) {
+            toast({
+              title: "Generating Report",
+              description: `Progress: ${status.progress}%`,
+            });
+          }
+        }
+      );
+
+      if (result.success) {
+        toast({
+          title: "Report Downloaded",
+          description: `${report.title} has been downloaded successfully.`,
+        });
+      } else {
+        throw new Error(result.error || 'Report generation failed');
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "Failed to generate report. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const reportCategories = [
     {
@@ -155,7 +206,7 @@ export default function Reports() {
                           <Button size="sm" variant="outline">
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button size="sm">
+                          <Button size="sm" onClick={() => handleDownloadReport(report)}>
                             <Download className="w-4 h-4" />
                           </Button>
                         </div>

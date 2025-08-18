@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/layout/Layout";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { generatePDFReport, type ReportData, type PDFCustomizations } from "@/lib/pdfGenerator";
+import { generateAndDownloadReport, type ReportStatusResponse } from "@/utils/downloadReport";
 import {
   FileText,
   Download,
@@ -101,35 +101,48 @@ export default function InvestorReports() {
 
   const handleDownloadReport = async (reportName: string, reportId?: string) => {
     try {
-      const report = reports.find((r: any) => r.name === reportName || r.id === reportId) || 
-                   { id: reportId || 'temp', name: reportName, status: 'ready', lastUpdated: new Date().toLocaleDateString(), type: 'performance' };
-      
-      // Convert to proper ReportData format
-      const reportData: ReportData = {
-        id: report.id.toString(),
-        name: report.name,
-        type: report.type || 'performance',
-        status: report.status,
-        lastUpdated: report.lastUpdated,
-        description: report.description
-      };
-      
-      // Generate PDF using the new generator
-      const doc = generatePDFReport(reportData, { layout: 'portrait' });
-      
-      // Download the PDF
-      const fileName = `${reportName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(fileName);
-      
+      // Show initial toast
       toast({
-        title: "Report Downloaded",
-        description: `${reportName} has been downloaded successfully as PDF.`,
+        title: "Generating Report",
+        description: "Your report is being generated. Please wait...",
       });
+
+      const result = await generateAndDownloadReport(
+        {
+          type: 'monthly-performance',
+          title: reportName,
+          data: {
+            user: { 
+              firstName: 'Investor',
+              lastName: 'User'
+            }
+          },
+          templateId: 'executive-report'
+        },
+        (status: ReportStatusResponse) => {
+          // Update progress
+          if (status.status === 'processing' && status.progress) {
+            toast({
+              title: "Generating Report",
+              description: `Progress: ${status.progress}%`,
+            });
+          }
+        }
+      );
+      
+      if (result.success) {
+        toast({
+          title: "Report Downloaded",
+          description: `${reportName} has been downloaded successfully.`,
+        });
+      } else {
+        throw new Error(result.error || 'Report generation failed');
+      }
     } catch (error) {
       console.error('Download error:', error);
       toast({
         title: "Download Failed",
-        description: "Failed to generate PDF report. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to generate report. Please try again.",
         variant: "destructive",
       });
     }
@@ -156,56 +169,73 @@ export default function InvestorReports() {
     }
 
     try {
-      // Create a new custom report object
-      const reportData: ReportData = {
-        id: `custom-${Date.now()}`,
-        name: reportSettings.name,
-        type: reportSettings.type,
-        status: 'ready',
-        lastUpdated: new Date().toLocaleDateString(),
-        description: `Custom ${reportSettings.type} report with ${reportSettings.visualizations.length} visualizations`
-      };
-      
-      // Convert settings to PDFCustomizations
-      const customizations: PDFCustomizations = {
-        layout: reportSettings.layout as 'portrait' | 'landscape',
-        includeCharts: reportSettings.includeCharts,
-        includeTables: reportSettings.includeTables,
-        includeRecommendations: reportSettings.includeRecommendations,
-        visualizations: reportSettings.visualizations,
-        period: reportSettings.period,
-        customSections: reportSettings.customSections
-      };
-      
-      // Generate PDF immediately for custom reports
-      const doc = generatePDFReport(reportData, customizations);
-      
-      // Download the PDF
-      const fileName = `${reportSettings.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(fileName);
-      
+      // Show initial toast
       toast({
-        title: "Report Generated",
-        description: `${reportSettings.name} has been generated and downloaded successfully.`,
+        title: "Generating Report",
+        description: "Your custom report is being generated. Please wait...",
       });
+
+      const result = await generateAndDownloadReport(
+        {
+          type: reportSettings.type,
+          title: reportSettings.name,
+          data: {
+            user: { 
+              firstName: 'Investor',
+              lastName: 'User'
+            },
+            customizations: {
+              visualizations: reportSettings.visualizations,
+              includeCharts: reportSettings.includeCharts,
+              includeTables: reportSettings.includeTables,
+              includeRecommendations: reportSettings.includeRecommendations,
+              customSections: reportSettings.customSections,
+              period: reportSettings.period
+            }
+          },
+          templateId: 'executive-report',
+          options: {
+            pageSize: reportSettings.layout === 'landscape' ? 'A4' : 'A4' // Could extend for different sizes
+          }
+        },
+        (status: ReportStatusResponse) => {
+          // Update progress
+          if (status.status === 'processing' && status.progress) {
+            toast({
+              title: "Generating Report",
+              description: `Progress: ${status.progress}%`,
+            });
+          }
+        }
+      );
       
-      setIsGenerateOpen(false);
-      setReportSettings({
-        name: "",
-        type: "",
-        visualizations: [],
-        layout: "portrait",
-        period: "monthly",
-        includeCharts: true,
-        includeTables: true,
-        includeRecommendations: true,
-        customSections: ""
-      });
+      if (result.success) {
+        toast({
+          title: "Report Generated",
+          description: `${reportSettings.name} has been downloaded successfully.`,
+        });
+        
+        // Reset form
+        setReportSettings({
+          name: "",
+          type: "",
+          visualizations: [],
+          layout: "portrait",
+          period: "monthly",
+          includeCharts: true,
+          includeTables: true,
+          includeRecommendations: true,
+          customSections: ""
+        });
+        setIsGenerateOpen(false);
+      } else {
+        throw new Error(result.error || 'Report generation failed');
+      }
     } catch (error) {
-      console.error('Generate report error:', error);
+      console.error('Generate error:', error);
       toast({
         title: "Generation Failed",
-        description: "Failed to generate custom report. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to generate report. Please try again.",
         variant: "destructive",
       });
     }
