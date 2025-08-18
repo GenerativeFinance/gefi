@@ -757,5 +757,111 @@ export const aiModelsData = [
       "Dynamic Asset Allocation",
       "Tail Risk Hedging"
     ]
+  },
+  {
+    id: 12,
+    name: "Advanced Fraud Detection & AML Compliance",
+    description: "State-of-the-art fraud detection system using machine learning and pattern recognition to identify suspicious financial activities, prevent money laundering, and ensure regulatory compliance in real-time.",
+    category: "Fraud Detection",
+    subcategory: "Transaction Fraud",
+    creator: "SecureFinance AI Labs",
+    rating: 4.6,
+    totalRatings: 198,
+    price: "849.99",
+    monthlySubscribers: 634,
+    accuracy: 96.8,
+    riskLevel: "Low",
+    aiTechnique: "Machine Learning + Anomaly Detection",
+    targetUserType: "Compliance Officers",
+    financialInstrument: "Financial Transactions",
+    tags: ["Fraud Detection", "AML", "Compliance", "Anomaly Detection", "Real-time Monitoring", "Risk Prevention"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      anomalyDetection: true,
+      complianceReporting: true,
+      riskScoring: true,
+      transactionMonitoring: true,
+      regulatoryAlerts: true
+    },
+    performance: {
+      accuracy: 96.8,
+      falsePositiveRate: 2.1,
+      detectionLatency: 0.3,
+      transactionsThroughput: 50000,
+      uptime: 99.8,
+      precisionScore: 0.94,
+      recallScore: 0.97,
+      f1Score: 0.95
+    },
+    dataRequirements: [
+      "Transaction History", 
+      "Customer Demographics", 
+      "Behavioral Patterns", 
+      "Geographic Data", 
+      "Account Information", 
+      "Regulatory Watch Lists", 
+      "Network Analysis Data"
+    ],
+    supportedRegions: ["Global", "US", "EU", "Asia-Pacific", "Canada", "UK"],
+    complianceFrameworks: ["AML/BSA", "KYC", "OFAC", "PCI DSS", "GDPR", "FINTRAC", "FCA"],
+    minInvestment: "75000.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2025-08-17T09:00:00Z",
+    lastUpdated: "2025-08-17T14:30:00Z",
+    technicalSpecs: {
+      modelTypes: ["Supervised ML", "Unsupervised Anomaly Detection", "Neural Networks", "Graph Analytics"],
+      detectionCapabilities: [
+        "Identity Theft Detection",
+        "Credit Card Fraud Prevention", 
+        "Wire Transfer Monitoring",
+        "Money Laundering Detection",
+        "Account Takeover Prevention",
+        "Synthetic Identity Fraud"
+      ],
+      algorithms: ["Random Forest", "XGBoost", "LSTM Networks", "Isolation Forest", "Local Outlier Factor"],
+      realTimeProcessing: {
+        throughput: "50,000 transactions/second",
+        latency: "< 300ms average response time",
+        scalability: "Auto-scaling to handle peak loads",
+        availability: "99.8% uptime SLA"
+      },
+      dataConnectors: ["Core Banking Systems", "Payment Processors", "External Databases", "Regulatory APIs"],
+      alertingMechanisms: [
+        "Real-time Dashboard Alerts",
+        "Email/SMS Notifications", 
+        "API Webhooks",
+        "SIEM Integration",
+        "Case Management Integration"
+      ]
+    },
+    complianceFeatures: {
+      regulatoryReporting: [
+        "Suspicious Activity Reports (SAR)",
+        "Currency Transaction Reports (CTR)", 
+        "Large Cash Transaction Reports",
+        "Cross-Border Wire Reports",
+        "Regulatory Compliance Dashboards"
+      ],
+      auditTrail: "Complete transaction audit logs and decision explanations",
+      dataRetention: "Configurable retention policies for regulatory compliance",
+      privacyProtection: "GDPR-compliant data handling and anonymization"
+    },
+    useCases: [
+      "Credit Card Fraud Prevention",
+      "Wire Transfer Monitoring", 
+      "Money Laundering Detection",
+      "Identity Theft Prevention",
+      "Account Takeover Detection",
+      "Regulatory Compliance Monitoring",
+      "Risk Scoring and Assessment",
+      "Transaction Pattern Analysis",
+      "Cross-Channel Fraud Detection",
+      "Merchant Risk Assessment"
+    ]
   }
 ];
