@@ -285,6 +285,7 @@ function Router() {
             <Route path="/smart-contracts" component={BlockchainContracts} />
             <Route path="/market-sentiment" component={MarketSentiment} />
             <Route path="/ai-models" component={AIModels} />
+            <Route path="/ai-models/:id" component={ModelDetail} />
             <Route path="/forecasting-model" component={ForecastingModel} />
             <Route path="/hrp-portfolio-optimization" component={HRPPortfolioOptimization} />
             <Route path="/defi-anomaly-detection" component={DeFiAnomalyDetection} />
