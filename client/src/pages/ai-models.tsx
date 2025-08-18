@@ -27,8 +27,10 @@ import {
   Target,
   MessageSquare,
   AlertTriangle,
-  FileText
+  FileText,
+  Wallet
 } from "lucide-react";
+import OnchainPaymentModal from "@/components/OnchainPaymentModal";
 
 export default function AIModels() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,6 +38,8 @@ export default function AIModels() {
   const [sortBy, setSortBy] = useState("performance");
   const [selectedModel, setSelectedModel] = useState<any>(null);
   const [modelDetailsOpen, setModelDetailsOpen] = useState(false);
+  const [onchainPaymentOpen, setOnchainPaymentOpen] = useState(false);
+  const [paymentModelId, setPaymentModelId] = useState<number | null>(null);
 
   const { data: aiModels = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/ai-models"]
@@ -76,6 +80,16 @@ export default function AIModels() {
     if (performance >= 75) return "text-blue-600 bg-blue-100";
     if (performance >= 60) return "text-yellow-600 bg-yellow-100";
     return "text-red-600 bg-red-100";
+  };
+
+  const handleOnchainPayment = (modelId: number) => {
+    setPaymentModelId(modelId);
+    setOnchainPaymentOpen(true);
+  };
+
+  const handleCloseOnchainPayment = () => {
+    setOnchainPaymentOpen(false);
+    setPaymentModelId(null);
   };
 
   if (isLoading || userModelsLoading) {
@@ -287,9 +301,19 @@ export default function AIModels() {
                         View Details
                       </Button>
                       {!isUserSubscribed(model.id) ? (
-                        <Button size="sm" className="flex-1">
-                          Subscribe
-                        </Button>
+                        <div className="flex gap-1 flex-1">
+                          <Button size="sm" className="flex-1">
+                            Subscribe
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleOnchainPayment(model.id)}
+                            title="Pay with Crypto"
+                          >
+                            <Wallet className="h-4 w-4" />
+                          </Button>
+                        </div>
                       ) : (
                         <Button variant="secondary" size="sm" className="flex-1">
                           Manage
@@ -1024,20 +1048,30 @@ export default function AIModels() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="border-t pt-4 flex gap-3">
+                <div className="border-t pt-4">
                   {!isUserSubscribed(selectedModel.id) ? (
-                    <>
-                      <Button className="flex-1">
-                        <Activity className="h-4 w-4 mr-2" />
-                        Subscribe to Model
+                    <div className="space-y-3">
+                      <div className="flex gap-3">
+                        <Button className="flex-1">
+                          <Activity className="h-4 w-4 mr-2" />
+                          Subscribe to Model
+                        </Button>
+                        <Button variant="outline" className="flex-1">
+                          <Clock className="h-4 w-4 mr-2" />
+                          Start Free Trial
+                        </Button>
+                      </div>
+                      <Button 
+                        variant="secondary" 
+                        className="w-full"
+                        onClick={() => handleOnchainPayment(selectedModel.id)}
+                      >
+                        <Wallet className="h-4 w-4 mr-2" />
+                        Pay with Crypto (Web3)
                       </Button>
-                      <Button variant="outline" className="flex-1">
-                        <Clock className="h-4 w-4 mr-2" />
-                        Start Free Trial
-                      </Button>
-                    </>
+                    </div>
                   ) : (
-                    <>
+                    <div className="flex gap-3">
                       <Button className="flex-1">
                         <Activity className="h-4 w-4 mr-2" />
                         Access Dashboard
@@ -1046,7 +1080,7 @@ export default function AIModels() {
                         <Target className="h-4 w-4 mr-2" />
                         View Performance
                       </Button>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1054,6 +1088,15 @@ export default function AIModels() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Onchain Payment Modal */}
+      <OnchainPaymentModal
+        modelId={paymentModelId || 0}
+        isOpen={onchainPaymentOpen}
+        onClose={handleCloseOnchainPayment}
+        modelName={paymentModelId ? aiModels.find(m => m.id === paymentModelId)?.name : "AI Model"}
+        price={0.1} // Default price - can be made dynamic based on model
+      />
     </Layout>
   );
 }
