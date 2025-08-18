@@ -1,0 +1,238 @@
+Plan and summary
+- Root cause: the Reports dashboard Download buttons tried to fetch a generated PDF but either the server didn’t provide a stable download endpoint + stored file location, or server-side HTML template/runtime assumed user.profileImageUrl (causing a runtime error during server-side render). The UI also didn't use a reliable browser-download flow for the PDF blob.
+- Fix overview:
+  1. Ensure the report-generator writes PDFs to a predictable storage directory (storage/reports).
+  2. Expose two server endpoints:
+     - POST /api/reports/generate — generate (or enqueue) a report and return a reportId/pdfUrl
+     - GET /api/reports/:id/download — stream the generated PDF (or 404/processing state)
+  3. Guard template access to user.profileImageUrl to avoid runtime errors when a field is missing.
+  4. Add a client helper to call GET /api/reports/:id/download and trigger a browser file download (handles blob -> save).
+  5. Wire the Download buttons to call the helper and show toasts for success / error.
+
+Below are the minimal, drop-in file changes and snippets you can add. They follow the structure already in the repo (server workers & templates exist). After merging/deploying, clicking Download will call the server endpoint, receive the PDF blob and save it locally in the browser.
+
+1) Server: route to generate / download reports
+Create a small express router that (a) calls your existing processReportJob for on-demand generation and (b) serves the generated PDF file from storage/reports.
+
+```typescript name=server/routes/reports.ts
+import express from "express";
+import path from "path";
+import fs from "fs/promises";
+import { processReportJob } from "../workers/reportGenerator"; // existing worker
+import { v4 as uuidv4 } from "uuid";
+
+const router = express.Router();
+const REPORTS_DIR = path.join(process.cwd(), "storage", "reports");
+
+// ensure directory exists
+fs.mkdir(REPORTS_DIR, { recursive: true }).catch(() => {});
+
+router.post("/generate", async (req, res) => {
+  try {
+    // Accept a simple payload: { reportType, params }
+    const { reportType = "custom", params = {} } = req.body || {};
+    const reportId = uuidv4();
+
+    // Call worker to generate the report and store PDF in REPORTS_DIR/report-<id>.pdf
+    // We pass a small payload the worker expects; adapt keys as needed for your worker.
+    const jobPayload = {
+      reportId,
+      reportType,
+      params,
+      outputDir: REPORTS_DIR
+    };
+
+    const result = await processReportJob(jobPayload);
+
+    if (result.success && result.pdfPath) {
+      // return a stable download URL
+      return res.status(200).json({ success: true, reportId, downloadUrl: `/api/reports/${reportId}/download` });
+    }
+
+    return res.status(500).json({ success: false, error: result.error || "Generation failed" });
+  } catch (err) {
+    console.error("Generate report error:", err);
+    return res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+router.get("/:id/download", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pdfPath = path.join(REPORTS_DIR, `report-${id}.pdf`);
+
+    // check file exists
+    try {
+      await fs.access(pdfPath);
+    } catch (err) {
+      return res.status(404).json({ success: false, error: "Report not found or still processing" });
+    }
+
+    // stream file
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="report-${id}.pdf"`);
+    const file = await fs.readFile(pdfPath);
+    return res.status(200).send(file);
+  } catch (err) {
+    console.error("Download report error:", err);
+    return res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+export default router;
+```
+
+- Integration: mount this router in your main server app (e.g., app.use("/api/reports", reportsRouter)) if not already done.
+
+2) Server worker: ensure consistent output directory
+Modify the worker so it writes PDFs into a stable directory (storage/reports) and returns pdfPath. Minimal snippet showing the change. Replace or update the part that writes the PDF.
+
+```typescript name=server/workers/reportGenerator.ts
+// ... at top of file
+import path from "path";
+import fs from "fs/promises";
+import os from "os";
+// ...
+
+// inside processReportJob or earlier in the file, pick an output directory from payload or fallback:
+export async function processReportJob(job: ReportJobPayload) {
+  const reportId = job.reportId || `tmp-${Date.now()}`;
+  const outputDir = job.outputDir || path.join(process.cwd(), "storage", "reports");
+
+  // ensure dir exists
+  await fs.mkdir(outputDir, { recursive: true });
+
+  // ... render HTML to `renderedHtml`
+  const tmpHtmlPath = path.join(outputDir, `report-${reportId}.html`);
+  await fs.writeFile(tmpHtmlPath, renderedHtml, "utf8");
+
+  // Launch puppeteer and create pdfBuffer (existing code)
+  // ...
+  const pdfPath = path.join(outputDir, `report-${reportId}.pdf`);
+  await fs.writeFile(pdfPath, pdfBuffer);
+
+  const pdfUrl = `/api/reports/${reportId}/download`;
+
+  return { success: true, pdfUrl, pdfPath };
+}
+```
+
+Notes:
+- This ensures worker writes to storage/reports and returns pdfPath. The API route above uses the same directory, so GET /api/reports/:id/download will find it.
+- If you already have a job queue, change the POST endpoint to enqueue a job and return a reportId; the UI can poll the job status. The direct generate flow above is the simplest to make Download buttons work immediately in dev.
+
+3) Template: guard missing profile fields to avoid runtime error (fix user.profileImageUrl crash shown in screenshot)
+Your template uses Handlebars-like placeholders. Replace any raw property access with a guarded version. Example snippet change in server/templates/standard-report.html:
+
+```html name=server/templates/standard-report.html
+<!-- Replace raw usage like: <img src="{{user.profileImageUrl}}" /> -->
+<!-- Use conditional to avoid runtime error if user or profileImageUrl is missing -->
+{{#if user}}
+  {{#if user.profileImageUrl}}
+    <img src="{{user.profileImageUrl}}" alt="Profile" style="width:48px;height:48px;border-radius:6px;" />
+  {{/if}}
+{{/if}}
+<!-- Or show fallback -->
+{{#unless user.profileImageUrl}}
+  <div class="avatar-placeholder" style="width:48px;height:48px;border-radius:6px;background:#e6eefc;"></div>
+{{/unless}}
+```
+
+If your templating engine doesn't support helper blocks, ensure the server sets user = user || {} before rendering. Example in worker where you call the template renderer:
+
+```ts
+const dataToRender = {
+  reportName: job.reportName || "Report",
+  user: job.user || {}, // prevents undefined user in template
+  // ...
+};
+const renderedHtml = renderTemplate(dataToRender);
+```
+
+4) Client: download helper (fetch + blob)
+Add a small client utility that downloads from the new server endpoint and triggers a browser download.
+
+```typescript name=client/src/utils/downloadReport.ts
+export async function downloadReport(reportId: string, { signal } : { signal?: AbortSignal } = {}) {
+  const url = `/api/reports/${encodeURIComponent(reportId)}/download`;
+  const res = await fetch(url, { method: "GET", signal });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Failed to download report: ${res.status} ${text}`);
+  }
+
+  const blob = await res.blob();
+  const filenameHeader = res.headers.get("content-disposition");
+  let filename = `report-${reportId}.pdf`;
+  if (filenameHeader) {
+    const match = filenameHeader.match(/filename="?(.+?)"?($|;)/);
+    if (match) filename = match[1];
+  }
+
+  const blobUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(blobUrl);
+}
+```
+
+5) Client: wire Download button on Reports Dashboard
+Update the Reports page that renders each report card. Replace the existing Download onClick to call downloadReport and show toasts. Example snippet (update your reports page):
+
+```tsx name=client/src/pages/investor/reports.tsx
+import { downloadReport } from "@/utils/downloadReport";
+import { useToast } from "@/components/ui/use-toast"; // your toast hook
+
+// inside component
+const { toast } = useToast();
+
+const handleDownloadClick = async (reportId: string) => {
+  try {
+    toast({ title: "Downloading", description: "Preparing your PDF..." });
+    await downloadReport(reportId);
+    toast({ title: "Download started", description: "The PDF should be saving to your device." });
+  } catch (err: any) {
+    console.error("Download failed:", err);
+    toast({
+      title: "Download Failed",
+      description: err?.message || "Failed to download PDF report",
+      variant: "destructive",
+    });
+  }
+};
+
+// in JSX for each card:
+<Button onClick={() => handleDownloadClick(report.id)}>Download</Button>
+```
+
+6) Optional: generate-on-demand vs pre-generated reports
+- If you want pre-generation (background jobs), change POST /api/reports/generate to enqueue a job and return reportId. Add GET /api/reports/:id/status to return ready/processing/failed and poll from UI. When ready, Download button will call the download endpoint.
+- For immediate generation (smaller reports), POST /generate can wait for processReportJob to finish and return downloadUrl.
+
+7) Testing steps
+- Start server.
+- Visit the Reports page.
+- Click “Generate” (or if report already pre-generated, click Download).
+- The client will call GET /api/reports/:id/download → server will stream PDF; browser should save as report-<id>.pdf.
+- If you used on-demand generation, call POST /api/reports/generate first to create the PDF.
+
+8) Notes about Puppeteer on cloud / production
+- Puppeteer requires the host to have Chrome or use playwright / chrome-aws-lambda in serverless.
+- For production scale, use a queue + worker pool, and store PDFs in S3 with signed URLs instead of local files. The attached assets in the repo already include guidance and S3 upload placeholders.
+
+Why this fixes the screenshot errors
+- The runtime error "undefined is not an object (evaluating 'user.profileImageUrl')" occurs because template expects user to exist. Guarding or defaulting prevents a crash during server-side rendering (fixes the error screenshot).
+- The "Download Failed - Failed to generate PDF report" from the dashboard indicates either generation failed or download endpoint was missing. The changes above make generation write a stable file and a download URL that the UI can fetch.
+
+If you want I can:
+- Open a PR with these file changes (routes + modified worker + client util + small pages change).
+- Or provide an enqueue/polling flow variant (background generation + status endpoint + polling + disabled download until ready) — recommended for large reports.
+
+Which do you prefer?
+- Quick fix (direct generate + immediate download) — I'll prepare the PR with the minimal changes above.
+- Robust flow (enqueue → worker → status polling → S3 upload + signed url) — I'll prepare a multi-file PR implementing queue and S3 (longer).

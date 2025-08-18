@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Download, Eye, Calendar, TrendingUp, Shield, AlertTriangle, Users, DollarSign } from 'lucide-react';
 import { Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
+import { downloadReport, generateReport } from '@/utils/downloadReport';
 
 interface Report {
   id: string;
@@ -17,11 +19,132 @@ interface Report {
 }
 
 export default function Reports() {
+  const [downloadingReports, setDownloadingReports] = useState<Set<string>>(new Set());
+  const [generatingReport, setGeneratingReport] = useState(false);
+  const { toast } = useToast();
+  
   // Fetch reports data
   const { data: reports = [], isLoading } = useQuery({
     queryKey: ['/api/reports'],
     enabled: true
   });
+
+  const handleDownload = async (reportId: string, reportTitle: string) => {
+    if (downloadingReports.has(reportId)) return;
+    
+    setDownloadingReports(prev => new Set(prev).add(reportId));
+    
+    try {
+      toast({ 
+        title: "Downloading Report", 
+        description: `Preparing ${reportTitle} for download...` 
+      });
+      
+      await downloadReport(reportId);
+      
+      toast({ 
+        title: "Download Started", 
+        description: "The PDF should be saving to your device." 
+      });
+    } catch (error: any) {
+      console.error("Download failed:", error);
+      toast({
+        title: "Download Failed",
+        description: error?.message || "Failed to download PDF report",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingReports(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(reportId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleGenerateReport = async (reportType: string, title: string) => {
+    if (generatingReport) return;
+    
+    setGeneratingReport(true);
+    
+    try {
+      toast({ 
+        title: "Generating Report", 
+        description: `Creating ${title}...` 
+      });
+      
+      // Sample data for report generation - in production this would come from real data sources
+      const sampleData = {
+        keyMetrics: {
+          metrics: [
+            { label: "Total Return", value: "12.5%" },
+            { label: "Volatility", value: "8.2%" },
+            { label: "Sharpe Ratio", value: "1.52" },
+            { label: "Max Drawdown", value: "-4.1%" }
+          ]
+        },
+        executiveSummary: {
+          content: `This ${reportType.toLowerCase()} report provides comprehensive analysis of portfolio performance and key metrics for the specified period.`
+        },
+        highlights: {
+          items: [
+            "Strong performance across all asset classes",
+            "Risk metrics remain within acceptable ranges",
+            "Diversification strategy proving effective",
+            "No significant compliance issues identified"
+          ]
+        },
+        charts: [
+          {
+            title: "Portfolio Performance",
+            description: "Monthly returns and cumulative performance over time",
+            image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", // Placeholder
+            insights: {
+              items: [
+                "Consistent positive returns over the analysis period",
+                "Low correlation with market volatility"
+              ]
+            }
+          }
+        ]
+      };
+      
+      const result = await generateReport({
+        type: reportType,
+        title: title,
+        data: sampleData,
+        templateId: 'executive-report',
+        options: {
+          pageSize: 'A4',
+          margin: { top: '20mm', right: '12mm', bottom: '20mm', left: '12mm' }
+        }
+      });
+      
+      if (result.reportId) {
+        toast({ 
+          title: "Report Generated", 
+          description: "Starting download..." 
+        });
+        
+        // Auto-download the generated report
+        await downloadReport(result.reportId);
+        
+        toast({ 
+          title: "Download Complete", 
+          description: `${title} has been downloaded successfully.` 
+        });
+      }
+    } catch (error: any) {
+      console.error("Generation failed:", error);
+      toast({
+        title: "Generation Failed",
+        description: error?.message || "Failed to generate report",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
 
   const reportCategories = [
     {
@@ -115,9 +238,13 @@ export default function Reports() {
                 <span>View All Reports</span>
               </Button>
             </Link>
-            <Button className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700">
-              <Download className="w-4 h-4" />
-              <span>Generate Report</span>
+            <Button 
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+              onClick={() => handleGenerateReport('performance', 'Custom Performance Report')}
+              disabled={generatingReport}
+            >
+              <Download className={`w-4 h-4 ${generatingReport ? 'animate-pulse' : ''}`} />
+              <span>{generatingReport ? 'Generating...' : 'Generate Report'}</span>
             </Button>
           </div>
         </div>
@@ -155,8 +282,12 @@ export default function Reports() {
                           <Button size="sm" variant="outline">
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button size="sm">
-                            <Download className="w-4 h-4" />
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleDownload(report.id, report.title)}
+                            disabled={downloadingReports.has(report.id)}
+                          >
+                            <Download className={`w-4 h-4 ${downloadingReports.has(report.id) ? 'animate-pulse' : ''}`} />
                           </Button>
                         </div>
                       </div>
@@ -180,15 +311,30 @@ export default function Reports() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button variant="outline" className="h-20 flex flex-col space-y-2">
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex flex-col space-y-2"
+                  onClick={() => handleGenerateReport('performance', 'Monthly Performance Report')}
+                  disabled={generatingReport}
+                >
                   <TrendingUp className="w-6 h-6" />
                   <span>Monthly Performance</span>
                 </Button>
-                <Button variant="outline" className="h-20 flex flex-col space-y-2">
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex flex-col space-y-2"
+                  onClick={() => handleGenerateReport('risk', 'Risk Analysis Report')}
+                  disabled={generatingReport}
+                >
                   <Shield className="w-6 h-6" />
                   <span>Risk Analysis</span>
                 </Button>
-                <Button variant="outline" className="h-20 flex flex-col space-y-2">
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex flex-col space-y-2"
+                  onClick={() => handleGenerateReport('client', 'Client Summary Report')}
+                  disabled={generatingReport}
+                >
                   <Users className="w-6 h-6" />
                   <span>Client Summary</span>
                 </Button>

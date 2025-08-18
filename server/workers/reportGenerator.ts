@@ -39,16 +39,16 @@ export async function processReportJob(job: ReportJobPayload) {
     // Render HTML using Mustache (data should include base64 chart images and HTML table)
     const renderedHtml = Mustache.render(templateHtml, data);
 
-    // Create tmp directory if it doesn't exist
-    const tmpDir = '/tmp';
+    // Create storage directory if it doesn't exist
+    const reportsDir = path.join(process.cwd(), 'storage', 'reports');
     try {
-      await fs.access(tmpDir);
+      await fs.access(reportsDir);
     } catch {
-      await fs.mkdir(tmpDir, { recursive: true });
+      await fs.mkdir(reportsDir, { recursive: true });
     }
 
     // Write to a temp HTML file
-    const tmpHtmlPath = path.join(tmpDir, `report-${reportId}.html`);
+    const tmpHtmlPath = path.join(reportsDir, `report-${reportId}.html`);
     await fs.writeFile(tmpHtmlPath, renderedHtml, 'utf8');
 
     // Launch Puppeteer
@@ -78,7 +78,7 @@ export async function processReportJob(job: ReportJobPayload) {
     await browser.close();
 
     // Save PDF to local storage (can be extended to S3 later)
-    const pdfPath = path.join(tmpDir, `report-${reportId}.pdf`);
+    const pdfPath = path.join(reportsDir, `report-${reportId}.pdf`);
     await fs.writeFile(pdfPath, pdfBuffer);
     
     const pdfUrl = `/api/reports/${reportId}/download`;
