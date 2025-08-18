@@ -246,12 +246,12 @@ export default function ModelDetail() {
               The model with ID "{idParam}" could not be found.
             </p>
             <div className="bg-muted/30 p-4 rounded-lg mb-6">
-              <p className="text-sm text-muted-foreground mb-3">Available model IDs: 1, 2, 3, 5, 6, 7, 8, 9</p>
+              <p className="text-sm text-muted-foreground mb-3">Available model IDs: 1, 2, 3, 5, 6, 7, 8, 9, 12, 19</p>
               <p className="text-sm text-muted-foreground">
                 Try visiting one of these models:
               </p>
               <div className="flex flex-wrap justify-center gap-2 mt-3">
-                {[1, 2, 3, 5, 6, 7, 8, 9].map((modelId) => (
+                {[1, 2, 3, 5, 6, 7, 8, 9, 12, 19].map((modelId) => (
                   <Button 
                     key={modelId}
                     variant="outline" 
