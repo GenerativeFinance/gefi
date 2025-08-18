@@ -60,6 +60,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/theme/theme-provider";
 import { useQuery } from "@tanstack/react-query";
+import GlobalSearch from "@/components/search/GlobalSearch";
 
 // Helper function to map role to user type for display
 const mapRoleToUserType = (role?: string): string => {
@@ -466,13 +467,16 @@ export default function Header() {
               )}
 
               {/* Search */}
+              <div className="hidden md:block">
+                <GlobalSearch />
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsSearchOpen(true)}
-                className="w-9 h-9 md:w-auto md:h-auto p-2 md:px-3 md:py-2 text-muted-foreground hover:text-foreground"
+                className="md:hidden w-9 h-9 p-2 text-muted-foreground hover:text-foreground"
               >
-                <Search className="h-4 w-4 md:h-5 md:w-5" />
+                <Search className="h-4 w-4" />
               </Button>
 
               {/* AI Chatbot */}

@@ -82,6 +82,7 @@ import ESGGeospatialCommodities from "@/pages/esg-geospatial-commodities";
 import AlgorithmicHFTTrading from "@/pages/algorithmic-hft-trading";
 import FraudDetectionBayesian from "@/pages/fraud-detection-bayesian";
 import ReportGenerator from "@/pages/reports";
+import SearchPage from "@/pages/search";
 
 
 import ProfileSetup from "@/pages/profile-setup";
@@ -318,6 +319,7 @@ function Router() {
             <Route path="/compliance-reports" component={ComplianceReports} />
             <Route path="/risk-reports" component={RiskReports} />
             <Route path="/custom-reports" component={CustomReports} />
+            <Route path="/search" component={SearchPage} />
             <Route path="/market-data" component={MarketData} />
             <Route path="/investment-insights" component={InvestmentInsights} />
             <Route path="/regulator" component={RegulatorDashboard} />
