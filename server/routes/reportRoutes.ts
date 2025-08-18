@@ -3,6 +3,15 @@ import path from 'path';
 import fs from 'fs/promises';
 import { processReportJob } from '../workers/reportGenerator';
 import { nanoid } from 'nanoid';
+import reportStore from '../models/reportStore';
+
+// Check if Redis/queue is available
+let reportQueue: any = null;
+try {
+  reportQueue = require('../workers/reportQueue').default;
+} catch (err) {
+  console.warn('Report queue not available, using direct processing');
+}
 
 export function registerReportRoutes(app: Express): void {
   console.log("📄 Registering Report APIs...");
@@ -23,37 +32,76 @@ export function registerReportRoutes(app: Express): void {
       }
 
       const reportId = nanoid();
+      const now = new Date().toISOString();
       
-      // Process the report in the background
-      const result = await processReportJob({
-        reportId,
-        templateId,
-        data: {
-          ...data,
-          reportName: title,
-          generatedAt: new Date().toLocaleDateString(),
-          dateRange: data.dateRange || {
-            start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-            end: new Date().toLocaleDateString()
-          }
+      // Enhanced data with user information
+      const enhancedData = {
+        ...data,
+        reportName: title,
+        generatedAt: new Date().toLocaleDateString(),
+        dateRange: data.dateRange || {
+          start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          end: new Date().toLocaleDateString()
         },
-        options
-      });
+        user: req.user || {}
+      };
 
-      if (result.success) {
-        res.json({
+      if (reportQueue) {
+        // Queue-based processing
+        const metadata = {
+          id: reportId,
+          ownerId: req.user?.id || null,
+          templateId,
+          status: 'pending' as const,
+          createdAt: now,
+          updatedAt: now,
+          progress: 0,
+          error: null,
+          s3Key: null,
+          signedUrl: null,
+          pdfPath: null
+        };
+
+        await reportStore.createReport(metadata);
+
+        await reportQueue.enqueueReport({
           reportId,
-          status: 'completed',
-          pdfUrl: result.pdfUrl,
-          message: 'Report generated successfully'
+          templateId,
+          data: enhancedData,
+          options
+        });
+
+        res.status(202).json({
+          reportId,
+          status: 'pending',
+          statusUrl: `/api/reports/${reportId}/status`,
+          downloadUrl: `/api/reports/${reportId}/download`,
+          message: 'Report generation queued'
         });
       } else {
-        res.status(500).json({
+        // Direct processing fallback
+        const result = await processReportJob({
           reportId,
-          status: 'failed',
-          error: result.error,
-          message: 'Report generation failed'
+          templateId,
+          data: enhancedData,
+          options
         });
+
+        if (result.success) {
+          res.json({
+            reportId,
+            status: 'completed',
+            pdfUrl: result.pdfUrl,
+            message: 'Report generated successfully'
+          });
+        } else {
+          res.status(500).json({
+            reportId,
+            status: 'failed',
+            error: result.error,
+            message: 'Report generation failed'
+          });
+        }
       }
     } catch (error) {
       console.error('Report generation request failed:', error);
@@ -98,7 +146,7 @@ export function registerReportRoutes(app: Express): void {
     }
   });
 
-  // Get report status
+  // Get report status - enhanced for queue support
   app.get("/api/reports/:reportId/status", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -106,21 +154,40 @@ export function registerReportRoutes(app: Express): void {
 
     try {
       const { reportId } = req.params;
+
+      if (reportQueue) {
+        // Check metadata store first
+        const metadata = await reportStore.getReport(reportId);
+        if (metadata) {
+          return res.json({
+            reportId,
+            status: metadata.status,
+            progress: metadata.progress,
+            downloadUrl: metadata.status === 'completed' 
+              ? (metadata.signedUrl || `/api/reports/${reportId}/download`) 
+              : null,
+            error: metadata.error
+          });
+        }
+      }
+
+      // Fallback: check if file exists locally
       const reportsDir = path.join(process.cwd(), 'storage', 'reports');
       const pdfPath = path.join(reportsDir, `report-${reportId}.pdf`);
       
-      // Check if file exists
       try {
         await fs.access(pdfPath);
         res.json({
           reportId,
           status: 'completed',
-          pdfUrl: `/api/reports/${reportId}/download`
+          progress: 100,
+          downloadUrl: `/api/reports/${reportId}/download`
         });
       } catch {
         res.json({
           reportId,
-          status: 'not_found'
+          status: 'not_found',
+          progress: 0
         });
       }
     } catch (error) {

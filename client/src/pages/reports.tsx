@@ -7,7 +7,7 @@ import { Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
-import { downloadReport, generateReport } from '@/utils/downloadReport';
+import { downloadReport, generateReport, pollReportStatus, ReportStatus } from '@/utils/downloadReport';
 
 interface Report {
   id: string;
@@ -121,18 +121,47 @@ export default function Reports() {
       });
       
       if (result.reportId) {
-        toast({ 
-          title: "Report Generated", 
-          description: "Starting download..." 
-        });
-        
-        // Auto-download the generated report
-        await downloadReport(result.reportId);
-        
-        toast({ 
-          title: "Download Complete", 
-          description: `${title} has been downloaded successfully.` 
-        });
+        // Check if immediate download is available (local processing)
+        if (result.status === 'completed') {
+          toast({ 
+            title: "Report Generated", 
+            description: "Starting download..." 
+          });
+          
+          await downloadReport(result.reportId);
+          
+          toast({ 
+            title: "Download Complete", 
+            description: `${title} has been downloaded successfully.` 
+          });
+        } else {
+          // Queue-based processing - poll for status
+          toast({ 
+            title: "Report Queued", 
+            description: "Processing your report..." 
+          });
+          
+          await pollReportStatus(result.reportId, (status: ReportStatus) => {
+            if (status.status === 'processing') {
+              toast({ 
+                title: "Processing Report", 
+                description: `Progress: ${status.progress}%` 
+              });
+            }
+          });
+          
+          toast({ 
+            title: "Report Ready", 
+            description: "Starting download..." 
+          });
+          
+          await downloadReport(result.reportId);
+          
+          toast({ 
+            title: "Download Complete", 
+            description: `${title} has been downloaded successfully.` 
+          });
+        }
       }
     } catch (error: any) {
       console.error("Generation failed:", error);
