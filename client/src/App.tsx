@@ -106,6 +106,7 @@ import AdminContentModeration from "@/pages/admin-content-moderation";
 import AdminSecurity from "@/pages/admin-security";
 import AdminSupport from "@/pages/admin-support";
 import AdminAnalytics from "@/pages/admin-analytics";
+import AdminAIModels from "@/pages/admin-ai-models";
 import ModeratorContentReview from "@/pages/moderator-content-review";
 import ModeratorSupportTickets from "@/pages/moderator-support-tickets";
 import ModeratorUserMonitoring from "@/pages/moderator-user-monitoring";
@@ -376,6 +377,7 @@ function Router() {
             <Route path="/developer/collaboration/notifications" component={DeveloperCollaborationNotifications} />
             <Route path="/admin" component={AdminDashboard} />
             <Route path="/admin/users" component={AdminUserManagement} />
+            <Route path="/admin/ai-models" component={AdminAIModels} />
             <Route path="/admin/content" component={AdminContentModeration} />
             <Route path="/admin/security" component={AdminSecurity} />
             <Route path="/admin/support" component={AdminSupport} />
