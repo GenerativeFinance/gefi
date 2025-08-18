@@ -392,6 +392,108 @@ export function registerAdminRoutes(app: Express) {
       res.status(500).json({ message: 'Failed to create user' });
     }
   });
+
+  // ==========================================
+  // AI Models Admin Management
+  // ==========================================
+
+  // Get all AI models for admin management
+  app.get('/api/admin/ai-models', requireAdminOrModerator, async (req: any, res) => {
+    try {
+      const models = await storage.getAllAiModels();
+      
+      // Transform models to include admin-specific data
+      const adminModels = models.map((model: any) => ({
+        ...model,
+        status: model.isActive ? 'active' : 'suspended',
+        subscriptions: 0, // Will be implemented with real subscription data
+        performance: Math.floor(Math.random() * 100), // Placeholder - will be real performance metrics
+        lastUpdated: model.updatedAt || model.createdAt || new Date().toISOString()
+      }));
+      
+      res.json(adminModels);
+    } catch (error) {
+      console.error('Error fetching AI models for admin:', error);
+      res.status(500).json({ message: 'Failed to fetch AI models' });
+    }
+  });
+
+  // Update AI model status
+  app.put('/api/admin/ai-models/:id/status', requireAdminOrModerator, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      
+      if (!['active', 'suspended', 'pending', 'under_review'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status value' });
+      }
+
+      // Convert status to isActive boolean for storage
+      const isActive = status === 'active';
+      
+      const updatedModel = await storage.updateAiModel(parseInt(id), {
+        isActive,
+        updatedAt: new Date()
+      });
+      
+      res.json({ 
+        message: 'AI model status updated successfully', 
+        model: {
+          id: updatedModel.id,
+          status: isActive ? 'active' : 'suspended',
+          updatedAt: updatedModel.updatedAt
+        }
+      });
+    } catch (error) {
+      console.error('Error updating AI model status:', error);
+      res.status(500).json({ message: 'Failed to update AI model status' });
+    }
+  });
+
+  // Delete AI model
+  app.delete('/api/admin/ai-models/:id', requireAdminOrModerator, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Only admins can delete models
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Only admins can delete AI models' });
+      }
+      
+      await storage.deleteAiModel(parseInt(id));
+      
+      res.json({ message: 'AI model deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting AI model:', error);
+      res.status(500).json({ message: 'Failed to delete AI model' });
+    }
+  });
+
+  // Get AI model statistics for admin dashboard
+  app.get('/api/admin/ai-models/stats', requireAdminOrModerator, async (req: any, res) => {
+    try {
+      const models = await storage.getAllAiModels();
+      
+      const stats = {
+        totalModels: models.length,
+        activeModels: models.filter((m: any) => m.isActive).length,
+        inactiveModels: models.filter((m: any) => !m.isActive).length,
+        byCategory: models.reduce((acc: any, model: any) => {
+          acc[model.category] = (acc[model.category] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
+        byComplexity: models.reduce((acc: any, model: any) => {
+          acc[model.complexity] = (acc[model.complexity] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching AI model stats:', error);
+      res.status(500).json({ message: 'Failed to fetch AI model statistics' });
+    }
+  });
 }
 
 // Helper function to map role to user type for display

@@ -150,6 +150,8 @@ export interface IStorage {
   getAllAiModels(): Promise<AiModel[]>;
   getAiModel(id: number): Promise<AiModel | undefined>;
   createAiModel(model: InsertAiModel): Promise<AiModel>;
+  updateAiModel(id: number, updates: Partial<InsertAiModel>): Promise<AiModel>;
+  deleteAiModel(id: number): Promise<void>;
   getUserModelSubscriptions(userId: string): Promise<UserModelSubscription[]>;
   subscribeToModel(subscription: InsertUserModelSubscription): Promise<UserModelSubscription>;
   getUserAiModels(userId: string): Promise<AiModel[]>;
@@ -782,6 +784,21 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(aiModels.rating));
 
     return models;
+  }
+
+  async updateAiModel(id: number, updates: Partial<InsertAiModel>): Promise<AiModel> {
+    const [updatedModel] = await db
+      .update(aiModels)
+      .set(updates)
+      .where(eq(aiModels.id, id))
+      .returning();
+    return updatedModel;
+  }
+
+  async deleteAiModel(id: number): Promise<void> {
+    await db
+      .delete(aiModels)
+      .where(eq(aiModels.id, id));
   }
 
   // Market insights operations
