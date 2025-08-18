@@ -1,0 +1,222 @@
+I can enable search across the GeFi platform for Models, Strategies, Reports, Users, Funding and Bounties. Before I implement, pick how you want the search backend to work — I’ll prepare the code and open the PR after you confirm.
+
+High-level options (pick one)
+- MeiliSearch (recommended for speed, typo tolerance, relevance, easy to run locally or hosted; great developer DX)
+- Algolia (hosted, enterprise grade, paid)
+- Postgres full‑text search (no extra services, simpler for small datasets, less feature-rich for ranking/fuzziness/autocomplete)
+- Elasticsearch / OpenSearch (full power and scale, more operational complexity)
+
+If you want me to implement now, tell me which backend you prefer. If you want a recommendation, I recommend MeiliSearch for this project because:
+- Easy to run locally (docker), low ops overhead.
+- Built-in typo tolerance, ranking rules, facets, and autocomplete.
+- Fast to integrate and supports incremental updates.
+
+What I will implement (if you confirm MeiliSearch)
+1. Add a search service and indexer:
+   - server/services/search.ts — MeiliSearch client + helpers to index documents and run queries.
+   - Indexes: models, strategies, reports, users, funding, bounties (one index per resource).
+   - Index mappings: minimal searchable attributes per resource, plus filterable attributes (ownerId, status, tags, createdAt).
+
+2. Indexing pipeline:
+   - On create/update/delete of each resource, call the search service to add/update/delete the document in the appropriate index.
+   - Add a small queue/worker for bulk reindexing jobs (use existing BullMQ from the report work if present).
+   - Provide a CLI script or npm script to run a full reindex (for initial population).
+
+3. Search API endpoints:
+   - GET /api/search?q=...&types=models,strategies&limit=10&cursor=...
+     - Returns grouped results per requested types with counts and paging cursors.
+   - GET /api/search/autocomplete?q=...&type=models&limit=6
+     - Fast autocomplete endpoint.
+   - Or resource-specific endpoints if you prefer:
+     - GET /api/models/search?q=...
+     - GET /api/strategies/search?q=...
+   - All endpoints will validate user permissions and filter results by ownership/visibility when required.
+
+4. Client UI:
+   - Global search component (top bar) with:
+     - Debounced requests (300ms).
+     - Autocomplete suggestions grouped by resource.
+     - Keyboard navigation (arrow keys, enter).
+     - “See all results” link to a full search results page.
+   - Per-page search: integrate search box on Models/Strategies/Reports pages that filters only that resource.
+   - Download/Action links in result cards (where applicable).
+   - Disabled download or visibility rules enforced by server results.
+
+5. Auth & security:
+   - Filter results server-side based on user role and resource visibility (public/private).
+   - Keep user-sensitive attributes out of the public search index (e.g., emails), or use separate private indexes.
+
+6. Tests & docs:
+   - Unit tests for search helpers and API endpoints.
+   - README updates with env vars and how to run MeiliSearch locally:
+     - docker run -it --rm -p 7700:7700 getmeili/meilisearch
+   - Reindex instructions.
+
+Example implementation (MeiliSearch) — server side
+- An Express route + search service example you can drop in.
+
+server/services/search.ts
+```typescript
+import { MeiliSearch } from "meilisearch";
+
+const MEILI_HOST = process.env.MEILI_HOST || "http://127.0.0.1:7700";
+const MEILI_KEY = process.env.MEILI_MASTER_KEY || "";
+
+const client = new MeiliSearch({ host: MEILI_HOST, apiKey: MEILI_KEY });
+
+export async function indexDocument(indexName: string, doc: any) {
+  const index = client.index(indexName);
+  return index.addDocuments([doc]);
+}
+
+export async function updateDocument(indexName: string, doc: any) {
+  const index = client.index(indexName);
+  return index.addDocuments([doc]); // addDocuments upserts
+}
+
+export async function deleteDocument(indexName: string, id: string) {
+  const index = client.index(indexName);
+  return index.deleteDocument(id);
+}
+
+export async function searchIndex(indexName: string, q: string, opts = {}) {
+  const index = client.index(indexName);
+  return index.search(q, opts);
+}
+```
+
+server/routes/search.ts (single endpoint, grouped results)
+```typescript
+import express from "express";
+import { searchIndex } from "../services/search";
+
+const router = express.Router();
+
+/**
+ * GET /api/search?q=...&types=models,strategies&limit=10
+ * types: comma-separated list of indexes to query
+ */
+router.get("/", async (req, res) => {
+  try {
+    const q = String(req.query.q || "");
+    const types = String(req.query.types || "models,strategies,reports,users,funding,bounties")
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    const limit = parseInt(String(req.query.limit || "6"), 10);
+
+    if (!q || q.trim().length === 0) {
+      return res.json({ q, results: {} });
+    }
+
+    // Parallel searches to keep latency low
+    const promises = types.map(async (type) => {
+      const r = await searchIndex(type, q, { limit });
+      return { type, hits: r.hits, nbHits: r.nbHits, processingTimeMs: r.processingTimeMs };
+    });
+
+    const results = await Promise.all(promises);
+    const grouped: Record<string, any> = {};
+    results.forEach((r) => (grouped[r.type] = r));
+
+    res.json({ q, results: grouped });
+  } catch (err) {
+    console.error("GET /api/search error:", err);
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+export default router;
+```
+
+Example indexing document shape (Models index)
+- id (string)
+- title (string) — searchable & displayed
+- description (string) — searchable
+- ownerId (string) — filterable
+- tags (array) — filterable
+- createdAt (ISO) — sortable/filterable
+- visibility (public/private) — filterable
+
+Example MeiliSearch index settings (run once during setup):
+```js
+// pseudocode to set index settings
+await client.index("models").updateSettings({
+  searchableAttributes: ["title", "description", "tags"],
+  displayedAttributes: ["id", "title", "description", "ownerId", "tags", "createdAt", "visibility"],
+  filterableAttributes: ["ownerId", "visibility", "tags"],
+  rankingRules: ["typo", "words", "proximity", "attribute", "sort", "exactness"],
+});
+```
+
+If you prefer Postgres full-text search (no extra service)
+- Add a tsvector column on the table(s), update it on insert/update, and create GIN index.
+- Example migration for Models (Postgres / SQL):
+```sql
+ALTER TABLE models ADD COLUMN document_tsv tsvector;
+
+UPDATE models SET document_tsv = to_tsvector('english', coalesce(title,'') || ' ' || coalesce(description,''));
+
+CREATE INDEX models_document_tsv_idx ON models USING GIN(document_tsv);
+
+-- trigger to update tsvector on change
+CREATE FUNCTION models_tsvector_trigger() RETURNS trigger AS $$
+begin
+  new.document_tsv := to_tsvector('english', coalesce(new.title,'') || ' ' || coalesce(new.description,''));
+  return new;
+end
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tsvectorupdate BEFORE INSERT OR UPDATE
+  ON models FOR EACH ROW EXECUTE PROCEDURE models_tsvector_trigger();
+```
+Then search with:
+```sql
+SELECT id, title, ts_rank(document_tsv, plainto_tsquery('english', $1)) AS rank
+FROM models
+WHERE document_tsv @@ plainto_tsquery('english', $1)
+ORDER BY rank DESC
+LIMIT 20;
+```
+
+Client UI suggestions
+- Global topbar search:
+  - Debounce 250–350ms
+  - Show up to 3 result groups (Models, Strategies, Reports), each with 3 suggestions + “See all results”
+  - Use keyboard navigation and accessible aria attributes
+- Results page:
+  - Show filters (owner, tags, created date)
+  - Pagination or cursor-based paging (MeiliSearch supports offset/limit and cursor-like behavior)
+- Per-resource pages:
+  - Use resource-specific search endpoint to avoid extraneous results and to enable facets
+
+Rollout plan
+1. Implement search service + indices
+2. Add indexing hooks for create/update/delete (quick wins: call indexer in same request; longer-term: queue)
+3. Add API endpoints
+4. Add UI components (topbar autocomplete, results pages)
+5. QA and run full reindex
+6. Switch on feature flag and monitor metrics (search latency, errors)
+7. Promote to prod and remove dev flags
+
+Security & privacy
+- Never index PII (emails, SSNs) into public indexes.
+- If indexing user-sensitive data, create a private index or include ownerId and enforce result filtering server-side.
+- Signed search API keys (MeiliSearch supports API keys with limited permissions) for client-side autocomplete if needed; otherwise proxy through your backend.
+
+Next steps
+- Tell me which backend you want (MeiliSearch, Postgres full-text, Algolia, Elasticsearch).
+- Tell me whether you want:
+  - One global search endpoint (grouped results) + per-resource endpoints (preferred)
+  - Or only per-resource search endpoints
+- Confirm and I will:
+  - Open a PR implementing the chosen backend (service, indexing hooks, API routes, client helpers and a small UI integration).
+  - Include README changes and a full reindex script.
+  - Add tests for the server search endpoints.
+
+If you prefer, I can prepare a short PoC branch (MeiliSearch-based) that:
+- spins up MeiliSearch via docker-compose,
+- adds the server/service and one index (Models),
+- shows the client topbar autocomplete and a results page.
+
+Which option do you want me to implement now?

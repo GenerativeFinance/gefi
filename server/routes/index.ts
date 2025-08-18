@@ -50,7 +50,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerAuthCompat(app);
 
   console.log("📄 Registering Report APIs...");
-  registerReportRoutes(app);
+  const reportsRouter = (await import("./reports")).default;
+  app.use("/api/reports", reportsRouter);
   
   console.log("📅 Registering Calendly APIs...");
   const { registerCalendlyRoutes } = await import("./calendlyRoutes");
