@@ -3,7 +3,9 @@ import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import puppeteer from 'puppeteer';
 import Mustache from 'mustache';
-import { db } from '../db';
+import { v4 as uuidv4 } from 'uuid';
+import { uploadReportPDF } from '../services/s3.js';
+import { db } from '../db.js';
 import { reports } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
@@ -25,9 +27,16 @@ export interface ReportJobPayload {
  * Process a report job:
  * - Render the HTML template with provided data
  * - Launch Puppeteer and render PDF
- * - Save PDF and update the DB record
+ * - Upload to S3 and update the metadata store
  */
-export async function processReportJob(job: ReportJobPayload) {
+export async function processReportJob(job: ReportJobPayload): Promise<{
+  success: boolean;
+  pdfUrl?: string;
+  pdfPath?: string;
+  s3Key?: string;
+  signedUrl?: string;
+  error?: string;
+}> {
   const { reportId, templateId, data, options = {} } = job;
   console.log(`Starting report generation for ${reportId}`);
   
@@ -36,8 +45,31 @@ export async function processReportJob(job: ReportJobPayload) {
     const templatePath = path.join(__dirname, '..', 'templates', `${templateId}.html`);
     const templateHtml = await fs.readFile(templatePath, 'utf8');
 
-    // Render HTML using Mustache (data should include base64 chart images and HTML table)
-    const renderedHtml = Mustache.render(templateHtml, data);
+    // Ensure data has safe defaults to prevent template errors
+    const safeData = {
+      ...data,
+      user: data.user || {},
+      reportName: data.reportName || 'Financial Report',
+      generatedAt: data.generatedAt || new Date().toLocaleDateString(),
+      dateRange: data.dateRange || {
+        start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+        end: new Date().toLocaleDateString()
+      }
+    };
+
+    // Ensure user object has safe defaults
+    if (safeData.user) {
+      safeData.user = {
+        profileImageUrl: '',
+        firstName: 'User',
+        lastName: '',
+        email: '',
+        ...safeData.user
+      };
+    }
+
+    // Render HTML using Mustache with safe data
+    const renderedHtml = Mustache.render(templateHtml, safeData);
 
     // Create tmp directory if it doesn't exist
     const tmpDir = '/tmp';
@@ -77,14 +109,43 @@ export async function processReportJob(job: ReportJobPayload) {
 
     await browser.close();
 
-    // Save PDF to local storage (can be extended to S3 later)
-    const pdfPath = path.join(tmpDir, `report-${reportId}.pdf`);
-    await fs.writeFile(pdfPath, pdfBuffer);
+    // Try to upload to S3 first (production), fallback to local storage (development)
+    const isProduction = process.env.NODE_ENV === 'production';
+    let s3Key: string | undefined;
+    let signedUrl: string | undefined;
+    let pdfPath: string | undefined;
+
+    if (isProduction && process.env.S3_BUCKET) {
+      console.log(`Uploading report ${reportId} to S3...`);
+      const uploadResult = await uploadReportPDF(reportId, pdfBuffer);
+      
+      if (uploadResult.success) {
+        s3Key = uploadResult.s3Key;
+        signedUrl = uploadResult.signedUrl;
+        console.log(`Report ${reportId} uploaded to S3: ${s3Key}`);
+      } else {
+        console.warn(`S3 upload failed for ${reportId}, falling back to local storage:`, uploadResult.error);
+        // Fallback to local storage
+        pdfPath = path.join(tmpDir, `report-${reportId}.pdf`);
+        await fs.writeFile(pdfPath, pdfBuffer);
+      }
+    } else {
+      // Development mode or S3 not configured - save locally
+      pdfPath = path.join(tmpDir, `report-${reportId}.pdf`);
+      await fs.writeFile(pdfPath, pdfBuffer);
+      console.log(`Report ${reportId} saved locally: ${pdfPath}`);
+    }
     
     const pdfUrl = `/api/reports/${reportId}/download`;
 
     console.log(`Report generation completed for ${reportId}`);
-    return { success: true, pdfUrl, pdfPath };
+    return { 
+      success: true, 
+      pdfUrl, 
+      pdfPath,
+      s3Key,
+      signedUrl 
+    };
   } catch (err) {
     console.error('Report generation failed:', (err as Error).message);
     return { success: false, error: String(err) };

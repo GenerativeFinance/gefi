@@ -288,6 +288,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log("📡 WebSocket server configured on /ws");
   console.log("🔗 API overview available at /api");
 
+  // Initialize report generation worker
+  if (process.env.NODE_ENV !== 'test') {
+    console.log("🔄 Starting report generation worker...");
+    try {
+      const { createReportWorker } = await import("../workers/reportQueue.js");
+      createReportWorker();
+      console.log("✅ Report generation worker started successfully");
+    } catch (error) {
+      console.warn("⚠️ Failed to start report worker (Redis may not be available):", error);
+    }
+  }
+
   return httpServer;
 }
 
