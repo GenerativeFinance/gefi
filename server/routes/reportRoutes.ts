@@ -1,7 +1,4 @@
-import type { Express } from "express";
-import path from 'path';
-import fs from 'fs/promises';
-import { processReportJob } from '../workers/reportGenerator';
+import express from "express";
 import { nanoid } from 'nanoid';
 import reportStore from '../models/reportStore';
 
@@ -12,6 +9,8 @@ try {
 } catch (err) {
   console.warn('Report queue not available, using direct processing');
 }
+
+const router = express.Router();
 
 export function registerReportRoutes(app: Express): void {
   console.log("📄 Registering Report APIs...");
