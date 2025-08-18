@@ -56,3 +56,53 @@ export async function generateReport(reportData: {
   const result = await response.json();
   return result;
 }
+
+export interface ReportStatus {
+  reportId: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  progress: number;
+  downloadUrl?: string;
+  error?: string;
+}
+
+/**
+ * Poll for report status with exponential backoff
+ */
+export async function pollReportStatus(
+  reportId: string,
+  onProgress?: (status: ReportStatus) => void
+): Promise<ReportStatus> {
+  const maxAttempts = 30; // Max 5 minutes with exponential backoff
+  let attempt = 0;
+  
+  while (attempt < maxAttempts) {
+    try {
+      const response = await fetch(`/api/reports/${reportId}/status`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const status: ReportStatus = await response.json();
+      
+      onProgress && onProgress(status);
+      
+      if (status.status === 'completed' || status.status === 'failed') {
+        return status;
+      }
+      
+      // Exponential backoff: 1s, 2s, 4s, 8s, max 16s
+      const delay = Math.min(1000 * Math.pow(2, attempt), 16000);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+    } catch (error) {
+      console.warn(`Status check attempt ${attempt + 1} failed:`, error);
+    }
+    
+    attempt++;
+  }
+  
+  throw new Error('Report generation timed out');
+}

@@ -3,9 +3,7 @@ import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import puppeteer from 'puppeteer';
 import Mustache from 'mustache';
-import { db } from '../db';
-import { reports } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { uploadBufferToS3, getSignedUrlForKey, isS3Configured } from '../services/s3';
 
 // Fix for ES modules - __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
@@ -21,13 +19,25 @@ export interface ReportJobPayload {
   };
 }
 
+export interface ReportResult {
+  success: boolean;
+  pdfUrl?: string;
+  pdfPath?: string;
+  s3Key?: string;
+  signedUrl?: string;
+  error?: string;
+}
+
 /**
  * Process a report job:
  * - Render the HTML template with provided data
  * - Launch Puppeteer and render PDF
- * - Save PDF and update the DB record
+ * - Save PDF locally or upload to S3
  */
-export async function processReportJob(job: ReportJobPayload) {
+export async function processReportJob(
+  job: ReportJobPayload, 
+  onProgress?: (progress: number) => void
+): Promise<ReportResult> {
   const { reportId, templateId, data, options = {} } = job;
   console.log(`Starting report generation for ${reportId}`);
   
@@ -51,10 +61,13 @@ export async function processReportJob(job: ReportJobPayload) {
     const tmpHtmlPath = path.join(reportsDir, `report-${reportId}.html`);
     await fs.writeFile(tmpHtmlPath, renderedHtml, 'utf8');
 
-    // Launch Puppeteer
+    onProgress && onProgress(20);
+
+    // Launch Puppeteer with explicit Chrome path
     const browser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-      headless: true
+      headless: true,
+      executablePath: '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium'
     });
     const page = await browser.newPage();
 
@@ -77,14 +90,46 @@ export async function processReportJob(job: ReportJobPayload) {
 
     await browser.close();
 
-    // Save PDF to local storage (can be extended to S3 later)
-    const pdfPath = path.join(reportsDir, `report-${reportId}.pdf`);
-    await fs.writeFile(pdfPath, pdfBuffer);
-    
-    const pdfUrl = `/api/reports/${reportId}/download`;
+    onProgress && onProgress(80);
+
+    // Choose storage strategy based on S3 configuration
+    let pdfPath: string | undefined;
+    let s3Key: string | undefined;
+    let signedUrl: string | undefined;
+    let pdfUrl: string;
+
+    if (isS3Configured()) {
+      try {
+        // Upload to S3
+        s3Key = `reports/${reportId}/${Date.now()}-report.pdf`;
+        await uploadBufferToS3(s3Key, pdfBuffer);
+        signedUrl = await getSignedUrlForKey(s3Key, 3600); // 1 hour expiry
+        pdfUrl = signedUrl;
+        console.log(`Report ${reportId} uploaded to S3: ${s3Key}`);
+      } catch (s3Error) {
+        console.warn(`S3 upload failed for ${reportId}, falling back to local storage:`, s3Error);
+        // Fallback to local storage
+        pdfPath = path.join(reportsDir, `report-${reportId}.pdf`);
+        await fs.writeFile(pdfPath, pdfBuffer);
+        pdfUrl = `/api/reports/${reportId}/download`;
+      }
+    } else {
+      // Local storage
+      pdfPath = path.join(reportsDir, `report-${reportId}.pdf`);
+      await fs.writeFile(pdfPath, pdfBuffer);
+      pdfUrl = `/api/reports/${reportId}/download`;
+    }
+
+    onProgress && onProgress(100);
 
     console.log(`Report generation completed for ${reportId}`);
-    return { success: true, pdfUrl, pdfPath };
+    return { 
+      success: true, 
+      pdfUrl, 
+      pdfPath, 
+      s3Key, 
+      signedUrl 
+    };
   } catch (err) {
     console.error('Report generation failed:', (err as Error).message);
     return { success: false, error: String(err) };
