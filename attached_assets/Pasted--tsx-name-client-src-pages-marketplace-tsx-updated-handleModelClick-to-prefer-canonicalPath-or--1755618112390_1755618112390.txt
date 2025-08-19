@@ -1,0 +1,244 @@
+```tsx name=client/src/pages/marketplace.tsx
+/* updated handleModelClick to prefer canonicalPath or slug when navigating to details */
+/* ...existing imports... */
+import { Eye } from "lucide-react";
+/* ...other code... */
+
+export default function AIMarketplace() {
+  /* ...other state / hooks / helpers... */
+
+  const resolveModelPath = (model: any) => {
+    // Prefer explicit canonicalPath if present (allow both with/without leading slash)
+    if (model?.canonicalPath) {
+      return model.canonicalPath.startsWith("/") ? model.canonicalPath : `/${model.canonicalPath}`;
+    }
+
+    // Prefer slug if present
+    if (model?.slug) {
+      return `/model/${model.slug}`;
+    }
+
+    // Fallback to numeric id route
+    return `/model/${model.id}`;
+  };
+
+  const handleModelClick = (model: any) => {
+    handleInteraction(model.id, "view", {
+      sessionDuration: Math.floor(Math.random() * 120) + 30,
+      clickDepth: 1,
+    });
+
+    // Special case redirects for models with custom pages
+    if (model.id === 5) {
+      window.location.href = "/forecasting-model";
+      return;
+    } else if (model.id === 9) {
+      window.location.href = "/hrp-portfolio-optimization";
+      return;
+    }
+
+    // Navigate to canonical model detail route using wouter
+    const target = resolveModelPath(model);
+    // Prefer client-side navigation where possible
+    try {
+      navigate(target);
+    } catch {
+      // Fallback to full page load if navigate fails
+      window.location.href = target;
+    }
+  };
+
+  /* ...other code... */
+
+  return (
+    /* ...markup above cards... */
+
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredModels.map((model: any) => (
+        <Card
+          key={model.id}
+          className="group hover:shadow-lg transition-all duration-200 cursor-pointer"
+          onClick={() => handleModelClick(model)}
+        >
+          <CardHeader>
+            {/* ...header content... */}
+          </CardHeader>
+
+          <CardContent>
+            {/* ...price / subscribe ... */}
+
+            <div className="mt-4 flex gap-3">
+              {/* View Details should navigate to the model detail page (prefer canonicalPath/slug) */}
+              <Button
+                size="sm"
+                className="flex-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleModelClick(model);
+                }}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
+              </Button>
+
+              {!isUserSubscribed(model.id) ? (
+                <Button
+                  size="sm"
+                  className="flex-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    subscribeMutation.mutate(model.id);
+                  }}
+                  disabled={subscribeMutation.isLoading}
+                >
+                  {subscribeMutation.isLoading ? "Processing..." : "Subscribe"}
+                </Button>
+              ) : (
+                <Button variant="secondary" size="sm" className="flex-1">
+                  Manage
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+
+    /* ...rest of the page ... */
+  );
+}
+```
+
+```tsx name=client/src/pages/model-detail.tsx
+/* support loading model by numeric id OR by slug and prefer canonicalPath / slug canonicalization */
+/* preserve existing imports... */
+
+export default function ModelDetail() {
+  // Try known route patterns (made the param name generic so it can be slug or id)
+  const [, modelRouteParams] = useRoute("/model/:idOrSlug");
+  const [, marketplaceRouteParams] = useRoute("/marketplace/:id");
+  const [, aiModelsRouteParams] = useRoute("/ai-models/:id");
+
+  // Resolve idParam from route params or fallback to pathname parsing
+  const idParamRaw =
+    modelRouteParams?.idOrSlug ??
+    marketplaceRouteParams?.id ??
+    aiModelsRouteParams?.id ??
+    (typeof window !== "undefined"
+      ? (window.location.pathname.match(/\/(?:model|marketplace|models|ai-models)\/([^/]+)/) || [])[1]
+      : undefined);
+
+  const idParam = idParamRaw ? String(idParamRaw) : undefined;
+
+  /* ...existing hooks: queryClient, toast, data fetching helpers ... */
+
+  // Fetch model: attempt numeric id first, otherwise try fetching by slug
+  useEffect(() => {
+    if (!idParam) return;
+
+    const fetchModel = async () => {
+      try {
+        // if idParam looks like a number, attempt numeric fetch
+        if (!Number.isNaN(Number(idParam))) {
+          await refetch({ queryKey: ["api", "ai-models", idParam] });
+        } else {
+          // non-numeric -> treat as slug; call slug endpoint
+          // This endpoint is added in backend patch below: GET /api/ai-models/slug/:slug
+          const res = await fetch(`/api/ai-models/slug/${encodeURIComponent(idParam)}`);
+          if (!res.ok) throw new Error("Model not found");
+          const json = await res.json();
+          // mutate the query cache / set local state accordingly (assumes existing query keys)
+          queryClient.setQueryData(["api", "ai-models", String(json.id)], json);
+          // set model into local query cache used by the page (if you use react-query useQuery for model, adjust accordingly)
+          // you may also set a direct component state if needed:
+          // setModel(json);
+        }
+      } catch (e) {
+        // allow existing error handling to handle missing models
+        console.error("Failed to load model by slug:", e);
+      }
+    };
+
+    fetchModel();
+  }, [idParam, queryClient, refetch]);
+
+  // If we have a loaded model, prefer the canonical path (redirect to canonicalPath or slug-based canonical URL)
+  useEffect(() => {
+    if (!model) return;
+
+    const canonical =
+      (model as any)?.canonicalPath ||
+      ((model as any)?.slug ? `/model/${(model as any).slug}` : null);
+
+    if (canonical && typeof window !== "undefined") {
+      const cur = window.location.pathname;
+      // Avoid redirecting if we're already on the canonical path
+      if (cur !== canonical) {
+        window.location.href = canonical;
+        return;
+      }
+    }
+  }, [model]);
+
+  /* ...rest of the existing component rendering code (unchanged) ... */
+}
+```
+
+```ts name=server/src/routes/ai-models.ts
+// Minimal Express route to support fetching a model by slug (or canonical path).
+// Add to your existing server route mounting (e.g. app.use('/api/ai-models', require('./routes/ai-models')))
+// Adjust imports/DB access to match your project's conventions.
+
+import express from "express";
+const router = express.Router();
+
+// Replace this with your real DB access layer / model
+import { getModelById, getModelBySlug } from "../controllers/aiModelsController";
+
+/**
+ * GET /api/ai-models/slug/:slug
+ * Return the model with the given slug (or 404).
+ */
+router.get("/slug/:slug", async (req, res) => {
+  try {
+    const { slug } = req.params;
+    if (!slug) return res.status(400).json({ error: "Missing slug" });
+
+    const model = await getModelBySlug(String(slug));
+    if (!model) return res.status(404).json({ error: "Model not found" });
+
+    // Ensure canonicalPath is present in the response where possible
+    // e.g. model.canonicalPath = model.canonicalPath || `/model/${model.slug || model.id}`;
+    res.json(model);
+  } catch (err) {
+    console.error("Error fetching model by slug:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+export default router;
+```
+
+Notes / migration steps
+- Frontend:
+  - marketplace.tsx: handleModelClick now computes a preferred path: model.canonicalPath (if present), else /model/{slug} (if slug present), else /model/{id}.
+  - model-detail.tsx: route param is now generic (idOrSlug). The page attempts numeric id fetch first; if the route param is not numeric it calls the new backend endpoint GET /api/ai-models/slug/:slug. After model loads, the page will redirect the browser to the canonical path if the model exposes canonicalPath or a slug-based canonical URL. This ensures the canonical URL is used site-wide.
+- Backend:
+  - Added an example route GET /api/ai-models/slug/:slug which should look up a model by slug. Hook it into your real controller/DB layer; the example references getModelBySlug in controllers/aiModelsController (you may already have such a function — if not add one).
+  - Ensure your model objects include canonicalPath and/or slug fields in API responses. If canonicalPath is not present in DB, you can synthesize: canonicalPath = model.canonicalPath || (model.slug ? `/model/${model.slug}` : `/model/${model.id}`).
+
+How to test
+1. Populate a model with slug and/or canonicalPath in your database (or ensure the API returns slug/canonicalPath).
+2. Start backend and frontend.
+3. From the marketplace:
+   - Click the card (or the "View Details" button); it should navigate to:
+     - model.canonicalPath if set (e.g. /models/forecasting-special)
+     - otherwise /model/{slug} when slug exists
+     - otherwise /model/{id} as fallback
+4. Navigate directly to /model/{slug} — the model-detail page will fetch by slug (uses the new backend route).
+5. If the model response contains canonicalPath, visiting any non-canonical path will redirect to canonicalPath (so search engines and social links converge to canonical URL).
+
+If you'd like I can:
+- Open a PR with these changes and wire the new backend route into your server's route mounting (please confirm repo write access).
+- Update any existing controller implementations (e.g. add getModelBySlug) if you point me to the server's DB access layer file names.
+- Prefer a different canonical URL pattern (for example /models/:slug instead of /model/:slug) — tell me which you prefer and I'll update the patches.

@@ -73,6 +73,7 @@ import ServerManagement from "@/pages/server-management";
 import ApiAccess from "@/pages/api-access";
 import ForecastingModel from "@/pages/forecasting-model";
 import HRPPortfolioOptimization from "@/pages/hrp-portfolio-optimization";
+import PortfolioHrpPage from "@/pages/portfolio-hrp";
 import DeFiAnomalyDetection from "@/pages/defi-anomaly-detection";
 import SocialSentimentTrading from "@/pages/social-sentiment-trading";
 import DeFiYieldOptimizer from "@/pages/defi-yield-optimizer";
@@ -239,6 +240,7 @@ function Router() {
             <Route path="/portfolio/ai-models" component={PortfolioAI} />
             <Route path="/portfolio/risk-distribution" component={RiskDistribution} />
             <Route path="/portfolio/rebalance" component={RebalanceActions} />
+            <Route path="/portfolio/hrp" component={PortfolioHrpPage} />
             <Route path="/risk-management/assessment" component={RiskAssessment} />
             <Route path="/reports" component={ReportGenerator} />
             <Route path="/reports/all" component={ReportsAll} />
