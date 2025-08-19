@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { ethers } from "ethers";
+// import { ethers } from "ethers";
 import { apiRequest } from "../lib/queryClient";
 import { useToast } from "../hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { connectWallet, disconnectWallet, getWeb3Modal } from "../lib/web3";
+// import { connectWallet, disconnectWallet, getWeb3Modal } from "../lib/web3";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -67,12 +67,13 @@ export default function OnchainPaymentModal({
   async function connectWalletHandler() {
     setLoading(true);
     try {
-      const { address } = await connectWallet();
-      setWalletConnected(true);
-      setWalletAddress(address);
+      // TODO: Re-enable Web3 functionality after fixing compatibility issues
+      // const { address } = await connectWallet();
+      // setWalletConnected(true);
+      // setWalletAddress(address);
       toast({ 
-        title: "Wallet Connected", 
-        description: `Connected to ${address.slice(0, 6)}...${address.slice(-4)}` 
+        title: "Web3 Temporarily Disabled", 
+        description: "Crypto payments will be available soon" 
       });
     } catch (e: any) {
       console.error(e);

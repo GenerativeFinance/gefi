@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import ErrorBoundary from "./components/ErrorBoundary";
+import "./polyfills";
 import "./index.css";
 
 // Global error handling for WebSocket and other unhandled errors
@@ -52,8 +53,9 @@ console.error = (...args) => {
   if (message.includes('WebSocket') || 
       message.includes('string did not match the expected pattern') ||
       message.includes('DOMException') ||
-      message.includes('[vite] connecting...')) {
-    return; // Silently ignore WebSocket connection errors
+      message.includes('[vite] connecting...') ||
+      message.includes("Can't find variable: global")) {
+    return; // Silently ignore WebSocket connection errors and global variable errors
   }
   
   originalConsoleError.apply(console, args);

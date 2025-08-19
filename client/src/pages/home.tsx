@@ -37,7 +37,7 @@ export default function Home() {
 
   // Generate recommendations when models are loaded
   useEffect(() => {
-    if (models.length > 0) {
+    if (Array.isArray(models) && models.length > 0) {
       const userRecommendations = RecommendationEngine.generateRecommendations(models, 5);
       setRecommendations(userRecommendations);
     }

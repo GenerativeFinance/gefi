@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { ethers } from 'ethers';
+// import { ethers } from 'ethers';
 
 // Supported chains configuration
 export const SUPPORTED_CHAINS = {
