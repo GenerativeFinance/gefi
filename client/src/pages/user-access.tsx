@@ -181,22 +181,72 @@ export default function UserAccess() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 mobile-content-padding">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold">User Access Management</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold mobile-heading">User Access Management</h1>
+            <p className="text-muted-foreground mobile-body-text">
               Manage user permissions and access controls across the platform
             </p>
           </div>
-          <Button onClick={() => setInviteModalOpen(true)}>
+          <Button 
+            onClick={() => setInviteModalOpen(true)}
+            className="mobile-button mobile-touch-target w-full lg:w-auto"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Invite User
           </Button>
         </div>
 
-        {/* Search and Filter */}
-        <div className="flex justify-between items-center mb-6">
+        {/* Mobile Search */}
+        <div className="mobile-search-container lg:hidden mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="mobile-search-input"
+            />
+          </div>
+        </div>
+
+        {/* Mobile Filter */}
+        <div className="mobile-filter-container lg:hidden mb-6">
+          <div 
+            className={`mobile-filter-pill ${selectedRole === 'all' ? 'active' : ''}`}
+            onClick={() => setSelectedRole('all')}
+          >
+            All Roles
+          </div>
+          <div 
+            className={`mobile-filter-pill ${selectedRole === 'admin' ? 'active' : ''}`}
+            onClick={() => setSelectedRole('admin')}
+          >
+            Admin
+          </div>
+          <div 
+            className={`mobile-filter-pill ${selectedRole === 'developer' ? 'active' : ''}`}
+            onClick={() => setSelectedRole('developer')}
+          >
+            Developer
+          </div>
+          <div 
+            className={`mobile-filter-pill ${selectedRole === 'analyst' ? 'active' : ''}`}
+            onClick={() => setSelectedRole('analyst')}
+          >
+            Analyst
+          </div>
+          <div 
+            className={`mobile-filter-pill ${selectedRole === 'viewer' ? 'active' : ''}`}
+            onClick={() => setSelectedRole('viewer')}
+          >
+            Viewer
+          </div>
+        </div>
+
+        {/* Desktop Search and Filter */}
+        <div className="hidden lg:flex justify-between items-center mb-6">
           <div className="flex space-x-2">
             <Input
               placeholder="Search users..."
@@ -222,18 +272,18 @@ export default function UserAccess() {
           </Select>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* User List */}
           <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Team Members</CardTitle>
-                <CardDescription>Manage user access and permissions</CardDescription>
+            <Card className="mobile-card">
+              <CardHeader className="pb-4">
+                <CardTitle className="mobile-subheading">Team Members</CardTitle>
+                <CardDescription className="mobile-body-text">Manage user access and permissions</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="p-0">
+                <div className="space-y-0">
                   {filteredTeamMembers.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
+                    <div className="text-center py-8 px-4 text-muted-foreground mobile-body-text">
                       {searchQuery.trim() || selectedRole !== "all" ? 
                         "No users match your search criteria." : 
                         "No team members found."
@@ -241,25 +291,32 @@ export default function UserAccess() {
                     </div>
                   ) : (
                     filteredTeamMembers.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                      <div key={user.id} className="mobile-list-item flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                        <div className="flex items-center space-x-3 sm:space-x-4">
+                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                             <Users className="h-5 w-5 text-primary" />
                           </div>
-                          <div>
-                            <div className="font-medium">{user.name}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium mobile-body-text truncate">{user.name}</div>
                             {user.email && (
-                              <div className="text-sm text-muted-foreground">{user.email}</div>
+                              <div className="text-sm text-muted-foreground truncate">{user.email}</div>
                             )}
                             <div className="text-xs text-muted-foreground">Last login: {user.lastLogin}</div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant={user.status === "Active" ? "default" : "secondary"}>
+                        <div className="flex flex-wrap items-center gap-2 sm:space-x-2 sm:gap-0">
+                          <Badge 
+                            variant={user.status === "Active" ? "default" : "secondary"}
+                            className="text-xs"
+                          >
                             {user.status}
                           </Badge>
-                          <Badge variant="outline">{user.role}</Badge>
-                          <Button variant="outline" size="sm">
+                          <Badge variant="outline" className="text-xs">{user.role}</Badge>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="mobile-touch-target h-8 w-8 p-0"
+                          >
                             <Settings className="h-4 w-4" />
                           </Button>
                         </div>
@@ -272,22 +329,22 @@ export default function UserAccess() {
           </div>
 
           {/* Roles & Permissions */}
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Roles & Permissions</CardTitle>
-                <CardDescription>Manage access levels</CardDescription>
+          <div className="space-y-4 sm:space-y-6">
+            <Card className="mobile-card">
+              <CardHeader className="pb-4">
+                <CardTitle className="mobile-subheading">Roles & Permissions</CardTitle>
+                <CardDescription className="mobile-body-text">Manage access levels</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {roles.map((role, index) => (
-                    <div key={index} className="p-3 border rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-medium">{role.name}</h3>
-                        <Badge variant="secondary">{role.users} users</Badge>
+                    <div key={index} className="p-3 border rounded-lg mobile-item-spacing">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                        <h3 className="font-medium mobile-body-text">{role.name}</h3>
+                        <Badge variant="secondary" className="text-xs self-start sm:self-center">{role.users} users</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">{role.description}</p>
-                      <Button variant="outline" size="sm" className="w-full mt-2">
+                      <p className="text-sm text-muted-foreground mb-3">{role.description}</p>
+                      <Button variant="outline" size="sm" className="w-full mobile-button-small mobile-touch-target">
                         <Eye className="h-4 w-4 mr-1" />
                         View Details
                       </Button>
@@ -297,25 +354,25 @@ export default function UserAccess() {
               </CardContent>
             </Card>
 
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Security Settings</CardTitle>
+            <Card className="mobile-card">
+              <CardHeader className="pb-4">
+                <CardTitle className="mobile-subheading">Security Settings</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Two-Factor Authentication</span>
-                    <Badge variant="default">Required</Badge>
+                    <span className="text-sm mobile-body-text">Two-Factor Authentication</span>
+                    <Badge variant="default" className="text-xs">Required</Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Session Timeout</span>
+                    <span className="text-sm mobile-body-text">Session Timeout</span>
                     <span className="text-sm text-muted-foreground">24 hours</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Password Policy</span>
-                    <Badge variant="default">Enforced</Badge>
+                    <span className="text-sm mobile-body-text">Password Policy</span>
+                    <Badge variant="default" className="text-xs">Enforced</Badge>
                   </div>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full mobile-button mobile-touch-target">
                     <Shield className="h-4 w-4 mr-1" />
                     Security Settings
                   </Button>

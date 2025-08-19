@@ -190,7 +190,7 @@ export default function AIMarketplace() {
     }
   };
 
-  const filteredModels = allModels.filter(model => {
+  const filteredModels = (allModels as any[]).filter(model => {
     const matchesSearch = searchTerm === "" || 
       model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       model.description?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -211,12 +211,12 @@ export default function AIMarketplace() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 space-y-6 sm:space-y-8 mobile-content-padding">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
         <div>
-          <h1 className="text-3xl font-bold">AI Model Marketplace</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl sm:text-3xl font-bold mobile-heading">AI Model Marketplace</h1>
+          <p className="text-muted-foreground mt-2 mobile-body-text">
             Discover and subscribe to AI-powered financial models tailored to your needs
           </p>
         </div>
@@ -224,7 +224,7 @@ export default function AIMarketplace() {
         <div className="flex flex-col sm:flex-row gap-3">
           <Dialog open={showPreferences} onOpenChange={setShowPreferences}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2 mobile-button-small mobile-touch-target">
                 <Settings2 className="h-4 w-4" />
                 Preferences
               </Button>
@@ -239,7 +239,7 @@ export default function AIMarketplace() {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium">Risk Tolerance</label>
-                  <Select defaultValue={userPreferences?.riskTolerance || 'moderate'}>
+                  <Select defaultValue={(userPreferences as any)?.riskTolerance || 'moderate'}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -253,7 +253,7 @@ export default function AIMarketplace() {
                 
                 <div>
                   <label className="text-sm font-medium">Experience Level</label>
-                  <Select defaultValue={userPreferences?.experienceLevel || 'intermediate'}>
+                  <Select defaultValue={(userPreferences as any)?.experienceLevel || 'intermediate'}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -294,8 +294,40 @@ export default function AIMarketplace() {
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col lg:flex-row gap-4">
+      {/* Mobile Search */}
+      <div className="mobile-search-container lg:hidden">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            placeholder="Search AI models..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="mobile-search-input"
+          />
+        </div>
+      </div>
+
+      {/* Mobile Filter Pills */}
+      <div className="mobile-filter-container lg:hidden">
+        <div 
+          className={`mobile-filter-pill ${selectedCategory === 'all' ? 'active' : ''}`}
+          onClick={() => setSelectedCategory('all')}
+        >
+          All Categories
+        </div>
+        {(categories as any[]).map((category: any) => (
+          <div 
+            key={category.id}
+            className={`mobile-filter-pill ${selectedCategory === category.name ? 'active' : ''}`}
+            onClick={() => setSelectedCategory(category.name)}
+          >
+            {category.name}
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Search and Filters */}
+      <div className="hidden lg:flex flex-col lg:flex-row gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -313,7 +345,7 @@ export default function AIMarketplace() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((category: any) => (
+              {(categories as any[]).map((category: any) => (
                 <SelectItem key={category.id} value={category.name}>
                   {category.name}
                 </SelectItem>
@@ -327,7 +359,7 @@ export default function AIMarketplace() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Subcategories</SelectItem>
-              {selectedCategory !== "all" && subcategories.map((subcategory: any) => (
+              {selectedCategory !== "all" && (subcategories as any[]).map((subcategory: any) => (
                 <SelectItem key={subcategory.id} value={subcategory.name}>
                   {subcategory.name}
                 </SelectItem>
@@ -351,7 +383,40 @@ export default function AIMarketplace() {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        {/* Mobile Navigation Tabs */}
+        <div className="mobile-nav-tabs lg:hidden">
+          <button 
+            onClick={() => setActiveTab('for-you')}
+            className={`mobile-nav-tab ${activeTab === 'for-you' ? 'mobile-tab-active' : 'mobile-tab-inactive'}`}
+          >
+            <Target className="h-4 w-4" />
+            For You
+          </button>
+          <button 
+            onClick={() => setActiveTab('trending')}
+            className={`mobile-nav-tab ${activeTab === 'trending' ? 'mobile-tab-active' : 'mobile-tab-inactive'}`}
+          >
+            <TrendingUp className="h-4 w-4" />
+            Trending
+          </button>
+          <button 
+            onClick={() => setActiveTab('browse')}
+            className={`mobile-nav-tab ${activeTab === 'browse' ? 'mobile-tab-active' : 'mobile-tab-inactive'}`}
+          >
+            <Search className="h-4 w-4" />
+            Browse
+          </button>
+          <button 
+            onClick={() => setActiveTab('categories')}
+            className={`mobile-nav-tab ${activeTab === 'categories' ? 'mobile-tab-active' : 'mobile-tab-inactive'}`}
+          >
+            <Filter className="h-4 w-4" />
+            Categories
+          </button>
+        </div>
+
+        {/* Desktop Tabs */}
+        <TabsList className="hidden lg:grid w-full grid-cols-4">
           <TabsTrigger value="for-you" className="flex items-center gap-2">
             <Target className="h-4 w-4" />
             For You
@@ -394,7 +459,7 @@ export default function AIMarketplace() {
                 </Card>
               ))}
             </div>
-          ) : recommendations.length === 0 ? (
+          ) : (recommendations as Recommendation[]).length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
                 <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -411,11 +476,11 @@ export default function AIMarketplace() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recommendations.map((rec: Recommendation) => (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+              {(recommendations as Recommendation[]).map((rec: Recommendation) => (
                 <Card 
                   key={rec.modelId} 
-                  className="group hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 border-l-primary/20 hover:border-l-primary"
+                  className="group hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 border-l-primary/20 hover:border-l-primary mobile-card mobile-list-item"
                   onClick={() => handleModelClick(rec.model)}
                 >
                   <CardHeader>
@@ -466,29 +531,31 @@ export default function AIMarketplace() {
                       </p>
                     </div>
                     
-                    <div className="mt-4 flex gap-3">
+                    <div className="mt-4 flex gap-2 sm:gap-3">
                       <Button
                         size="sm"
-                        className="flex-1"
+                        className="flex-1 mobile-button-small mobile-touch-target"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleModelClick(rec.model);
                         }}
                       >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
+                        <Eye className="h-4 w-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">View Details</span>
+                        <span className="sm:hidden">View</span>
                       </Button>
                       
                       <Button 
                         size="sm"
-                        className="flex-1"
+                        className="flex-1 mobile-button-small mobile-touch-target"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleInteraction(rec.model.id, 'trial');
                         }}
                         variant="outline"
                       >
-                        Try Free
+                        <span className="hidden sm:inline">Try Free</span>
+                        <span className="sm:hidden">Try</span>
                       </Button>
                     </div>
                     
@@ -527,14 +594,14 @@ export default function AIMarketplace() {
         <TabsContent value="trending" className="space-y-6">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold">Trending This Week</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mobile-subheading">Trending This Week</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allModels.slice(0, 9).map((model: any, index: number) => (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+            {(allModels as any[]).slice(0, 9).map((model: any, index: number) => (
               <Card 
                 key={model.id} 
-                className="group hover:shadow-lg transition-all duration-200 cursor-pointer"
+                className="group hover:shadow-lg transition-all duration-200 cursor-pointer mobile-card mobile-list-item"
                 onClick={() => handleModelClick(model)}
               >
                 <CardHeader>
@@ -574,28 +641,30 @@ export default function AIMarketplace() {
                     ${model.price}/month
                   </div>
                   
-                  <div className="flex gap-3">
+                  <div className="flex gap-2 sm:gap-3">
                     <Button
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 mobile-button-small mobile-touch-target"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleModelClick(model);
                       }}
                     >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View Details
+                      <Eye className="h-4 w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">View Details</span>
+                      <span className="sm:hidden">View</span>
                     </Button>
                     
                     <Button 
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 mobile-button-small mobile-touch-target"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleInteraction(model.id, 'subscribe');
                       }}
                     >
-                      Subscribe
+                      <span className="hidden sm:inline">Subscribe</span>
+                      <span className="sm:hidden">Sub</span>
                     </Button>
                   </div>
                 </CardContent>
@@ -609,16 +678,16 @@ export default function AIMarketplace() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Search className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">All AI Models</h2>
-              <Badge variant="outline">{filteredModels.length} models</Badge>
+              <h2 className="text-lg sm:text-xl font-semibold mobile-subheading">All AI Models</h2>
+              <Badge variant="outline" className="text-xs sm:text-sm">{filteredModels.length} models</Badge>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {filteredModels.map((model: any) => (
               <Card 
                 key={model.id} 
-                className="group hover:shadow-lg transition-all duration-200 cursor-pointer"
+                className="group hover:shadow-lg transition-all duration-200 cursor-pointer mobile-card mobile-list-item"
                 onClick={() => handleModelClick(model)}
               >
                 <CardHeader>
@@ -728,13 +797,13 @@ export default function AIMarketplace() {
             <h2 className="text-xl font-semibold">Browse by Category</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((category: any) => {
-              const categoryModels = allModels.filter((model: any) => model.category === category.name);
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+            {(categories as any[]).map((category: any) => {
+              const categoryModels = (allModels as any[]).filter((model: any) => model.category === category.name);
               return (
                 <Card 
                   key={category.id} 
-                  className="group hover:shadow-lg transition-all duration-200 cursor-pointer"
+                  className="group hover:shadow-lg transition-all duration-200 cursor-pointer mobile-card mobile-list-item"
                   onClick={() => {
                     setSelectedCategory(category.name);
                     setActiveTab('browse');

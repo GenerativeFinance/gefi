@@ -76,19 +76,17 @@ export default function MobileNav() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border z-50 md:hidden">
-      <div className="flex items-center justify-around py-2 px-4">
+    <div className="fixed bottom-0 left-0 right-0 mobile-nav-container border-t border-border z-50 md:hidden">
+      <div className="flex items-center justify-around py-2 px-2">
         {navigationItems.slice(0, 4).map((item) => {
           const IconComponent = item.icon;
           const isActive = location === item.path;
           
           return (
             <Link key={item.path} href={item.path}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`flex flex-col items-center gap-1 p-2 h-auto ${
-                  isActive ? "text-primary" : "text-muted-foreground"
+              <button
+                className={`flex flex-col items-center gap-1 p-2 rounded-lg min-w-[60px] mobile-touch-target transition-all duration-200 ${
+                  isActive ? "mobile-tab-active" : "mobile-tab-inactive"
                 }`}
               >
                 <div className="relative">
@@ -99,8 +97,8 @@ export default function MobileNav() {
                     </Badge>
                   )}
                 </div>
-                <span className="text-xs font-medium">{item.label}</span>
-              </Button>
+                <span className="text-[10px] font-medium leading-tight">{item.label}</span>
+              </button>
             </Link>
           );
         })}
@@ -108,27 +106,27 @@ export default function MobileNav() {
         {/* More Menu */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center gap-1 p-2 h-auto text-muted-foreground"
+            <button
+              className="flex flex-col items-center gap-1 p-2 rounded-lg min-w-[60px] mobile-touch-target mobile-tab-inactive transition-all duration-200"
             >
               <Menu className="h-5 w-5" />
-              <span className="text-xs font-medium">More</span>
-            </Button>
+              <span className="text-[10px] font-medium leading-tight">More</span>
+            </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-auto max-h-[80vh]">
-            <div className="py-4">
-              <div className="flex items-center gap-3 mb-6 p-4 bg-secondary/30 rounded-lg">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <User className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <div className="font-medium">
-                    {(user as any)?.firstName} {(user as any)?.lastName}
+          <SheetContent side="bottom" className="mobile-dialog h-auto max-h-[80vh]">
+            <div className="mobile-dialog-content">
+              <div className="mobile-dialog-header">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <User className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {(user as any)?.email}
+                  <div>
+                    <div className="font-medium">
+                      {(user as any)?.firstName} {(user as any)?.lastName}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {(user as any)?.email}
+                    </div>
                   </div>
                 </div>
               </div>
