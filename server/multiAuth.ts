@@ -88,21 +88,22 @@ function getBaseUrl(): string {
 }
 
 /**
- * Handles Google OAuth credentials with fallback for Replit environment
+ * Handles Google OAuth credentials from environment variables
  * 
  * @returns Object with clientId and clientSecret
+ * @throws Error if credentials are not provided via environment variables
  */
 function getGoogleCredentials() {
-  // Handle Replit environment variable caching issue
-  const isOldClientId = process.env.GOOGLE_CLIENT_ID === 'REDACTED-GOOGLE-CLIENT-ID.apps.googleusercontent.com';
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  
+  if (!clientId || !clientSecret) {
+    throw new Error('Google OAuth credentials must be provided via GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables');
+  }
   
   return {
-    clientId: isOldClientId 
-      ? 'REDACTED-GOOGLE-CLIENT-ID.apps.googleusercontent.com'
-      : process.env.GOOGLE_CLIENT_ID,
-    clientSecret: isOldClientId
-      ? 'REDACTED-GOOGLE-CLIENT-SECRET'
-      : process.env.GOOGLE_CLIENT_SECRET
+    clientId,
+    clientSecret
   };
 }
 
