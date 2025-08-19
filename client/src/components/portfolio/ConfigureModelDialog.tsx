@@ -1,197 +1,140 @@
-import React, { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import React, { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
-interface ConfigureModelDialogProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  model: {
-    id: number;
-    name: string;
-    allocation: number;
-    monthlyFee: number;
-  } | null;
-}
+type Model = any;
 
-export function ConfigureModelDialog({
-  isOpen,
-  onOpenChange,
-  model,
-}: ConfigureModelDialogProps) {
-  const [allocation, setAllocation] = useState(model?.allocation || 0);
-  const [monthlyFee, setMonthlyFee] = useState(model?.monthlyFee || 0);
+type Props = {
+  open: boolean;
+  model: Model | null;
+  onClose: () => void;
+  onSaved?: (updatedModel: Model) => void;
+};
+
+export default function ConfigureModelDialog({ open, model, onClose, onSaved }: Props) {
+  const [allocation, setAllocation] = useState<number>(0);
+  const [monthlyFee, setMonthlyFee] = useState<number>(0);
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Reset form when model changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (model) {
-      setAllocation(model.allocation);
-      setMonthlyFee(model.monthlyFee);
+      setAllocation(Number(model.allocation ?? 0));
+      setMonthlyFee(Number(model.monthlyFee ?? 0));
+    } else {
+      setAllocation(0);
+      setMonthlyFee(0);
     }
-  }, [model]);
+  }, [model, open]);
 
-  const configureModelMutation = useMutation({
-    mutationFn: async (data: { allocation: number; monthlyFee: number }) => {
-      if (!model) throw new Error("No model selected");
-      
-      try {
-        const response = await apiRequest(
-          "PUT", 
-          `/api/portfolio/ai-models/${model.id}`,
-          data
-        );
-        return await response.json();
-      } catch (error) {
-        // API might not be available, fall back to optimistic update
-        console.warn("API not available, using optimistic update:", error);
-        return { ...model, ...data };
-      }
-    },
-    onMutate: async (newData) => {
-      if (!model) return;
-
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["/api/portfolio/ai-models"] });
-
-      // Snapshot the previous value
-      const previousModels = queryClient.getQueryData(["/api/portfolio/ai-models"]);
-
-      // Optimistically update the cache
-      queryClient.setQueryData(["/api/portfolio/ai-models"], (old: any) => {
-        if (!old) return old;
-        
-        // Handle both array format and object format
-        if (Array.isArray(old)) {
-          return old.map((m: any) =>
-            m.id === model.id ? { ...m, ...newData } : m
-          );
-        }
-        
-        return old;
-      });
-
-      return { previousModels };
-    },
-    onError: (err, newData, context) => {
-      // Rollback on error
-      if (context?.previousModels) {
-        queryClient.setQueryData(["/api/portfolio/ai-models"], context.previousModels);
-      }
-      
-      toast({
-        title: "Configuration failed",
-        description: "Failed to update model configuration. Please try again.",
-        variant: "destructive",
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Model configured",
-        description: `${model?.name} has been successfully updated.`,
-      });
-      onOpenChange(false);
-    },
-    onSettled: () => {
-      // Always refetch to ensure we have the latest data
-      queryClient.invalidateQueries({ queryKey: ["/api/portfolio/ai-models"] });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSave = async () => {
     if (!model) return;
+    setSaving(true);
 
-    // Validate inputs
-    if (allocation < 0 || allocation > 100) {
-      toast({
-        title: "Invalid allocation",
-        description: "Allocation must be between 0% and 100%.",
-        variant: "destructive",
+    try {
+      const payload = { allocation, monthlyFee };
+      let updatedModel = { ...model, allocation, monthlyFee };
+
+      try {
+        const res = await fetch(`/api/portfolio/ai-models/${model.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const body = await res.json();
+          updatedModel = body;
+        } else {
+          toast({
+            title: "Saved locally",
+            description: "Server update failed — changes applied locally.",
+            variant: "destructive",
+          });
+        }
+      } catch (err) {
+        toast({
+          title: "Saved locally",
+          description: "Could not contact server — changes applied locally.",
+          variant: "destructive",
+        });
+      }
+
+      // Update cache optimistically
+      queryClient.setQueryData(["/api/portfolio/ai-models"], (old: any) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((m) => (m.id === updatedModel.id ? { ...m, ...updatedModel } : m));
       });
-      return;
-    }
 
-    if (monthlyFee < 0) {
+      onSaved?.(updatedModel);
+
       toast({
-        title: "Invalid fee",
-        description: "Monthly fee cannot be negative.",
-        variant: "destructive",
+        title: "Configuration saved",
+        description: `${model.name} configuration updated successfully.`,
       });
-      return;
-    }
 
-    configureModelMutation.mutate({
-      allocation,
-      monthlyFee,
-    });
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (!model) return null;
-
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Configure {model.name}</DialogTitle>
+          <DialogTitle>Configure {model?.name ?? "Model"}</DialogTitle>
+          <DialogDescription>
+            Adjust portfolio allocation and monthly fee for this AI model.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="allocation">Portfolio Allocation (%)</Label>
-            <Input
-              id="allocation"
-              type="number"
-              min="0"
-              max="100"
-              step="0.1"
+
+        <div className="space-y-4 mt-4">
+          <div>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
+              Portfolio Allocation (%)
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={100}
               value={allocation}
-              onChange={(e) => setAllocation(parseFloat(e.target.value) || 0)}
-              className="w-full"
+              onChange={(e) => setAllocation(Number(e.target.value))}
+              className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer"
             />
+            <div className="flex items-center justify-between text-sm mt-2">
+              <span className="text-muted-foreground">0%</span>
+              <span className="font-semibold text-primary">{allocation}%</span>
+              <span className="text-muted-foreground">100%</span>
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="monthlyFee">Monthly Fee ($)</Label>
-            <Input
-              id="monthlyFee"
+
+          <div>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
+              Monthly Fee ($)
+            </label>
+            <input
               type="number"
-              min="0"
-              step="0.01"
+              min={0}
+              step={0.01}
               value={monthlyFee}
-              onChange={(e) => setMonthlyFee(parseFloat(e.target.value) || 0)}
-              className="w-full"
+              onChange={(e) => setMonthlyFee(Number(e.target.value))}
+              className="w-full p-3 rounded-md border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="Enter monthly fee"
             />
           </div>
 
-          <div className="flex gap-2 pt-4">
-            <Button
-              type="submit"
-              disabled={configureModelMutation.isPending}
-              className="flex-1"
-            >
-              {configureModelMutation.isPending ? "Saving..." : "Save"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={configureModelMutation.isPending}
-            >
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={onClose} disabled={saving}>
               Cancel
             </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? "Saving..." : "Save Configuration"}
+            </Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

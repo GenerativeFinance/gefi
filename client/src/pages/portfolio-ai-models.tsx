@@ -1,133 +1,76 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Layout from "@/components/layout/Layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { ConfigureModelDialog } from "@/components/portfolio/ConfigureModelDialog";
-import { apiRequest } from "@/lib/queryClient";
+import ConfigureModelDialog from "@/components/portfolio/ConfigureModelDialog";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Bot, 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Activity, 
   Settings, 
   PlayCircle,
   PauseCircle,
-  RotateCcw,
   AlertTriangle,
   CheckCircle,
   Clock,
-  BarChart3,
-  Zap,
-  Target
+  BarChart3
 } from "lucide-react";
 
 export default function PortfolioAIModels() {
   const [, setLocation] = useLocation();
-  const [selectedModel, setSelectedModel] = React.useState<any>(null);
-  const [configureDialogOpen, setConfigureDialogOpen] = React.useState(false);
+  const [configuringModel, setConfiguringModel] = useState<any | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: aiModels, isLoading } = useQuery({
+  const { data: aiModels = [], isLoading } = useQuery({
     queryKey: ["/api/portfolio/ai-models"],
     enabled: true
   });
 
   // Mutation for pausing/resuming models
-  const toggleModelStatusMutation = useMutation({
-    mutationFn: async ({ id, currentStatus }: { id: number; currentStatus: string }) => {
-      const newStatus = currentStatus === 'active' ? 'paused' : 'active';
-      const endpoint = currentStatus === 'active' ? 'pause' : 'resume';
-      
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, action }: { id: number; action: "pause" | "resume" }) => {
       try {
-        const response = await apiRequest(
-          "POST", 
-          `/api/portfolio/ai-models/${id}/${endpoint}`,
-          {}
-        );
-        return await response.json();
-      } catch (error) {
-        // API might not be available, fall back to optimistic update
-        console.warn("API not available, using optimistic update:", error);
-        return { id, status: newStatus };
+        const res = await fetch(`/api/portfolio/ai-models/${id}/${action}`, { method: "POST" });
+        if (!res.ok) throw new Error("Server error");
+        return await res.json();
+      } catch {
+        return { id, status: action === "pause" ? "paused" : "active" };
       }
     },
-    onMutate: async ({ id, currentStatus }) => {
-      // Cancel any outgoing refetches
+    onMutate: async ({ id, action }) => {
       await queryClient.cancelQueries({ queryKey: ["/api/portfolio/ai-models"] });
-
-      // Snapshot the previous value
-      const previousModels = queryClient.getQueryData(["/api/portfolio/ai-models"]);
-      const newStatus = currentStatus === 'active' ? 'paused' : 'active';
-
-      // Optimistically update the cache
-      queryClient.setQueryData(["/api/portfolio/ai-models"], (old: any) => {
-        if (!old) return old;
-        
-        // Update the activeModels array (fallback data)
-        if (Array.isArray(old)) {
-          return old.map((model: any) =>
-            model.id === id ? { ...model, status: newStatus } : model
-          );
-        }
-        
-        return old;
-      });
-
-      return { previousModels, newStatus };
+      const previous = queryClient.getQueryData<any[]>(["/api/portfolio/ai-models"]);
+      queryClient.setQueryData(["/api/portfolio/ai-models"], (old: any[]) =>
+        (old || defaultActiveModels).map((m) => (m.id === id ? { ...m, status: action === "pause" ? "paused" : "active" } : m))
+      );
+      return { previous };
     },
-    onError: (err, { id, currentStatus }, context) => {
-      // Rollback on error
-      if (context?.previousModels) {
-        queryClient.setQueryData(["/api/portfolio/ai-models"], context.previousModels);
-      }
-      
+    onError: (err, variables, context: any) => {
       toast({
-        title: "Status change failed",
-        description: "Failed to update model status. Please try again.",
+        title: "Action failed",
+        description: "Could not update model status. Reverting.",
         variant: "destructive",
       });
+      if (context?.previous) {
+        queryClient.setQueryData(["/api/portfolio/ai-models"], context.previous);
+      }
     },
-    onSuccess: (data, { currentStatus }) => {
-      const action = currentStatus === 'active' ? 'paused' : 'resumed';
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/portfolio/ai-models"], (old: any[]) =>
+        (old || defaultActiveModels).map((m) => (m.id === data.id ? { ...m, ...data } : m))
+      );
       toast({
-        title: `Model ${action}`,
-        description: `The model has been successfully ${action}.`,
+        title: "Updated",
+        description: `Model ${data.status === "paused" ? "paused" : "resumed"}.`,
       });
-    },
-    onSettled: () => {
-      // Always refetch to ensure we have the latest data
-      queryClient.invalidateQueries({ queryKey: ["/api/portfolio/ai-models"] });
     },
   });
 
-  const handlePauseResume = (model: any) => {
-    toggleModelStatusMutation.mutate({
-      id: model.id,
-      currentStatus: model.status,
-    });
-  };
-
-  const handleConfigure = (model: any) => {
-    setSelectedModel(model);
-    setConfigureDialogOpen(true);
-  };
-
-  const handleAnalytics = (model: any) => {
-    setLocation(`/analytics/model/${model.id}`);
-  };
-
-  // Use activeModels as fallback data if API is not available
-  const modelsToDisplay = aiModels && Array.isArray(aiModels) ? aiModels : activeModels;
-
-  const activeModels = [
+  const defaultActiveModels = [
     {
       id: 1,
       name: "Quantum Risk Predictor",
@@ -139,8 +82,11 @@ export default function PortfolioAIModels() {
       lastUpdate: "2 hours ago",
       accuracy: 94.2,
       trades: 156,
-      profitLoss: 2847.50,
-      riskScore: "Low"
+      profitLoss: 2847.5,
+      tags: ["risk", "predictive"],
+      rating: 4.7,
+      subscribers: 1200,
+      description: "Real-time risk predictor",
     },
     {
       id: 2,
@@ -154,73 +100,36 @@ export default function PortfolioAIModels() {
       accuracy: 89.1,
       trades: 234,
       profitLoss: 1923.75,
-      riskScore: "Medium"
+      tags: ["trend", "momentum"],
+      rating: 4.4,
+      subscribers: 900,
+      description: "Momentum based trading signals",
     },
-    {
-      id: 3,
-      name: "Volatility Shield",
-      category: "Risk Management",
-      status: "paused",
-      performance: -2.1,
-      allocation: 15,
-      monthlyFee: 79,
-      lastUpdate: "1 day ago",
-      accuracy: 87.3,
-      trades: 89,
-      profitLoss: -456.25,
-      riskScore: "Low"
-    }
   ];
 
-  const recommendedModels = [
-    {
-      id: 4,
-      name: "Crypto Sentiment Analyzer",
-      category: "Sentiment Analysis",
-      rating: 4.8,
-      monthlyFee: 129,
-      description: "Advanced NLP model for cryptocurrency sentiment analysis",
-      accuracy: 91.5,
-      subscribers: 1247,
-      tags: ["Crypto", "NLP", "Sentiment"]
-    },
-    {
-      id: 5,
-      name: "ESG Impact Scorer",
-      category: "ESG Analysis",
-      rating: 4.6,
-      monthlyFee: 199,
-      description: "Evaluate environmental, social, and governance factors",
-      accuracy: 88.9,
-      subscribers: 856,
-      tags: ["ESG", "Sustainability", "Risk"]
-    }
-  ];
+  const activeModels = aiModels && aiModels.length > 0 ? aiModels : defaultActiveModels;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'paused':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'error':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-    }
+  const handleTogglePause = (model: any) => {
+    const action = model.status === "active" ? "pause" : "resume";
+    toggleMutation.mutate({ id: model.id, action });
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'paused':
-        return <Clock className="h-4 w-4 text-yellow-600" />;
-      case 'error':
-        return <AlertTriangle className="h-4 w-4 text-red-600" />;
-      default:
-        return <Clock className="h-4 w-4" />;
-    }
+  const handleOpenConfigure = (model: any) => {
+    setConfiguringModel(model);
+  };
+
+  const handleCloseConfigure = () => {
+    setConfiguringModel(null);
+  };
+
+  const handleSavedConfigure = (updatedModel: any) => {
+    queryClient.setQueryData(["/api/portfolio/ai-models"], (old: any[]) =>
+      (old || defaultActiveModels).map((m) => (m.id === updatedModel.id ? { ...m, ...updatedModel } : m))
+    );
+  };
+
+  const handleAnalytics = (model: any) => {
+    setLocation(`/analytics/model/${model.id}`);
   };
 
   if (isLoading) {
@@ -236,22 +145,16 @@ export default function PortfolioAIModels() {
   return (
     <Layout>
       <div className="min-h-screen bg-background">
-        {/* Header */}
         <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">
-                  Portfolio AI Models
-                </h1>
-                <p className="text-muted-foreground">
-                  Manage and optimize your AI-powered investment models
-                </p>
+                <h1 className="text-3xl font-bold text-foreground mb-2">Portfolio AI Models</h1>
+                <p className="text-muted-foreground">Manage and optimize your AI-powered investment models</p>
               </div>
               <Button asChild className="gap-2">
                 <Link href="/marketplace">
-                  <Bot className="h-5 w-5" />
-                  Browse Models
+                  <Bot className="h-5 w-5" /> Browse Models
                 </Link>
               </Button>
             </div>
@@ -259,291 +162,133 @@ export default function PortfolioAIModels() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Overview Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Active Models</p>
-                    <p className="text-2xl font-bold">3</p>
-                  </div>
-                  <Bot className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Performance</p>
-                    <p className="text-2xl font-bold text-green-600">+19.1%</p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-green-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Monthly Fees</p>
-                    <p className="text-2xl font-bold">$327</p>
-                  </div>
-                  <DollarSign className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Avg Accuracy</p>
-                    <p className="text-2xl font-bold">90.2%</p>
-                  </div>
-                  <Target className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Tabs defaultValue="active" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="active">Active Models</TabsTrigger>
-              <TabsTrigger value="recommended">Recommended</TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
-            </TabsList>
-
-            {/* Active Models */}
-            <TabsContent value="active" className="space-y-6">
-              <div className="grid gap-6">
-                {modelsToDisplay.map((model) => (
-                  <Card key={model.id} className="hover:shadow-lg transition-shadow duration-300">
-                    <CardContent className="p-6">
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        {/* Model Info */}
-                        <div className="lg:col-span-4 space-y-3">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-primary/10 rounded-lg">
-                              <Bot className="h-6 w-6 text-primary" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-lg">{model.name}</h3>
-                              <p className="text-sm text-muted-foreground">{model.category}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(model.status)}
-                            <Badge className={getStatusColor(model.status)}>
-                              {model.status}
-                            </Badge>
-                            <span className="text-sm text-muted-foreground">
-                              Updated {model.lastUpdate}
-                            </span>
-                          </div>
-
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span>Portfolio Allocation</span>
-                              <span>{model.allocation}%</span>
-                            </div>
-                            <Progress value={model.allocation} className="h-2" />
-                          </div>
-                        </div>
-
-                        {/* Performance Metrics */}
-                        <div className="lg:col-span-5 grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <p className="text-sm text-muted-foreground">Performance</p>
-                            <p className={`text-lg font-bold ${model.performance > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {model.performance > 0 ? '+' : ''}{model.performance}%
-                            </p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-sm text-muted-foreground">Accuracy</p>
-                            <p className="text-lg font-bold">{model.accuracy}%</p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-sm text-muted-foreground">Total Trades</p>
-                            <p className="text-lg font-bold">{model.trades}</p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-sm text-muted-foreground">P&L</p>
-                            <p className={`text-lg font-bold ${model.profitLoss > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              ${model.profitLoss.toFixed(2)}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="lg:col-span-3 flex flex-col gap-2">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-muted-foreground">Monthly Fee</span>
-                            <span className="font-semibold">${model.monthlyFee}</span>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            {model.status === 'active' ? (
-                              <Button 
-                                variant="outline" 
-                                className="w-full gap-2"
-                                onClick={() => handlePauseResume(model)}
-                                disabled={toggleModelStatusMutation.isPending}
-                              >
-                                <PauseCircle className="h-4 w-4" />
-                                {toggleModelStatusMutation.isPending ? "Pausing..." : "Pause"}
-                              </Button>
-                            ) : (
-                              <Button 
-                                className="w-full gap-2"
-                                onClick={() => handlePauseResume(model)}
-                                disabled={toggleModelStatusMutation.isPending}
-                              >
-                                <PlayCircle className="h-4 w-4" />
-                                {toggleModelStatusMutation.isPending ? "Resuming..." : "Resume"}
-                              </Button>
-                            )}
-                            <Button 
-                              variant="outline" 
-                              className="w-full gap-2"
-                              onClick={() => handleConfigure(model)}
-                            >
-                              <Settings className="h-4 w-4" />
-                              Configure
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              className="w-full gap-2"
-                              onClick={() => handleAnalytics(model)}
-                            >
-                              <BarChart3 className="h-4 w-4" />
-                              Analytics
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            {/* Recommended Models */}
-            <TabsContent value="recommended" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {recommendedModels.map((model) => (
-                  <Card key={model.id} className="hover:shadow-lg transition-shadow duration-300">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-primary/10 rounded-lg">
-                            <Bot className="h-6 w-6 text-primary" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg">{model.name}</CardTitle>
-                            <p className="text-sm text-muted-foreground">{model.category}</p>
-                          </div>
-                        </div>
-                        <Badge variant="outline">${model.monthlyFee}/mo</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <p className="text-muted-foreground">{model.description}</p>
-                      
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Rating</p>
-                          <p className="font-semibold">⭐ {model.rating}</p>
+          <div className="space-y-6">
+            {activeModels.map((model) => (
+              <Card key={model.id} className="hover:shadow-lg transition-shadow duration-300">
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div className="lg:col-span-4 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <Bot className="h-6 w-6 text-primary" />
                         </div>
                         <div>
-                          <p className="text-muted-foreground">Accuracy</p>
-                          <p className="font-semibold">{model.accuracy}%</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Subscribers</p>
-                          <p className="font-semibold">{model.subscribers.toLocaleString()}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Category</p>
-                          <p className="font-semibold">{model.category}</p>
+                          <h3 className="font-semibold text-lg">{model.name}</h3>
+                          <p className="text-sm text-muted-foreground">{model.category}</p>
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-1">
-                        {model.tags.map((tag, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
+                      <div className="flex items-center gap-2">
+                        {model.status === "active" ? (
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        ) : model.status === "paused" ? (
+                          <Clock className="h-4 w-4 text-yellow-600" />
+                        ) : (
+                          <AlertTriangle className="h-4 w-4 text-red-600" />
+                        )}
+                        <Badge variant={model.status === "active" ? "default" : "secondary"}>
+                          {model.status}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">Updated {model.lastUpdate}</span>
                       </div>
 
-                      <div className="flex gap-2">
-                        <Button className="flex-1 gap-2">
-                          <Zap className="h-4 w-4" />
-                          Subscribe
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Portfolio Allocation</span>
+                          <span>{model.allocation}%</span>
+                        </div>
+                        <Progress value={model.allocation} className="h-2" />
+                      </div>
+                    </div>
+
+                    <div className="lg:col-span-5 grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Performance</p>
+                        <p className={`text-lg font-bold ${model.performance > 0 ? "text-green-600" : "text-red-600"}`}>
+                          {model.performance > 0 ? `+${model.performance}` : model.performance}%
+                        </p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Accuracy</p>
+                        <p className="text-lg font-bold">{model.accuracy}%</p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Total Trades</p>
+                        <p className="text-lg font-bold">{model.trades}</p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">P&L</p>
+                        <p className={`text-lg font-bold ${model.profitLoss > 0 ? "text-green-600" : "text-red-600"}`}>
+                          ${model.profitLoss.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="lg:col-span-3 flex flex-col gap-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-muted-foreground">Monthly Fee</span>
+                        <span className="text-lg font-bold">${model.monthlyFee}</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Button
+                          size="sm"
+                          variant={model.status === "active" ? "outline" : "default"}
+                          className="w-full justify-start gap-2"
+                          onClick={() => handleTogglePause(model)}
+                          disabled={toggleMutation.isPending}
+                        >
+                          {model.status === "active" ? (
+                            <>
+                              <PauseCircle className="h-4 w-4" />
+                              Pause
+                            </>
+                          ) : (
+                            <>
+                              <PlayCircle className="h-4 w-4" />
+                              Resume
+                            </>
+                          )}
                         </Button>
-                        <Button variant="outline" className="gap-2">
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full justify-start gap-2"
+                          onClick={() => handleOpenConfigure(model)}
+                        >
+                          <Settings className="h-4 w-4" />
+                          Configure
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full justify-start gap-2"
+                          onClick={() => handleAnalytics(model)}
+                        >
                           <BarChart3 className="h-4 w-4" />
-                          Details
+                          Analytics
                         </Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            {/* Settings */}
-            <TabsContent value="settings" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Auto-Rebalancing</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span>Enable automatic rebalancing</span>
-                      <Button variant="outline" size="sm">Toggle</Button>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm text-muted-foreground">Rebalance frequency</label>
-                      <select className="w-full p-2 border rounded-md">
-                        <option>Daily</option>
-                        <option>Weekly</option>
-                        <option>Monthly</option>
-                      </select>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Risk Management</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm text-muted-foreground">Maximum allocation per model</label>
-                      <input type="number" className="w-full p-2 border rounded-md" defaultValue="35" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm text-muted-foreground">Stop-loss threshold</label>
-                      <input type="number" className="w-full p-2 border rounded-md" defaultValue="15" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Configure Model Dialog */}
-      <ConfigureModelDialog
-        isOpen={configureDialogOpen}
-        onOpenChange={setConfigureDialogOpen}
-        model={selectedModel}
-      />
+        <ConfigureModelDialog
+          open={configuringModel !== null}
+          model={configuringModel}
+          onClose={handleCloseConfigure}
+          onSaved={handleSavedConfigure}
+        />
+      </div>
     </Layout>
   );
 }
