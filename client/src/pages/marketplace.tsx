@@ -466,7 +466,33 @@ export default function AIMarketplace() {
                       </p>
                     </div>
                     
-                    <div className="flex items-center justify-between">
+                    <div className="mt-4 flex gap-3">
+                      <Button
+                        size="sm"
+                        className="flex-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleModelClick(rec.model);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                      </Button>
+                      
+                      <Button 
+                        size="sm"
+                        className="flex-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleInteraction(rec.model.id, 'trial');
+                        }}
+                        variant="outline"
+                      >
+                        Try Free
+                      </Button>
+                    </div>
+                    
+                    <div className="flex items-center justify-center mt-2">
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
@@ -489,18 +515,6 @@ export default function AIMarketplace() {
                           <Share2 className="h-4 w-4" />
                         </Button>
                       </div>
-                      
-                      <Button 
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleInteraction(rec.model.id, 'trial');
-                        }}
-                        className="group-hover:bg-primary group-hover:text-primary-foreground"
-                      >
-                        Try Free
-                        <ArrowRight className="h-4 w-4 ml-1" />
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -556,13 +570,26 @@ export default function AIMarketplace() {
                 </CardHeader>
                 
                 <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-muted-foreground">
-                      ${model.price}/month
-                    </div>
+                  <div className="text-sm text-muted-foreground mb-4">
+                    ${model.price}/month
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleModelClick(model);
+                      }}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </Button>
                     
                     <Button 
                       size="sm"
+                      className="flex-1"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleInteraction(model.id, 'subscribe');
@@ -639,7 +666,32 @@ export default function AIMarketplace() {
                     )}
                   </div>
                   
-                  <div className="flex items-center justify-between">
+                  <div className="mt-4 flex gap-3">
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleModelClick(model);
+                      }}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </Button>
+                    
+                    <Button 
+                      size="sm"
+                      className="flex-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleInteraction(model.id, 'subscribe');
+                      }}
+                    >
+                      Subscribe
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center justify-center mt-2">
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
@@ -662,16 +714,6 @@ export default function AIMarketplace() {
                         <Share2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    
-                    <Button 
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleInteraction(model.id, 'subscribe');
-                      }}
-                    >
-                      Subscribe
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
