@@ -1,13 +1,24 @@
+import React, { useState, useEffect, useMemo } from "react";
 import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Shield, Eye, Settings, Plus, Search } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Users, Shield, Eye, Settings, Plus, Search, X, Mail, UserPlus } from "lucide-react";
 
 export default function UserAccess() {
-  const users = [
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRole, setSelectedRole] = useState("all");
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [inviteSearchQuery, setInviteSearchQuery] = useState("");
+  const [inviteSearchResults, setInviteSearchResults] = useState<any[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [teamMembers, setTeamMembers] = useState([
     {
       id: 1,
       name: "Sarah Johnson",
@@ -35,7 +46,9 @@ export default function UserAccess() {
       lastLogin: "Never",
       permissions: ["Read Only", "Basic Reports"]
     }
-  ];
+  ]);
+  
+  const { toast } = useToast();
 
   const roles = [
     {
@@ -60,6 +73,112 @@ export default function UserAccess() {
     }
   ];
 
+  // Debounced search for invite modal
+  useEffect(() => {
+    if (!inviteSearchQuery.trim()) {
+      setInviteSearchResults([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        // Try primary search endpoint
+        let response = await fetch(`/api/search?q=${encodeURIComponent(inviteSearchQuery)}&type=user`);
+        if (!response.ok) {
+          // Fallback to secondary endpoint
+          response = await fetch(`/api/search?q=${encodeURIComponent(inviteSearchQuery)}&types=users`);
+        }
+        
+        if (response.ok) {
+          const data = await response.json();
+          const users = data.results?.users || data.users || [];
+          setInviteSearchResults(users);
+        } else {
+          setInviteSearchResults([]);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+        setInviteSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [inviteSearchQuery]);
+
+  // Filter team members based on search and role
+  const filteredTeamMembers = useMemo(() => {
+    return teamMembers.filter(user => {
+      const matchesSearch = !searchQuery.trim() || 
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.status.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesRole = selectedRole === "all" || 
+        user.role.toLowerCase() === selectedRole.toLowerCase();
+      
+      return matchesSearch && matchesRole;
+    });
+  }, [teamMembers, searchQuery, selectedRole]);
+
+  // Check if search query is a valid email
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Handle user selection in invite modal
+  const handleSelectUser = (user: any) => {
+    if (!selectedUsers.find(u => u.id === user.id || u.email === user.email)) {
+      setSelectedUsers([...selectedUsers, user]);
+    }
+  };
+
+  // Handle removing selected user
+  const handleRemoveSelectedUser = (userToRemove: any) => {
+    setSelectedUsers(selectedUsers.filter(u => u.id !== userToRemove.id && u.email !== userToRemove.email));
+  };
+
+  // Handle inviting users by email
+  const handleInviteByEmail = () => {
+    if (isValidEmail(inviteSearchQuery)) {
+      const emailUser = {
+        id: `email_${Date.now()}`,
+        name: inviteSearchQuery,
+        email: inviteSearchQuery,
+        isEmailInvite: true
+      };
+      handleSelectUser(emailUser);
+      setInviteSearchQuery("");
+    }
+  };
+
+  // Add selected users to team
+  const handleAddToTeam = () => {
+    const newMembers = selectedUsers.map(user => ({
+      id: user.id || `new_${Date.now()}_${Math.random()}`,
+      name: user.name || user.email,
+      email: user.email,
+      role: "Viewer",
+      status: "Pending",
+      lastLogin: "Never",
+      permissions: ["Read Only"]
+    }));
+
+    setTeamMembers([...teamMembers, ...newMembers]);
+    setSelectedUsers([]);
+    setInviteModalOpen(false);
+    setInviteSearchQuery("");
+    
+    toast({
+      title: "Users invited",
+      description: `${newMembers.length} user(s) have been invited to the team.`,
+    });
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -70,7 +189,7 @@ export default function UserAccess() {
               Manage user permissions and access controls across the platform
             </p>
           </div>
-          <Button>
+          <Button onClick={() => setInviteModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Invite User
           </Button>
@@ -82,12 +201,14 @@ export default function UserAccess() {
             <Input
               placeholder="Search users..."
               className="w-80"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
             <Button variant="outline" size="icon">
               <Search className="h-4 w-4" />
             </Button>
           </div>
-          <Select defaultValue="all">
+          <Select value={selectedRole} onValueChange={setSelectedRole}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
@@ -111,29 +232,40 @@ export default function UserAccess() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {users.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                          <Users className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <div className="font-medium">{user.name}</div>
-                          <div className="text-sm text-muted-foreground">{user.email}</div>
-                          <div className="text-xs text-muted-foreground">Last login: {user.lastLogin}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant={user.status === "Active" ? "default" : "secondary"}>
-                          {user.status}
-                        </Badge>
-                        <Badge variant="outline">{user.role}</Badge>
-                        <Button variant="outline" size="sm">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </div>
+                  {filteredTeamMembers.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      {searchQuery.trim() || selectedRole !== "all" ? 
+                        "No users match your search criteria." : 
+                        "No team members found."
+                      }
                     </div>
-                  ))}
+                  ) : (
+                    filteredTeamMembers.map((user) => (
+                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                            <Users className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <div className="font-medium">{user.name}</div>
+                            {user.email && (
+                              <div className="text-sm text-muted-foreground">{user.email}</div>
+                            )}
+                            <div className="text-xs text-muted-foreground">Last login: {user.lastLogin}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant={user.status === "Active" ? "default" : "secondary"}>
+                            {user.status}
+                          </Badge>
+                          <Badge variant="outline">{user.role}</Badge>
+                          <Button variant="outline" size="sm">
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -192,6 +324,130 @@ export default function UserAccess() {
             </Card>
           </div>
         </div>
+
+        {/* Invite User Modal */}
+        <Dialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
+          <DialogContent className="sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <UserPlus className="h-5 w-5" />
+                Invite User
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Search Input */}
+              <div className="space-y-2">
+                <Label htmlFor="invite-search">Search for users</Label>
+                <Input
+                  id="invite-search"
+                  placeholder="Search by email, username, or name..."
+                  value={inviteSearchQuery}
+                  onChange={(e) => setInviteSearchQuery(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Selected Users */}
+              {selectedUsers.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Selected Users</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedUsers.map((user) => (
+                      <div
+                        key={user.id || user.email}
+                        className="flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm"
+                      >
+                        <span>{user.name || user.email}</span>
+                        <button
+                          onClick={() => handleRemoveSelectedUser(user)}
+                          className="hover:bg-primary/20 rounded-full p-1"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Search Results */}
+              <div className="space-y-2">
+                {isSearching && (
+                  <div className="text-center py-4">
+                    <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto" />
+                    <p className="text-sm text-muted-foreground mt-2">Searching...</p>
+                  </div>
+                )}
+
+                {!isSearching && inviteSearchQuery.trim() && (
+                  <div className="max-h-60 overflow-y-auto border rounded-lg">
+                    {inviteSearchResults.length > 0 ? (
+                      <div className="p-2">
+                        <p className="text-sm font-medium mb-2">Search Results</p>
+                        {inviteSearchResults.map((user) => (
+                          <div
+                            key={user.id}
+                            className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg cursor-pointer"
+                            onClick={() => handleSelectUser(user)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                <Users className="h-4 w-4 text-primary" />
+                              </div>
+                              <div>
+                                <div className="font-medium">{user.name}</div>
+                                <div className="text-sm text-muted-foreground">{user.email}</div>
+                              </div>
+                            </div>
+                            <Button size="sm" variant="outline">
+                              Select
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center">
+                        <p className="text-sm text-muted-foreground mb-3">No users found</p>
+                        {isValidEmail(inviteSearchQuery) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleInviteByEmail}
+                            className="gap-2"
+                          >
+                            <Mail className="h-4 w-4" />
+                            Invite {inviteSearchQuery}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setInviteModalOpen(false);
+                    setSelectedUsers([]);
+                    setInviteSearchQuery("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddToTeam}
+                  disabled={selectedUsers.length === 0}
+                >
+                  Add to Team ({selectedUsers.length})
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
