@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-// import { ethers } from 'ethers';
+import { ethers } from 'ethers';
 
 // Supported chains configuration
 export const SUPPORTED_CHAINS = {
@@ -110,6 +110,8 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
 
   const initializeProvider = async (account: string) => {
     try {
+      if (!window.ethereum) return;
+      
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const network = await provider.getNetwork();
@@ -253,9 +255,3 @@ export const useWeb3 = (): Web3ContextType => {
   return context;
 };
 
-// Type declaration for window.ethereum
-declare global {
-  interface Window {
-    ethereum?: any;
-  }
-}
