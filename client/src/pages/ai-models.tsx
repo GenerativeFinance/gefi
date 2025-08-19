@@ -1095,7 +1095,6 @@ export default function AIModels() {
         isOpen={onchainPaymentOpen}
         onClose={handleCloseOnchainPayment}
         modelName={paymentModelId ? aiModels.find(m => m.id === paymentModelId)?.name : "AI Model"}
-        price={0.1} // Default price - can be made dynamic based on model
       />
     </Layout>
   );

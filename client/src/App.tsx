@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NotificationBanner } from "@/components/ui/notification-banner";
 import { ThemeProvider } from "@/components/theme/theme-provider";
-import { Web3Provider } from "@/contexts/Web3Context";
+// import { Web3Provider } from "@/contexts/Web3Context";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
@@ -212,7 +212,9 @@ function Router() {
       {/* Public routes - always available */}
       <Route path="/login" component={AuthFlow} />
       <Route path="/login-failed" component={LoginFailed} />
-      <Route path="/account-pending" component={AccountPending} />
+      <Route path="/account-pending">
+        <AccountPending />
+      </Route>
       <Route path="/account-status" component={AccountStatus} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
@@ -411,12 +413,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <Web3Provider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </Web3Provider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
