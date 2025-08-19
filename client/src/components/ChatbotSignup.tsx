@@ -245,16 +245,18 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
 
       if (response.ok) {
         const result = await response.json();
+        console.log('Signup successful:', result);
 
         // Persist minimal user info for AccountPending page
         const pendingUserData = {
-          id: result?.id || data.email || null,
+          id: result?.user?.id || result?.id || data.email || null,
           email: data.email,
           firstName: data.firstName,
           lastName: data.lastName,
           role: data.role || "user",
           company: data.company,
           experienceLevel: data.experienceLevel,
+          calendlyBookingUrl: result.calendlyBookingUrl,
           ...result,
         };
 
@@ -265,25 +267,43 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
         }
 
         addBotMessage("🎉 Account created successfully! Your account is now pending approval.");
-        addBotMessage("You'll receive an email once your account is approved. In the meantime, you can schedule a demo.");
+        
+        if (result.calendlyBookingUrl) {
+          addBotMessage("You'll receive an email once your account is approved. Your demo booking link has been generated!");
+        } else {
+          addBotMessage("You'll receive an email once your account is approved. In the meantime, you can schedule a demo.");
+        }
 
-        // Redirect to account pending page
+        // Show success and redirect
+        setAccountCreated(true);
         setTimeout(() => {
           navigate("/account-pending");
         }, 900);
       } else {
-        let errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        let errorMessage = "Failed to create account";
         try {
           const errorData = await response.json();
-          errorMessage = errorData.message || errorData.error || errorMessage;
+          
+          // Handle different error types
+          if (errorData.message && errorData.message.includes("duplicate key")) {
+            errorMessage = "This email is already registered. Please use a different email address.";
+          } else if (errorData.error && errorData.error.includes("SUSPICIOUS_INPUT")) {
+            errorMessage = "Invalid input detected. Please check your information and try again.";
+          } else {
+            errorMessage = errorData.message || errorData.error || `Server error: ${response.status}`;
+          }
         } catch (e) {
-          // ignore parse error
+          errorMessage = `Network error: ${response.status} ${response.statusText}`;
         }
+        
+        console.error('Signup failed:', errorMessage);
         addBotMessage(`❌ Sorry, there was an error creating your account: ${errorMessage}`);
+        addBotMessage("Please check your information and try again, or contact support if the issue persists.");
       }
     } catch (error) {
-      console.error("Signup error:", error);
-      addBotMessage("❌ Sorry, there was an error creating your account. Please try again.");
+      console.error("Signup network error:", error);
+      addBotMessage("❌ Sorry, there was a network error creating your account. Please check your internet connection and try again.");
+      addBotMessage("If the problem persists, please contact support@gefi.ai");
     } finally {
       setIsCreatingAccount(false);
     }

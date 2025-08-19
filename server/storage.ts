@@ -346,12 +346,27 @@ export class DatabaseStorage implements IStorage {
         const [user] = await db
           .insert(users)
           .values({
-            ...userData,
+            id: userData.id,
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            profileImageUrl: userData.profileImageUrl,
+            role: userData.role,
+            subscriptionTier: userData.subscriptionTier,
             provider: userData.provider || 'email',
             status: 'active',
             riskScore: 0,
             lastLoginAt: new Date(),
-            totalTrades: 0
+            totalTrades: 0,
+            company: userData.company,
+            country: userData.country,
+            experienceLevel: userData.experienceLevel,
+            areasOfFocus: userData.areasOfFocus || [],
+            linkedinProfile: userData.linkedinProfile,
+            portfolioUrl: userData.portfolioUrl,
+            preferredModelTypes: userData.preferredModelTypes || [],
+            platformIntent: userData.platformIntent,
+            subscriptionPreferences: userData.subscriptionPreferences || []
           })
           .onConflictDoNothing()
           .returning();
@@ -383,9 +398,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUser(id: string, updates: Partial<UpsertUser>): Promise<User> {
+    const updateData: any = { updatedAt: new Date() };
+    
+    // Only include valid fields
+    if (updates.email !== undefined) updateData.email = updates.email;
+    if (updates.firstName !== undefined) updateData.firstName = updates.firstName;
+    if (updates.lastName !== undefined) updateData.lastName = updates.lastName;
+    if (updates.profileImageUrl !== undefined) updateData.profileImageUrl = updates.profileImageUrl;
+    if (updates.role !== undefined) updateData.role = updates.role;
+    if (updates.subscriptionTier !== undefined) updateData.subscriptionTier = updates.subscriptionTier;
+    if (updates.provider !== undefined) updateData.provider = updates.provider;
+    if (updates.status !== undefined) updateData.status = updates.status;
+    if (updates.riskScore !== undefined) updateData.riskScore = updates.riskScore;
+    if (updates.lastLoginAt !== undefined) updateData.lastLoginAt = updates.lastLoginAt;
+    if (updates.totalTrades !== undefined) updateData.totalTrades = updates.totalTrades;
+    if (updates.company !== undefined) updateData.company = updates.company;
+    if (updates.country !== undefined) updateData.country = updates.country;
+    if (updates.experienceLevel !== undefined) updateData.experienceLevel = updates.experienceLevel;
+    if (updates.areasOfFocus !== undefined) updateData.areasOfFocus = updates.areasOfFocus;
+    if (updates.linkedinProfile !== undefined) updateData.linkedinProfile = updates.linkedinProfile;
+    if (updates.portfolioUrl !== undefined) updateData.portfolioUrl = updates.portfolioUrl;
+    if (updates.preferredModelTypes !== undefined) updateData.preferredModelTypes = updates.preferredModelTypes;
+    if (updates.platformIntent !== undefined) updateData.platformIntent = updates.platformIntent;
+    if (updates.subscriptionPreferences !== undefined) updateData.subscriptionPreferences = updates.subscriptionPreferences;
+
     const [user] = await db
       .update(users)
-      .set({ ...updates, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(users.id, id))
       .returning();
     return user;
@@ -486,12 +525,26 @@ export class DatabaseStorage implements IStorage {
 
       if (existingProfile) {
         console.log("Profile exists, updating...");
+        const updateData: any = { updatedAt: new Date() };
+        
+        // Only include valid profile fields
+        if (profile.company !== undefined) updateData.company = profile.company;
+        if (profile.location !== undefined) updateData.location = profile.location;
+        if (profile.streakDays !== undefined) updateData.streakDays = profile.streakDays;
+        if (profile.skills !== undefined) updateData.skills = profile.skills;
+        if (profile.bio !== undefined) updateData.bio = profile.bio;
+        if (profile.personalityType !== undefined) updateData.personalityType = profile.personalityType;
+        if (profile.timezone !== undefined) updateData.timezone = profile.timezone;
+        if (profile.language !== undefined) updateData.language = profile.language;
+        if (profile.website !== undefined) updateData.website = profile.website;
+        if (profile.github !== undefined) updateData.github = profile.github;
+        if (profile.twitter !== undefined) updateData.twitter = profile.twitter;
+        if (profile.linkedin !== undefined) updateData.linkedin = profile.linkedin;
+        if (profile.customFields !== undefined) updateData.customFields = profile.customFields;
+
         const [userProfile] = await db
           .update(userProfiles)
-          .set({
-            ...profile,
-            updatedAt: new Date(),
-          })
+          .set(updateData)
           .where(eq(userProfiles.userId, userId))
           .returning();
         console.log("Profile updated successfully");
@@ -501,8 +554,20 @@ export class DatabaseStorage implements IStorage {
         const [userProfile] = await db
           .insert(userProfiles)
           .values({
-            ...profile,
             userId,
+            company: profile.company,
+            location: profile.location,
+            streakDays: profile.streakDays || 0,
+            skills: profile.skills || [],
+            bio: profile.bio,
+            personalityType: profile.personalityType,
+            timezone: profile.timezone,
+            language: profile.language,
+            website: profile.website,
+            github: profile.github,
+            twitter: profile.twitter,
+            linkedin: profile.linkedin,
+            customFields: profile.customFields || {},
             createdAt: new Date(),
             updatedAt: new Date(),
           })
