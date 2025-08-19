@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { SearchModal } from "@/components/ui/search-modal";
+import { SearchModal } from "@/components/search/SearchModal";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
@@ -60,7 +60,6 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/theme/theme-provider";
 import { useQuery } from "@tanstack/react-query";
-import GlobalSearch from "@/components/search/GlobalSearch";
 
 // Helper function to map role to user type for display
 const mapRoleToUserType = (role?: string): string => {
@@ -467,14 +466,11 @@ export default function Header() {
               )}
 
               {/* Search */}
-              <div className="hidden md:block">
-                <GlobalSearch />
-              </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsSearchOpen(true)}
-                className="md:hidden w-9 h-9 p-2 text-muted-foreground hover:text-foreground"
+                className="w-9 h-9 p-2 text-muted-foreground hover:text-foreground"
               >
                 <Search className="h-4 w-4" />
               </Button>

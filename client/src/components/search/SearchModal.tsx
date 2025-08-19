@@ -16,6 +16,8 @@ interface SearchResult {
   name: string;
   description?: string;
   url: string;
+  canonicalPath?: string;
+  slug?: string;
   tags?: string[];
   category?: string;
   status?: string;
@@ -115,9 +117,19 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
     return (searchResults[tab as keyof SearchResponse] as SearchResult[])?.length || 0;
   };
 
+  const getResultUrl = (result: SearchResult): string => {
+    // For models, use canonicalPath or fallback to /model/:slug
+    if (result.type === 'model') {
+      if (result.canonicalPath) return result.canonicalPath;
+      if (result.slug) return `/model/${result.slug}`;
+    }
+    // For other types, use the provided URL
+    return result.url;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[80vh]">
+      <DialogContent className="max-w-3xl max-h-[80vh] bg-background/95 backdrop-blur-sm border border-border/50 shadow-2xl">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center gap-2">
             <Search className="w-5 h-5" />
@@ -245,7 +257,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
                       key={`${result.type}-${result.id}`}
                       className="group p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                     >
-                      <Link href={result.url} onClick={onClose}>
+                      <Link href={getResultUrl(result)} onClick={onClose}>
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">
