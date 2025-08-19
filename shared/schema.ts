@@ -601,7 +601,7 @@ export const modelChat = pgTable("model_chat", {
   userId: varchar("user_id").notNull().references(() => users.id),
   message: text("message").notNull(),
   messageType: varchar("message_type", { length: 50 }).notNull().default("text"), // text, file, code, issue
-  parentId: integer("parent_id").references(() => modelChat.id),
+  parentId: integer("parent_id"),
   attachments: jsonb("attachments"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -1004,8 +1004,7 @@ export const cloudProviderCredentials = pgTable("cloud_provider_credentials", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export type UpsertUser = typeof users.$inferInsert;
-export type User = typeof users.$inferSelect;
+// Removed duplicate - defined at bottom of file
 
 // AI Chatbot Types
 export type ChatbotConversation = typeof chatbotConversations.$inferSelect;
@@ -1244,9 +1243,7 @@ export const botFundingContributionsRelations = relations(botFundingContribution
   }),
 }));
 
-// User Profile Types
-export type UserProfile = typeof userProfiles.$inferSelect;
-export type InsertUserProfile = typeof userProfiles.$inferInsert;
+// User Profile Types - removed duplicate, defined below
 export type UserAchievement = typeof userAchievements.$inferSelect;
 export type InsertUserAchievement = typeof userAchievements.$inferInsert;
 export type UserSkillRating = typeof userSkillRatings.$inferSelect;
@@ -1785,7 +1782,7 @@ export const insertUserStatsSchema = createInsertSchema(userStats).omit({
   updatedAt: true,
 });
 
-// User Profile Type Definitions
+// User Profile Type Definitions - use z.infer for consistency
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 

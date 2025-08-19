@@ -278,7 +278,7 @@ export class DatabaseStorage implements IStorage {
     try {
       // Try to find user by provider and providerId
       const [user] = await db.select().from(users).where(
-        and(eq(users.provider, provider), eq(users.providerId, rawId))
+        and(eq(users.provider, provider), eq(users.id, `${provider}_${rawId}`))
       );
       return user || null;
     } catch (error) {
@@ -296,7 +296,7 @@ export class DatabaseStorage implements IStorage {
       } else if (query.email) {
         whereCondition = eq(users.email, query.email);
       } else if (query.provider && query.providerId) {
-        whereCondition = and(eq(users.provider, query.provider), eq(users.providerId, query.providerId));
+        whereCondition = and(eq(users.provider, query.provider), eq(users.id, `${query.provider}_${query.providerId}`));
       } else {
         return null;
       }
@@ -349,7 +349,7 @@ export class DatabaseStorage implements IStorage {
             ...userData,
             provider: userData.provider || 'email',
             status: 'active',
-            riskscore: 0,
+            riskScore: 0,
             lastLoginAt: new Date(),
             totalTrades: 0
           })
@@ -394,7 +394,7 @@ export class DatabaseStorage implements IStorage {
   // Admin user management methods
   async getAllUsers(): Promise<User[]> {
     try {
-      const result = await db.select().from(users).orderBy(users.createdAt);
+      const result = await db.select().from(users).orderBy(users.id);
       console.log('getAllUsers result count:', result.length);
       console.log('Sample user:', result[0] ? JSON.stringify(result[0], null, 2) : 'No users found');
       return result;
@@ -459,43 +459,7 @@ export class DatabaseStorage implements IStorage {
     return stats;
   }
 
-  async updateUserStatus(userId: string, status: string): Promise<User | undefined> {
-    try {
-      const [updatedUser] = await db
-        .update(users)
-        .set({ 
-          status: status as 'active' | 'suspended' | 'pending' | 'banned',
-          updatedAt: new Date()
-        })
-        .where(eq(users.id, userId))
-        .returning();
-      
-      console.log(`Updated user ${userId} status to ${status}`);
-      return updatedUser;
-    } catch (error) {
-      console.error('Error updating user status:', error);
-      throw error;
-    }
-  }
 
-  async updateUserRole(userId: string, role: string): Promise<User | undefined> {
-    try {
-      const [updatedUser] = await db
-        .update(users)
-        .set({ 
-          role: role,
-          updatedAt: new Date()
-        })
-        .where(eq(users.id, userId))
-        .returning();
-      
-      console.log(`Updated user ${userId} role to ${role}`);
-      return updatedUser;
-    } catch (error) {
-      console.error('Error updating user role:', error);
-      throw error;
-    }
-  }
 
   // User Profile operations
   async getUserProfile(userId: string): Promise<UserProfile | undefined> {
@@ -652,18 +616,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUserStats(userId: string): Promise<any> {
-    try {
-      const [stats] = await db
-        .select()
-        .from(userStats)
-        .where(eq(userStats.userId, userId));
-      return stats || {};
-    } catch (error) {
-      console.error("Error fetching user stats:", error);
-      return {};
-    }
-  }
+
 
   // Portfolio operations
   async getUserPortfolio(userId: string): Promise<Portfolio | undefined> {
@@ -759,7 +712,7 @@ export class DatabaseStorage implements IStorage {
       .select({
         modelId: userModelSubscriptions.modelId,
         status: userModelSubscriptions.status,
-        createdAt: userModelSubscriptions.createdAt,
+        createdAt: userModelSubscriptions.id,
         isActive: userModelSubscriptions.isActive,
       })
       .from(userModelSubscriptions)
@@ -849,7 +802,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(reports)
       .where(eq(reports.userId, userId))
-      .orderBy(desc(reports.lastUpdated));
+      .orderBy(desc(reports.createdAt));
   }
 
   async createReport(report: InsertReport): Promise<Report> {

@@ -22,6 +22,31 @@ import { Strategy as LinkedInStrategy, type Profile as LinkedInProfile } from "p
 import { storage } from "./storage";
 import fetch from "node-fetch";
 
+// Type declarations for global extensions
+declare global {
+  var verificationCodes: {
+    [email: string]: {
+      code: string;
+      expires: number;
+      userData: { email: string; firstName: string; lastName: string };
+      verified?: boolean;
+    };
+  } | undefined;
+  
+  var calendlyBookings: {
+    [id: string]: {
+      id: string;
+      eventType: string;
+      datetime: string;
+      userEmail: string;
+      userName: string;
+      userMessage: string;
+      status: string;
+      createdAt: Date;
+    };
+  } | undefined;
+}
+
 // Configuration constants
 const SESSION_TTL = 7 * 24 * 60 * 60 * 1000; // 1 week in milliseconds
 const SESSION_NAME = 'gefi.session';
@@ -381,7 +406,9 @@ function setupOAuthRoutes(app: Express) {
       }
 
       if (Date.now() > storedData.expires) {
-        delete global.verificationCodes[email];
+        if (global.verificationCodes) {
+          delete global.verificationCodes[email];
+        }
         return res.status(400).json({ message: 'Verification code has expired' });
       }
 
@@ -449,7 +476,9 @@ function setupOAuthRoutes(app: Express) {
 
       // Log the user in
       // Clean up verification code
-      delete global.verificationCodes[email];
+      if (global.verificationCodes) {
+        delete global.verificationCodes[email];
+      }
 
       req.login(user, (err) => {
         if (err) {
