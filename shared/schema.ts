@@ -436,6 +436,39 @@ export const riskLimits = pgTable("risk_limits", {
   alertThreshold: decimal("alert_threshold", { precision: 5, scale: 2 }).default("80.00"), // Alert at 80% utilization
 });
 
+// Team Messaging Tables
+export const conversations = pgTable("conversations", {
+  id: varchar("id").primaryKey(),
+  name: varchar("name").notNull(),
+  type: varchar("type").notNull(), // 'group', 'direct'
+  createdBy: varchar("created_by").references(() => users.id),
+  lastMessageId: varchar("last_message_id"),
+  lastMessageAt: timestamp("last_message_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const conversationMembers = pgTable("conversation_members", {
+  id: serial("id").primaryKey(),
+  conversationId: varchar("conversation_id").references(() => conversations.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  role: varchar("role").default("member"), // 'member', 'admin'
+  joinedAt: timestamp("joined_at").defaultNow(),
+  lastReadAt: timestamp("last_read_at"),
+});
+
+export const messages = pgTable("messages", {
+  id: varchar("id").primaryKey(),
+  conversationId: varchar("conversation_id").references(() => conversations.id, { onDelete: 'cascade' }),
+  senderId: varchar("sender_id").references(() => users.id),
+  content: text("content").notNull(),
+  type: varchar("type").default("text"), // 'text', 'file', 'system'
+  metadata: jsonb("metadata"), // For file attachments, mentions, etc.
+  editedAt: timestamp("edited_at"),
+  deletedAt: timestamp("deleted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Custom Reports Tables
 export const customReports = pgTable("custom_reports", {
   id: serial("id").primaryKey(),
@@ -2240,3 +2273,11 @@ export const insertUserSchema = createInsertSchema(users);
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type UpsertUser = Partial<InsertUser> & { id: string };
+
+// Team Messaging Types
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;
+export type ConversationMember = typeof conversationMembers.$inferSelect;
+export type InsertConversationMember = typeof conversationMembers.$inferInsert;

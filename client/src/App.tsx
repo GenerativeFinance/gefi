@@ -188,6 +188,7 @@ import DataProviders from "@/pages/data-providers";
 import DeveloperPortfolioOverview from "@/pages/developer/portfolio-overview";
 import DataProviderPortfolioOverview from "@/pages/data-provider/portfolio-overview";
 import SupportDashboard from "@/pages/support-dashboard";
+import TeamMessaging from "@/pages/team-messaging";
 
 
 
@@ -377,6 +378,7 @@ function Router() {
             <Route path="/collaboration/teams" component={CollaborationTeams} />
             <Route path="/collaboration/messaging" component={CollaborationMessaging} />
             <Route path="/collaboration/resources" component={CollaborationResources} />
+            <Route path="/team-messaging" component={TeamMessaging} />
             <Route path="/developer/collaboration" component={DeveloperCollaboration} />
             <Route path="/developer/collaboration/projects" component={DeveloperCollaborationProjects} />
             <Route path="/developer/collaboration/invitations" component={DeveloperCollaborationInvitations} />
