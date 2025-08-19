@@ -117,6 +117,16 @@ import {
   type InsertDataCollaboration,
   type DatasetReview,
   type InsertDatasetReview,
+  // Messaging types
+  conversations,
+  conversationMembers,
+  messages,
+  type Conversation,
+  type InsertConversation,
+  type Message,
+  type InsertMessage,
+  type ConversationMember,
+  type InsertConversationMember,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, lte, inArray } from "drizzle-orm";
@@ -259,6 +269,15 @@ export interface IStorage {
   getUserNFTs(userId: string): Promise<NftHolding[]>;
   addNFT(nft: InsertNftHolding): Promise<NftHolding>;
   updateNFT(nftId: number, updates: Partial<InsertNftHolding>): Promise<NftHolding>;
+
+  // Messaging operations
+  getUserConversations(userId: string): Promise<Conversation[]>;
+  getConversationMessages(conversationId: string): Promise<Message[]>;
+  checkConversationAccess(userId: string, conversationId: string): Promise<boolean>;
+  createConversation(conversation: InsertConversation & { members: string[] }): Promise<Conversation>;
+  createMessage(message: InsertMessage): Promise<Message>;
+  addConversationMember(conversationId: string, userId: string): Promise<void>;
+  removeConversationMember(conversationId: string, userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1556,6 +1575,96 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(datasetReviews)
       .where(eq(datasetReviews.datasetId, datasetId))
       .orderBy(desc(datasetReviews.createdAt));
+  }
+
+  // Messaging operations
+  async getUserConversations(userId: string): Promise<Conversation[]> {
+    return await db
+      .select({
+        id: conversations.id,
+        name: conversations.name,
+        type: conversations.type,
+        createdBy: conversations.createdBy,
+        lastMessageId: conversations.lastMessageId,
+        lastMessageAt: conversations.lastMessageAt,
+        createdAt: conversations.createdAt,
+        updatedAt: conversations.updatedAt,
+      })
+      .from(conversations)
+      .innerJoin(conversationMembers, eq(conversations.id, conversationMembers.conversationId))
+      .where(eq(conversationMembers.userId, userId))
+      .orderBy(desc(conversations.lastMessageAt));
+  }
+
+  async getConversationMessages(conversationId: string): Promise<Message[]> {
+    return await db.select().from(messages)
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(messages.createdAt);
+  }
+
+  async checkConversationAccess(userId: string, conversationId: string): Promise<boolean> {
+    const [member] = await db.select().from(conversationMembers)
+      .where(and(
+        eq(conversationMembers.userId, userId),
+        eq(conversationMembers.conversationId, conversationId)
+      ));
+    return !!member;
+  }
+
+  async createConversation(conversationData: InsertConversation & { members: string[] }): Promise<Conversation> {
+    const { members, ...conversationInsert } = conversationData;
+    
+    const [conversation] = await db.insert(conversations)
+      .values(conversationInsert)
+      .returning();
+
+    // Add conversation members
+    if (members && members.length > 0) {
+      await db.insert(conversationMembers).values(
+        members.map(userId => ({
+          conversationId: conversation.id,
+          userId: userId,
+          role: userId === conversation.createdBy ? 'admin' : 'member'
+        }))
+      );
+    }
+
+    return conversation;
+  }
+
+  async createMessage(messageData: InsertMessage): Promise<Message> {
+    const [message] = await db.insert(messages)
+      .values(messageData)
+      .returning();
+
+    // Update conversation's last message
+    await db.update(conversations)
+      .set({
+        lastMessageId: message.id,
+        lastMessageAt: message.createdAt,
+        updatedAt: new Date()
+      })
+      .where(eq(conversations.id, message.conversationId));
+
+    return message;
+  }
+
+  async addConversationMember(conversationId: string, userId: string): Promise<void> {
+    await db.insert(conversationMembers)
+      .values({
+        conversationId,
+        userId,
+        role: 'member'
+      })
+      .onConflictDoNothing();
+  }
+
+  async removeConversationMember(conversationId: string, userId: string): Promise<void> {
+    await db.delete(conversationMembers)
+      .where(and(
+        eq(conversationMembers.conversationId, conversationId),
+        eq(conversationMembers.userId, userId)
+      ));
   }
 }
 
