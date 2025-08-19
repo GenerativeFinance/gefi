@@ -81,6 +81,7 @@ import ESGClimateRisk from "@/pages/esg-climate-risk";
 import GRUForecasting from "@/pages/gru-forecasting";
 import ESGGeospatialCommodities from "@/pages/esg-geospatial-commodities";
 import AlgorithmicHFTTrading from "@/pages/algorithmic-hft-trading";
+import AlgorithmicTradingPage from "@/pages/algorithmic-trading";
 import FraudDetectionBayesian from "@/pages/fraud-detection-bayesian";
 import ReportGenerator from "@/pages/reports";
 import SearchPage from "@/pages/search";
@@ -300,6 +301,7 @@ function Router() {
             <Route path="/gru-forecasting" component={GRUForecasting} />
             <Route path="/esg-geospatial-commodities" component={ESGGeospatialCommodities} />
             <Route path="/algorithmic-hft-trading" component={AlgorithmicHFTTrading} />
+            <Route path="/algorithmic-trading" component={AlgorithmicTradingPage} />
             <Route path="/fraud-detection-bayesian" component={FraudDetectionBayesian} />
             <Route path="/risk-distribution" component={RiskDistribution} />
             <Route path="/rebalance-actions" component={RebalanceActions} />
