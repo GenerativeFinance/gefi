@@ -146,15 +146,31 @@ export function useBadgeSystem() {
     // Create a temporary notification element
     const notification = document.createElement('div');
     notification.className = 'fixed top-4 right-4 bg-primary text-primary-foreground p-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-right';
-    notification.innerHTML = `
-      <div class="flex items-center gap-3">
-        <span class="text-2xl">${badge.icon}</span>
-        <div>
-          <div class="font-semibold">Badge Unlocked!</div>
-          <div class="text-sm opacity-90">${badge.name}</div>
-        </div>
-      </div>
-    `;
+    
+    // Create elements safely using DOM methods
+    const container = document.createElement('div');
+    container.className = 'flex items-center gap-3';
+    
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'text-2xl';
+    iconSpan.textContent = badge.icon; // Safe: textContent escapes HTML
+    
+    const textContainer = document.createElement('div');
+    
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'font-semibold';
+    titleDiv.textContent = 'Badge Unlocked!'; // Safe: static text
+    
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'text-sm opacity-90';
+    nameDiv.textContent = badge.name; // Safe: textContent escapes HTML
+    
+    // Assemble the DOM structure
+    textContainer.appendChild(titleDiv);
+    textContainer.appendChild(nameDiv);
+    container.appendChild(iconSpan);
+    container.appendChild(textContainer);
+    notification.appendChild(container);
 
     document.body.appendChild(notification);
 
