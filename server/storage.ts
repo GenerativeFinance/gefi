@@ -373,7 +373,7 @@ export class DatabaseStorage implements IStorage {
             role: userData.role,
             subscriptionTier: userData.subscriptionTier,
             provider: userData.provider || 'email',
-            status: 'active',
+            status: userData.status || 'active',
             riskScore: 0,
             lastLoginAt: new Date(),
             totalTrades: 0,
