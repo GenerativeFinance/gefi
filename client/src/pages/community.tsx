@@ -24,7 +24,6 @@ import {
   Plus,
   Search,
   Pin,
-  Fire,
   ArrowUp,
   Clock,
   ThumbsUp,
@@ -184,7 +183,7 @@ export default function Community() {
                     <CardContent className="p-6">
                       <div className="flex items-start space-x-4">
                         <Avatar>
-                          <AvatarImage src={discussion.avatar} />
+                          <AvatarImage src={discussion.avatar || undefined} />
                           <AvatarFallback>{discussion.author.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 space-y-2">
