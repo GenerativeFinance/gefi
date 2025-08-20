@@ -65,13 +65,15 @@ import {
   TrendingDown
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import FederatedLearningGraph from "@/components/FederatedLearningGraph";
+import { Sparkles } from "lucide-react";
 
 export default function WalletPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [isNewContractOpen, setIsNewContractOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
@@ -80,8 +82,10 @@ export default function WalletPage() {
   const [trainingProgress, setTrainingProgress] = useState(0);
   const [walletAddress, setWalletAddress] = useState("");
   const [flModelStatus, setFlModelStatus] = useState("idle");
+  const [selectedChain, setSelectedChain] = useState<string>("solana");
+  const [hasPro, setHasPro] = useState<boolean>(() => !!localStorage.getItem("gefi.contractWallet.pro"));
 
-  // Federated Learning Model Status
+  // Contract Model Status
   const [modelMetrics, setModelMetrics] = useState({
     accuracy: 85.3,
     loss: 0.247,
@@ -90,9 +94,30 @@ export default function WalletPage() {
     lastUpdate: new Date().toISOString()
   });
 
-  // Mock wallet data for FL system
-  const flWalletData = {
-    publicKey: "fl_" + (user as any)?.id || "demo_key",
+  // Subscribe to Contract Wallet Pro
+  const subscribePro = useMutation({
+    mutationFn: async () => {
+      const resp = await apiRequest("POST", "/api/contract-wallet/subscribe", {});
+      if ((resp as any)?.json) return (resp as Response).json();
+      return resp;
+    },
+    onSuccess: (data: any) => {
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+      localStorage.setItem("gefi.contractWallet.pro", "true");
+      setHasPro(true);
+      toast({ title: "Activated", description: "Contract Wallet Pro is now active." });
+    },
+    onError: (err: any) => {
+      toast({ title: "Activation failed", description: String(err?.message || "Please try again."), variant: "destructive" });
+    }
+  });
+
+  // Mock wallet data for contract system
+  const contractWalletData = {
+    publicKey: "contract_" + (user as any)?.id || "demo_key",
     balance: 2850, // GeFi tokens
     totalEarnings: 12450,
     contributions: 47,
@@ -100,13 +125,13 @@ export default function WalletPage() {
     stakeholderType: (user as any)?.role || "investor"
   };
 
-  // Federated Learning Contracts
+  // Contract Wallet Contracts
   const flContracts = [
     {
       id: 1,
       name: "Asset Price Prediction Model",
-      type: "Federated Learning",
-      contractAddress: "0xfl_001...abc",
+      type: "AI Model Contract",
+      contractAddress: "0xcw_001...abc",
       status: "Active",
       balance: "1,250 GeFi",
       totalEarnings: "8,450 GeFi",
@@ -121,8 +146,8 @@ export default function WalletPage() {
     {
       id: 2,
       name: "Risk Assessment Collaborative Model",
-      type: "Federated Learning",
-      contractAddress: "0xfl_002...def",
+      type: "AI Model Contract",
+      contractAddress: "0xcw_002...def",
       status: "Training",
       balance: "850 GeFi",
       totalEarnings: "2,100 GeFi",
@@ -281,11 +306,33 @@ export default function WalletPage() {
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
               <Brain className="w-8 h-8 text-primary" />
-              Federated Learning Wallet
+              Contract Wallet
             </h1>
             <p className="text-muted-foreground mt-1">
-              Manage your FL contracts, model contributions, and token rewards
+              Manage stakeholder contracts for your AI financial models across supported blockchains
             </p>
+          </div>
+          
+          {/* Chain selector and Pro upsell */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Select value={selectedChain} onValueChange={setSelectedChain}>
+              <SelectTrigger className="w-56">
+                <SelectValue placeholder="Select blockchain" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="solana">Solana</SelectItem>
+                <SelectItem value="ethereum">Ethereum</SelectItem>
+                <SelectItem value="base">Base</SelectItem>
+                <SelectItem value="polygon">Polygon</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {!hasPro && (
+              <Button onClick={() => subscribePro.mutate()} className="gap-2" disabled={subscribePro.isPending}>
+                <Sparkles className="h-4 w-4" />
+                {subscribePro.isPending ? "Activating..." : "Enable Contract Wallet Pro – $19/mo"}
+              </Button>
+            )}
           </div>
           <div className="flex gap-2">
             <Button onClick={createWallet} variant="outline">
@@ -315,7 +362,7 @@ export default function WalletPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">GeFi Balance</p>
-                  <p className="text-2xl font-bold">{flWalletData.balance.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{contractWalletData.balance.toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground">tokens</p>
                 </div>
                 <Wallet className="w-8 h-8 text-primary" />
@@ -327,7 +374,7 @@ export default function WalletPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Earnings</p>
-                  <p className="text-2xl font-bold">{flWalletData.totalEarnings.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{contractWalletData.totalEarnings.toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground">GeFi tokens</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-green-600" />
@@ -339,7 +386,7 @@ export default function WalletPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Contributions</p>
-                  <p className="text-2xl font-bold">{flWalletData.contributions}</p>
+                  <p className="text-2xl font-bold">{contractWalletData.contributions}</p>
                   <p className="text-xs text-muted-foreground">model updates</p>
                 </div>
                 <Upload className="w-8 h-8 text-blue-600" />
@@ -351,7 +398,7 @@ export default function WalletPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Leaderboard Rank</p>
-                  <p className="text-2xl font-bold">{flWalletData.rank}</p>
+                  <p className="text-2xl font-bold">{contractWalletData.rank}</p>
                   <p className="text-xs text-muted-foreground">global ranking</p>
                 </div>
                 <Award className="w-8 h-8 text-yellow-600" />
@@ -364,8 +411,8 @@ export default function WalletPage() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Stakeholder Type</p>
                   <div className="flex items-center gap-2">
-                    {getStakeholderRole(flWalletData.stakeholderType).icon}
-                    <p className="text-sm font-semibold capitalize">{getStakeholderRole(flWalletData.stakeholderType).label}</p>
+                    {getStakeholderRole(contractWalletData.stakeholderType).icon}
+                    <p className="text-sm font-semibold capitalize">{getStakeholderRole(contractWalletData.stakeholderType).label}</p>
                   </div>
                 </div>
                 <Network className="w-8 h-8 text-purple-600" />
@@ -416,7 +463,7 @@ export default function WalletPage() {
         {/* Main Content */}
         <Tabs defaultValue="contracts" className="space-y-6">
           <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="contracts">FL Contracts</TabsTrigger>
+            <TabsTrigger value="contracts">Contracts</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
             <TabsTrigger value="models">Model Performance</TabsTrigger>
             <TabsTrigger value="network">Network</TabsTrigger>
@@ -697,7 +744,7 @@ export default function WalletPage() {
                     { rank: 1, name: "DataMaster Pro", contributions: 156, tokens: 15600, accuracy: "94.2%" },
                     { rank: 2, name: "ML_Investor_01", contributions: 143, tokens: 14300, accuracy: "93.8%" },
                     { rank: 3, name: "QuantAnalyst", contributions: 128, tokens: 12800, accuracy: "92.1%" },
-                    { rank: 23, name: `You (${flWalletData.publicKey.slice(0, 12)}...)`, contributions: flWalletData.contributions, tokens: flWalletData.totalEarnings, accuracy: "85.3%", isUser: true }
+                    { rank: 23, name: `You (${contractWalletData.publicKey.slice(0, 12)}...)`, contributions: contractWalletData.contributions, tokens: contractWalletData.totalEarnings, accuracy: "85.3%", isUser: true }
                   ].map((participant) => (
                     <div 
                       key={participant.rank} 
@@ -754,7 +801,7 @@ export default function WalletPage() {
                     <div className="flex gap-2 mt-1">
                       <Input 
                         id="wallet-address"
-                        value={flWalletData.publicKey}
+                        value={contractWalletData.publicKey}
                         readOnly 
                         className="font-mono text-sm"
                       />
@@ -765,7 +812,7 @@ export default function WalletPage() {
                   </div>
                   <div>
                     <Label htmlFor="stakeholder-type">Stakeholder Type</Label>
-                    <Select defaultValue={flWalletData.stakeholderType}>
+                    <Select defaultValue={contractWalletData.stakeholderType}>
                       <SelectTrigger className="mt-1">
                         <SelectValue />
                       </SelectTrigger>

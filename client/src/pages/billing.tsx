@@ -10,12 +10,14 @@ import { getLocalSubscriptions } from '@/lib/subscriptionsLocal';
 
 export default function Billing() {
   const [activeModelSubs, setActiveModelSubs] = useState<{ modelName: string; price: number; billingCycle: string }[]>([]);
+  const [hasContractWalletPro, setHasContractWalletPro] = useState<boolean>(false);
 
   useEffect(() => {
     // If you later fetch server subscriptions, merge with local here.
     const locals = getLocalSubscriptions().filter(s => s.status === 'active');
     setActiveModelSubs(locals.map(s => ({ modelName: s.modelName, price: s.price, billingCycle: s.billingCycle })));
-  }, []);
+    setHasContractWalletPro(!!localStorage.getItem("gefi.contractWallet.pro"));
+  }, []); 
 
   const currentPlan = {
     name: "Professional",
@@ -160,6 +162,31 @@ export default function Billing() {
                         ))}
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+                
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle>Add-ons</CardTitle>
+                    <CardDescription>Optional subscriptions for advanced features</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <div className="font-medium">Contract Wallet Pro</div>
+                        <div className="text-sm text-muted-foreground">$19/month</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={hasContractWalletPro ? "default" : "secondary"}>
+                          {hasContractWalletPro ? "Active" : "Not Active"}
+                        </Badge>
+                        {!hasContractWalletPro && (
+                          <Button asChild variant="outline" size="sm">
+                            <a href="/wallet">Activate</a>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
                 

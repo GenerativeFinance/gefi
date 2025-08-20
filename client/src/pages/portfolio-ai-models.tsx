@@ -7,6 +7,7 @@ import Layout from "@/components/layout/Layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import ConfigureModelDialog from "@/components/portfolio/ConfigureModelDialog";
+import StakeholderMetrics from "@/components/portfolio/StakeholderMetrics";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Bot, 
@@ -87,6 +88,14 @@ export default function PortfolioAIModels() {
       rating: 4.7,
       subscribers: 1200,
       description: "Real-time risk predictor",
+      // NEW stakeholder/usage fields
+      dailyUsers: 420,
+      monthlyUsers: 5600,
+      yearlyUsers: 61200,
+      stakeholderSharePct: 2.5,
+      roiPct: 14.2,
+      otherStakeholders: 18,
+      contractChain: "Solana"
     },
     {
       id: 2,
@@ -104,6 +113,14 @@ export default function PortfolioAIModels() {
       rating: 4.4,
       subscribers: 900,
       description: "Momentum based trading signals",
+      // NEW stakeholder/usage fields
+      dailyUsers: 310,
+      monthlyUsers: 4300,
+      yearlyUsers: 48700,
+      stakeholderSharePct: 1.7,
+      roiPct: 9.6,
+      otherStakeholders: 11,
+      contractChain: "Ethereum"
     },
   ];
 
@@ -275,6 +292,11 @@ export default function PortfolioAIModels() {
                         </Button>
                       </div>
                     </div>
+                  </div>
+
+                  {/* NEW: Stakeholder and usage metrics section */}
+                  <div className="mt-6">
+                    <StakeholderMetrics model={model} />
                   </div>
                 </CardContent>
               </Card>
