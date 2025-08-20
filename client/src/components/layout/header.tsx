@@ -209,10 +209,11 @@ export default function Header() {
       ];
     }
     
-    if (location.startsWith('/marketplace') || location.startsWith('/my-subscriptions') || location.startsWith('/developers') || location.startsWith('/trading-bots') || location.startsWith('/categories')) {
+    if (location.startsWith('/marketplace') || location.startsWith('/my-subscriptions') || location.startsWith('/developers') || location.startsWith('/trading-bots') || location.startsWith('/categories') || location.startsWith('/autonomous-agents')) {
       return [
         { name: "Overview", href: "/", icon: BarChart3 },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
+        { name: "Autonomous Agents", href: "/autonomous-agents", icon: Bot },
         { name: "Categories", href: "/categories", icon: Grid },
         { name: "My Subscriptions", href: "/my-subscriptions", icon: CreditCard },
         { name: "Developers", href: "/developers", icon: Users }

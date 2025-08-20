@@ -68,6 +68,7 @@ import UserAccess from "@/pages/user-access";
 import Billing from "@/pages/billing";
 import Storage from "@/pages/Storage";
 import ReportGeneration from "@/pages/ReportGeneration";
+import AutonomousAgents from "@/pages/AutonomousAgents";
 import MobileDemo from "@/pages/mobile-demo";
 import WalletManagement from "@/pages/wallet-management";
 import ServerManagement from "@/pages/server-management";
@@ -254,6 +255,7 @@ function Router() {
             <Route path="/risk-management" component={RiskManagement} />
             <Route path="/risk-dashboard" component={RiskManagement} />
             <Route path="/marketplace" component={Marketplace} />
+            <Route path="/autonomous-agents" component={AutonomousAgents} />
             <Route path="/model/:id" component={ModelDetail} />
             <Route path="/risk-assessment-models" component={RiskAssessmentModels} />
             <Route path="/data-provider" component={DataProviderDashboard} />
