@@ -183,6 +183,7 @@ import DeveloperPortfolioScoreOverall from "@/pages/developer/portfolio/score/ov
 import DeveloperPortfolioScoreMilestones from "@/pages/developer/portfolio/score/milestones";
 import DeveloperPortfolioScore from "@/pages/developer/portfolio/score";
 import DeveloperDevelopIDEAccess from "@/pages/developer/develop/ide-access";
+import DeveloperDevelop from "@/pages/developer/develop/develop";
 import DeveloperDevelopVersionControl from "@/pages/developer/develop/version-control";
 import DeveloperDevelopCodeReview from "@/pages/developer/develop/code-review";
 import DeveloperPortfolioCollaborationHistory from "@/pages/developer/portfolio/collaboration-history";
@@ -384,6 +385,7 @@ function Router() {
             <Route path="/developer/portfolio/score" component={DeveloperPortfolioScore} />
             <Route path="/developer/portfolio/score/overall" component={DeveloperPortfolioScoreOverall} />
             <Route path="/developer/portfolio/score/milestones" component={DeveloperPortfolioScoreMilestones} />
+            <Route path="/developer/develop" component={DeveloperDevelop} />
             <Route path="/developer/develop/ide-access" component={DeveloperDevelopIDEAccess} />
             <Route path="/developer/develop/version-control" component={DeveloperDevelopVersionControl} />
             <Route path="/developer/develop/code-review" component={DeveloperDevelopCodeReview} />

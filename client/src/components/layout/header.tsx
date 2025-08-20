@@ -266,7 +266,7 @@ export default function Header() {
       if (location.includes('/developer/develop/') || location === '/develop') {
         return [
           { name: "Overview", href: "/developer", icon: BarChart3 },
-          { name: "Develop", href: "/develop", icon: Code },
+          { name: "Develop", href: "/developer/develop", icon: Code },
           { name: "Testing", href: "/develop", icon: TrendingUp },
           { name: "IDE Access", href: "/developer/develop/ide-access", icon: Code },
           { name: "Version Control", href: "/developer/develop/version-control", icon: GitBranch },
@@ -278,7 +278,8 @@ export default function Header() {
       return [
         { name: "Overview", href: "/developer", icon: BarChart3 },
         { name: "Portfolio", href: "/developer/portfolio", icon: Wallet },
-        { name: "Develop", href: "/develop", icon: Code },
+        { name: "Develop", href: "/developer/develop", icon: Code },
+        { name: "Testing", href: "/develop", icon: TrendingUp },
         { name: "AI Marketplace", href: "/developer-marketplace", icon: Store },
         { name: "Market Data", href: "/market-data", icon: Database },
         { name: "Bounties", href: "/bounties", icon: Target },
