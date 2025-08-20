@@ -378,7 +378,7 @@ export default function MySubscriptions() {
                               size="sm"
                               asChild
                             >
-                              <Link href={`/marketplace/model/${subscription.modelId}`}>
+                              <Link href={`/model/${subscription.modelId}`}>
                                 <BarChart3 className="h-4 w-4 mr-1" />
                                 View
                               </Link>
