@@ -67,11 +67,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { storage } = await import("../storage");
   registerProfileCompatibilityRoutes(app, storage);
 
-  // Register messaging routes
-  console.log("💬 Registering Team Messaging APIs...");
-  const messagingRouter = (await import("../routes/messagingRoutes")).default;
-  app.use("/api/messaging", messagingRouter);
-
   // ===========================================
   // WebSocket Server Setup
   // ===========================================
@@ -83,6 +78,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     server: httpServer, 
     path: '/ws'
   });
+
+  // Register messaging routes (after WebSocket server is created)
+  console.log("💬 Registering Team Messaging APIs...");
+  const { registerMessagingRoutes } = await import("./messagingRoutes");
+  registerMessagingRoutes(app, wss);
 
   // Store active connections
   const activeConnections = new Map<string, WebSocket>();

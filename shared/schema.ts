@@ -469,6 +469,36 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Message Notifications Table
+export const messageNotifications = pgTable("message_notifications", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  conversationId: varchar("conversation_id").references(() => conversations.id, { onDelete: 'cascade' }),
+  messageId: varchar("message_id").references(() => messages.id, { onDelete: 'cascade' }),
+  type: varchar("type").notNull().default("message"), // 'message', 'mention', 'thread_reply'
+  isRead: boolean("is_read").default(false),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Integration Settings Table
+export const integrationSettings = pgTable("integration_settings", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  provider: varchar("provider").notNull(), // 'slack', 'teams', 'discord'
+  isEnabled: boolean("is_enabled").default(false),
+  webhookUrl: text("webhook_url"),
+  accessToken: text("access_token"),
+  channelId: varchar("channel_id"),
+  teamId: varchar("team_id"),
+  botToken: text("bot_token"),
+  settings: jsonb("settings").default({}), // Additional provider-specific settings
+  lastTestAt: timestamp("last_test_at"),
+  testResult: varchar("test_result"), // 'success', 'failed', 'pending'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Custom Reports Tables
 export const customReports = pgTable("custom_reports", {
   id: serial("id").primaryKey(),
@@ -2281,3 +2311,7 @@ export type Message = typeof messages.$inferSelect;
 export type InsertMessage = typeof messages.$inferInsert;
 export type ConversationMember = typeof conversationMembers.$inferSelect;
 export type InsertConversationMember = typeof conversationMembers.$inferInsert;
+export type MessageNotification = typeof messageNotifications.$inferSelect;
+export type InsertMessageNotification = typeof messageNotifications.$inferInsert;
+export type IntegrationSetting = typeof integrationSettings.$inferSelect;
+export type InsertIntegrationSetting = typeof integrationSettings.$inferInsert;

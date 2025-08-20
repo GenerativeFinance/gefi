@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SearchModal } from "@/components/search/SearchModal";
+import { NotificationBell } from "@/components/NotificationBell";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
@@ -488,33 +489,7 @@ export default function Header() {
               </Button>
 
               {/* Notifications */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="relative w-9 h-9 md:w-auto md:h-auto p-2 md:px-3 md:py-2 text-muted-foreground hover:text-foreground">
-                    <Bell className="h-4 w-4 md:h-5 md:w-5" />
-                    {unreadCount > 0 && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
-                  <div className="p-4">
-                    <h3 className="font-semibold mb-2">Notifications</h3>
-                    {notificationsArray.length === 0 ? (
-                      <p className="text-muted-foreground text-sm">No notifications</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {notificationsArray.slice(0, 5).map((notification: any) => (
-                          <div key={notification.id} className="p-2 rounded border">
-                            <p className="text-sm font-medium">{notification.title}</p>
-                            <p className="text-xs text-muted-foreground">{notification.message}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <NotificationBell />
 
               {/* App Marketplace */}
               <Link href="/app-marketplace">
