@@ -88,7 +88,7 @@ export default function Storage() {
   const queryClient = useQueryClient();
 
   // Fetch storage files
-  const { data: files = [], isLoading, refetch } = useQuery({
+  const { data: files = [], isLoading, refetch } = useQuery<StorageFile[]>({
     queryKey: ["/api/storage/files"],
     refetchInterval: 30000, // Refetch every 30 seconds
   });

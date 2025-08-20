@@ -89,7 +89,7 @@ import ReportGenerator from "@/pages/reports";
 import SearchPage from "@/pages/search";
 import AppMarketplace from "@/pages/app-marketplace";
 import Integrations from "@/pages/integrations";
-
+import AllReports from "@/pages/AllReports";
 
 import ProfileSetup from "@/pages/profile-setup";
 import ModelProfile from "@/pages/model-profile";
@@ -364,6 +364,7 @@ function Router() {
             <Route path="/data-provider/data/versioning" component={DataProviderDataVersioning} />
             <Route path="/investor/reports" component={InvestorReports} />
             <Route path="/investor/create-custom-report" component={CreateCustomReport} />
+            <Route path="/all-reports" component={AllReports} />
             <Route path="/data-provider/enhanced" component={DataProviderEnhanced} />
             <Route path="/developer/learning" component={DeveloperLearningPage} />
             <Route path="/developer/portfolio" component={DeveloperPortfolioOverview} />
