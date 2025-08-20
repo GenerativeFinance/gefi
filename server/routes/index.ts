@@ -61,6 +61,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerBacktestingRoutes } = await import("./backtestingRoutes");
   registerBacktestingRoutes(app);
 
+  console.log("🔗 Registering GitHub Integration APIs...");
+  const githubIntegrationRouter = (await import("./githubIntegration")).default;
+  app.use("/api/integrations/github", githubIntegrationRouter);
+
   // Register profile compatibility routes
   console.log("👤 Registering Profile Compatibility APIs...");
   const registerProfileCompatibilityRoutes = (await import("./profileCompat")).default;
