@@ -75,9 +75,9 @@ export async function apiRequest(
   } catch (error) {
     // Enhanced error logging for debugging
     console.error(`API Request failed: ${method} ${url}`, {
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       data,
-      status: error.message.split(':')[0],
+      status: error instanceof Error ? error.message.split(':')[0] : 'unknown',
     });
     throw error;
   }
@@ -120,9 +120,9 @@ export const getQueryFn: <T>(options: {
 
       await throwIfResNotOk(response);
       return await response.json();
-    } catch (error) {
+    } catch (error: unknown) {
       // Don't log errors for aborted requests
-      if (error.name !== 'AbortError') {
+      if (error instanceof Error && error.name !== 'AbortError') {
         console.warn(`Query failed for ${url}:`, error.message);
       }
       throw error;
@@ -197,15 +197,13 @@ export const queryClient = new QueryClient({
       refetchOnReconnect: true,
       refetchOnMount: true,
       
-      // Error handling
-      onError: handleGlobalError,
+      // Error handling - removed onError as it's deprecated in v5
     },
     mutations: {
       // Mutations should not retry automatically
       retry: false,
       
-      // Error handling for mutations
-      onError: handleGlobalError,
+      // Error handling for mutations - removed as deprecated in v5
     },
   },
 });

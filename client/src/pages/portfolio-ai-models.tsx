@@ -26,7 +26,7 @@ export default function PortfolioAIModels() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: aiModels = [], isLoading } = useQuery({
+  const { data: aiModels = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/portfolio/ai-models"],
     enabled: true
   });
@@ -124,7 +124,7 @@ export default function PortfolioAIModels() {
     },
   ];
 
-  const activeModels = aiModels && aiModels.length > 0 ? aiModels : defaultActiveModels;
+  const activeModels = Array.isArray(aiModels) && aiModels.length > 0 ? aiModels : defaultActiveModels;
 
   const handleTogglePause = (model: any) => {
     const action = model.status === "active" ? "pause" : "resume";
@@ -180,7 +180,7 @@ export default function PortfolioAIModels() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="space-y-6">
-            {activeModels.map((model) => (
+            {Array.isArray(activeModels) && activeModels.map((model: any) => (
               <Card key={model.id} className="hover:shadow-lg transition-shadow duration-300">
                 <CardContent className="p-6">
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

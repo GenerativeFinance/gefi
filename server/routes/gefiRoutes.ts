@@ -257,7 +257,7 @@ export function registerGeFiRoutes(app: Express) {
   // Get server deployments
   app.get('/api/server-deployments', isAuthenticated, async (req: any, res) => {
     try {
-      const deployments = [];
+      const deployments: any[] = [];
       res.json(deployments);
     } catch (error) {
       console.error("Error fetching deployments:", error);
@@ -268,7 +268,7 @@ export function registerGeFiRoutes(app: Express) {
   // Get federated learning nodes
   app.get('/api/federated-learning-nodes', isAuthenticated, async (req: any, res) => {
     try {
-      const nodes = [];
+      const nodes: any[] = [];
       res.json(nodes);
     } catch (error) {
       console.error("Error fetching FL nodes:", error);
@@ -868,7 +868,7 @@ export function registerGeFiRoutes(app: Express) {
       }
       
       // Calculate rebalancing actions based on target allocation
-      const rebalanceActions = [];
+      const rebalanceActions: any[] = [];
       const currentAllocation = {
         stocks: 75,
         bonds: 15,
@@ -1089,50 +1089,62 @@ export function registerGeFiRoutes(app: Express) {
 
       // Apply filters
       if (category && category !== 'all') {
-        filteredModels = filteredModels.filter(model => 
-          model.category.toLowerCase().includes(category.toLowerCase())
+        const categoryStr = Array.isArray(category) ? category[0] : category;
+        filteredModels = filteredModels.filter((model: any) => 
+          model.category.toLowerCase().includes(categoryStr.toLowerCase())
         );
       }
 
       if (subcategory && subcategory !== 'all') {
-        filteredModels = filteredModels.filter(model => 
-          model.subcategory.toLowerCase().includes(subcategory.toLowerCase())
+        const subcategoryStr = Array.isArray(subcategory) ? subcategory[0] : subcategory;
+        filteredModels = filteredModels.filter((model: any) => 
+          model.subcategory.toLowerCase().includes(subcategoryStr.toLowerCase())
         );
       }
 
       if (riskLevel && riskLevel !== 'all') {
-        filteredModels = filteredModels.filter(model => 
-          model.riskLevel.toLowerCase() === riskLevel.toLowerCase()
+        const riskLevelStr = Array.isArray(riskLevel) ? riskLevel[0] : riskLevel;
+        filteredModels = filteredModels.filter((model: any) => 
+          model.riskLevel.toLowerCase() === riskLevelStr.toLowerCase()
         );
       }
 
       if (priceMin) {
-        filteredModels = filteredModels.filter(model => 
-          parseFloat(model.price) >= parseFloat(priceMin)
-        );
+        const priceMinStr = Array.isArray(priceMin) ? priceMin[0] : priceMin;
+        if (typeof priceMinStr === 'string') {
+          filteredModels = filteredModels.filter((model: any) => 
+            parseFloat(model.price) >= parseFloat(priceMinStr)
+          );
+        }
       }
 
       if (priceMax) {
-        filteredModels = filteredModels.filter(model => 
-          parseFloat(model.price) <= parseFloat(priceMax)
-        );
+        const priceMaxStr = Array.isArray(priceMax) ? priceMax[0] : priceMax;
+        if (typeof priceMaxStr === 'string') {
+          filteredModels = filteredModels.filter((model: any) => 
+            parseFloat(model.price) <= parseFloat(priceMaxStr)
+          );
+        }
       }
 
       if (search) {
-        const searchTerm = search.toLowerCase();
-        filteredModels = filteredModels.filter(model => 
-          model.name.toLowerCase().includes(searchTerm) ||
-          model.description.toLowerCase().includes(searchTerm) ||
-          model.tags.some(tag => tag.toLowerCase().includes(searchTerm))
-        );
+        const searchStr = Array.isArray(search) ? search[0] : search;
+        if (typeof searchStr === 'string') {
+          const searchTerm = searchStr.toLowerCase();
+          filteredModels = filteredModels.filter((model: any) => 
+            model.name.toLowerCase().includes(searchTerm) ||
+            model.description.toLowerCase().includes(searchTerm) ||
+            model.tags.some((tag: any) => tag.toLowerCase().includes(searchTerm))
+          );
+        }
       }
 
       if (featured === 'true') {
-        filteredModels = filteredModels.filter(model => model.isFeatured);
+        filteredModels = filteredModels.filter((model: any) => model.isFeatured);
       }
 
       // Apply sorting
-      filteredModels.sort((a, b) => {
+      filteredModels.sort((a: any, b: any) => {
         let comparison = 0;
         switch (sortBy) {
           case 'rating':
