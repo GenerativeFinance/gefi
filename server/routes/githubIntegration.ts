@@ -21,10 +21,12 @@ function getUserId(req: any): string {
 }
 
 function getOrigin(req: any): string {
-  // Try to reconstruct origin for callback URL
-  const proto = (req.headers['x-forwarded-proto'] as string) || 'http';
-  const host = req.headers['x-forwarded-host'] || req.headers.host;
-  return `${proto}://${host}`;
+  // Use consistent Replit domain for OAuth callbacks
+  const replitDomain = process.env.REPL_SLUG && process.env.REPL_OWNER 
+    ? `https://${process.env.REPL_ID || process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+    : `https://${req.headers.host}`;
+  
+  return replitDomain;
 }
 
 function requireToken(req: any, res: any, next: any) {
