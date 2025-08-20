@@ -101,6 +101,7 @@ import CreateCustomReport from "@/pages/investor/create-custom-report";
 import Community from "@/pages/community";
 import Docs from "@/pages/docs";
 import Webinars from "@/pages/webinars";
+import MessagingCenter from "@/pages/MessagingCenter";
 import PortfolioAI from "@/pages/portfolio-ai-models";
 import Strategies from "@/pages/strategies";
 import Orders from "@/pages/orders";
@@ -313,6 +314,7 @@ function Router() {
             <Route path="/current-risk-assessment" component={CurrentRiskAssessment} />
             <Route path="/order-book" component={OrderBook} />
             <Route path="/community" component={Community} />
+            <Route path="/messaging" component={MessagingCenter} />
             <Route path="/docs" component={Docs} />
             <Route path="/webinars" component={Webinars} />
             <Route path="/strategies" component={Strategies} />

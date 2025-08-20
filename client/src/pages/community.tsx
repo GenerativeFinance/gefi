@@ -2,8 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import Layout from "@/components/layout/Layout";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   Users, 
   MessageCircle, 
@@ -13,46 +19,86 @@ import {
   ExternalLink,
   Heart,
   Share2,
-  Eye
+  Eye,
+  Hash,
+  Plus,
+  Search,
+  Pin,
+  Fire,
+  ArrowUp,
+  Clock,
+  ThumbsUp,
+  MessageSquare
 } from "lucide-react";
 
 export default function Community() {
+  const { user } = useAuth();
+  
+  // Fetch forum conversations from messaging API
+  const { data: forumConversations = [], isLoading } = useQuery({
+    queryKey: ["/api/messaging/conversations"],
+    select: (data: any) => {
+      const conversations = Array.isArray(data) ? data : [];
+      return conversations.filter((conv: any) => conv.type === "forum");
+    },
+  });
+
   const discussions = [
     {
       id: 1,
       title: "Best AI models for crypto trading in 2025?",
       author: "CryptoAnalyst",
-      avatar: "/api/placeholder/32/32",
+      avatar: null,
       replies: 24,
       views: 156,
       likes: 12,
       category: "Trading",
       time: "2 hours ago",
-      tags: ["AI Models", "Crypto", "Trading"]
+      tags: ["AI Models", "Crypto", "Trading"],
+      isPinned: true,
+      conversationId: "conv_forum_1"
     },
     {
       id: 2,
       title: "Portfolio optimization using reinforcement learning",
       author: "MLTrader",
-      avatar: "/api/placeholder/32/32",
+      avatar: null,
       replies: 18,
       views: 89,
       likes: 8,
-      category: "Development",
+      category: "Development", 
       time: "4 hours ago",
-      tags: ["Portfolio", "ML", "Optimization"]
+      tags: ["Portfolio", "ML", "Optimization"],
+      isPinned: false,
+      conversationId: "conv_forum_2"
     },
     {
       id: 3,
       title: "Risk management strategies for volatile markets",
       author: "RiskManager",
-      avatar: "/api/placeholder/32/32",
+      avatar: null,
       replies: 31,
       views: 203,
       likes: 15,
       category: "Risk",
       time: "6 hours ago",
-      tags: ["Risk", "Strategy", "Markets"]
+      tags: ["Risk", "Strategy", "Markets"],
+      isPinned: false,
+      conversationId: "conv_forum_3"
+    },
+    {
+      id: 4,
+      title: "New member introduction and team messaging",
+      author: "TeamLeader",
+      avatar: null,
+      replies: 12,
+      views: 67,
+      likes: 8,
+      category: "General",
+      time: "8 hours ago",
+      tags: ["Introduction", "Team", "Messaging"],
+      isPinned: false,
+      conversationId: "conv_team_1"
     }
   ];
 
@@ -98,8 +144,14 @@ export default function Community() {
                 Share insights, collaborate on projects, and learn from the community.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
+                <Link href="/messaging">
+                  <Button size="lg" className="gap-2">
+                    <MessageCircle className="h-5 w-5" />
+                    Open Messages
+                  </Button>
+                </Link>
                 <Button size="lg" className="gap-2">
-                  <MessageCircle className="h-5 w-5" />
+                  <Hash className="h-5 w-5" />
                   Start Discussion
                 </Button>
                 <Button variant="outline" size="lg" className="gap-2">
