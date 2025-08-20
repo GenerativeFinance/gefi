@@ -5,8 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreditCard, Download, Calendar, TrendingUp, DollarSign, FileText, AlertCircle } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { getLocalSubscriptions } from '@/lib/subscriptionsLocal';
 
 export default function Billing() {
+  const [activeModelSubs, setActiveModelSubs] = useState<{ modelName: string; price: number; billingCycle: string }[]>([]);
+
+  useEffect(() => {
+    // If you later fetch server subscriptions, merge with local here.
+    const locals = getLocalSubscriptions().filter(s => s.status === 'active');
+    setActiveModelSubs(locals.map(s => ({ modelName: s.modelName, price: s.price, billingCycle: s.billingCycle })));
+  }, []);
+
   const currentPlan = {
     name: "Professional",
     price: 299,
@@ -129,6 +139,30 @@ export default function Billing() {
                 </Card>
 
                 {/* Upcoming Charges */}
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle>Active Model Subscriptions</CardTitle>
+                    <CardDescription>Your AI model subscriptions billed via GeFi</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {activeModelSubs.length === 0 ? (
+                      <div className="text-sm text-muted-foreground">No active model subscriptions yet.</div>
+                    ) : (
+                      <div className="space-y-3">
+                        {activeModelSubs.map((s, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <div className="font-medium">{s.modelName}</div>
+                              <div className="text-sm text-muted-foreground">${s.price}/{s.billingCycle}</div>
+                            </div>
+                            <Badge variant="default">Active</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                
                 <Card className="mt-6">
                   <CardHeader>
                     <CardTitle>Upcoming Charges</CardTitle>
