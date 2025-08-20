@@ -63,13 +63,13 @@ export default function AlgorithmicTradingPage() {
 
   const handleUpdateParameters = () => {
     // Simulate parameter update
-    console.log("Updating trading parameters:", {
-      strategyType,
-      positionSizeMin,
-      positionSizeMax,
-      stopLoss,
-      takeProfit
-    });
+    // Update trading parameters: {
+    //   strategyType,
+    //   positionSizeMin,
+    //   positionSizeMax,
+    //   stopLoss,
+    //   takeProfit
+    // }
   };
 
   return (

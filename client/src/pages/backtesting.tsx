@@ -150,7 +150,7 @@ export default function BacktestingEnvironment() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: models = [] } = useQuery({
+  const { data: models = [] } = useQuery<any[]>({
     queryKey: ["/api/developer/models"],
     retry: false,
   });
@@ -769,15 +769,15 @@ export default function BacktestingEnvironment() {
                 backtest={selectedBacktest}
                 onStop={() => {
                   // Handle backtest stop
-                  console.log("Stopping backtest");
+                  // Stop backtest
                 }}
                 onPause={() => {
                   // Handle backtest pause
-                  console.log("Pausing backtest");
+                  // Pause backtest
                 }}
                 onResume={() => {
                   // Handle backtest resume
-                  console.log("Resuming backtest");
+                  // Resume backtest
                 }}
               />
             ) : (
@@ -799,7 +799,7 @@ export default function BacktestingEnvironment() {
                 backtest={selectedBacktest}
                 onOptimize={(parameters) => {
                   // Handle optimization
-                  console.log("Optimizing with parameters:", parameters);
+                  // Optimize with parameters
                 }}
               />
             ) : (

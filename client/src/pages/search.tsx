@@ -304,15 +304,13 @@ export default function SearchPage() {
                             onClick={() => handleResultClick(result, type)}
                           >
                             <CardContent className="p-4">
-                              <h3 
-                                className="font-semibold text-sm mb-2 line-clamp-2"
-                                dangerouslySetInnerHTML={{ __html: getResultTitle(result) }}
-                              />
+                              <h3 className="font-semibold text-sm mb-2 line-clamp-2">
+                                {getResultTitle(result)}
+                              </h3>
                               {getResultDescription(result) && (
-                                <p 
-                                  className="text-xs text-muted-foreground mb-3 line-clamp-3"
-                                  dangerouslySetInnerHTML={{ __html: getResultDescription(result) }}
-                                />
+                                <p className="text-xs text-muted-foreground mb-3 line-clamp-3">
+                                  {getResultDescription(result)}
+                                </p>
                               )}
                               {result.tags && result.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mb-2">

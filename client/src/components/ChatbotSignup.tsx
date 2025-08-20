@@ -245,7 +245,7 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Signup successful:', result);
+        // Signup successful
 
         // Persist minimal user info for AccountPending page
         const pendingUserData = {
@@ -1074,7 +1074,7 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
                   disabled={verificationCode.length !== 6}
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                 >
-                  {(emailVerificationStep === 'verifying') || (emailVerificationStep === 'sent' && isCreatingAccount) ? (
+                  {isCreatingAccount ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <Check className="w-4 h-4" />

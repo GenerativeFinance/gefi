@@ -150,7 +150,7 @@ export default function TeamMessaging() {
       wsRef.current = new WebSocket(wsUrl);
       
       wsRef.current.onopen = () => {
-        console.log("Connected to messaging WebSocket");
+        // Connected to messaging WebSocket
       };
       
       wsRef.current.onmessage = (event) => {

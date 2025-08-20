@@ -66,7 +66,7 @@ import BountyFunding from "@/pages/bounty-funding";
 import BotFunding from "@/pages/bot-funding";
 import UserAccess from "@/pages/user-access";
 import Billing from "@/pages/billing";
-import Storage from "@/pages/storage";
+import Storage from "@/pages/Storage";
 import ReportGeneration from "@/pages/ReportGeneration";
 import AutonomousAgents from "@/pages/AutonomousAgents";
 import MobileDemo from "@/pages/mobile-demo";

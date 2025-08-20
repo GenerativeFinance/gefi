@@ -113,8 +113,7 @@ export function registerSearchRoutes(app: Express) {
         .where(
           and(
             ilike(aiModels.name, `${q}%`),
-            eq(aiModels.visibility, 'public'),
-            eq(aiModels.status, 'active')
+            eq(aiModels.isActive, true)
           )
         )
         .limit(5)

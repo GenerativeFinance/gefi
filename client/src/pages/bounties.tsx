@@ -139,7 +139,7 @@ export default function Bounties() {
   });
 
   const handleClaimBounty = (bountyId: string) => {
-    console.log("Claiming bounty:", bountyId);
+    // Claim bounty logic
     // Implementation for claiming bounty
   };
 

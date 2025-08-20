@@ -229,15 +229,13 @@ export default function GlobalSearch() {
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
-                              <p 
-                                className="font-medium text-sm truncate"
-                                dangerouslySetInnerHTML={{ __html: getResultTitle(result) }}
-                              />
+                              <p className="font-medium text-sm truncate">
+                                {getResultTitle(result)}
+                              </p>
                               {getResultDescription(result) && (
-                                <p 
-                                  className="text-xs text-muted-foreground mt-1 line-clamp-2"
-                                  dangerouslySetInnerHTML={{ __html: getResultDescription(result) }}
-                                />
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                  {getResultDescription(result)}
+                                </p>
                               )}
                               {result.tags && result.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2">
