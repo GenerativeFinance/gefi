@@ -1368,5 +1368,466 @@ export const aiModelsData = [
         "Risk-Adjusted Sustainability"
       ]
     }
+  },
+  // On-Chain Anomaly Detection & Security Intelligence
+  {
+    id: 25,
+    name: "Real-Time DeFi Fraud Detection System",
+    description: "Advanced on-chain anomaly detection system that monitors DeFi protocols in real-time to identify fraud, rug pulls, flash loan attacks, and wash trading. Features network analysis, threat intelligence, and automated alert systems.",
+    category: "Security Intelligence",
+    subcategory: "Fraud Detection",
+    creator: "ChainSecure Labs",
+    rating: 4.9,
+    totalRatings: 542,
+    price: "799.99",
+    monthlySubscribers: 678,
+    accuracy: 96.8,
+    riskLevel: "Low",
+    aiTechnique: "Graph Neural Networks + Anomaly Detection",
+    targetUserType: "Security Teams",
+    financialInstrument: "DeFi Protocols",
+    tags: ["Fraud Detection", "Real-time Monitoring", "Anomaly Detection", "DeFi Security", "Graph Analysis", "Threat Intelligence"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: false,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      networkMapping: true,
+      threatIntelligence: true,
+      automaticBlacklisting: true,
+      complianceReporting: true,
+      investigationTools: true
+    },
+    performance: {
+      accuracy: 96.8,
+      falsePositiveRate: 1.8,
+      detectionSpeed: "< 50ms",
+      throughput: "10M+ transactions/hour",
+      precision: 0.94,
+      recall: 0.97,
+      f1Score: 0.95
+    },
+    dataRequirements: [
+      "On-Chain Transaction Data",
+      "Mempool Monitoring",
+      "DEX Liquidity Data", 
+      "Bridge Transaction Logs",
+      "Oracle Feed Data",
+      "Known Threat Actor Database",
+      "Protocol Risk Scores",
+      "Wallet Clustering Data"
+    ],
+    supportedRegions: ["Global"],
+    supportedChains: ["Ethereum", "Polygon", "BSC", "Avalanche", "Arbitrum", "Optimism", "Solana"],
+    complianceFrameworks: ["MiCA", "FATF", "SEC DeFi Guidelines", "AML Standards"],
+    minInvestment: "50000.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2024-11-01T09:00:00Z",
+    lastUpdated: "2025-08-20T17:00:00Z",
+    technicalSpecs: {
+      detectionTypes: ["Rug Pull", "Flash Loan Attack", "Wash Trading", "Bridge Exploit", "Sybil Ring", "MEV Attack"],
+      monitoringCapabilities: [
+        "Real-time Transaction Screening",
+        "Mempool Analysis",
+        "Liquidity Pool Monitoring",
+        "Cross-Chain Bridge Surveillance",
+        "Oracle Feed Anomalies",
+        "Whale Wallet Tracking"
+      ],
+      alertCategories: [
+        "Critical Security Breach",
+        "Suspicious Transaction Pattern",
+        "Abnormal Liquidity Movement", 
+        "Potential Rug Pull",
+        "Flash Loan Exploit",
+        "Cross-Chain Attack Vector"
+      ],
+      visualizations: [
+        "Network Topology Graph",
+        "Risk Heatmap Dashboard",
+        "Attack Timeline Visualization",
+        "Transaction Flow Diagrams",
+        "Threat Actor Network Maps"
+      ]
+    }
+  },
+  {
+    id: 26,
+    name: "Rug Pull Prediction Engine",
+    description: "Specialized AI system that analyzes token projects and liquidity patterns to predict potential rug pulls before they happen. Uses behavioral analysis, code auditing, and social sentiment to assess project legitimacy.",
+    category: "Security Intelligence",
+    subcategory: "Rug Pull Detection",
+    creator: "RugWatch AI",
+    rating: 4.7,
+    totalRatings: 389,
+    price: "449.99",
+    monthlySubscribers: 892,
+    accuracy: 94.3,
+    riskLevel: "Medium",
+    aiTechnique: "Ensemble ML + Social Network Analysis",
+    targetUserType: "DeFi Investors",
+    financialInstrument: "DeFi Tokens",
+    tags: ["Rug Pull", "Project Analysis", "Token Security", "Social Sentiment", "Code Auditing", "Risk Assessment"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      projectScoring: true,
+      socialAnalysis: true,
+      codeAuditing: true,
+      liquidityTracking: true,
+      developerProfiling: true
+    },
+    performance: {
+      accuracy: 94.3,
+      earlyDetectionRate: 89.7,
+      falsePositiveRate: 4.2,
+      avgWarningTime: "48 hours",
+      precision: 0.91,
+      recall: 0.89,
+      f1Score: 0.90
+    },
+    dataRequirements: [
+      "Token Contract Code",
+      "Liquidity Pool Data",
+      "Developer Wallet History",
+      "Social Media Sentiment",
+      "Discord/Telegram Activity", 
+      "Website & Documentation Analysis",
+      "Token Distribution Patterns",
+      "Trading Volume Analysis"
+    ],
+    supportedRegions: ["Global"],
+    supportedChains: ["Ethereum", "BSC", "Polygon", "Avalanche"],
+    complianceFrameworks: ["Investor Protection Standards", "Token Security Guidelines"],
+    minInvestment: "2500.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2024-12-15T14:30:00Z",
+    lastUpdated: "2025-08-20T12:15:00Z",
+    technicalSpecs: {
+      riskFactors: [
+        "Locked Liquidity Analysis",
+        "Team Wallet Concentration", 
+        "Code Vulnerability Scanning",
+        "Social Media Authenticity",
+        "Website Quality Assessment",
+        "Tokenomics Red Flags"
+      ],
+      predictionMethods: [
+        "Behavioral Pattern Recognition",
+        "Statistical Anomaly Detection",
+        "Natural Language Processing",
+        "Network Graph Analysis",
+        "Time Series Analysis"
+      ]
+    }
+  },
+  {
+    id: 27,
+    name: "Flash Loan Attack Detector",
+    description: "Real-time monitoring system that identifies and analyzes flash loan attacks across DeFi protocols. Provides instant alerts, attack vector analysis, and mitigation strategies for protocol security teams.",
+    category: "Security Intelligence", 
+    subcategory: "Flash Loan Security",
+    creator: "FlashGuard Protocol",
+    rating: 4.8,
+    totalRatings: 278,
+    price: "599.99",
+    monthlySubscribers: 445,
+    accuracy: 97.2,
+    riskLevel: "Low",
+    aiTechnique: "Sequence Analysis + Pattern Matching",
+    targetUserType: "Protocol Developers",
+    financialInstrument: "Flash Loans",
+    tags: ["Flash Loan", "Attack Detection", "Protocol Security", "Real-time Monitoring", "Attack Vector Analysis", "MEV"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      attackVectorMapping: true,
+      instantAlerts: true,
+      mitigationStrategies: true,
+      protocolIntegration: true,
+      forensicAnalysis: true
+    },
+    performance: {
+      accuracy: 97.2,
+      detectionSpeed: "< 10ms",
+      falsePositiveRate: 1.1,
+      attackPrevention: "85%",
+      precision: 0.96,
+      recall: 0.94,
+      f1Score: 0.95
+    },
+    dataRequirements: [
+      "Flash Loan Transaction Data",
+      "DEX Price Oracle Data",
+      "Protocol State Changes",
+      "Arbitrage Opportunity Data",
+      "Mempool Transaction Sequences",
+      "Known Attack Patterns",
+      "Protocol Vulnerability Database"
+    ],
+    supportedRegions: ["Global"],
+    supportedChains: ["Ethereum", "Polygon", "Avalanche", "Arbitrum", "Optimism"],
+    complianceFrameworks: ["DeFi Security Standards", "Flash Loan Best Practices"],
+    minInvestment: "15000.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2025-01-20T11:45:00Z",
+    lastUpdated: "2025-08-20T14:20:00Z",
+    technicalSpecs: {
+      attackTypes: [
+        "Oracle Manipulation",
+        "Arbitrage Exploitation", 
+        "Liquidation Attacks",
+        "Governance Attacks",
+        "Cross-Protocol MEV",
+        "Sandwich Attacks"
+      ],
+      detectionFeatures: [
+        "Transaction Sequence Analysis",
+        "Price Impact Calculation",
+        "Multi-Hop Path Detection",
+        "Slippage Anomaly Detection",
+        "Gas Price Analysis",
+        "Timing Attack Patterns"
+      ]
+    }
+  },
+  {
+    id: 28,
+    name: "Wash Trading Detection System",
+    description: "Advanced AI system that identifies wash trading and market manipulation schemes in DeFi and CEX markets. Uses transaction pattern analysis and wallet clustering to detect coordinated trading activities.",
+    category: "Security Intelligence",
+    subcategory: "Market Manipulation",
+    creator: "TradeSurveillance AI",
+    rating: 4.6,
+    totalRatings: 312,
+    price: "399.99",
+    monthlySubscribers: 567,
+    accuracy: 92.8,
+    riskLevel: "Medium",
+    aiTechnique: "Clustering Analysis + Behavioral ML",
+    targetUserType: "Compliance Teams",
+    financialInstrument: "All Trading Pairs", 
+    tags: ["Wash Trading", "Market Manipulation", "Trading Surveillance", "Compliance", "Behavioral Analysis", "Pattern Detection"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      walletClustering: true,
+      behaviorProfiling: true,
+      complianceReporting: true,
+      investigationTools: true,
+      regulatoryExports: true
+    },
+    performance: {
+      accuracy: 92.8,
+      detectionRate: 88.5,
+      falsePositiveRate: 5.3,
+      investigationTime: "60% reduction",
+      precision: 0.89,
+      recall: 0.91,
+      f1Score: 0.90
+    },
+    dataRequirements: [
+      "Trading Transaction Data",
+      "Wallet Address Mappings",
+      "Order Book Data",
+      "Trading Volume Patterns",
+      "Time-based Trading Analysis",
+      "Cross-Exchange Data",
+      "Behavioral Patterns Database"
+    ],
+    supportedRegions: ["Global"],
+    supportedChains: ["Ethereum", "BSC", "Polygon", "Solana", "CEX Data"],
+    complianceFrameworks: ["Market Abuse Regulation", "SEC Trading Rules", "MiFID II", "CFTC Guidelines"],
+    minInvestment: "8000.00",
+    isFeatured: false,
+    isActive: true,
+    createdAt: "2025-02-10T16:00:00Z",
+    lastUpdated: "2025-08-20T10:30:00Z",
+    technicalSpecs: {
+      manipulationTypes: [
+        "Wash Trading",
+        "Pump and Dump Schemes",
+        "Spoofing",
+        "Layering", 
+        "Quote Stuffing",
+        "Coordinated Trading"
+      ],
+      analysisFeatures: [
+        "Transaction Pattern Clustering",
+        "Temporal Analysis",
+        "Volume Spike Detection",
+        "Cross-Chain Correlation",
+        "Entity Resolution",
+        "Behavioral Fingerprinting"
+      ]
+    }
+  },
+  {
+    id: 29,
+    name: "Bridge Security Monitor",
+    description: "Comprehensive security monitoring system for cross-chain bridges that detects exploits, validates transactions, and monitors bridge health. Provides early warning for bridge attacks and suspicious cross-chain activities.",
+    category: "Security Intelligence",
+    subcategory: "Bridge Security",
+    creator: "BridgeGuard Systems",
+    rating: 4.8,
+    totalRatings: 234,
+    price: "899.99",
+    monthlySubscribers: 378,
+    accuracy: 95.4,
+    riskLevel: "Low",
+    aiTechnique: "Cross-Chain Analysis + State Verification",
+    targetUserType: "Bridge Operators", 
+    financialInstrument: "Cross-Chain Bridges",
+    tags: ["Bridge Security", "Cross-Chain", "Exploit Detection", "State Verification", "Transaction Validation", "Multi-Chain"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: false,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      stateVerification: true,
+      crossChainMonitoring: true,
+      exploitDetection: true,
+      bridgeHealthScore: true,
+      emergencyShutdown: true
+    },
+    performance: {
+      accuracy: 95.4,
+      responseTime: "< 30ms",
+      exploitDetection: "92%",
+      falsePositiveRate: 2.1,
+      precision: 0.93,
+      recall: 0.96,
+      f1Score: 0.94
+    },
+    dataRequirements: [
+      "Cross-Chain Transaction Data",
+      "Bridge State Information",
+      "Validator Node Data",
+      "Lock/Mint Transaction Pairs",
+      "Oracle Price Feeds",
+      "Bridge TVL Tracking",
+      "Known Exploit Patterns"
+    ],
+    supportedRegions: ["Global"],
+    supportedChains: ["Ethereum", "Polygon", "Avalanche", "BSC", "Arbitrum", "Optimism", "Solana", "Cosmos"],
+    complianceFrameworks: ["Cross-Chain Security Standards", "Bridge Audit Guidelines"],
+    minInvestment: "25000.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2025-03-05T13:20:00Z",
+    lastUpdated: "2025-08-20T16:45:00Z",
+    technicalSpecs: {
+      bridgeTypes: [
+        "Token Bridges",
+        "Liquidity Bridges",
+        "Messaging Bridges",
+        "Validator Bridges",
+        "Hybrid Bridges"
+      ],
+      securityChecks: [
+        "Double Spending Prevention",
+        "Transaction Hash Verification",
+        "State Consensus Monitoring",
+        "Validator Behavior Analysis",
+        "Economic Security Assessment",
+        "Smart Contract Integrity"
+      ],
+      monitoringFeatures: [
+        "Real-time Bridge Health Score",
+        "Cross-Chain State Synchronization",
+        "Suspicious Transaction Flagging",
+        "Validator Performance Tracking",
+        "Economic Attack Detection",
+        "Emergency Circuit Breakers"
+      ]
+    }
+  },
+  {
+    id: 30,
+    name: "Sybil Ring Detection Network",
+    description: "Advanced graph-based AI system that identifies Sybil attacks and coordinated bot networks in DeFi. Uses network analysis and behavioral patterns to detect fake account clusters and manipulation campaigns.",
+    category: "Security Intelligence",
+    subcategory: "Sybil Detection",
+    creator: "NetworkSec AI",
+    rating: 4.7,
+    totalRatings: 189,
+    price: "549.99",
+    monthlySubscribers: 423,
+    accuracy: 91.6,
+    riskLevel: "Medium",
+    aiTechnique: "Graph Neural Networks + Community Detection",
+    targetUserType: "DeFi Protocols",
+    financialInstrument: "DeFi Governance",
+    tags: ["Sybil Attack", "Bot Detection", "Network Analysis", "Governance Security", "Identity Verification", "Graph Analysis"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      networkMapping: true,
+      communityDetection: true,
+      behaviorAnalysis: true,
+      identityScoring: true,
+      governanceProtection: true
+    },
+    performance: {
+      accuracy: 91.6,
+      sybilDetectionRate: 87.3,
+      falsePositiveRate: 6.8,
+      networkAnalysisSpeed: "< 2 seconds",
+      precision: 0.88,
+      recall: 0.86,
+      f1Score: 0.87
+    },
+    dataRequirements: [
+      "Wallet Transaction Graphs",
+      "Governance Voting Patterns", 
+      "Token Distribution Data",
+      "Interaction Network Data",
+      "Timing Pattern Analysis",
+      "IP Geolocation Data",
+      "Behavioral Fingerprints"
+    ],
+    supportedRegions: ["Global"],
+    supportedChains: ["Ethereum", "Polygon", "Avalanche", "Arbitrum"],
+    complianceFrameworks: ["DAO Governance Standards", "Identity Verification Guidelines"],
+    minInvestment: "12000.00",
+    isFeatured: false,
+    isActive: true,
+    createdAt: "2025-04-12T10:10:00Z",
+    lastUpdated: "2025-08-20T09:15:00Z",
+    technicalSpecs: {
+      detectionMethods: [
+        "Graph Clustering Analysis",
+        "Behavioral Pattern Matching",
+        "Transaction Timing Analysis",
+        "Network Topology Mapping", 
+        "Community Structure Detection",
+        "Anomalous Voting Detection"
+      ],
+      networkFeatures: [
+        "Account Similarity Scoring",
+        "Interaction Graph Construction",
+        "Temporal Pattern Analysis",
+        "Geographic Clustering",
+        "Voting Behavior Correlation",
+        "Asset Flow Tracking"
+      ]
+    }
   }
 ];
