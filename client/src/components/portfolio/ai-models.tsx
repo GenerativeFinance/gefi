@@ -68,67 +68,38 @@ export default function AiModels({ models }: AiModelsProps) {
     },
   });
 
-  // Download report function
+  // Download report function using server-side generation
   const handleDownloadReport = async () => {
     try {
-      const reportData = await apiRequest("GET", "/api/portfolio/report");
+      const { exportAndDownload } = await import("@/lib/reports");
       
-      // Generate PDF using jsPDF
-      const { default: jsPDF } = await import('jspdf');
-      const doc = new jsPDF();
+      const res = await exportAndDownload({
+        template: "performance",
+        input: {
+          title: "AI Portfolio Report",
+          period: "Last 30 days",
+          generatedBy: "GeFi",
+          summary: "Overview of current allocation, performance, and AI confidence.",
+          metrics: [
+            { label: "AI Confidence", value: "94.2%" },
+            { label: "Total Models", value: aiModels.length.toString() },
+            { label: "Conservative AI", value: `$${parseFloat(aiModels.find(m => m.modelType === 'conservative')?.value || '0').toLocaleString()}` },
+            { label: "Aggressive Growth", value: `$${parseFloat(aiModels.find(m => m.modelType === 'aggressive')?.value || '0').toLocaleString()}` }
+          ],
+          sections: [
+            { 
+              heading: "Highlights", 
+              body: "• AI-driven allocation insights • Performance drivers • Risk overview"
+            }
+          ],
+        },
+      });
       
-      // Add title
-      doc.setFontSize(20);
-      doc.text('Portfolio Performance Report', 20, 30);
-      
-      // Add generation date
-      doc.setFontSize(12);
-      doc.text(`Generated: ${new Date(reportData.generatedAt).toLocaleDateString()}`, 20, 45);
-      
-      // Add portfolio summary
-      doc.setFontSize(16);
-      doc.text('Portfolio Summary', 20, 65);
-      
-      doc.setFontSize(12);
-      doc.text(`Total Value: $${reportData.portfolio.totalValue.toLocaleString()}`, 20, 80);
-      doc.text(`Live P&L: $${reportData.portfolio.livePnL.toLocaleString()}`, 20, 95);
-      doc.text(`Annual Returns: ${reportData.portfolio.annualReturns}%`, 20, 110);
-      doc.text(`Sharpe Ratio: ${reportData.portfolio.sharpeRatio}`, 20, 125);
-      doc.text(`Number of Assets: ${reportData.portfolio.assetsCount}`, 20, 140);
-      
-      // Add assets table if there are assets
-      if (reportData.assets && reportData.assets.length > 0) {
-        doc.setFontSize(16);
-        doc.text('Asset Breakdown', 20, 165);
-        
-        let yPosition = 180;
-        doc.setFontSize(12);
-        doc.text('Symbol', 20, yPosition);
-        doc.text('Quantity', 70, yPosition);
-        doc.text('Purchase Price', 120, yPosition);
-        doc.text('Current Value', 170, yPosition);
-        
-        yPosition += 10;
-        reportData.assets.forEach((asset: any, index: number) => {
-          if (yPosition > 250) {
-            doc.addPage();
-            yPosition = 30;
-          }
-          
-          doc.text(asset.symbol || 'N/A', 20, yPosition);
-          doc.text(asset.quantity.toString(), 70, yPosition);
-          doc.text(`$${asset.purchasePrice.toFixed(2)}`, 120, yPosition);
-          doc.text(`$${asset.currentValue.toFixed(2)}`, 170, yPosition);
-          yPosition += 15;
-        });
-      }
-      
-      // Save the PDF
-      doc.save(`portfolio-report-${new Date().toISOString().split('T')[0]}.pdf`);
+      if (!res?.downloadUrl) throw new Error("No download URL returned");
       
       toast({
         title: "Report Downloaded",
-        description: "Your portfolio report has been downloaded successfully.",
+        description: "Your AI portfolio report has been downloaded successfully.",
       });
     } catch (error: any) {
       toast({
