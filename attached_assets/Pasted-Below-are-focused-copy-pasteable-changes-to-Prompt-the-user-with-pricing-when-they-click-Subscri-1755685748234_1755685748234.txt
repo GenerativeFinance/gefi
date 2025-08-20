@@ -1,0 +1,399 @@
+Below are focused, copy-pasteable changes to:
+- Prompt the user with pricing when they click Subscribe.
+- On confirm, subscribe and immediately reflect it in:
+  - My Subscriptions (/my-subscriptions)
+  - Billing (/billing)
+
+This is done fully client-side for instant UX using a tiny local storage helper, while still calling your existing POST /api/ai-models/:id/subscribe endpoint. If/when you persist subscriptions server-side, the UI will still work; we also invalidate related queries.
+
+New shared helper
+
+```typescript name=client/src/lib/subscriptionsLocal.ts
+const STORE_KEY = 'gefi.local.subscriptions';
+
+export type LocalSubscription = {
+  id: string; // local id
+  modelId: number | string;
+  modelName: string;
+  developerName?: string;
+  price: number;
+  billingCycle: 'monthly' | 'annually';
+  status: 'active' | 'paused' | 'trial' | 'cancelled';
+  subscribedDate: string;
+  nextBilling?: string | null;
+  category?: string;
+  performance?: string; // purely cosmetic
+};
+
+function read(): LocalSubscription[] {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function write(items: LocalSubscription[]) {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(items));
+  } catch {
+    // ignore
+  }
+}
+
+export function getLocalSubscriptions(): LocalSubscription[] {
+  return read();
+}
+
+export function addLocalSubscription(sub: Omit<LocalSubscription, 'id' | 'subscribedDate' | 'status'> & Partial<Pick<LocalSubscription, 'status' | 'subscribedDate'>>) {
+  const list = read();
+  const existingIdx = list.findIndex(s => String(s.modelId) === String(sub.modelId));
+  const now = new Date().toISOString();
+
+  const record: LocalSubscription = {
+    id: `local_${sub.modelId}_${Date.now()}`,
+    modelId: sub.modelId,
+    modelName: sub.modelName,
+    developerName: sub.developerName,
+    price: sub.price,
+    billingCycle: sub.billingCycle || 'monthly',
+    status: sub.status || 'active',
+    subscribedDate: sub.subscribedDate || now,
+    nextBilling: sub.nextBilling ?? null,
+    category: sub.category,
+    performance: sub.performance,
+  };
+
+  if (existingIdx >= 0) {
+    list[existingIdx] = record;
+  } else {
+    list.push(record);
+  }
+  write(list);
+  return record;
+}
+
+export function mergeSubscriptions(primary: any[], local: LocalSubscription[]) {
+  // Merge by modelId; prefer primary (server) if present
+  const byModel = new Map<string, any>();
+  (primary || []).forEach(p => {
+    const key = String(p.modelId ?? p.id ?? p.model?.id ?? '');
+    if (key) byModel.set(key, p);
+  });
+  (local || []).forEach(l => {
+    const key = String(l.modelId);
+    if (!byModel.has(key)) {
+      byModel.set(key, l);
+    }
+  });
+  return Array.from(byModel.values());
+}
+```
+
+Subscribe confirmation dialog
+
+```tsx name=client/src/components/subscriptions/SubscribeConfirm.tsx
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+
+type Props = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  modelName: string;
+  price: number;
+  billingCycle?: 'monthly' | 'annually';
+  onConfirm: () => void;
+  isSubmitting?: boolean;
+};
+
+export default function SubscribeConfirm({
+  open,
+  onOpenChange,
+  modelName,
+  price,
+  billingCycle = 'monthly',
+  onConfirm,
+  isSubmitting
+}: Props) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Subscribe to {modelName}</DialogTitle>
+          <DialogDescription>
+            Confirm your subscription. You will be charged ${price}/{billingCycle}.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="text-sm text-muted-foreground">
+          - Cancel anytime from My Subscriptions
+          <br />
+          - Access the model immediately after subscribing
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button onClick={onConfirm} disabled={isSubmitting}>
+            {isSubmitting ? 'Subscribing...' : 'Confirm'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+```
+
+Enable Subscribe on AI Models list and modal
+
+Below are additive snippets you can paste into client/src/pages/ai-models.tsx. They assume you already have subscribeMutation defined and working (as seen in your repo). We only add the confirmation UI and push the subscription to local storage, then invalidate relevant queries.
+
+1) Imports near top:
+
+```tsx name=client/src/pages/ai-models.tsx
+import { useState } from 'react';
+import SubscribeConfirm from '@/components/subscriptions/SubscribeConfirm';
+import { addLocalSubscription } from '@/lib/subscriptionsLocal';
+import { useLocation } from 'wouter';
+```
+
+2) State inside the component:
+
+```tsx name=client/src/pages/ai-models.tsx
+const [, navigate] = useLocation();
+const [confirm, setConfirm] = useState<{ open: boolean; model: any | null }>({ open: false, model: null });
+```
+
+3) Where you render each model card’s Subscribe button in the grid, replace the existing onClick with:
+
+```tsx name=client/src/pages/ai-models.tsx
+<Button
+  size="sm"
+  className="flex-1"
+  onClick={() => setConfirm({ open: true, model })}
+>
+  Subscribe
+</Button>
+```
+
+4) In your model details modal actions (the “Subscribe to Model” button), similarly:
+
+```tsx name=client/src/pages/ai-models.tsx
+<Button
+  className="flex-1"
+  onClick={() => setConfirm({ open: true, model: selectedModel })}
+  disabled={!selectedModel}
+>
+  <Activity className="h-4 w-4 mr-2" />
+  Subscribe to Model
+</Button>
+```
+
+5) Render the confirmation dialog near the bottom of the component:
+
+```tsx name=client/src/pages/ai-models.tsx
+{confirm.model && (
+  <SubscribeConfirm
+    open={confirm.open}
+    onOpenChange={(open) => setConfirm((s) => ({ ...s, open }))}
+    modelName={confirm.model.name}
+    price={Number(confirm.model.price || confirm.model.pricing?.monthly || 0)}
+    billingCycle="monthly"
+    isSubmitting={subscribeMutation.isLoading}
+    onConfirm={() => {
+      const model = confirm.model;
+      subscribeMutation.mutate(model.id, {
+        onSuccess: () => {
+          // Save locally for instant reflection in /my-subscriptions and /billing
+          addLocalSubscription({
+            modelId: model.id,
+            modelName: model.name,
+            developerName: model.developerName || model.developer || 'Unknown',
+            price: Number(model.price || model.pricing?.monthly || 0),
+            billingCycle: 'monthly',
+            status: 'active',
+            nextBilling: null,
+            category: model.category,
+            performance: model.performance ? `${model.performance}%` : undefined,
+          });
+          // Invalidate pages that may read from API
+          queryClient.invalidateQueries({ queryKey: ['/api/user/subscriptions'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/portfolio/ai-models'] });
+          // Close dialog and optionally navigate
+          setConfirm({ open: false, model: null });
+          // Navigate to My Subscriptions for confirmation UX (optional)
+          navigate('/my-subscriptions');
+        }
+      });
+    }}
+  />
+)}
+```
+
+Enable Subscribe on model-detail page
+
+Add the same flow to the model detail page.
+
+1) Imports:
+
+```tsx name=client/src/pages/model-detail.tsx
+import { useState } from 'react';
+import SubscribeConfirm from '@/components/subscriptions/SubscribeConfirm';
+import { addLocalSubscription } from '@/lib/subscriptionsLocal';
+import { useLocation } from 'wouter';
+```
+
+2) State in component:
+
+```tsx name=client/src/pages/model-detail.tsx
+const [, navigate] = useLocation();
+const [confirmOpen, setConfirmOpen] = useState(false);
+```
+
+3) Replace the Subscribe button’s onClick with:
+
+```tsx name=client/src/pages/model-detail.tsx
+<Button className="w-full mb-4 bg-blue-600 hover:bg-blue-700" onClick={() => setConfirmOpen(true)}>
+  {subscribeMutation.isLoading ? "Processing..." : "Subscribe Now"}
+</Button>
+```
+
+4) Render confirmation dialog:
+
+```tsx name=client/src/pages/model-detail.tsx
+{model && (
+  <SubscribeConfirm
+    open={confirmOpen}
+    onOpenChange={setConfirmOpen}
+    modelName={model.name}
+    price={Number(model.price ?? model.pricing?.monthly ?? 0)}
+    billingCycle="monthly"
+    isSubmitting={subscribeMutation.isLoading}
+    onConfirm={() => {
+      subscribeMutation.mutate(undefined, {
+        onSuccess: () => {
+          addLocalSubscription({
+            modelId: model.id,
+            modelName: model.name,
+            developerName: model.developerName || model.developer || 'Unknown',
+            price: Number(model.price ?? model.pricing?.monthly ?? 0),
+            billingCycle: 'monthly',
+            status: 'active',
+            nextBilling: null,
+            category: model.category,
+            performance: model.performance ? `${model.performance}%` : undefined,
+          });
+          queryClient.invalidateQueries({ queryKey: ['/api/user/subscriptions'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/portfolio/ai-models'] });
+          setConfirmOpen(false);
+          navigate('/my-subscriptions');
+        }
+      });
+    }}
+  />
+)}
+```
+
+Reflect subscriptions immediately in My Subscriptions
+
+Augment the page to merge server (or mock) data with local subscriptions saved after Confirm.
+
+1) Import and merge before you compute filtered lists:
+
+```tsx name=client/src/pages/my-subscriptions.tsx
+import { getLocalSubscriptions, mergeSubscriptions } from '@/lib/subscriptionsLocal';
+```
+
+Find where you have the source subscriptions array (often named subscriptions from useQuery or a mock). Merge:
+
+```tsx name=client/src/pages/my-subscriptions.tsx
+// After you obtain `subscriptions` (server/mocked)
+const localSubs = getLocalSubscriptions();
+const mergedSubscriptions = mergeSubscriptions(subscriptions || [], localSubs);
+
+// Use mergedSubscriptions everywhere instead of `subscriptions`
+const filteredSubscriptions = mergedSubscriptions.filter(sub => {
+  if (activeTab === "all") return true;
+  return sub.status === activeTab;
+});
+
+const totalMonthlySpend = mergedSubscriptions
+  .filter(sub => sub.status === 'active' && sub.billingCycle === 'monthly')
+  .reduce((total, sub) => total + (Number(sub.price) || 0), 0);
+
+const totalAnnualSpend = mergedSubscriptions
+  .filter(sub => sub.status === 'active' && sub.billingCycle === 'annually')
+  .reduce((total, sub) => total + (Number(sub.price) || 0), 0);
+```
+
+Reflect subscriptions in Billing
+
+Add a small card under the Overview tab to display active model subscriptions (merged with local).
+
+1) At the top:
+
+```tsx name=client/src/pages/billing.tsx
+import { useEffect, useState } from 'react';
+import { getLocalSubscriptions } from '@/lib/subscriptionsLocal';
+```
+
+2) Inside component:
+
+```tsx name=client/src/pages/billing.tsx
+const [activeModelSubs, setActiveModelSubs] = useState<{ modelName: string; price: number; billingCycle: string }[]>([]);
+
+useEffect(() => {
+  // If you later fetch server subscriptions, merge with local here.
+  const locals = getLocalSubscriptions().filter(s => s.status === 'active');
+  setActiveModelSubs(locals.map(s => ({ modelName: s.modelName, price: s.price, billingCycle: s.billingCycle })));
+}, []);
+```
+
+3) In the Overview tab, under “Current Plan” card, add this card:
+
+```tsx name=client/src/pages/billing.tsx
+<Card className="mt-6">
+  <CardHeader>
+    <CardTitle>Active Model Subscriptions</CardTitle>
+    <CardDescription>Your AI model subscriptions billed via GeFi</CardDescription>
+  </CardHeader>
+  <CardContent>
+    {activeModelSubs.length === 0 ? (
+      <div className="text-sm text-muted-foreground">No active model subscriptions yet.</div>
+    ) : (
+      <div className="space-y-3">
+        {activeModelSubs.map((s, idx) => (
+          <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
+            <div>
+              <div className="font-medium">{s.modelName}</div>
+              <div className="text-sm text-muted-foreground">${s.price}/{s.billingCycle}</div>
+            </div>
+            <Badge variant="default">Active</Badge>
+          </div>
+        ))}
+      </div>
+    )}
+  </CardContent>
+</Card>
+```
+
+What this delivers
+- Clicking “Subscribe” opens a confirmation with the actual price.
+- On confirm:
+  - Calls POST /api/ai-models/:id/subscribe (existing route).
+  - Adds a local record for immediate reflection in:
+    - /my-subscriptions (merged with any server data)
+    - /billing (Active Model Subscriptions section)
+  - Invalidates relevant queries for when server persistence is added.
+  - Optionally navigates to /my-subscriptions.
+
+Notes
+- This is safe to ship now and works even before server persistence is complete.
+- When you later implement persistent subscriptions:
+  - Have /api/user/subscriptions return the user’s real subscriptions.
+  - The merge will prefer server data automatically.
+- If you want the Subscribe button to handle Stripe Checkout flows, your existing subscribeMutation already redirects when data.checkoutUrl is present; the confirmation dialog runs before that as requested.
+
+If you want, I can open a PR with these exact additions and wire-ups after you confirm you’re ready.

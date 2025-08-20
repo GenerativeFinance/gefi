@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getLocalSubscriptions, mergeSubscriptions } from '@/lib/subscriptionsLocal';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -86,10 +87,15 @@ export default function MySubscriptions() {
   const queryClient = useQueryClient();
 
   // This would normally fetch from the API
-  const { data: subscriptions = mockSubscriptions, isLoading } = useQuery({
+  const { data: serverSubscriptions = mockSubscriptions, isLoading } = useQuery({
     queryKey: ["/api/my-subscriptions"],
     queryFn: () => mockSubscriptions // Replace with actual API call
   });
+
+  // Merge server subscriptions with local subscriptions
+  const localSubs = getLocalSubscriptions();
+  const mergedSubscriptions = mergeSubscriptions(serverSubscriptions || [], localSubs);
+  const subscriptions = mergedSubscriptions;
 
   const pauseSubscription = useMutation({
     mutationFn: async (subscriptionId: number) => {
@@ -199,13 +205,13 @@ export default function MySubscriptions() {
     return sub.status === activeTab;
   });
 
-  const totalMonthlySpend = subscriptions
+  const totalMonthlySpend = mergedSubscriptions
     .filter(sub => sub.status === 'active' && sub.billingCycle === 'monthly')
-    .reduce((total, sub) => total + sub.price, 0);
+    .reduce((total, sub) => total + (Number(sub.price) || 0), 0);
 
-  const totalAnnualSpend = subscriptions
+  const totalAnnualSpend = mergedSubscriptions
     .filter(sub => sub.status === 'active' && sub.billingCycle === 'annually')
-    .reduce((total, sub) => total + sub.price, 0);
+    .reduce((total, sub) => total + (Number(sub.price) || 0), 0);
 
   if (isLoading) {
     return (

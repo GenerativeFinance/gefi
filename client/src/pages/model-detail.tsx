@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import SubscribeConfirm from '@/components/subscriptions/SubscribeConfirm';
+import { addLocalSubscription } from '@/lib/subscriptionsLocal';
+import { useLocation } from 'wouter';
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useRoute } from "wouter";
@@ -26,6 +29,8 @@ export default function ModelDetail() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // Optional: Check for special cases and redirect (disabled to show actual model details)
   // Only redirect if coming from old routes, but allow direct /ai-models/:id access
@@ -135,6 +140,8 @@ export default function ModelDetail() {
         description: "You have successfully subscribed to this model.",
       });
       queryClient.invalidateQueries({ queryKey: ["api", "ai-models", idParam] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/portfolio/ai-models"] });
     },
     onError: (err: any) => {
       if (err?.status === 401) {
@@ -334,8 +341,8 @@ export default function ModelDetail() {
 
             {/* Actions */}
             <div className="flex items-center gap-3">
-              <Button onClick={() => subscribeMutation.mutate()} disabled={subscribeMutation.isPending}>
-                {subscribeMutation.isPending ? "Processing..." : "Subscribe to Model"}
+              <Button className="w-full mb-4 bg-blue-600 hover:bg-blue-700" onClick={() => setConfirmOpen(true)}>
+                {subscribeMutation.isPending ? "Processing..." : "Subscribe Now"}
               </Button>
               <Button variant="outline" onClick={() => (window.location.href = "/marketplace")}>
                 Browse Marketplace
@@ -352,6 +359,39 @@ export default function ModelDetail() {
               <h2 className="text-xl font-semibold mb-3">About This Model</h2>
               <p className="text-muted-foreground leading-relaxed">{(model as any).longDescription}</p>
             </div>
+          )}
+          
+          {/* Subscribe Confirmation Dialog */}
+          {model && (
+            <SubscribeConfirm
+              open={confirmOpen}
+              onOpenChange={setConfirmOpen}
+              modelName={model.name}
+              price={Number(model.price ?? model.pricing?.monthly ?? 0)}
+              billingCycle="monthly"
+              isSubmitting={subscribeMutation.isPending}
+              onConfirm={() => {
+                subscribeMutation.mutate(undefined, {
+                  onSuccess: () => {
+                    addLocalSubscription({
+                      modelId: model.id,
+                      modelName: model.name,
+                      developerName: model.developerName || model.developer || 'Unknown',
+                      price: Number(model.price ?? model.pricing?.monthly ?? 0),
+                      billingCycle: 'monthly',
+                      status: 'active',
+                      nextBilling: null,
+                      category: model.category,
+                      performance: model.performance ? `${model.performance}%` : undefined,
+                    });
+                    queryClient.invalidateQueries({ queryKey: ["/api/user/subscriptions"] });
+                    queryClient.invalidateQueries({ queryKey: ["/api/portfolio/ai-models"] });
+                    setConfirmOpen(false);
+                    navigate('/my-subscriptions');
+                  }
+                });
+              }}
+            />
           )}
         </div>
       </div>

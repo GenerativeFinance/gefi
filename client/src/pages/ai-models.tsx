@@ -1,4 +1,10 @@
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import SubscribeConfirm from "@/components/subscriptions/SubscribeConfirm";
+import { addLocalSubscription } from "@/lib/subscriptionsLocal";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,6 +46,10 @@ export default function AIModels() {
   const [modelDetailsOpen, setModelDetailsOpen] = useState(false);
   const [onchainPaymentOpen, setOnchainPaymentOpen] = useState(false);
   const [paymentModelId, setPaymentModelId] = useState<number | null>(null);
+  const [confirm, setConfirm] = useState<{ open: boolean; model: any | null }>({ open: false, model: null });
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: aiModels = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/ai-models"]
@@ -47,6 +57,27 @@ export default function AIModels() {
 
   const { data: userModels = [], isLoading: userModelsLoading } = useQuery<any[]>({
     queryKey: ["/api/portfolio/ai-models"]
+  });
+
+  const subscribeMutation = useMutation({
+    mutationFn: async (modelId: number) => {
+      return apiRequest("POST", `/api/ai-models/${modelId}/subscribe`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Subscribed",
+        description: "You have successfully subscribed to this model.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/portfolio/ai-models"] });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Subscription failed",
+        description: String(err?.message || "Please try again."),
+        variant: "destructive",
+      });
+    }
   });
 
   const filteredModels = aiModels.filter((model: any) => {
@@ -302,7 +333,7 @@ export default function AIModels() {
                       </Button>
                       {!isUserSubscribed(model.id) ? (
                         <div className="flex gap-1 flex-1">
-                          <Button size="sm" className="flex-1">
+                          <Button size="sm" className="flex-1" onClick={() => setConfirm({ open: true, model })}>
                             Subscribe
                           </Button>
                           <Button 
@@ -1052,7 +1083,7 @@ export default function AIModels() {
                   {!isUserSubscribed(selectedModel.id) ? (
                     <div className="space-y-3">
                       <div className="flex gap-3">
-                        <Button className="flex-1">
+                        <Button className="flex-1" onClick={() => setConfirm({ open: true, model: selectedModel })} disabled={!selectedModel}>
                           <Activity className="h-4 w-4 mr-2" />
                           Subscribe to Model
                         </Button>
@@ -1096,6 +1127,44 @@ export default function AIModels() {
         onClose={handleCloseOnchainPayment}
         modelName={paymentModelId ? aiModels.find(m => m.id === paymentModelId)?.name : "AI Model"}
       />
+      
+      {/* Subscribe Confirmation Dialog */}
+      {confirm.model && (
+        <SubscribeConfirm
+          open={confirm.open}
+          onOpenChange={(open) => setConfirm((s) => ({ ...s, open }))}
+          modelName={confirm.model.name}
+          price={Number(confirm.model.price || confirm.model.pricing?.monthly || 0)}
+          billingCycle="monthly"
+          isSubmitting={subscribeMutation.isPending}
+          onConfirm={() => {
+            const model = confirm.model;
+            subscribeMutation.mutate(model.id, {
+              onSuccess: () => {
+                // Save locally for instant reflection in /my-subscriptions and /billing
+                addLocalSubscription({
+                  modelId: model.id,
+                  modelName: model.name,
+                  developerName: model.developerName || model.developer || 'Unknown',
+                  price: Number(model.price || model.pricing?.monthly || 0),
+                  billingCycle: 'monthly',
+                  status: 'active',
+                  nextBilling: null,
+                  category: model.category,
+                  performance: model.performance ? `${model.performance}%` : undefined,
+                });
+                // Invalidate pages that may read from API
+                queryClient.invalidateQueries({ queryKey: ["/api/user/subscriptions"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/portfolio/ai-models"] });
+                // Close dialog and optionally navigate
+                setConfirm({ open: false, model: null });
+                // Navigate to My Subscriptions for confirmation UX (optional)
+                navigate('/my-subscriptions');
+              }
+            });
+          }}
+        />
+      )}
     </Layout>
   );
 }
