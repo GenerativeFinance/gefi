@@ -105,7 +105,7 @@ export default function Header() {
 
   // Check if we're on developer pages
   const isDeveloperPage = location.startsWith('/developer') || 
-                         location.startsWith('/backtesting') || 
+                         location.startsWith('/develop') || 
                          location.startsWith('/bounties') || 
                          location.startsWith('/model-funding') ||
                          location.startsWith('/bounty-funding') ||
@@ -260,11 +260,11 @@ export default function Header() {
       }
       
       // Develop subsections
-      if (location.includes('/developer/develop/') || location === '/backtesting') {
+      if (location.includes('/developer/develop/') || location === '/develop') {
         return [
           { name: "Overview", href: "/developer", icon: BarChart3 },
-          { name: "Develop", href: "/backtesting", icon: Code },
-          { name: "Backtesting", href: "/backtesting", icon: TrendingUp },
+          { name: "Develop", href: "/develop", icon: Code },
+          { name: "Testing", href: "/develop", icon: TrendingUp },
           { name: "IDE Access", href: "/developer/develop/ide-access", icon: Code },
           { name: "Version Control", href: "/developer/develop/version-control", icon: GitBranch },
           { name: "Code Review", href: "/developer/develop/code-review", icon: FileText }
@@ -274,7 +274,7 @@ export default function Header() {
       return [
         { name: "Overview", href: "/developer", icon: BarChart3 },
         { name: "Portfolio", href: "/developer/portfolio", icon: Wallet },
-        { name: "Develop", href: "/backtesting", icon: Code },
+        { name: "Develop", href: "/develop", icon: Code },
         { name: "AI Marketplace", href: "/developer-marketplace", icon: Store },
         { name: "Market Data", href: "/market-data", icon: Database },
         { name: "Bounties", href: "/bounties", icon: Target },
@@ -1034,7 +1034,7 @@ function AIFinancialChatbot({ isOpen, onClose, user }: { isOpen: boolean; onClos
 
     // Feature explanations
     if (lowerMessage.includes('explain') || lowerMessage.includes('what is') || lowerMessage.includes('how does')) {
-      if (lowerMessage.includes('backtesting')) {
+      if (lowerMessage.includes('backtesting') || lowerMessage.includes('develop')) {
         return "GeFi's Backtesting feature allows you to test your AI trading strategies against historical market data. You can:\n\n• Configure test parameters (timeframe, assets, initial capital)\n• Run simulations with real market data\n• Analyze performance metrics (Sharpe ratio, drawdown, win rate)\n• Compare multiple strategies\n• Export detailed reports\n\nWould you like me to show you how to set up your first backtest?";
       }
       if (lowerMessage.includes('risk assessment')) {
