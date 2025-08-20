@@ -19,8 +19,21 @@ type Props = {
 };
 
 export default function StakeholderMetrics({ model }: Props) {
-  const [, navigate] = useLocation();
+  const [, setLocation] = useLocation();
   const perfColor = typeof model.roiPct === "number" && model.roiPct >= 0 ? "text-green-600" : "text-red-600";
+
+  const chainParam = (model.contractChain || "").toLowerCase().trim() || "solana";
+
+  const goToContractWallet = () => {
+    // Deep-link directly to Contract Wallet with preselection hints
+    // Supported params the wallet now reads: contractId, modelId, contractAddress, chain
+    const url = `/wallet?contractId=${encodeURIComponent(
+      String(model.id)
+    )}&model=${encodeURIComponent(model.name)}&chain=${encodeURIComponent(
+      chainParam
+    )}`;
+    setLocation(url);
+  };
 
   return (
     <Card className="border-dashed">
@@ -61,19 +74,12 @@ export default function StakeholderMetrics({ model }: Props) {
             {model.contractChain ? `${model.contractChain} contract` : "No chain set"}
           </Badge>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(`/analytics/model/${model.id}`)}
-            >
-              <BarChart3 className="h-4 w-4 mr-2" />
+            <Button variant="outline" size="sm" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
               Analytics
             </Button>
-            <Button
-              size="sm"
-              onClick={() => navigate(`/wallet?modelId=${model.id}`)}
-            >
-              <LinkIcon className="h-4 w-4 mr-2" />
+            <Button onClick={goToContractWallet} size="sm" className="gap-2">
+              <LinkIcon className="h-4 w-4" />
               Manage Contract
             </Button>
           </div>

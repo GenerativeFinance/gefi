@@ -66,11 +66,13 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import FederatedLearningGraph from "@/components/FederatedLearningGraph";
 import { Sparkles } from "lucide-react";
 
 export default function WalletPage() {
+  const [, /* setLocation */] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -288,6 +290,53 @@ export default function WalletPage() {
       default: return { icon: <Users className="w-4 h-4" />, label: "Participant", color: "text-gray-600" };
     }
   };
+
+  // NEW: auto-select a contract when arriving via deep-link
+  useEffect(() => {
+    try {
+      const search = typeof window !== "undefined" ? window.location.search : "";
+      if (!search) return;
+
+      const params = new URLSearchParams(search);
+
+      // Accept multiple hints
+      const byId =
+        params.get("contractId") ||
+        params.get("modelId") ||
+        params.get("id");
+      const byAddress = params.get("contractAddress");
+      const chain = params.get("chain");
+
+      if (chain) {
+        setSelectedChain(String(chain).toLowerCase());
+      }
+
+      let target: any | undefined;
+      if (byId) {
+        target = flContracts.find(
+          (c) => String(c.id) === String(byId)
+        );
+      }
+      if (!target && byAddress) {
+        const needle = String(byAddress).toLowerCase();
+        target = flContracts.find(
+          (c) => String(c.contractAddress || "").toLowerCase().includes(needle)
+        );
+      }
+
+      if (target) {
+        // Open the contract dialog by setting selectedContract
+        setSelectedContract(target);
+        // Optionally, you can scroll to the card:
+        setTimeout(() => {
+          document.getElementById(`contract-${target.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    } catch {
+      // no-op on parse errors
+    }
+  // include flContracts so it re-runs if list changes
+  }, [flContracts]);
 
   const filteredContracts = flContracts.filter(contract => {
     const statusMatch = filterStatus === "all" || contract.status.toLowerCase() === filterStatus;
@@ -510,7 +559,7 @@ export default function WalletPage() {
             {/* FL Contracts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {filteredContracts.map((contract) => (
-                <Card key={contract.id} className="hover:shadow-md transition-shadow border-l-4 border-l-primary">
+                <Card key={contract.id} id={`contract-${contract.id}`} className="hover:shadow-md transition-shadow border-l-4 border-l-primary">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
