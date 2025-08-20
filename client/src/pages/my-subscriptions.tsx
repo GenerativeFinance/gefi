@@ -23,6 +23,7 @@ import {
   BarChart3
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getLocalSubscriptions, mergeSubscriptions } from "@/lib/subscriptionsLocal";
 
 // Sample subscription data (this would normally come from the API)
 const mockSubscriptions = [
@@ -86,10 +87,13 @@ export default function MySubscriptions() {
   const queryClient = useQueryClient();
 
   // This would normally fetch from the API
-  const { data: subscriptions = mockSubscriptions, isLoading } = useQuery({
+  const { data: serverSubscriptions = mockSubscriptions, isLoading } = useQuery({
     queryKey: ["/api/my-subscriptions"],
     queryFn: () => mockSubscriptions // Replace with actual API call
   });
+
+  // Merge server subscriptions with local subscriptions
+  const subscriptions = mergeSubscriptions(serverSubscriptions, getLocalSubscriptions());
 
   const pauseSubscription = useMutation({
     mutationFn: async (subscriptionId: number) => {

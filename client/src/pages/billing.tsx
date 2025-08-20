@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CreditCard, Download, Calendar, TrendingUp, DollarSign, FileText, AlertCircle } from "lucide-react";
+import { CreditCard, Download, Calendar, TrendingUp, DollarSign, FileText, AlertCircle, Bot } from "lucide-react";
+import { getLocalSubscriptions } from "@/lib/subscriptionsLocal";
 
 export default function Billing() {
   const currentPlan = {
@@ -211,6 +212,68 @@ export default function Billing() {
                   </CardContent>
                 </Card>
               </div>
+            </div>
+
+            {/* Active Model Subscriptions */}
+            <div className="mt-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bot className="h-5 w-5" />
+                    Active Model Subscriptions
+                  </CardTitle>
+                  <CardDescription>Your currently active AI model subscriptions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const localSubscriptions = getLocalSubscriptions();
+                    const activeSubscriptions = localSubscriptions.filter(sub => sub.status === 'active');
+                    
+                    if (activeSubscriptions.length === 0) {
+                      return (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                          <p>No active model subscriptions</p>
+                          <p className="text-sm">Subscribe to AI models to see them here</p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-3">
+                        {activeSubscriptions.map((subscription) => (
+                          <div key={subscription.modelId} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <Bot className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <div className="font-medium">{subscription.modelName}</div>
+                                {subscription.developerName && (
+                                  <div className="text-sm text-muted-foreground">by {subscription.developerName}</div>
+                                )}
+                                {subscription.category && (
+                                  <Badge variant="secondary" className="text-xs mt-1">
+                                    {subscription.category}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-medium">
+                                ${subscription.price}/{subscription.billingCycle === 'annual' ? 'year' : 'month'}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                Since {new Date(subscription.subscribedDate).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 

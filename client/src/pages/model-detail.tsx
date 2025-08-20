@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import SubscribeConfirm from "@/components/subscriptions/SubscribeConfirm";
+import { addLocalSubscription, isUserSubscribedLocal } from "@/lib/subscriptionsLocal";
+import { useLocation } from "wouter";
 
 export default function ModelDetail() {
   // Try known route patterns (added /ai-models/:id to support links like /ai-models/12)
@@ -26,6 +29,10 @@ export default function ModelDetail() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+
+  // Subscription confirmation dialog state
+  const [subscribeConfirmOpen, setSubscribeConfirmOpen] = useState(false);
 
   // Optional: Check for special cases and redirect (disabled to show actual model details)
   // Only redirect if coming from old routes, but allow direct /ai-models/:id access
@@ -130,11 +137,31 @@ export default function ModelDetail() {
         window.location.href = data.checkoutUrl;
         return;
       }
+
+      // Save to local storage for immediate UI feedback
+      if (model) {
+        addLocalSubscription({
+          modelId: model.id,
+          modelName: model.name,
+          price: model.price || 199, // Default price if not provided
+          billingCycle: 'monthly',
+          status: 'active',
+          subscribedDate: new Date().toISOString(),
+          developerName: model.developerName,
+          category: model.category
+        });
+      }
+
       toast({
         title: "Subscribed",
         description: "You have successfully subscribed to this model.",
       });
       queryClient.invalidateQueries({ queryKey: ["api", "ai-models", idParam] });
+      queryClient.invalidateQueries({ queryKey: ["/api/portfolio/ai-models"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/subscriptions"] });
+      
+      // Navigate to my-subscriptions page
+      navigate("/my-subscriptions");
     },
     onError: (err: any) => {
       if (err?.status === 401) {
@@ -179,6 +206,15 @@ export default function ModelDetail() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleSubscribeClick = () => {
+    setSubscribeConfirmOpen(true);
+  };
+
+  const handleSubscribeConfirm = () => {
+    subscribeMutation.mutate();
+    setSubscribeConfirmOpen(false);
   };
 
   // Defensive UI states
@@ -334,7 +370,7 @@ export default function ModelDetail() {
 
             {/* Actions */}
             <div className="flex items-center gap-3">
-              <Button onClick={() => subscribeMutation.mutate()} disabled={subscribeMutation.isPending}>
+              <Button onClick={handleSubscribeClick} disabled={subscribeMutation.isPending}>
                 {subscribeMutation.isPending ? "Processing..." : "Subscribe to Model"}
               </Button>
               <Button variant="outline" onClick={() => (window.location.href = "/marketplace")}>
@@ -355,6 +391,20 @@ export default function ModelDetail() {
           )}
         </div>
       </div>
+
+      {/* Subscription Confirmation Dialog */}
+      {model && (
+        <SubscribeConfirm
+          open={subscribeConfirmOpen}
+          onOpenChange={setSubscribeConfirmOpen}
+          modelName={model.name}
+          price={model.price || 199}
+          billingCycle="monthly"
+          isSubmitting={subscribeMutation.isPending}
+          onConfirm={handleSubscribeConfirm}
+          developerName={model.developerName}
+        />
+      )}
     </Layout>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +31,11 @@ import {
   Wallet
 } from "lucide-react";
 import OnchainPaymentModal from "@/components/OnchainPaymentModal";
+import SubscribeConfirm from "@/components/subscriptions/SubscribeConfirm";
+import { apiRequest } from "@/lib/queryClient";
+import { addLocalSubscription, isUserSubscribedLocal } from "@/lib/subscriptionsLocal";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 export default function AIModels() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,6 +45,14 @@ export default function AIModels() {
   const [modelDetailsOpen, setModelDetailsOpen] = useState(false);
   const [onchainPaymentOpen, setOnchainPaymentOpen] = useState(false);
   const [paymentModelId, setPaymentModelId] = useState<number | null>(null);
+  
+  // Subscription confirmation dialog state
+  const [subscribeConfirmOpen, setSubscribeConfirmOpen] = useState(false);
+  const [subscribeModel, setSubscribeModel] = useState<any>(null);
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const { data: aiModels = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/ai-models"]
@@ -47,6 +60,55 @@ export default function AIModels() {
 
   const { data: userModels = [], isLoading: userModelsLoading } = useQuery<any[]>({
     queryKey: ["/api/portfolio/ai-models"]
+  });
+
+  // Subscribe mutation
+  const subscribeMutation = useMutation({
+    mutationFn: async (modelId: number) => {
+      const resp = await apiRequest("POST", `/api/ai-models/${modelId}/subscribe`, {});
+      if (resp && typeof (resp as any).json === "function") return (resp as any).json();
+      return resp;
+    },
+    onSuccess: (data: any, modelId: number) => {
+      // If server returned a checkoutUrl, redirect
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+      
+      // Otherwise treat as success and save locally
+      if (subscribeModel) {
+        addLocalSubscription({
+          modelId: subscribeModel.id,
+          modelName: subscribeModel.name,
+          price: subscribeModel.price || 199, // Default price if not provided
+          billingCycle: 'monthly',
+          status: 'active',
+          subscribedDate: new Date().toISOString(),
+          developerName: subscribeModel.developerName,
+          category: subscribeModel.category
+        });
+      }
+
+      toast({
+        title: "Subscribed",
+        description: "You have successfully subscribed to this model.",
+      });
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/portfolio/ai-models"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/subscriptions"] });
+      
+      // Navigate to my-subscriptions page
+      navigate("/my-subscriptions");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Subscription Failed",
+        description: error.message || "Failed to subscribe to the model. Please try again.",
+        variant: "destructive"
+      });
+    }
   });
 
   const filteredModels = aiModels.filter((model: any) => {
@@ -72,7 +134,9 @@ export default function AIModels() {
   });
 
   const isUserSubscribed = (modelId: number) => {
-    return userModels.some((userModel: any) => userModel.aiModelId === modelId);
+    const serverSubscribed = userModels.some((userModel: any) => userModel.aiModelId === modelId);
+    const localSubscribed = isUserSubscribedLocal(modelId, userModels);
+    return serverSubscribed || localSubscribed;
   };
 
   const getPerformanceColor = (performance: number) => {
@@ -90,6 +154,18 @@ export default function AIModels() {
   const handleCloseOnchainPayment = () => {
     setOnchainPaymentOpen(false);
     setPaymentModelId(null);
+  };
+
+  const handleSubscribeClick = (model: any) => {
+    setSubscribeModel(model);
+    setSubscribeConfirmOpen(true);
+  };
+
+  const handleSubscribeConfirm = () => {
+    if (subscribeModel) {
+      subscribeMutation.mutate(subscribeModel.id);
+      setSubscribeConfirmOpen(false);
+    }
   };
 
   if (isLoading || userModelsLoading) {
@@ -302,7 +378,11 @@ export default function AIModels() {
                       </Button>
                       {!isUserSubscribed(model.id) ? (
                         <div className="flex gap-1 flex-1">
-                          <Button size="sm" className="flex-1">
+                          <Button 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => handleSubscribeClick(model)}
+                          >
                             Subscribe
                           </Button>
                           <Button 
@@ -1052,7 +1132,10 @@ export default function AIModels() {
                   {!isUserSubscribed(selectedModel.id) ? (
                     <div className="space-y-3">
                       <div className="flex gap-3">
-                        <Button className="flex-1">
+                        <Button 
+                          className="flex-1"
+                          onClick={() => handleSubscribeClick(selectedModel)}
+                        >
                           <Activity className="h-4 w-4 mr-2" />
                           Subscribe to Model
                         </Button>
@@ -1096,6 +1179,19 @@ export default function AIModels() {
         onClose={handleCloseOnchainPayment}
         modelName={paymentModelId ? aiModels.find(m => m.id === paymentModelId)?.name : "AI Model"}
       />
+
+      {subscribeModel && (
+        <SubscribeConfirm
+          open={subscribeConfirmOpen}
+          onOpenChange={setSubscribeConfirmOpen}
+          modelName={subscribeModel.name}
+          price={subscribeModel.price || 199}
+          billingCycle="monthly"
+          isSubmitting={subscribeMutation.isPending}
+          onConfirm={handleSubscribeConfirm}
+          developerName={subscribeModel.developerName}
+        />
+      )}
     </Layout>
   );
 }
