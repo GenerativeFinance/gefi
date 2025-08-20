@@ -209,10 +209,13 @@ export default function Header() {
       ];
     }
     
-    if (location.startsWith('/marketplace') || location.startsWith('/my-subscriptions') || location.startsWith('/developers') || location.startsWith('/trading-bots') || location.startsWith('/categories') || location.startsWith('/autonomous-agents')) {
+    if (location.startsWith('/marketplace') || location.startsWith('/my-subscriptions') || location.startsWith('/developers') || location.startsWith('/trading-bots') || location.startsWith('/categories') || location.startsWith('/autonomous-agents') || location.startsWith('/my-integrations')) {
       return [
         { name: "Overview", href: "/", icon: BarChart3 },
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
+        { name: "App Marketplace", href: "/app-marketplace", icon: Grid3x3 },
+        { name: "Integrations", href: "/marketplace/integrations", icon: PlugZap },
+        { name: "My Integrations", href: "/my-integrations", icon: Zap },
         { name: "Autonomous Agents", href: "/autonomous-agents", icon: Bot },
         { name: "Categories", href: "/categories", icon: Grid },
         { name: "My Subscriptions", href: "/my-subscriptions", icon: CreditCard }
@@ -267,7 +270,8 @@ export default function Header() {
           { name: "Testing", href: "/develop", icon: TrendingUp },
           { name: "IDE Access", href: "/developer/develop/ide-access", icon: Code },
           { name: "Version Control", href: "/developer/develop/version-control", icon: GitBranch },
-          { name: "Code Review", href: "/developer/develop/code-review", icon: FileText }
+          { name: "Code Review", href: "/developer/develop/code-review", icon: FileText },
+          { name: "Integrations", href: "/my-integrations", icon: PlugZap }
         ];
       }
       

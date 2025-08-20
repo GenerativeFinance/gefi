@@ -89,6 +89,8 @@ import ReportGenerator from "@/pages/reports";
 import SearchPage from "@/pages/search";
 import AppMarketplace from "@/pages/app-marketplace";
 import Integrations from "@/pages/integrations";
+import IntegrationsMarketplace from "@/pages/marketplace/IntegrationsMarketplace";
+import UserIntegrations from "@/pages/UserIntegrations";
 import AllReports from "@/pages/AllReports";
 
 import ProfileSetup from "@/pages/profile-setup";
@@ -269,7 +271,9 @@ function Router() {
             <Route path="/settings" component={Settings} />
             <Route path="/wallet" component={Wallet} />
             <Route path="/app-marketplace" component={AppMarketplace} />
+            <Route path="/marketplace/integrations" component={IntegrationsMarketplace} />
             <Route path="/integrations" component={Integrations} />
+            <Route path="/my-integrations" component={UserIntegrations} />
             <Route path="/wallet-management" component={WalletManagement} />
             <Route path="/server-management" component={ServerManagement} />
             <Route path="/mobile-demo" component={MobileDemo} />
