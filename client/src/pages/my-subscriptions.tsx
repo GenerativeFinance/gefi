@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import Layout from "@/components/layout/Layout";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { 
   Bot, 
   Calendar, 
@@ -85,6 +85,44 @@ export default function MySubscriptions() {
   const [activeTab, setActiveTab] = useState("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
+
+  async function handleViewModel(id: number) {
+    // Known dedicated pages
+    if (id === 5) {
+      try { navigate('/forecasting-model'); } catch { window.location.href = '/forecasting-model'; }
+      return;
+    }
+    if (id === 9) {
+      try { navigate('/hrp-portfolio-optimization'); } catch { window.location.href = '/hrp-portfolio-optimization'; }
+      return;
+    }
+
+    // Try to fetch details to discover canonicalPath/slug
+    try {
+      const resp = await fetch(`/api/ai-models/${id}`);
+      if (resp.ok) {
+        const model = await resp.json();
+        const canonicalPath = (model?.canonicalPath && String(model.canonicalPath)) || '';
+        const slug = (model?.slug && String(model.slug)) || '';
+
+        const target = canonicalPath
+          ? `/${canonicalPath.replace(/^\//, '')}`
+          : slug
+            ? `/models/${slug.replace(/^\//, '')}`
+            : `/ai-models/${id}`;
+
+        try { navigate(target); } catch { window.location.href = target; }
+        return;
+      }
+    } catch (e) {
+      // no-op; fall through to default
+    }
+
+    // Fallback: standard model detail route
+    const fallback = `/ai-models/${id}`;
+    try { navigate(fallback); } catch { window.location.href = fallback; }
+  }
 
   // This would normally fetch from the API
   const { data: serverSubscriptions = mockSubscriptions, isLoading } = useQuery({
@@ -376,12 +414,10 @@ export default function MySubscriptions() {
                             <Button
                               variant="outline"
                               size="sm"
-                              asChild
+                              onClick={() => handleViewModel(subscription.modelId)}
                             >
-                              <Link href={`/model/${subscription.modelId}`}>
-                                <BarChart3 className="h-4 w-4 mr-1" />
-                                View
-                              </Link>
+                              <BarChart3 className="h-4 w-4 mr-1" />
+                              View
                             </Button>
 
                             <Button
