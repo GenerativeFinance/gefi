@@ -58,8 +58,8 @@ const navigationPatterns = {
     { key: "monitoring", label: "Monitoring", icon: Eye }
   ],
   
-  // Backtesting/Analysis tabs
-  backtesting: [
+  // Development/Analysis tabs
+  develop: [
     { key: "configure", label: "Configure", icon: Settings },
     { key: "live-monitor", label: "Live Monitor", icon: Activity },
     { key: "optimizer", label: "Optimizer", icon: TrendingUp },

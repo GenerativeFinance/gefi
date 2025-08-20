@@ -32,7 +32,7 @@ import Settings from "@/pages/settings";
 import Wallet from "@/pages/wallet";
 import DeveloperDashboard from "@/pages/developer-dashboard";
 import DeveloperMarketplace from "@/pages/developer-marketplace";
-const BacktestingEnvironment = lazy(() => import("./pages/BacktestingEnvironment"));
+import BacktestingEnvironment from "./pages/BacktestingEnvironment";
 import LiveTradingPage from "@/pages/live-trading";
 import Bounties from "@/pages/bounties";
 import BountyLeaderboard from "@/pages/bounty-leaderboard";
@@ -66,7 +66,7 @@ import BountyFunding from "@/pages/bounty-funding";
 import BotFunding from "@/pages/bot-funding";
 import UserAccess from "@/pages/user-access";
 import Billing from "@/pages/billing";
-import Storage from "@/pages/Storage";
+import Storage from "@/pages/storage";
 import ReportGeneration from "@/pages/ReportGeneration";
 import AutonomousAgents from "@/pages/AutonomousAgents";
 import MobileDemo from "@/pages/mobile-demo";
@@ -282,7 +282,7 @@ function Router() {
             <Route path="/developer" component={DeveloperDashboard} />
             <Route path="/developer-marketplace" component={DeveloperMarketplace} />
             <Route path="/developer/collaboration" component={DeveloperCollaborationMain} />
-            <Route path="/backtesting" component={BacktestingEnvironment} />
+            <Route path="/develop" component={BacktestingEnvironment} />
             <Route path="/live-trading" component={LiveTradingPage} />
             <Route path="/model-funding" component={ModelFunding} />
             <Route path="/bounty-funding" component={BountyFunding} />

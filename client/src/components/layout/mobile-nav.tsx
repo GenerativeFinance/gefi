@@ -41,7 +41,7 @@ const moreNavigationItems = [
   { path: "/model-funding", label: "Fund Models", icon: DollarSign },
   { path: "/reports", label: "Reports", icon: FileText },
   { path: "/risk-management", label: "Risk", icon: Shield },
-  { path: "/backtesting", label: "Backtesting", icon: BarChart3 },
+  { path: "/develop", label: "Develop", icon: BarChart3 },
   { path: "/federated-learning", label: "FL Network", icon: Network },
   { path: "/trading-bots", label: "Trading Bots", icon: Activity },
   { path: "/wallet-management", label: "Wallet Management", icon: Wallet },
