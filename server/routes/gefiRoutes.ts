@@ -1245,31 +1245,53 @@ export function registerGeFiRoutes(app: Express) {
     }
   });
 
-  // Subscribe to AI Model
-  app.post('/api/ai-models/:id/subscribe', isAuthenticated, async (req, res) => {
+  // Subscribe to AI Model (auth-aware with demo fallback)
+  app.post('/api/ai-models/:id/subscribe', async (req, res) => {
     try {
-      const modelId = parseInt(req.params.id);
-      const userId = req.user?.claims?.sub;
+      const allowDemo =
+        (process.env.ALLOW_DEMO_SUBS !== 'false') &&
+        (process.env.NODE_ENV !== 'production');
 
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
+      const modelId = parseInt(req.params.id, 10);
+
+      // Try to resolve a user ID from several possible locations
+      const userId =
+        (req as any)?.user?.claims?.sub ||
+        (req as any)?.user?.id ||
+        (req as any)?.auth?.userId ||
+        (req.headers['x-user-id'] as string | undefined);
+
+      if (!userId && !allowDemo) {
+        return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      // In a real app, this would create a subscription record in the database
-      // For now, we'll just return a success response
-      res.json({ 
-        success: true, 
-        message: "Successfully subscribed to AI model",
-        subscription: {
-          modelId,
-          userId,
-          subscribedAt: new Date().toISOString(),
-          status: "active"
-        }
+      // Use the existing models data for pricing if available
+      const model = aiModelsData?.find?.((m: any) => m.id === modelId);
+      const priceNumber =
+        model?.price != null ? Number(model.price) :
+        model?.pricing?.monthly != null ? Number(model.pricing.monthly) :
+        null;
+
+      // In production with proper auth, you'd persist a subscription here.
+      // For demo/local fallback, return an active subscription immediately.
+      const subscription = {
+        id: `sub_${userId || 'guest'}_${modelId}_${Date.now()}`,
+        modelId,
+        userId: String(userId || 'guest'),
+        price: priceNumber,
+        currency: 'USD',
+        status: 'active',
+        subscribedAt: new Date().toISOString(),
+      };
+
+      return res.json({
+        success: true,
+        message: userId ? 'Successfully subscribed to AI model' : 'Subscribed (demo mode, no auth)',
+        subscription,
       });
     } catch (error) {
-      console.error("Error subscribing to AI model:", error);
-      res.status(500).json({ message: "Failed to subscribe to AI model" });
+      console.error('Error subscribing to AI model:', error);
+      return res.status(500).json({ success: false, message: 'Failed to subscribe to model' });
     }
   });
 
