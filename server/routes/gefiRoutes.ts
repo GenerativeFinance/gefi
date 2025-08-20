@@ -1351,4 +1351,11 @@ export function registerGeFiRoutes(app: Express) {
     }
   });
 
+  // Register Contract Wallet routes
+  import("./contractWalletRoutes").then((module) => {
+    module.default(app);
+  }).catch((err) => {
+    console.error("Failed to load contract wallet routes:", err);
+  });
+
 }
