@@ -66,7 +66,8 @@ import BountyFunding from "@/pages/bounty-funding";
 import BotFunding from "@/pages/bot-funding";
 import UserAccess from "@/pages/user-access";
 import Billing from "@/pages/billing";
-import Storage from "@/pages/storage";
+import Storage from "@/pages/Storage";
+import ReportGeneration from "@/pages/ReportGeneration";
 import MobileDemo from "@/pages/mobile-demo";
 import WalletManagement from "@/pages/wallet-management";
 import ServerManagement from "@/pages/server-management";
@@ -274,6 +275,7 @@ function Router() {
             <Route path="/user-access" component={UserAccess} />
             <Route path="/billing" component={Billing} />
             <Route path="/storage" component={Storage} />
+            <Route path="/report-generation" component={ReportGeneration} />
             <Route path="/api-access" component={ApiAccess} />
             <Route path="/developer" component={DeveloperDashboard} />
             <Route path="/developer-marketplace" component={DeveloperMarketplace} />

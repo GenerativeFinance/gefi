@@ -7,6 +7,8 @@ import MobileNav from "@/components/layout/mobile-nav";
 import Footer from "@/components/layout/footer";
 import RiskMonitoring from "@/components/risk/risk-monitoring";
 import RecentAlerts from "@/components/risk/recent-alerts";
+import GenerateReportButton from "@/components/reports/GenerateReportButton";
+import { ReportDataExtractor } from "@/lib/reportGenerator";
 
 export default function RiskManagement() {
   const { toast } = useToast();
@@ -56,10 +58,27 @@ export default function RiskManagement() {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Risk Management</h1>
-          <p className="text-muted-foreground">
-            AI-powered risk monitoring and real-time alerts
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Risk Management</h1>
+              <p className="text-muted-foreground">
+                AI-powered risk monitoring and real-time alerts
+              </p>
+            </div>
+            <GenerateReportButton
+              template="risk"
+              defaultData={ReportDataExtractor.extractRiskData({
+                period: "Current Assessment",
+                var: "$-125,000",
+                riskScore: "72",
+                critical: "2",
+                totalReports: "15",
+                stressTest: "Portfolio shows resilience under adverse market conditions with controlled downside risk."
+              })}
+              buttonText="Generate Risk Report"
+              buttonVariant="outline"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

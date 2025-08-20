@@ -83,6 +83,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log("💬 Registering Team Messaging APIs...");
   const { registerMessagingRoutes } = await import("./messagingRoutes");
   registerMessagingRoutes(app, wss);
+  
+  console.log("📄 Registering Report Generation APIs...");
+  const registerReportGeneration = (await import("./reportsApi")).default;
+  registerReportGeneration(app);
 
   // Store active connections
   const activeConnections = new Map<string, WebSocket>();
