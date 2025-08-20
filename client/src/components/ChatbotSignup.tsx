@@ -235,7 +235,7 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
         honeypot: "",
       };
 
-      const response = await fetch("/api/chatbot/signup/complete", {
+      const response = await fetch("/api/auth/complete-chatbot-signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
