@@ -34,12 +34,14 @@ import {
   AlertTriangle,
   Users,
   Zap,
+  PlugZap,
   Globe,
   Store,
   Activity,
   PieChart,
   TrendingDown,
   Grid,
+  Grid3x3,
   CreditCard,
   Building,
   Video,
@@ -514,6 +516,18 @@ export default function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              {/* App Marketplace */}
+              <Link href="/app-marketplace">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-9 h-9 md:w-auto md:h-auto p-2 md:px-3 md:py-2 text-muted-foreground hover:text-foreground"
+                  title="App Marketplace"
+                >
+                  <Grid3x3 className="h-4 w-4 md:h-5 md:w-5" />
+                </Button>
+              </Link>
+
               {/* Theme Toggle - Hidden on mobile */}
               <Button
                 variant="ghost"
@@ -584,6 +598,12 @@ export default function Header() {
                       <Link href="/wallet" className="flex items-center">
                         <Wallet className="mr-2 h-4 w-4" />
                         Wallet
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/integrations" className="flex items-center">
+                        <PlugZap className="mr-2 h-4 w-4" />
+                        Integrations
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
