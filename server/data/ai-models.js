@@ -1009,5 +1009,364 @@ export const aiModelsData = [
       "Customer Risk Profiling",
       "Sanctions Screening"
     ]
+  },
+  // AI-Powered Yield Optimization & Portfolio Management (DynaSets)
+  {
+    id: 20,
+    name: "AI-Powered DynaSet Growth Portfolio",
+    description: "Intelligent crypto portfolio management system that autonomously rebalances between BTC, ETH, and top altcoins using advanced ML algorithms. Features dynamic allocation based on market conditions, momentum signals, and correlation analysis.",
+    category: "Portfolio Management",
+    subcategory: "AI Yield Optimization",
+    creator: "SingularityAI Labs",
+    rating: 4.9,
+    totalRatings: 456,
+    price: "399.99",
+    monthlySubscribers: 1240,
+    accuracy: 91.8,
+    riskLevel: "Medium",
+    aiTechnique: "Deep Reinforcement Learning + Portfolio Theory",
+    targetUserType: "DeFi Investors",
+    financialInstrument: "Crypto Portfolios",
+    tags: ["Portfolio Management", "DynaSet", "Auto-Rebalancing", "Growth Strategy", "AI Allocation", "Yield Optimization"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      aiRebalancing: true,
+      riskConstraints: true,
+      scenarioTesting: true,
+      explainableAI: true,
+      socialCopy: true
+    },
+    performance: {
+      accuracy: 91.8,
+      sharpeRatio: 2.4,
+      maxDrawdown: 15.2,
+      annualReturn: 47.3,
+      winRate: 73.5,
+      volatility: 18.7,
+      sortinoRatio: 3.1
+    },
+    dataRequirements: [
+      "Token Prices & Volume",
+      "Market Correlation Data",
+      "DeFi Protocol Yields",
+      "Liquidity Metrics",
+      "Sentiment Indicators",
+      "Macro Economic Data"
+    ],
+    supportedRegions: ["Global"],
+    supportedChains: ["Ethereum", "Polygon", "Arbitrum", "Optimism", "BSC"],
+    complianceFrameworks: ["DeFi Best Practices", "Portfolio Management Standards"],
+    minInvestment: "5000.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2024-10-01T10:00:00Z",
+    lastUpdated: "2025-08-20T14:30:00Z",
+    technicalSpecs: {
+      allocationStrategies: ["Mean Reversion", "Momentum", "Risk Parity", "Black-Litterman", "Kelly Criterion"],
+      rebalancingFrequency: ["Daily", "Weekly", "Dynamic (Event-Driven)"],
+      riskConstraints: {
+        maxAssetWeight: "40%",
+        maxDrawdown: "20%",
+        volatilityTarget: "15-25%",
+        correlationLimits: "0.8 max"
+      },
+      aiFeatures: [
+        "Dynamic Asset Allocation",
+        "Regime Detection",
+        "Risk Budgeting",
+        "Factor Exposure Control",
+        "Momentum Signal Integration",
+        "Mean Reversion Detection"
+      ]
+    }
+  },
+  {
+    id: 21,
+    name: "AI-Powered DeFi Yield Optimizer",
+    description: "Advanced yield optimization system that automatically allocates capital across DeFi protocols to maximize APY while managing smart contract risks. Features cross-chain yield farming with automated harvesting and compounding.",
+    category: "Portfolio Management",
+    subcategory: "AI Yield Optimization",
+    creator: "YieldMax Protocol",
+    rating: 4.7,
+    totalRatings: 298,
+    price: "299.99",
+    monthlySubscribers: 890,
+    accuracy: 94.2,
+    riskLevel: "Medium",
+    aiTechnique: "Multi-Agent Reinforcement Learning",
+    targetUserType: "DeFi Yield Farmers",
+    financialInstrument: "DeFi Protocols",
+    tags: ["DeFi", "Yield Farming", "Auto-Compound", "Cross-Chain", "Risk Management", "Protocol Analysis"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      autoCompounding: true,
+      riskScoring: true,
+      protocolMonitoring: true,
+      gasOptimization: true,
+      yieldForecasting: true
+    },
+    performance: {
+      accuracy: 94.2,
+      sharpeRatio: 2.8,
+      maxDrawdown: 8.5,
+      annualReturn: 28.4,
+      winRate: 87.2,
+      volatility: 9.8,
+      avgAPY: 24.7
+    },
+    dataRequirements: [
+      "DeFi Protocol APYs",
+      "Smart Contract Security Scores",
+      "Liquidity Pool Data",
+      "Gas Price Forecasts",
+      "Protocol TVL & Volume",
+      "Governance Token Prices"
+    ],
+    supportedRegions: ["Global"],
+    supportedChains: ["Ethereum", "Polygon", "Avalanche", "Fantom", "Arbitrum", "Optimism"],
+    complianceFrameworks: ["DeFi Security Standards"],
+    minInvestment: "2500.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2024-11-15T12:00:00Z",
+    lastUpdated: "2025-08-20T16:00:00Z",
+    technicalSpecs: {
+      protocols: ["Aave", "Compound", "Curve", "Convex", "Yearn", "Lido", "Rocket Pool"],
+      strategies: [
+        "Single Asset Yield Farming",
+        "LP Token Farming",
+        "Stablecoin Optimization",
+        "Leveraged Yield Strategies",
+        "Cross-Chain Arbitrage"
+      ],
+      riskManagement: {
+        protocolRiskScoring: true,
+        impermanentLossTracking: true,
+        liquidationRiskMonitoring: true,
+        smartContractAudits: true
+      }
+    }
+  },
+  {
+    id: 22,
+    name: "AI-Powered Defensive Portfolio Manager",
+    description: "Conservative AI portfolio manager focused on capital preservation with steady returns. Automatically allocates between stablecoins, treasuries, and low-volatility assets with downside protection strategies.",
+    category: "Portfolio Management", 
+    subcategory: "AI Yield Optimization",
+    creator: "SafeHaven AI",
+    rating: 4.8,
+    totalRatings: 367,
+    price: "199.99",
+    monthlySubscribers: 1450,
+    accuracy: 96.1,
+    riskLevel: "Low",
+    aiTechnique: "Bayesian Optimization + Risk Parity",
+    targetUserType: "Conservative Investors",
+    financialInstrument: "Stablecoins & Fixed Income",
+    tags: ["Conservative", "Capital Preservation", "Stablecoins", "Risk Parity", "Downside Protection", "Steady Yield"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      capitalProtection: true,
+      yieldOptimization: true,
+      downsideHedging: true,
+      stressTestiing: true,
+      liquidityManagement: true
+    },
+    performance: {
+      accuracy: 96.1,
+      sharpeRatio: 1.9,
+      maxDrawdown: 3.2,
+      annualReturn: 8.7,
+      winRate: 94.3,
+      volatility: 4.1,
+      calmarRatio: 2.7
+    },
+    dataRequirements: [
+      "Stablecoin Yields",
+      "Treasury Rates",
+      "Credit Spreads", 
+      "Volatility Indicators",
+      "Liquidity Metrics",
+      "Macro Indicators"
+    ],
+    supportedRegions: ["US", "EU", "Global"],
+    supportedChains: ["Ethereum", "Polygon", "Arbitrum"],
+    complianceFrameworks: ["Conservative Investment Standards", "Capital Preservation Guidelines"],
+    minInvestment: "1000.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2024-12-01T09:30:00Z",
+    lastUpdated: "2025-08-20T11:00:00Z",
+    technicalSpecs: {
+      assetClasses: ["Stablecoins", "Treasury Bills", "Money Market Funds", "Conservative DeFi"],
+      protectionStrategies: [
+        "Capital Preservation Focus",
+        "Downside Risk Hedging", 
+        "Volatility Targeting",
+        "Liquidity Management",
+        "Credit Risk Assessment"
+      ],
+      allocationConstraints: {
+        maxRiskAssets: "20%",
+        minStablecoins: "60%",
+        maxSingleAsset: "25%",
+        volatilityLimit: "5%"
+      }
+    }
+  },
+  {
+    id: 23,
+    name: "AI-Powered Multi-Asset Momentum Strategy",
+    description: "Advanced momentum-based portfolio system that dynamically allocates across crypto, stocks, commodities, and bonds. Uses ML to identify trend changes and optimize entry/exit timing across multiple asset classes.",
+    category: "Portfolio Management",
+    subcategory: "AI Yield Optimization", 
+    creator: "MomentumAI Capital",
+    rating: 4.6,
+    totalRatings: 234,
+    price: "599.99",
+    monthlySubscribers: 567,
+    accuracy: 89.4,
+    riskLevel: "High",
+    aiTechnique: "LSTM + Transformer Networks",
+    targetUserType: "Active Traders",
+    financialInstrument: "Multi-Asset",
+    tags: ["Momentum", "Multi-Asset", "Trend Following", "Cross-Asset", "Dynamic Allocation", "Machine Learning"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      momentumDetection: true,
+      crossAssetAnalysis: true,
+      regimeDetection: true,
+      trendFiltering: true,
+      riskSizing: true
+    },
+    performance: {
+      accuracy: 89.4,
+      sharpeRatio: 2.1,
+      maxDrawdown: 22.8,
+      annualReturn: 52.6,
+      winRate: 68.9,
+      volatility: 24.3,
+      informationRatio: 1.8
+    },
+    dataRequirements: [
+      "Multi-Asset Price Data",
+      "Volume & Momentum Indicators", 
+      "Cross-Asset Correlations",
+      "Macro Economic Data",
+      "Sentiment Indicators",
+      "Interest Rate Data"
+    ],
+    supportedRegions: ["Global", "US", "EU", "Asia-Pacific"],
+    supportedChains: ["Ethereum", "Bitcoin", "Traditional Markets"],
+    complianceFrameworks: ["MiFID II", "SEC", "Multi-Asset Investment Guidelines"],
+    minInvestment: "25000.00",
+    isFeatured: false,
+    isActive: true,
+    createdAt: "2025-01-10T11:00:00Z",
+    lastUpdated: "2025-08-20T13:45:00Z",
+    technicalSpecs: {
+      assetUniverse: ["Cryptocurrencies", "Equities", "Commodities", "Fixed Income", "FX", "REITs"],
+      momentumIndicators: [
+        "Price Momentum (1-12M)",
+        "Risk-Adjusted Momentum", 
+        "Cross-Sectional Momentum",
+        "Time Series Momentum",
+        "Volatility-Adjusted Returns"
+      ],
+      allocationMethods: [
+        "Equal Risk Contribution", 
+        "Inverse Volatility Weighting",
+        "Risk Budgeting",
+        "Kelly Criterion Sizing"
+      ]
+    }
+  },
+  {
+    id: 24,
+    name: "AI-Powered ESG Portfolio Optimizer",
+    description: "Sustainable investment AI that builds ESG-compliant portfolios while optimizing for both financial returns and environmental/social impact. Features ESG scoring, impact measurement, and sustainable yield strategies.",
+    category: "Portfolio Management",
+    subcategory: "AI Yield Optimization",
+    creator: "GreenFinance AI",
+    rating: 4.7,
+    totalRatings: 189,
+    price: "349.99", 
+    monthlySubscribers: 425,
+    accuracy: 92.3,
+    riskLevel: "Medium",
+    aiTechnique: "Multi-Objective Optimization + ESG ML",
+    targetUserType: "ESG Investors",
+    financialInstrument: "ESG Assets",
+    tags: ["ESG", "Sustainable Finance", "Impact Investing", "Green Bonds", "ESG Scoring", "Responsible AI"],
+    features: {
+      realTimeAnalysis: true,
+      backtesting: true,
+      alertSystem: true,
+      apiAccess: true,
+      customDashboard: true,
+      esgScoring: true,
+      impactMeasurement: true,
+      sustainabilityTracking: true,
+      greenBondAnalysis: true,
+      carbonFootprinting: true
+    },
+    performance: {
+      accuracy: 92.3,
+      sharpeRatio: 2.0,
+      maxDrawdown: 11.4,
+      annualReturn: 19.8,
+      winRate: 76.8,
+      esgScore: 8.7,
+      impactScore: 9.2
+    },
+    dataRequirements: [
+      "ESG Ratings & Scores",
+      "Carbon Emissions Data",
+      "Impact Metrics",
+      "Green Asset Universe",
+      "Sustainability Reports", 
+      "Regulatory ESG Data"
+    ],
+    supportedRegions: ["Global", "US", "EU", "ESG Focused Markets"],
+    supportedChains: ["Ethereum (ESG Tokens)", "Polygon (Carbon Credits)"],
+    complianceFrameworks: ["EU Taxonomy", "SFDR", "TCFD", "UN PRI", "ESG Disclosure Standards"],
+    minInvestment: "5000.00",
+    isFeatured: true,
+    isActive: true,
+    createdAt: "2025-02-14T10:15:00Z",
+    lastUpdated: "2025-08-20T15:20:00Z",
+    technicalSpecs: {
+      esgFactors: ["Environmental", "Social", "Governance", "Climate Risk", "Impact Alignment"],
+      sustainableAssets: [
+        "Green Bonds",
+        "ESG ETFs",
+        "Renewable Energy Tokens",
+        "Carbon Credits",
+        "Sustainable DeFi Protocols"
+      ],
+      optimizationObjectives: [
+        "Financial Return Maximization",
+        "ESG Score Maximization", 
+        "Carbon Footprint Minimization",
+        "Impact Measurement",
+        "Risk-Adjusted Sustainability"
+      ]
+    }
   }
 ];
