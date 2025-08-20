@@ -215,8 +215,7 @@ export default function Header() {
         { name: "AI Marketplace", href: "/marketplace", icon: Store },
         { name: "Autonomous Agents", href: "/autonomous-agents", icon: Bot },
         { name: "Categories", href: "/categories", icon: Grid },
-        { name: "My Subscriptions", href: "/my-subscriptions", icon: CreditCard },
-        { name: "Developers", href: "/developers", icon: Users }
+        { name: "My Subscriptions", href: "/my-subscriptions", icon: CreditCard }
       ];
     }
 
