@@ -471,7 +471,57 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
 
     const currentStepData = steps[currentStep];
     
-    // Validate input
+    // Security step: handle captcha success/failure with attempt tracking
+    if (currentStepData.type === 'security') {
+      const isCorrect = currentStepData.validation ? currentStepData.validation(inputValue) : false;
+      addUserMessage(inputValue);
+      setCurrentInput('');
+
+      if (!isCorrect) {
+        const newAttemptCount = securityAttempts + 1;
+        setSecurityAttempts(newAttemptCount);
+
+        if (newAttemptCount >= 2) {
+          setSecurityCheckStep('failed');
+          addBotMessage("Security check failed after multiple attempts. Please contact support@gefi.io for assistance.");
+        } else {
+          const newCaptcha = generateCaptcha();
+          setCaptcha(newCaptcha);
+          addBotMessage(`Incorrect answer. Please try again (${newAttemptCount}/2): ${newCaptcha.question}`);
+        }
+        return;
+      }
+
+      // Captcha correct — proceed to account creation
+      const newUserData = { ...userData, [currentStepData.field]: inputValue };
+      setUserData(newUserData);
+      setIsTyping(true);
+
+      setTimeout(async () => {
+        setIsTyping(false);
+        setSecurityCheckStep('passed');
+        addBotMessage("Correct! Security check passed. ✅");
+        setCurrentStep(steps.length - 1);
+        setShowOptions(false);
+
+        setTimeout(() => {
+          addBotMessage("Perfect! Let me create your account now...");
+          setIsCreatingAccount(true);
+
+          setTimeout(async () => {
+            try {
+              await createPendingAccount(newUserData);
+            } catch (error) {
+              console.error('Signup error:', error);
+              setIsCreatingAccount(false);
+            }
+          }, 1000);
+        }, 1500);
+      }, 1500);
+      return;
+    }
+
+    // Validate input for non-security steps
     if (currentStepData.validation && !currentStepData.validation(inputValue)) {
       addBotMessage(currentStepData.errorMessage || "Invalid input. Please try again.");
       return;
@@ -547,9 +597,8 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
     
     setTimeout(async () => {
       setIsTyping(false);
-      
+
       if (currentStep < steps.length - 1) {
-        // Move to next step
         const nextStep = currentStep + 1;
         setCurrentStep(nextStep);
         
@@ -559,83 +608,6 @@ export default function ChatbotSignup({ onComplete, onBack }: { onComplete: (use
             : steps[nextStep].question;
           addBotMessage(questionText);
           setShowOptions(steps[nextStep].type === 'select' || steps[nextStep].type === 'multiselect');
-        }
-      } else if (currentStepData.type === 'security') {
-        // Handle security check with dynamic captcha validation
-        if (currentStepData.validation && currentStepData.validation(inputValue)) {
-          setSecurityCheckStep('passed');
-          addBotMessage("Correct! Security check passed. ✅");
-          
-          // Complete signup - directly create account
-          setTimeout(() => {
-            addBotMessage("Perfect! Let me create your account now...");
-            setIsCreatingAccount(true);
-            
-            setTimeout(async () => {
-              try {
-                // Use centralized account creation function
-                await createPendingAccount(newUserData);
-                return; // Exit early since createPendingAccount handles the flow
-              } catch (error) {
-                console.error('Signup error:', error);
-                setIsCreatingAccount(false);
-              }
-            }, 1000);
-          }, 1500);
-        } else {
-          // Fix stale state bug by using the updated value directly
-          const newAttemptCount = securityAttempts + 1;
-          setSecurityAttempts(newAttemptCount);
-          
-          if (newAttemptCount >= 2) { // Allow 2 attempts instead of 1
-            setSecurityCheckStep('failed');
-            addBotMessage("Security check failed after multiple attempts. Please contact support@gefi.io for assistance.");
-            return;
-          } else {
-            // Generate new captcha for each failure
-            const newCaptcha = generateCaptcha();
-            setCaptcha(newCaptcha);
-            addBotMessage(`Incorrect answer. Please try again (${newAttemptCount}/2): ${newCaptcha.question}`);
-            setCurrentInput('');
-            return;
-          }
-        }
-      } else {
-        // Complete signup - but first verify email
-        addBotMessage("Perfect! Before I create your account, I need to verify your email address for security.");
-        setEmailVerificationStep('sending');
-        
-        try {
-          const response = await fetch('/api/auth/send-verification', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: newUserData.email,
-              firstName: newUserData.firstName,
-              lastName: newUserData.lastName
-            }),
-          });
-
-          const data = await response.json();
-          
-          if (response.ok) {
-            setEmailVerificationStep('sent');
-            setDemoVerificationCode(data.verificationCode); // For demo purposes
-            addBotMessage(`I've sent a 6-digit verification code to ${newUserData.email}. Please enter the code to continue.`);
-            // Only show verification code in development
-            if (import.meta.env.DEV || import.meta.env.VITE_DEBUG_VERIFICATION === 'true') {
-              addBotMessage(`For demo purposes, your verification code is: ${data.verificationCode}`);
-            }
-          } else {
-            addBotMessage("Sorry, I couldn't send the verification email. Please try again.");
-            setEmailVerificationStep('none');
-          }
-        } catch (error) {
-          console.error('Verification send error:', error);
-          addBotMessage("Sorry, there was an issue sending the verification email. Please try again.");
-          setEmailVerificationStep('none');
         }
       }
     }, 1500);
