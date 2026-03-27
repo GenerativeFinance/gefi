@@ -6,16 +6,19 @@ import "./index.css";
 
 // Global error handling for WebSocket and other unhandled errors
 window.addEventListener('unhandledrejection', (event) => {
+  const msg = event.reason?.message || String(event.reason) || '';
   // Suppress WebSocket DOMException errors in console
-  if (event.reason?.name === 'DOMException' && event.reason?.message?.includes('WebSocket')) {
-    console.warn('WebSocket connection issue handled silently');
+  if (event.reason?.name === 'DOMException' && msg.includes('WebSocket')) {
     event.preventDefault();
+    return;
   }
-  
-  // Suppress Vite WebSocket connection promise rejections
-  if (event.reason?.name === 'SyntaxError' && event.reason?.message?.includes('string did not match the expected pattern')) {
-    console.warn('Vite WebSocket connection promise rejection handled silently');
+  // Suppress Vite HMR WebSocket connection errors (URL pattern mismatch through Replit proxy)
+  if (msg.includes('string did not match the expected pattern') ||
+      msg.includes('WebSocket') ||
+      msg.includes('wss://') ||
+      msg.includes('ws://')) {
     event.preventDefault();
+    return;
   }
 });
 
