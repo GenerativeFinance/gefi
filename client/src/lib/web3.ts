@@ -1,37 +1,42 @@
-import Web3Modal from "web3modal";
-import WalletConnectProvider from "@walletconnect/web3-provider";
 import { ethers } from "ethers";
 
-let web3Modal: Web3Modal | null = null;
+let web3Modal: any = null;
 
-function getProviderOptions() {
-  const rpcUrl = process.env.NEXT_PUBLIC_ONCHAIN_RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || "";
-  const infuraId = process.env.NEXT_PUBLIC_INFURA_ID || process.env.REACT_APP_INFURA_ID || "";
+async function getProviderOptions() {
+  const rpcUrl = (import.meta as any).env?.VITE_ONCHAIN_RPC_URL || "";
+  const infuraId = (import.meta as any).env?.VITE_INFURA_ID || "";
 
   const providerOptions: any = {};
-  providerOptions.walletconnect = {
-    package: WalletConnectProvider,
-    options: {
-      rpc: rpcUrl ? { 1: rpcUrl } : undefined,
-      infuraId: infuraId || undefined,
-    },
-  };
+
+  try {
+    const WalletConnectProvider = (await import("@walletconnect/web3-provider")).default;
+    providerOptions.walletconnect = {
+      package: WalletConnectProvider,
+      options: {
+        rpc: rpcUrl ? { 1: rpcUrl } : undefined,
+        infuraId: infuraId || undefined,
+      },
+    };
+  } catch (e) {
+    console.warn("WalletConnect provider not available:", e);
+  }
 
   return providerOptions;
 }
 
-export function getWeb3Modal() {
+export async function getWeb3Modal() {
   if (!web3Modal) {
+    const Web3Modal = (await import("web3modal")).default;
     web3Modal = new Web3Modal({
       cacheProvider: true,
-      providerOptions: getProviderOptions(),
+      providerOptions: await getProviderOptions(),
     } as any);
   }
   return web3Modal;
 }
 
 export async function connectWallet() {
-  const modal = getWeb3Modal();
+  const modal = await getWeb3Modal();
   const instance = await modal.connect();
   const provider = new ethers.BrowserProvider(instance as any);
   const signer = await provider.getSigner();
@@ -40,6 +45,6 @@ export async function connectWallet() {
 }
 
 export async function disconnectWallet() {
-  const modal = getWeb3Modal();
+  const modal = await getWeb3Modal();
   if (modal) await modal.clearCachedProvider();
 }

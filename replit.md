@@ -16,9 +16,9 @@ Preferred communication style: Simple, everyday language.
 - **Build Tool**: Vite
 
 ### Backend
-- **Runtime**: Node.js with Express.js
+- **Runtime**: Node.js with Express.js (started via `npx tsx server/index.ts`)
 - **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: Replit Auth with OpenID Connect
+- **Authentication**: Multi-provider OAuth (Google, GitHub, LinkedIn) — all providers are optional; app starts cleanly without credentials
 - **Session Management**: Express sessions with PostgreSQL store
 - **API Design**: RESTful endpoints
 
