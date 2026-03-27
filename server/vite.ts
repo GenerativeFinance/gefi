@@ -27,6 +27,7 @@ export async function setupVite(app: Express, server: Server) {
         clientPort: 443,
         protocol: "wss" as const,
         host: replitDomain,
+        path: "/__vite_hmr",
       }
     : { server };
 

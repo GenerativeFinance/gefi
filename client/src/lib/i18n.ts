@@ -45,19 +45,15 @@ class I18nService {
 
   async loadTranslations() {
     try {
-      // Load English translations
-      const enModule = await import('../locales/en.json');
-      this.translations.en = enModule.default;
-
-      // Load Spanish translations
-      const esModule = await import('../locales/es.json');
-      this.translations.es = esModule.default;
-
-      // Notify listeners that translations are loaded
+      const [enRes, esRes] = await Promise.all([
+        fetch('/src/locales/en.json'),
+        fetch('/src/locales/es.json'),
+      ]);
+      if (enRes.ok) this.translations.en = await enRes.json();
+      if (esRes.ok) this.translations.es = await esRes.json();
       this.notifyListeners();
     } catch (error) {
-      console.error('Failed to load translations:', error);
-      // Fallback to English if translations fail to load
+      console.warn('Failed to load translations, using fallback:', error instanceof Error ? error.message : String(error));
       this.translations.en = {};
       this.translations.es = {};
     }

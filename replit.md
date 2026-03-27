@@ -67,3 +67,22 @@ Preferred communication style: Simple, everyday language.
 - **ethers.js**: Ethereum blockchain interaction
 - **Recharts**: Charting library
 - **Chart.js**: Charting library
+
+## Replit Environment Notes
+
+### Startup
+- Server starts with: `NODE_ENV=development npx tsx server/index.ts` (tsx is in node_modules/.bin, not on PATH)
+- App serves on port 5000 (both API and frontend via Vite middleware)
+
+### Vite HMR (Hot Module Replacement)
+- HMR WebSocket path is explicitly set to `/__vite_hmr` in `server/vite.ts` to work through Replit's proxy
+- The app WebSocket (`/ws`) uses `noServer: true` and manual `upgrade` event routing so Vite can share the same HTTP server without conflicts
+- Translations loaded via `fetch('/src/locales/en.json')` instead of dynamic imports for browser compatibility
+
+### OAuth
+- Google, GitHub, and LinkedIn OAuth are all optional — app starts cleanly with just warnings if credentials are missing
+- To enable OAuth, set: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`
+
+### Web3
+- `@walletconnect/web3-provider` and `web3modal` use dynamic imports (not static) to avoid Node.js globals breaking the browser bundle
+- Browser globals (`global`, `Buffer`, `process`) shimmed via `client/src/polyfills.ts` and Vite `define` config

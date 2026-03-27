@@ -77,10 +77,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   
-  // WebSocket server for real-time features
-  const wss = new WebSocketServer({ 
-    server: httpServer, 
-    path: '/ws'
+  // WebSocket server for real-time features (noServer so Vite HMR can share the same HTTP server)
+  const wss = new WebSocketServer({ noServer: true });
+
+  // Route upgrade events: /ws → app WebSocket, everything else → let Vite handle it
+  httpServer.on('upgrade', (request, socket, head) => {
+    const pathname = request.url?.split('?')[0] || '';
+    if (pathname === '/ws') {
+      wss.handleUpgrade(request, socket as any, head, (ws) => {
+        wss.emit('connection', ws, request);
+      });
+    }
+    // Non-/ws paths (e.g. /__vite_hmr) fall through to Vite's own upgrade handler
   });
 
   // Register messaging routes (after WebSocket server is created)
