@@ -1,9 +1,16 @@
 export type {
   ApiEnv,
+  Auth0M2MSecrets,
+  Auth0Vars,
   CommonSecrets,
   CommonVars,
   ComplianceEnv,
   DeployEnv,
+  EntityType,
+  IntegrationSecrets,
+  KycTier,
+  Persona,
   Region,
+  SubscriptionTier,
   WebEnv,
 } from "./env.js";

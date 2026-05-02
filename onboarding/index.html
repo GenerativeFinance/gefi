@@ -1,0 +1,33 @@
+---
+layout: onboarding
+title: "Choose your data region"
+permalink: /onboarding/
+step: jurisdiction
+step_index: 1
+---
+{% if site.app.enabled == false %}
+  <h1>Onboarding is opening soon</h1>
+  <p>The GeFi app surface — including jurisdiction selection, identity verification and multi-factor enrolment — opens with the dashboards. <a href="{{ '/contact/?topic=early-access' | relative_url }}">Request early access</a> and we'll loop you in.</p>
+{% else %}
+  <h1>Choose your data region</h1>
+  <p>GeFi runs separate data planes in the EU and the US so your account, model artefacts and audit logs stay in your chosen jurisdiction. Pick the region that matches where your firm is regulated. You can't change this later without contacting compliance.</p>
+  <form id="onboarding-jurisdiction" class="onboarding-form" novalidate>
+    <fieldset>
+      <legend class="visually-hidden">Data region</legend>
+      <label class="region-card">
+        <input type="radio" name="jurisdiction" value="eu" required>
+        <span class="region-card__title">European Union</span>
+        <span class="region-card__sub">Frankfurt &amp; Dublin · GDPR · MiCA · DORA</span>
+      </label>
+      <label class="region-card">
+        <input type="radio" name="jurisdiction" value="us" required>
+        <span class="region-card__title">United States</span>
+        <span class="region-card__sub">N. Virginia &amp; Oregon · SOC 2 · SEC / CFTC frameworks</span>
+      </label>
+    </fieldset>
+    <div class="onboarding-form__actions">
+      <button type="submit" class="btn btn--primary">Continue</button>
+    </div>
+    <p class="onboarding-form__error" id="onboarding-jurisdiction-error" hidden></p>
+  </form>
+{% endif %}

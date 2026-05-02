@@ -24,6 +24,39 @@ export type Region = "eu" | "us";
 /** The runtime environment a Worker has been deployed into. */
 export type DeployEnv = "dev" | "staging" | "prod";
 
+/**
+ * The kind of legal entity a tenant signs up as. Different KYC paths and
+ * compliance rules apply to each. Captured during onboarding (Task #3).
+ */
+export type EntityType =
+  | "retail"          // Individual retail investor.
+  | "professional"    // Sophisticated/accredited individual.
+  | "institutional"   // Bank, asset manager, broker-dealer, etc.
+  | "data_provider";  // Counterparty contributing data to the federation.
+
+/**
+ * KYC depth performed during onboarding. Mapped from subscription tier:
+ * see `subscriptionToKycTier()` in `@gefi/auth`.
+ */
+export type KycTier = "none" | "basic" | "standard" | "enhanced";
+
+/** Subscription pricing tiers. Source of truth for what a tenant has paid for. */
+export type SubscriptionTier = "free" | "starter" | "pro" | "enterprise";
+
+/**
+ * Personas in the GeFi RBAC model. A user's `roles` claim is a non-empty
+ * subset of these. Real permissions are computed from the union of their
+ * roles via the permission matrix in `@gefi/auth`.
+ */
+export type Persona =
+  | "admin"
+  | "developer"
+  | "investor"
+  | "data_provider"
+  | "regulator"
+  | "auditor"
+  | "compliance_officer";
+
 /** Common variables every Worker reads. */
 export interface CommonVars {
   /** Which deploy slot is this — used in logs and observability tagging. */
@@ -36,6 +69,21 @@ export interface CommonVars {
   SITE_PUBLIC_URL: string;
 }
 
+/**
+ * Auth0 configuration used to validate user JWTs. Unlike `INTERNAL_SIGNING_KEY`
+ * (HS256, edge↔region only) these are RS256 + JWKS, used for *user* auth.
+ *
+ * `AUTH0_DOMAIN` is the tenant URL, e.g. `https://gefi.eu.auth0.com/` —
+ * MUST end with a slash (Auth0 sets `iss` to that exact value).
+ * `AUTH0_AUDIENCE` is the API identifier configured in the Auth0 dashboard,
+ * usually `https://api.gefi.io`. Both are vars (not secrets) — they're
+ * public.
+ */
+export interface Auth0Vars {
+  AUTH0_DOMAIN: string;
+  AUTH0_AUDIENCE: string;
+}
+
 /** Common secrets every Worker may need. Set via `wrangler secret put`. */
 export interface CommonSecrets {
   /**
@@ -45,8 +93,37 @@ export interface CommonSecrets {
   INTERNAL_SIGNING_KEY: string;
 }
 
+/**
+ * Optional Auth0 management-API credentials, only needed by background jobs
+ * that update user metadata (e.g. write-back of KYC tier after onboarding).
+ * Not required for token verification.
+ */
+export interface Auth0M2MSecrets {
+  AUTH0_M2M_CLIENT_ID?: string;
+  AUTH0_M2M_CLIENT_SECRET?: string;
+}
+
+/**
+ * Per-provider KYC + sanctions API keys. All optional — when missing, the
+ * respective provider falls back to the deterministic stub implementation
+ * from `@gefi/integrations` (intended for dev / local tests, never prod).
+ */
+export interface IntegrationSecrets {
+  ONFIDO_API_TOKEN?: string;
+  PERSONA_API_KEY?: string;
+  SUMSUB_APP_TOKEN?: string;
+  SUMSUB_SECRET_KEY?: string;
+  MIDDESK_API_KEY?: string;
+  OPENSANCTIONS_API_KEY?: string;
+}
+
 /** Bindings exposed to `gefi-api`. */
-export interface ApiEnv extends CommonVars, CommonSecrets {
+export interface ApiEnv
+  extends CommonVars,
+    CommonSecrets,
+    Auth0Vars,
+    Auth0M2MSecrets,
+    IntegrationSecrets {
   /** Primary OLTP store for tenant + user + subscription rows. */
   DB: D1Database;
   /** Object store for uploaded artifacts (filings, model weights, etc.). */

@@ -11,6 +11,8 @@
  */
 
 import type { ApiEnv } from "@gefi/shared-types";
+import type { GefiAuthClaims } from "@gefi/auth/types";
+import type { LooseAuthClaims } from "@gefi/auth/verify";
 
 export type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS";
 
@@ -24,6 +26,19 @@ export interface RouteContext {
   country: string | null;
   /** URL-decoded path-parameter map (empty for non-parameterised routes). */
   params: Record<string, string>;
+  /**
+   * The verified user claims. Set by the auth middleware in `index.ts`
+   * BEFORE the handler runs:
+   *   - `null` if the request has no `Authorization` header.
+   *   - a `GefiAuthClaims` if the token verified AND has GeFi custom claims.
+   *   - a `LooseAuthClaims` (no GeFi claims yet) if the token verified
+   *     but the user hasn't onboarded — only the onboarding handler
+   *     should accept this. Other handlers must check `auth?.tenant_id`.
+   *
+   * If the token is *present but invalid*, the middleware short-circuits
+   * with a 401 and the handler never runs.
+   */
+  auth: GefiAuthClaims | LooseAuthClaims | null;
 }
 
 export type Handler = (rc: RouteContext) => Promise<Response> | Response;

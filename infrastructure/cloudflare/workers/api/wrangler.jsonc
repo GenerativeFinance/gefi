@@ -19,7 +19,11 @@
     "ENVIRONMENT": "dev",
     "WORKER_REGION": "us",
     "API_PUBLIC_URL": "http://localhost:8787",
-    "SITE_PUBLIC_URL": "http://localhost:8788"
+    "SITE_PUBLIC_URL": "http://localhost:8788",
+    // Auth0 vars are public — set per-env. The dev value points at a
+    // throwaway tenant; the real prod values are set in the prod env block.
+    "AUTH0_DOMAIN": "https://gefi-dev.eu.auth0.com/",
+    "AUTH0_AUDIENCE": "https://api.gefi.io"
   },
   // Local dev bindings. Each environment overrides these with real IDs.
   "d1_databases": [
@@ -43,7 +47,9 @@
         "ENVIRONMENT": "staging",
         "WORKER_REGION": "us",
         "API_PUBLIC_URL": "https://staging-api.gefi.io",
-        "SITE_PUBLIC_URL": "https://staging.gefi.io"
+        "SITE_PUBLIC_URL": "https://staging.gefi.io",
+        "AUTH0_DOMAIN": "https://gefi-staging.eu.auth0.com/",
+        "AUTH0_AUDIENCE": "https://staging-api.gefi.io"
       },
       "routes": [{ "pattern": "staging-api.gefi.io/*", "zone_name": "gefi.io" }],
       "d1_databases": [
@@ -69,7 +75,9 @@
         "ENVIRONMENT": "prod",
         "WORKER_REGION": "us",
         "API_PUBLIC_URL": "https://api.gefi.io",
-        "SITE_PUBLIC_URL": "https://gefi.io"
+        "SITE_PUBLIC_URL": "https://gefi.io",
+        "AUTH0_DOMAIN": "https://gefi.eu.auth0.com/",
+        "AUTH0_AUDIENCE": "https://api.gefi.io"
       },
       "routes": [{ "pattern": "api.gefi.io/*", "zone_name": "gefi.io" }],
       "d1_databases": [
@@ -91,7 +99,9 @@
         "ENVIRONMENT": "prod",
         "WORKER_REGION": "eu",
         "API_PUBLIC_URL": "https://eu.api.gefi.io",
-        "SITE_PUBLIC_URL": "https://gefi.io"
+        "SITE_PUBLIC_URL": "https://gefi.io",
+        "AUTH0_DOMAIN": "https://gefi.eu.auth0.com/",
+        "AUTH0_AUDIENCE": "https://api.gefi.io"
       },
       "routes": [{ "pattern": "eu.api.gefi.io/*", "zone_name": "gefi.io" }],
       "d1_databases": [
@@ -111,7 +121,9 @@
         "ENVIRONMENT": "prod",
         "WORKER_REGION": "us",
         "API_PUBLIC_URL": "https://us.api.gefi.io",
-        "SITE_PUBLIC_URL": "https://gefi.io"
+        "SITE_PUBLIC_URL": "https://gefi.io",
+        "AUTH0_DOMAIN": "https://gefi.eu.auth0.com/",
+        "AUTH0_AUDIENCE": "https://api.gefi.io"
       },
       "routes": [{ "pattern": "us.api.gefi.io/*", "zone_name": "gefi.io" }],
       "d1_databases": [

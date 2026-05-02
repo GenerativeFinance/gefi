@@ -1,0 +1,23 @@
+---
+layout: default
+---
+<section class="onboarding">
+  <div class="container container--narrow">
+    <ol class="onboarding-steps" aria-label="Onboarding progress">
+      {%- assign steps = "jurisdiction,entity,identity,security" | split: "," -%}
+      {%- for s in steps -%}
+        {%- assign idx = forloop.index -%}
+        <li class="onboarding-steps__item{% if page.step == s %} is-current{% endif %}{% if page.step_index and page.step_index > idx %} is-done{% endif %}">
+          <span class="onboarding-steps__num">{{ idx }}</span>
+          <span class="onboarding-steps__label">{{ s | capitalize }}</span>
+        </li>
+      {%- endfor -%}
+    </ol>
+    <div class="onboarding-card">
+      {{ content }}
+    </div>
+  </div>
+</section>
+{% if site.app.enabled %}
+<script src="{{ '/assets/js/onboarding.js' | relative_url }}" defer></script>
+{% endif %}

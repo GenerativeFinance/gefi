@@ -234,14 +234,45 @@ Required repo Secrets:
   **D1: Edit**, and **Vectorize: Edit** scopes for the GeFi account.
 - `CLOUDFLARE_ACCOUNT_ID` — your Cloudflare account ID.
 
+## Auth, multi-tenancy & jurisdiction routing (Task #3)
+
+Auth runs on Auth0 with RS256 access tokens. The `gefi-api` Worker
+fetches the JWKS lazily (KV-cached for 1h), verifies every bearer
+token at the edge, and rejects cross-region traffic at the regional
+sibling. The full operator runbook is in [`AUTH0-SETUP.md`](./AUTH0-SETUP.md).
+
+Surface area:
+
+- `GET /v1/auth/me` — hydrated principal + tenant slice from D1.
+- `POST /v1/auth/onboard` — first-time tenant + user + membership
+  creation. Loose auth: accepts a token without GeFi custom claims.
+- `POST/GET/DELETE /v1/api-keys[/:id]` — tenant-scoped API keys; the
+  raw secret is shown once and stored as `sha256(secret)`.
+- `POST /v1/kyc/start` — picks a provider for `(entity_type,
+  jurisdiction)` and returns the hosted verification URL.
+- `GET /v1/kyc/status` — current evidence + outstanding sanction hits.
+- `POST /v1/kyc/webhook[/:provider]` — provider callback; on approve
+  runs sanctions screening and either bumps `tenants.kyc_tier` or
+  suspends the tenant on a hit.
+
+Packages:
+
+- [`packages/auth`](./packages/auth) — JWKS fetcher, RS256 verifier,
+  CASL-style RBAC matrix (`canPerform()`), subscription→KYC tier map.
+- [`packages/integrations`](./packages/integrations) — KYC + sanctions
+  provider interfaces with stubs and real Onfido / OpenSanctions
+  implementations. The factories fall back to stubs that **fail
+  closed** when the live provider's secret is missing.
+
+D1 schema: `workers/api/migrations/0001_init_auth.sql` creates
+`tenants`, `users`, `memberships`, `api_keys`, `kyc_evidence`,
+`sanction_hits`, `compliance_events`. Every row is keyed on
+`tenant_id` + `jurisdiction`.
+
 ## What's NOT in this task
 
-- Real auth: Auth0 / RS256 / KYC / multi-tenancy → **Task #3**.
 - Compliance rule engine + audit Merkle anchoring → **Task #4**.
 - Marketplace + Stripe + onchain billing → **Task #5**.
 - Federated learning orchestrator → **Task #6**.
 - Persona dashboards (`app.gefi.io`) → **Task #7**.
 - TEE / sovereign cloud routing → later phases.
-
-This task is the **foundation** — bindings, Workers, jurisdiction edge,
-security headers, CI, /health. Everything else plugs into this scaffold.

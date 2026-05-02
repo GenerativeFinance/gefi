@@ -198,9 +198,48 @@ pnpm typecheck     # turbo run typecheck across the graph
 pnpm --filter @gefi/worker-api run dev    # wrangler dev with local D1/R2/KV emulation
 ```
 
+## Task #3 — Auth, multi-tenancy & jurisdiction routing (DONE)
+
+Auth runs on Auth0 with RS256 tokens. The operator runbook is
+`infrastructure/cloudflare/AUTH0-SETUP.md`. Required env vars:
+`AUTH0_DOMAIN`, `AUTH0_AUDIENCE` (in `wrangler.jsonc`) and the secret
+`AUTH0_M2M_CLIENT_SECRET` (via `wrangler secret put`).
+
+New packages:
+- `packages/auth` — JWKS cache (`jwks.ts`), RS256 verifier (`verify.ts`
+  with both strict and `verifyAuth0TokenLoose` variants), 7-persona
+  RBAC matrix (`rbac.ts`), subscription→KYC tier map (`kyc-tiers.ts`).
+- `packages/integrations` — `KycProvider` + `SanctionsProvider`
+  interfaces, with `StubKycProvider`, `OnfidoKycProvider`,
+  `StubSanctionsProvider`, `OpenSanctionsProvider`. Factories fall
+  back to stubs that fail-closed when secrets are missing.
+
+D1: `workers/api/migrations/0001_init_auth.sql` creates `tenants`,
+`users`, `memberships`, `api_keys`, `kyc_evidence`, `sanction_hits`,
+`compliance_events`. Every table has `tenant_id` + `jurisdiction`.
+
+Endpoints (in `gefi-api`):
+- `GET /v1/auth/me`, `POST /v1/auth/onboard`,
+  `POST/GET/DELETE /v1/api-keys[/:id]`,
+- `POST /v1/kyc/start`, `GET /v1/kyc/status`,
+  `POST /v1/kyc/webhook[/:provider]`.
+
+Cross-region rejection: regional siblings drop traffic whose JWT
+`jurisdiction` claim doesn't match `WORKER_REGION`. The public edge
+forwards based on the JWT's `jurisdiction` (else `cf.country`).
+
+Jekyll onboarding: `onboarding/index.html` (jurisdiction) →
+`/onboarding/entity/` → `/onboarding/identity/` → `/onboarding/security/`,
+gated on `site.app.enabled`. `assets/js/onboarding.js` posts to
+`/v1/auth/onboard` then `/v1/kyc/start`.
+
+Tests: 100/100 (`packages/auth` 34, `packages/integrations` 18,
+`workers/api` 18 incl. integration, `workers/web` 2, `shared-router`
+17, `shared-types` 0, `shared-headers` 0). Run `pnpm test` from
+`infrastructure/cloudflare/`.
+
 What's NOT here yet (each lives in a downstream task):
 
-- Real auth / multi-tenancy / Auth0 / RS256 → **Task #3**.
 - Compliance rule engine + Merkle audit anchoring → **Task #4**.
 - Marketplace + Stripe + onchain billing → **Task #5**.
 - Federated learning orchestrator → **Task #6**.

@@ -11,6 +11,8 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
+    "@gefi/auth": "workspace:*",
+    "@gefi/integrations": "workspace:*",
     "@gefi/shared-headers": "workspace:*",
     "@gefi/shared-router": "workspace:*",
     "@gefi/shared-types": "workspace:*"

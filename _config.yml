@@ -42,6 +42,19 @@ app:
   signup_url: "https://app.gefi.io/sign-up"
   fallback_url: "/contact/?topic=sales"
 
+# Auth0 wiring for the onboarding flow + dashboard sign-in.
+#
+# Filled in for prod by the operator following AUTH0-SETUP.md (see
+# infrastructure/cloudflare/AUTH0-SETUP.md). The values below are the
+# *staging* defaults; production is set via Jekyll's --config override
+# on deploy.
+auth0:
+  domain: "https://gefi-staging.eu.auth0.com/"
+  client_id: ""             # SPA client id from Auth0
+  audience: "https://staging-api.gefi.io"
+  callback_path: "/auth/callback"
+  scope: "openid profile email offline_access"
+
 nav:
   - { title: "Models",     url: "/models/" }
   - { title: "Features",   url: "/features/" }
