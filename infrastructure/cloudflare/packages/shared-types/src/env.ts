@@ -154,14 +154,92 @@ export interface ApiEnv
   REGIONAL_US?: Fetcher;
 }
 
+/**
+ * Vocabulary of platform events the compliance engine cares about. Extending
+ * this type without also adding a matching rule in `@gefi/compliance-rules`
+ * is fine — it just means no rule fires on the new event yet.
+ */
+export type ComplianceEventKind =
+  | "tenant_onboarded"
+  | "kyc_declined"
+  | "sanction_hit"
+  | "model_listed"
+  | "subscription_created"
+  | "data_breach"
+  | "dsar_received"
+  | "drift_exceeded"
+  | "subpoena_received"
+  | "cross_border";
+
+/** Severity used by compliance events + audit entries. */
+export type ComplianceSeverity = "info" | "warn" | "high" | "critical";
+
+/**
+ * MailChannels DKIM credentials used to sign outbound lawyer-routing emails.
+ * Optional in dev/staging — without them the mailer falls back to a stub
+ * that records messages to D1 but never makes a network call.
+ */
+export interface MailChannelsSecrets {
+  MAILCHANNELS_DKIM_DOMAIN?: string;
+  MAILCHANNELS_DKIM_SELECTOR?: string;
+  MAILCHANNELS_DKIM_PRIVATE_KEY?: string;
+  /** From-address every routing email is sent from (e.g. `compliance@gefi.io`). */
+  MAILCHANNELS_FROM_ADDRESS?: string;
+}
+
+/**
+ * Polygon (PoS) anchoring credentials for daily Merkle root commits. Optional
+ * in dev/staging — without them the anchor service marks the day's root with
+ * a synthetic `pending_anchor` reference and the on-chain transaction hash is
+ * filled in once a real key is provisioned.
+ */
+export interface AnchorSecrets {
+  POLYGON_RPC_URL?: string;
+  POLYGON_ANCHOR_ADDRESS?: string;
+  POLYGON_ANCHOR_PRIVATE_KEY?: string;
+}
+
+/**
+ * DocuSign credentials used to obtain lawyer/auditor sign-off on
+ * compliance cases. Optional in dev/staging — stub returns a synthetic
+ * envelope id that the routing service treats as already signed.
+ */
+export interface DocuSignSecrets {
+  DOCUSIGN_BASE_URL?: string;
+  DOCUSIGN_INTEGRATION_KEY?: string;
+  DOCUSIGN_USER_ID?: string;
+  DOCUSIGN_RSA_PRIVATE_KEY?: string;
+  DOCUSIGN_ACCOUNT_ID?: string;
+}
+
+/**
+ * Shared secret minted by the compliance Worker and verified on every
+ * Service-binding call from `gefi-api`. Prevents an accidental external
+ * route on `gefi-compliance` from leaking a privileged endpoint.
+ */
+export interface ComplianceInternalSecrets {
+  COMPLIANCE_INTERNAL_TOKEN?: string;
+}
+
 /** Bindings exposed to `gefi-compliance`. */
-export interface ComplianceEnv extends CommonVars, CommonSecrets {
-  /** Append-only audit log table on D1. */
+export interface ComplianceEnv
+  extends CommonVars,
+    CommonSecrets,
+    MailChannelsSecrets,
+    AnchorSecrets,
+    DocuSignSecrets,
+    ComplianceInternalSecrets {
+  /** Append-only audit log + cases + directory tables on D1. */
   DB: D1Database;
-  /** Object store for compliance evidence packs. */
+  /** Object store for compliance evidence packs + signed envelopes. */
   EVIDENCE: R2Bucket;
   /** Cache of jurisdiction rules + per-tenant routing decisions. */
   CACHE: KVNamespace;
+  /**
+   * Durable Object namespace owning per-case state + SLA `alarm()` timers.
+   * One DO instance per ComplianceCase (id = case_id).
+   */
+  CASE_DO: DurableObjectNamespace;
 }
 
 /** Bindings exposed to `gefi-web`. */
