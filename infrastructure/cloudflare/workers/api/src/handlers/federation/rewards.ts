@@ -84,17 +84,24 @@ export const distributeRewardsHandler: Handler = async (rc) => {
   // The mirror lives in D1 (`kyc_whitelist`) for hot-path checks; the
   // on-chain gate in RewardDistributor.sol catches anything that slips
   // through (defence in depth).
-  // Filter by jurisdiction AND active expiry — an entry whose
-  // `expires_at` is in the past is treated as not whitelisted, matching
-  // KYCRegistry.sol semantics. NULL expiry = never expires.
-  const allowed = new Set<string>();
+  // Build the canonical (tenant_id → recipient_address) map from D1.
+  // The request payload's recipient_address is treated as advisory only:
+  // we ALWAYS pay the address bound to that tenant in `kyc_whitelist`.
+  // This eliminates a class of operational misallocation where a stale
+  // or wrong recipient address in the request would route a payout to
+  // a non-canonical wallet. Filter by jurisdiction AND active expiry —
+  // an entry whose `expires_at` is in the past is treated as not
+  // whitelisted, matching KYCRegistry.sol semantics. NULL = never expires.
+  const kycByTenant = new Map<string, string>();
   const kycRows = await rc.env.DB.prepare(
-    `SELECT recipient_address FROM kyc_whitelist
+    `SELECT tenant_id, recipient_address FROM kyc_whitelist
        WHERE jurisdiction = ?
          AND (expires_at IS NULL OR expires_at >= ?)`,
   ).bind(round.jurisdiction, Math.floor(Date.now() / 1000))
-    .all<{ recipient_address: string }>();
-  for (const row of kycRows.results ?? []) allowed.add(row.recipient_address.toLowerCase());
+    .all<{ tenant_id: string; recipient_address: string }>();
+  for (const row of kycRows.results ?? []) {
+    kycByTenant.set(row.tenant_id, row.recipient_address.toLowerCase());
+  }
 
   const distributor = rewardsClient(rc.env);
   const results: Array<{ tenant_id: string; recipient_address: string; amount_wei: string; tx_hash: string | null; skipped: string | null }> = [];
@@ -104,12 +111,20 @@ export const distributeRewardsHandler: Handler = async (rc) => {
       results.push({ tenant_id: a.tenantId, recipient_address: a.recipientAddress, amount_wei: "0", tx_hash: null, skipped: "zero_allocation" });
       continue;
     }
-    if (!allowed.has(a.recipientAddress.toLowerCase())) {
+    const canonicalAddr = kycByTenant.get(a.tenantId);
+    if (!canonicalAddr) {
       results.push({ tenant_id: a.tenantId, recipient_address: a.recipientAddress, amount_wei: a.amountWei.toString(), tx_hash: null, skipped: "kyc_not_whitelisted" });
       continue;
     }
+    if (canonicalAddr !== a.recipientAddress.toLowerCase()) {
+      // Caller-supplied address didn't match the address bound to the
+      // tenant in `kyc_whitelist`. We pay the canonical address and
+      // surface the override in the response so operators can audit.
+      results.push({ tenant_id: a.tenantId, recipient_address: canonicalAddr, amount_wei: a.amountWei.toString(), tx_hash: null, skipped: "tenant_address_mismatch" });
+      continue;
+    }
     try {
-      const r = await distributor.distribute({ recipient: a.recipientAddress, amountWei: a.amountWei, roundId: round.id });
+      const r = await distributor.distribute({ recipient: canonicalAddr, amountWei: a.amountWei, roundId: round.id });
       await rc.env.DB.prepare(
         `INSERT INTO reward_distributions (
            id, round_id, tenant_id, recipient_address, wei_amount,
@@ -120,7 +135,7 @@ export const distributeRewardsHandler: Handler = async (rc) => {
           `rd_${crypto.randomUUID().replace(/-/g, "").slice(0, 24)}`,
           round.id,
           a.tenantId,
-          a.recipientAddress.toLowerCase(),
+          canonicalAddr,
           a.amountWei.toString(),
           a.score,
           r.onChain ? "broadcast" : "confirmed",
