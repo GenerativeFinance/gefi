@@ -157,6 +157,19 @@ export const getModelHandler: Handler = async (rc) => {
     return Response.json({ ok: false, error: "not_found" }, { status: 404 });
   }
   const metadata = await getMetadata(deps(rc.env), model.id);
+  // Jurisdiction visibility: list/search paths already pass `visibleTo`
+  // to filter by `jurisdictionsSupported`, but a direct lookup by id
+  // or slug must apply the same policy. Otherwise a caller who
+  // discovers an EU-only model id (e.g. via a leaked link) could read
+  // its full metadata + versions from a US tenant. Owners are exempt
+  // so the developer can preview their own EU-only model from any
+  // jurisdiction. An empty `jurisdictionsSupported` means "all".
+  if (!isOwner) {
+    const allowed = metadata?.jurisdictionsSupported ?? [];
+    if (allowed.length > 0 && !allowed.includes(c.jurisdiction)) {
+      return Response.json({ ok: false, error: "not_found" }, { status: 404 });
+    }
+  }
   const versions = await listVersions(deps(rc.env), model.id);
   return Response.json({ ok: true, model, metadata, versions });
 };

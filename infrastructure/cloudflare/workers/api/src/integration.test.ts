@@ -957,6 +957,200 @@ describe("Marketplace + billing endpoints", () => {
     expect(bodyWithEnv.checkout_url).not.toBe(bodyNoEnv.checkout_url);
   });
 
+  /**
+   * Build a D1 mock that knows enough about the marketplace + billing
+   * tables to drive `runModelHandler` end-to-end:
+   *   - models / model_versions / model_metadata SELECTs return seeded rows
+   *   - entitlements + api_key_quotas are stateful (mirror the production
+   *     conditional-UPDATE semantics in `consume()` so cap enforcement
+   *     actually fires)
+   *   - INSERT INTO model_runs is a no-op (we only assert HTTP behavior)
+   */
+  function marketplaceD1(opts: {
+    model: Record<string, unknown>;
+    version: Record<string, unknown>;
+    metadata: Record<string, unknown> | null;
+    entitlements: Array<{ tenant_id: string; feature: string; limit_value: number; used_value: number; period: string; resets_at: number | null; updated_at?: number }>;
+  }): { db: D1Database; entitlements: Array<{ tenant_id: string; feature: string; limit_value: number; used_value: number; period: string; resets_at: number | null; updated_at?: number }> } {
+    const ents = opts.entitlements.map((e) => ({ ...e }));
+    const prepare = (sql: string) => {
+      let bindings: unknown[] = [];
+      const stmt = {
+        bind(...args: unknown[]) { bindings = args; return stmt; },
+        async first<T>() {
+          if (/SELECT \* FROM models WHERE id = \? OR slug = \?/.test(sql)) {
+            return ((bindings[0] === opts.model.id || bindings[0] === opts.model.slug) ? { ...opts.model } : null) as T;
+          }
+          if (/SELECT \* FROM model_versions WHERE id = \?/.test(sql)) {
+            return (bindings[0] === opts.version.id ? { ...opts.version } : null) as T;
+          }
+          if (/SELECT \* FROM model_metadata WHERE model_id = \?/.test(sql)) {
+            return (opts.metadata ? { ...opts.metadata } : null) as T;
+          }
+          if (/SELECT \* FROM entitlements WHERE tenant_id = \? AND feature = \?/.test(sql)) {
+            const r = ents.find((x) => x.tenant_id === bindings[0] && x.feature === bindings[1]);
+            return (r ? { ...r } : null) as T;
+          }
+          if (/SELECT \* FROM api_key_quotas WHERE api_key_id = \? AND feature = \?/.test(sql)) {
+            return null as T;
+          }
+          if (/FROM tenants WHERE id/.test(sql)) {
+            return null as T;
+          }
+          return null as T;
+        },
+        async all<T>() {
+          if (/FROM model_versions WHERE model_id = \?/.test(sql)) return { results: [{ ...opts.version }] as T[], success: true } as never;
+          return { results: [] as T[], success: true } as never;
+        },
+        async run() {
+          if (/^UPDATE entitlements/.test(sql)) {
+            // Mirror production conditional UPDATE so cap enforcement
+            // is real. Bind shape:
+            //   [now, n, n, now, nextReset, now, tenantId, feature, now, n, n]
+            const now = Number(bindings[0]);
+            const n = Number(bindings[1]);
+            const tenantId = bindings[6];
+            const feature = bindings[7];
+            const r = ents.find((x) => x.tenant_id === tenantId && x.feature === feature);
+            if (!r) return { meta: { changes: 0 }, success: true } as never;
+            const expired = r.resets_at !== null && now >= r.resets_at;
+            const newUsed = expired ? n : r.used_value + n;
+            if (r.limit_value !== 0 && newUsed > r.limit_value) {
+              return { meta: { changes: 0 }, success: true } as never;
+            }
+            r.used_value = newUsed;
+            r.updated_at = now;
+            return { meta: { changes: 1 }, success: true } as never;
+          }
+          return { meta: { changes: 1 }, success: true } as never;
+        },
+      };
+      return stmt as unknown as D1PreparedStatement;
+    };
+    const db = {
+      prepare,
+      batch: async (s: D1PreparedStatement[]) => { const r = []; for (const x of s) r.push(await (x as unknown as { run(): Promise<unknown> }).run()); return r as never; },
+      exec: async () => ({ count: 0, duration: 0 }) as never,
+    } as unknown as D1Database;
+    return { db, entitlements: ents };
+  }
+
+  it("POST /v1/models/:id/run hard-fails (429) when actual tokens exceed the cap, even if preflight passed", async () => {
+    // Regression: the previous handler returned a successful response
+    // with `X-Token-Overage: 1` when the post-run top-up was denied.
+    // That meant a caller could bypass `tokens_per_month` entirely by
+    // setting a tiny `max_tokens` and relying on the provider emitting
+    // more — directly contradicting the entitlement guarantee.
+    // Now we fail closed with 429 and surface the run id for audit.
+    const m = marketplaceD1({
+      model: {
+        id: "mdl-cap",
+        slug: "mdl-cap",
+        developer_tenant_id: "tenant-other-1",
+        name: "Cap Test",
+        slug_canonical: "mdl-cap",
+        summary: "x",
+        category: "research",
+        risk_class: "low",
+        jurisdiction: "us",
+        status: "approved",
+        visibility: "public",
+        current_version_id: "ver-cap",
+        monthly_price_cents: 0,
+        developer_share_bps: 7000,
+        federation_enabled: 0,
+        created_at: 0,
+        updated_at: 0,
+      },
+      version: { id: "ver-cap", model_id: "mdl-cap", version: "1.0.0", artifact_r2_key: "x", artifact_sha256: "y", manifest_json: "{}", chain_tx_hash: null, created_at: 0 },
+      metadata: { long_description: "", inputs_json: "[]", outputs_json: "[]", metrics_json: "{}", risk_json: "{}", jurisdictions_supported_json: "[]" },
+      entitlements: [
+        { tenant_id: "tenant-inv-1", feature: "requests_per_day",     limit_value: 1000, used_value: 0, period: "day",   resets_at: null },
+        { tenant_id: "tenant-inv-1", feature: "tokens_per_month",     limit_value: 50,   used_value: 0, period: "month", resets_at: null },
+        { tenant_id: "tenant-inv-1", feature: "inferences_per_month", limit_value: 1000, used_value: 0, period: "month", resets_at: null },
+      ],
+    });
+    const env = regionalEnv({ region: "us", db: m.db });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const token = await investorToken();
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/models/mdl-cap/run", {
+        method: "POST",
+        headers: { "X-Gefi-Edge-JWT": edge, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        // max_tokens=50 burns the entire 50-token budget at preflight.
+        // The deterministic provider's tokensIn = ceil(prompt_len/4)
+        // and tokensOut = ceil(("[deterministic] " + prompt[:240]).length/4).
+        // A 250-char prompt → ~63 in + ~64 out = ~127 actual, blowing
+        // the 50-token cap and forcing the top-up to deny.
+        body: JSON.stringify({
+          prompt: "Q3 filing summary: ".concat("revenue grew steadily across the period and operating margins expanded driven by SaaS mix shift, while free cash flow conversion improved on lower capex and disciplined working capital. Guidance was maintained for the year and "),
+          max_tokens: 50,
+          no_stream: true,
+        }),
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(429);
+    const body = (await res.json()) as { ok: boolean; error: string; feature: string; runId: string; actualTokens: number; preTokens: number };
+    expect(body.ok).toBe(false);
+    expect(body.error).toBe("quota_exceeded");
+    expect(body.feature).toBe("tokens_per_month");
+    expect(body.runId).toMatch(/^run_/);
+    expect(body.actualTokens).toBeGreaterThan(body.preTokens);
+    // The response MUST NOT include the model output. The previous
+    // overage-header path leaked the text; the fail-closed path
+    // withholds it.
+    expect(body).not.toHaveProperty("response");
+  });
+
+  it("GET /v1/models/:id returns 404 to non-owners whose jurisdiction is not in jurisdictionsSupported", async () => {
+    // Regression: list/search applied `visibleTo` jurisdiction filtering
+    // but the direct lookup did not. A US tenant who happened to know
+    // the id of an EU-only model could read its full metadata + version
+    // list. Owners are still allowed (so a developer can preview their
+    // own model from any jurisdiction); non-owners get a flat 404.
+    const m = marketplaceD1({
+      model: {
+        id: "mdl-eu-only",
+        slug: "mdl-eu-only",
+        developer_tenant_id: "tenant-other-1",   // ← caller is "tenant-inv-1"
+        name: "EU Only",
+        slug_canonical: "mdl-eu-only",
+        summary: "x",
+        category: "research",
+        risk_class: "low",
+        jurisdiction: "eu",
+        status: "approved",
+        visibility: "public",
+        current_version_id: "ver-eu",
+        monthly_price_cents: 0,
+        developer_share_bps: 7000,
+        federation_enabled: 0,
+        created_at: 0,
+        updated_at: 0,
+      },
+      version: { id: "ver-eu", model_id: "mdl-eu-only", version: "1.0.0", artifact_r2_key: "x", artifact_sha256: "y", manifest_json: "{}", chain_tx_hash: null, created_at: 0 },
+      metadata: { long_description: "", inputs_json: "[]", outputs_json: "[]", metrics_json: "{}", risk_json: "{}", jurisdictions_supported_json: JSON.stringify(["eu"]) },
+      entitlements: [],
+    });
+    const env = regionalEnv({ region: "us", db: m.db });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const token = await investorToken(); // jurisdiction=us
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/models/mdl-eu-only", {
+        headers: { "X-Gefi-Edge-JWT": edge, Authorization: `Bearer ${token}` },
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(404);
+    const body = (await res.json()) as { ok: boolean; error: string };
+    expect(body.ok).toBe(false);
+    expect(body.error).toBe("not_found");
+  });
+
   it("POST /v1/billing/subscriptions returns 503 in prod when tier price is not configured", async () => {
     // With a real STRIPE_SECRET_KEY but no STRIPE_PRICE_* set, the
     // handler must refuse rather than ship a synthetic id to live

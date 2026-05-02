@@ -191,16 +191,48 @@ export const runModelHandler: Handler = async (rc) => {
   );
 
   // Reconcile tokens: settle the difference between the pre-charge and
-  // actual usage. If actual > preTokens we top up (and fail-close if
-  // the top-up would exceed the cap — the caller's response is still
-  // returned but a header flags overage so dashboards can alert). If
-  // actual < preTokens we issue a "refund" via a direct UPDATE since
-  // consume() can't go negative.
+  // actual usage.
+  //
+  //   actual > preTokens  → top-up. If the top-up is denied (i.e. the
+  //                         tenant blew past tokens_per_month), we
+  //                         **fail closed**: do NOT return the model
+  //                         output. Returning success with just an
+  //                         X-Token-Overage header would let callers
+  //                         bypass the cap by setting a tiny
+  //                         max_tokens and relying on provider
+  //                         non-conformance — that contradicts the
+  //                         "tokens_per_month is enforced" guarantee.
+  //                         The audit row in `model_runs` is retained
+  //                         so the operator can reconcile (refund the
+  //                         inference charge, surface the overage in
+  //                         the dashboard, etc.). Callers who hit
+  //                         this should upgrade their tier and replay
+  //                         the run via /v1/runs/:runId/replay.
+  //   actual < preTokens  → direct UPDATE refund (consume() can't go
+  //                         negative).
   const actualTokens = result.response.tokensIn + result.response.tokensOut;
-  let tokenOverage = false;
   if (actualTokens > preTokens) {
     const top = await consume(billingDeps, c.tenant_id, "tokens_per_month", actualTokens - preTokens);
-    if (!top.allowed) tokenOverage = true;
+    if (!top.allowed) {
+      return Response.json(
+        {
+          ok: false,
+          error: "quota_exceeded",
+          scope: "tenant",
+          feature: "tokens_per_month",
+          reason: top.reason,
+          remaining: top.remaining,
+          // Surface the audit run id so the caller (and the operator)
+          // can replay or refund deterministically.
+          runId: result.runId,
+          actualTokens,
+          preTokens,
+          message:
+            "Token cap exceeded by actual usage; run was recorded for audit but the response is withheld.",
+        },
+        { status: 429 },
+      );
+    }
   } else if (actualTokens < preTokens) {
     const refund = preTokens - actualTokens;
     await rc.env.DB.prepare(
@@ -215,31 +247,26 @@ export const runModelHandler: Handler = async (rc) => {
   }
 
   if (body.no_stream) {
-    const headers: Record<string, string> = {};
-    if (tokenOverage) headers["X-Token-Overage"] = "1";
-    return Response.json(
-      {
-        ok: true,
-        runId: result.runId,
-        inputSha: result.inputSha,
-        outputSha: result.outputSha,
-        response: result.response,
-        tokenOverage,
-      },
-      { headers },
-    );
+    return Response.json({
+      ok: true,
+      runId: result.runId,
+      inputSha: result.inputSha,
+      outputSha: result.outputSha,
+      response: result.response,
+    });
   }
 
   const stream = responseToSseStream(result.response);
-  const sseHeaders: Record<string, string> = {
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-store, no-transform",
-    "X-Run-Id": result.runId,
-    "X-Input-Sha": result.inputSha,
-    "X-Output-Sha": result.outputSha,
-  };
-  if (tokenOverage) sseHeaders["X-Token-Overage"] = "1";
-  return new Response(stream, { status: 200, headers: sseHeaders });
+  return new Response(stream, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-store, no-transform",
+      "X-Run-Id": result.runId,
+      "X-Input-Sha": result.inputSha,
+      "X-Output-Sha": result.outputSha,
+    },
+  });
 };
 
 export const replayRunHandler: Handler = async (rc) => {
