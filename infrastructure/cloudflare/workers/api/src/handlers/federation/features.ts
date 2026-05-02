@@ -21,12 +21,30 @@ function regionalCachePrefix(env: ApiEnv): string {
   return env.FEATURE_STORE_REGION_PREFIX ?? `feat:${env.WORKER_REGION}:`;
 }
 
+function seededStub(env: ApiEnv): StubFeatureNodeClient {
+  const c = new StubFeatureNodeClient();
+  const raw = env.FEATURE_STORE_STUB_FIXTURES;
+  if (!raw) return c;
+  try {
+    const parsed = JSON.parse(raw) as Record<string, { value: unknown; schemaVersion?: string }>;
+    for (const [k, v] of Object.entries(parsed)) {
+      const idx = k.indexOf(":");
+      if (idx <= 0) continue;
+      c.put(k.slice(0, idx), k.slice(idx + 1), v.value, v.schemaVersion ?? "v1");
+    }
+  } catch (err) {
+    console.error("[gefi-api] FEATURE_STORE_STUB_FIXTURES parse error", err);
+  }
+  return c;
+}
+
 function clientFor(env: ApiEnv, sourceEndpoint: string): FeatureNodeClient {
-  if (sourceEndpoint.startsWith("stub://")) return new StubFeatureNodeClient();
+  if (sourceEndpoint.startsWith("stub://")) return seededStub(env);
   if (!env.FEDERATION_INTERNAL_TOKEN) {
-    // Fall back to stub when no bearer is configured — the lookup will
-    // still resolve from the in-memory store any test setup pre-seeded.
-    return new StubFeatureNodeClient();
+    // Fall back to seeded stub when no bearer is configured — local dev
+    // can populate FEATURE_STORE_STUB_FIXTURES to exercise the lookup
+    // path end-to-end without a real node-agent.
+    return seededStub(env);
   }
   return new HttpFeatureNodeClient(env.FEDERATION_INTERNAL_TOKEN);
 }

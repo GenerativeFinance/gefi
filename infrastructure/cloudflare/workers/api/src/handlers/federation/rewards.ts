@@ -104,7 +104,7 @@ export const distributeRewardsHandler: Handler = async (rc) => {
   }
 
   const distributor = rewardsClient(rc.env);
-  const results: Array<{ tenant_id: string; recipient_address: string; amount_wei: string; tx_hash: string | null; skipped: string | null }> = [];
+  const results: Array<{ tenant_id: string; recipient_address: string; amount_wei: string; tx_hash: string | null; skipped: string | null; address_overridden?: boolean }> = [];
   const now = Math.floor(Date.now() / 1000);
   for (const a of allocations) {
     if (a.amountWei === 0n) {
@@ -116,13 +116,11 @@ export const distributeRewardsHandler: Handler = async (rc) => {
       results.push({ tenant_id: a.tenantId, recipient_address: a.recipientAddress, amount_wei: a.amountWei.toString(), tx_hash: null, skipped: "kyc_not_whitelisted" });
       continue;
     }
-    if (canonicalAddr !== a.recipientAddress.toLowerCase()) {
-      // Caller-supplied address didn't match the address bound to the
-      // tenant in `kyc_whitelist`. We pay the canonical address and
-      // surface the override in the response so operators can audit.
-      results.push({ tenant_id: a.tenantId, recipient_address: canonicalAddr, amount_wei: a.amountWei.toString(), tx_hash: null, skipped: "tenant_address_mismatch" });
-      continue;
-    }
+    // Caller-supplied address may differ from the canonical KYC address;
+    // we always pay the canonical address (single source of truth lives
+    // in `kyc_whitelist`). The response carries `address_overridden`
+    // so operators can audit the substitution end-to-end.
+    const addressOverridden = canonicalAddr !== a.recipientAddress.toLowerCase();
     try {
       const r = await distributor.distribute({ recipient: canonicalAddr, amountWei: a.amountWei, roundId: round.id });
       await rc.env.DB.prepare(
@@ -144,7 +142,14 @@ export const distributeRewardsHandler: Handler = async (rc) => {
           now,
         )
         .run();
-      results.push({ tenant_id: a.tenantId, recipient_address: a.recipientAddress, amount_wei: a.amountWei.toString(), tx_hash: r.txHash, skipped: null });
+      results.push({
+        tenant_id: a.tenantId,
+        recipient_address: canonicalAddr,
+        amount_wei: a.amountWei.toString(),
+        tx_hash: r.txHash,
+        skipped: null,
+        address_overridden: addressOverridden,
+      });
     } catch (err) {
       console.error("[gefi-api] reward distribute failed", err);
       results.push({ tenant_id: a.tenantId, recipient_address: a.recipientAddress, amount_wei: a.amountWei.toString(), tx_hash: null, skipped: "distribute_failed" });

@@ -307,6 +307,15 @@ export interface BaseChainSecrets {
 export interface FederationSecrets {
   FEDERATION_INTERNAL_TOKEN?: string;
   FEATURE_STORE_REGION_PREFIX?: string;        // defaults to `feat:${WORKER_REGION}:`
+  /**
+   * Deterministic fixture map for `stub://` feature endpoints. JSON
+   * object whose keys are `<feature_slug>:<lookup_key>` and whose
+   * values are `{ value, schemaVersion? }`. Lets local operator flows
+   * exercise the lookup path without spinning up a real node-agent.
+   * Example:
+   *   {"price_volatility:AAPL":{"value":0.32,"schemaVersion":"v3"}}
+   */
+  FEATURE_STORE_STUB_FIXTURES?: string;
 }
 
 /**
