@@ -128,6 +128,20 @@ export const createSubscriptionHandler: Handler = async (rc) => {
       .first<{ id: string; monthly_price_cents: number }>();
     if (!row) return Response.json({ ok: false, error: "model_not_found" }, { status: 404 });
     monthlyCents = Number(row.monthly_price_cents);
+    // Symmetric to the tier path: in live mode (STRIPE_SECRET_KEY
+    // configured) we will not hand a synthetic `price_model_<id>`
+    // to real Stripe — that price doesn't exist in the Stripe
+    // dashboard and checkout creation would fail with a confusing
+    // 400 from upstream. The caller MUST pass a real Stripe price id
+    // (typically resolved from a future `models.stripe_price_id`
+    // column or the model author's Connect account). The stub path
+    // keeps the synthetic fallback so dev/test still round-trips.
+    if (rc.env.STRIPE_SECRET_KEY && !priceId) {
+      return Response.json(
+        { ok: false, error: "model_price_not_configured", model_id: row.id },
+        { status: 503 },
+      );
+    }
     priceId = priceId ?? `price_model_${row.id}`;
   }
 

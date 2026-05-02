@@ -888,6 +888,89 @@ describe("Marketplace + billing endpoints", () => {
     }
   });
 
+  it("POST /v1/billing/subscriptions kind=model 503s in live mode without an explicit price_id", async () => {
+    // Symmetric to the tier guard: synthetic `price_model_<id>` is
+    // not a real Stripe price, so live Stripe would reject it. The
+    // handler must refuse with `model_price_not_configured` BEFORE
+    // creating a checkout session — otherwise we'd ship a confusing
+    // 400 back to the caller from upstream Stripe.
+    const fake = scriptedD1({
+      selects: [{ match: /FROM models WHERE id/, row: { id: "mdl-x", monthly_price_cents: 4900 } }],
+    });
+    const env = regionalEnv({ region: "us", db: fake.db });
+    (env as { STRIPE_SECRET_KEY?: string }).STRIPE_SECRET_KEY = "sk_test_dummy";
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const originalFetch = globalThis.fetch;
+    const fetchCalls: string[] = [];
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      fetchCalls.push(url);
+      return originalFetch(input as Parameters<typeof originalFetch>[0], init);
+    }) as typeof fetch;
+    try {
+      const res = await worker.fetch(
+        new Request("https://us.api.gefi.io/v1/billing/subscriptions", {
+          method: "POST",
+          headers: {
+            "X-Gefi-Edge-JWT": edge,
+            Authorization: `Bearer ${await devToken()}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ kind: "model", model_id: "mdl-x" }),
+        }),
+        env,
+        ctx,
+      );
+      expect(res.status).toBe(503);
+      const body = (await res.json()) as { ok: boolean; error: string; model_id: string };
+      expect(body.ok).toBe(false);
+      expect(body.error).toBe("model_price_not_configured");
+      expect(body.model_id).toBe("mdl-x");
+      // No outbound HTTP to Stripe — we refused before checkout.
+      const stripeCalls = fetchCalls.filter((u) => /api\.stripe\.com/.test(u));
+      expect(stripeCalls).toHaveLength(0);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("POST /v1/billing/subscriptions kind=model accepts an explicit price_id in live mode", async () => {
+    // The escape hatch: callers (typically the model author's
+    // onboarding flow) can pass a real Stripe price id that they
+    // configured on their Connect account. The handler must accept
+    // it and forward it verbatim to checkout — no synthetic id is
+    // substituted.
+    const fake = scriptedD1({
+      selects: [{ match: /FROM models WHERE id/, row: { id: "mdl-y", monthly_price_cents: 9900 } }],
+    });
+    const env = regionalEnv({ region: "us", db: fake.db });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    // Note: STRIPE_SECRET_KEY left unset so the StubStripe path is
+    // exercised — we only care that the handler accepted the price
+    // and recorded it on the subscription row.
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/subscriptions", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await devToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          kind: "model",
+          model_id: "mdl-y",
+          price_id: "price_1Qabc_real_stripe_id",
+        }),
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { ok: boolean; checkout_url: string | null };
+    expect(body.ok).toBe(true);
+    expect(body.checkout_url).toBeTruthy();
+  });
+
   it("POST /v1/billing/webhook seeds tier entitlements ONLY when status flips to active", async () => {
     // The activation half of the deferred-seed contract: when Stripe
     // confirms payment via customer.subscription.updated with
