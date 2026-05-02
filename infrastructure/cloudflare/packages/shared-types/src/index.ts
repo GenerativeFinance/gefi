@@ -23,4 +23,6 @@ export type {
   ResendSecrets,
   AiProviderSecrets,
   SearchSecrets,
+  BaseChainSecrets,
+  FederationSecrets,
 } from "./env.js";

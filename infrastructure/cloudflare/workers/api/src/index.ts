@@ -77,6 +77,22 @@ import {
   listEntitlementsHandler,
   stripeWebhookHandler,
 } from "./handlers/billing/subscriptions.js";
+import {
+  aggregateRoundHandler,
+  createRoundHandler,
+  getRoundHandler,
+  inviteParticipantHandler,
+  submitUpdateHandler,
+} from "./handlers/federation/rounds.js";
+import {
+  createFeatureDefinitionHandler,
+  lookupFeatureHandler,
+} from "./handlers/federation/features.js";
+import {
+  addKycWhitelistHandler,
+  distributeRewardsHandler,
+  listContributionsHandler,
+} from "./handlers/federation/rewards.js";
 import { Router, type RouteContext } from "./router.js";
 
 const REGIONAL_HOST_RE = /^https:\/\/(eu|us)\.api\./;
@@ -148,7 +164,20 @@ const router = new Router()
   .get("/v1/billing/portal", billingPortalHandler)
   .post("/v1/billing/connect/onboarding", connectOnboardingHandler)
   .get("/v1/entitlements", listEntitlementsHandler)
-  .post("/v1/billing/webhook", stripeWebhookHandler);
+  .post("/v1/billing/webhook", stripeWebhookHandler)
+  // Federation — round lifecycle
+  .post("/v1/federation/rounds", createRoundHandler)
+  .get("/v1/federation/rounds/:id", getRoundHandler)
+  .post("/v1/federation/rounds/:id/invite", inviteParticipantHandler)
+  .post("/v1/federation/rounds/:id/updates", submitUpdateHandler)
+  .post("/v1/federation/rounds/:id/aggregate", aggregateRoundHandler)
+  // Federation — features
+  .post("/v1/features/lookup", lookupFeatureHandler)
+  .post("/v1/features/definitions", createFeatureDefinitionHandler)
+  // Federation — rewards + KYC
+  .post("/v1/federation/rewards/distribute", distributeRewardsHandler)
+  .get("/v1/federation/contributions/:tenant_id", listContributionsHandler)
+  .post("/v1/federation/kyc-whitelist", addKycWhitelistHandler);
 
 async function forwardToRegion(
   request: Request,

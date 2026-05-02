@@ -1,0 +1,30 @@
+{
+  "name": "@gefi/node-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reference open-source node-agent for GeFi federated learning. Apache-2.0.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./adapters": "./src/adapters.ts",
+    "./trainer": "./src/trainer.ts",
+    "./attestation": "./src/attestation.ts",
+    "./audit": "./src/audit.ts",
+    "./feature-server": "./src/feature-server.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gefi/federation": "workspace:*",
+    "@gefi/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240620.0",
+    "typescript": "^5.5.3",
+    "vitest": "^1.6.0"
+  }
+}

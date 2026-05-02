@@ -196,7 +196,10 @@ export interface ApiEnv
     StripeSecrets,
     ResendSecrets,
     AiProviderSecrets,
-    SearchSecrets {
+    SearchSecrets,
+    AnchorSecrets,
+    BaseChainSecrets,
+    FederationSecrets {
   /** Primary OLTP store for tenant + user + subscription rows. */
   DB: D1Database;
   /** Object store for uploaded artifacts (filings, model weights, etc.). */
@@ -268,6 +271,42 @@ export interface AnchorSecrets {
   POLYGON_RPC_URL?: string;
   POLYGON_ANCHOR_ADDRESS?: string;
   POLYGON_ANCHOR_PRIVATE_KEY?: string;
+}
+
+/**
+ * Base (L2) chain credentials for the federation reward distributor +
+ * contribution ledger + KYC registry contracts. Optional in dev/staging —
+ * the on-chain clients fall back to deterministic stubs that never make
+ * a network call. In production the resolver throws.
+ *
+ * `BASE_REWARD_PRIVATE_KEY` is the operator key that signs payouts. Never
+ * log it. The Worker reads it from `env.BASE_REWARD_PRIVATE_KEY` directly
+ * in the on-chain client; nothing else sees it.
+ */
+export interface BaseChainSecrets {
+  BASE_RPC_URL?: string;
+  BASE_CHAIN_ID?: string;                       // 8453 mainnet, 84532 sepolia
+  BASE_FEDERATION_REGISTRY_ADDRESS?: string;    // ModelRegistry.sol
+  BASE_FEDERATION_LEDGER_ADDRESS?: string;      // ContributionLedger.sol
+  BASE_FEDERATION_REWARDS_ADDRESS?: string;     // RewardDistributor.sol
+  BASE_FEDERATION_KYC_ADDRESS?: string;         // KYCRegistry.sol
+  BASE_REWARD_PRIVATE_KEY?: string;             // operator signing key
+}
+
+/**
+ * Federation orchestrator + node-agent secrets.
+ *
+ * `FEDERATION_INTERNAL_TOKEN` is the shared bearer the orchestrator
+ * accepts on `POST /v1/federation/rounds/:id/updates` (the node-agent
+ * presents it). Distinct from `INTERNAL_SIGNING_KEY` so a leaked
+ * node-agent token can't impersonate the edge router.
+ *
+ * `FEATURE_STORE_REGION_PREFIX` controls the regional KV cache key
+ * prefix so the EU edge never accidentally reads a US-cached feature.
+ */
+export interface FederationSecrets {
+  FEDERATION_INTERNAL_TOKEN?: string;
+  FEATURE_STORE_REGION_PREFIX?: string;        // defaults to `feat:${WORKER_REGION}:`
 }
 
 /**

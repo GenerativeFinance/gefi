@@ -94,6 +94,41 @@ importers:
         specifier: ^1.6.0
         version: 1.6.1(@types/node@25.6.0)
 
+  packages/feature-store:
+    dependencies:
+      '@gefi/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240620.0
+        version: 4.20260502.1
+      typescript:
+        specifier: ^5.5.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@25.6.0)
+
+  packages/federation:
+    dependencies:
+      '@gefi/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240620.0
+        version: 4.20260502.1
+      '@gefi/onchain-federation':
+        specifier: workspace:*
+        version: link:../onchain-federation
+      typescript:
+        specifier: ^5.5.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@25.6.0)
+
   packages/integrations:
     dependencies:
       '@gefi/shared-types':
@@ -137,6 +172,50 @@ importers:
       '@gefi/shared-types':
         specifier: workspace:*
         version: link:../shared-types
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240620.0
+        version: 4.20260502.1
+      typescript:
+        specifier: ^5.5.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@25.6.0)
+
+  packages/node-agent:
+    dependencies:
+      '@gefi/federation':
+        specifier: workspace:*
+        version: link:../federation
+      '@gefi/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240620.0
+        version: 4.20260502.1
+      typescript:
+        specifier: ^5.5.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@25.6.0)
+
+  packages/onchain-federation:
+    dependencies:
+      '@gefi/marketplace':
+        specifier: workspace:*
+        version: link:../marketplace
+      '@gefi/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+      '@noble/curves':
+        specifier: ^1.9.7
+        version: 1.9.7
+      '@noble/hashes':
+        specifier: ^1.8.0
+        version: 1.8.0
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20240620.0
@@ -228,6 +307,12 @@ importers:
       '@gefi/billing':
         specifier: workspace:*
         version: link:../../packages/billing
+      '@gefi/feature-store':
+        specifier: workspace:*
+        version: link:../../packages/feature-store
+      '@gefi/federation':
+        specifier: workspace:*
+        version: link:../../packages/federation
       '@gefi/integrations':
         specifier: workspace:*
         version: link:../../packages/integrations
@@ -237,6 +322,12 @@ importers:
       '@gefi/model-gateway':
         specifier: workspace:*
         version: link:../../packages/model-gateway
+      '@gefi/node-agent':
+        specifier: workspace:*
+        version: link:../../packages/node-agent
+      '@gefi/onchain-federation':
+        specifier: workspace:*
+        version: link:../../packages/onchain-federation
       '@gefi/reference-models':
         specifier: workspace:*
         version: link:../../packages/reference-models

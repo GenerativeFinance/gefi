@@ -365,7 +365,72 @@ the pre-existing 189). `pnpm --filter @gefi/worker-api run build`
 (wrangler dry-run) succeeds with the new D1 / R2 bindings unchanged.
 
 What's NOT here yet:
-- Federated learning orchestrator → **Task #6**.
+- Persona dashboards on `app.gefi.io` → **Task #7**.
+
+## Task #6 — Federated learning infrastructure
+
+End-to-end federated-learning stack lives in `infrastructure/cloudflare/`
+(TS packages + worker handlers) and `infrastructure/contracts/` (Solidity).
+Production-shaped code with deterministic stubs because the sandbox
+cannot reach Base testnet, run Foundry, or stand up SGX/Nitro nodes.
+
+**Packages**
+- `@gefi/federation` — `FederationStore` (D1 CRUD over 4 tables), FedAvg
+  + FedProx weighted aggregation, Bonawitz pairwise-mask secure
+  aggregation (deterministic mulberry32 PRNG so masks cancel exactly),
+  DP-SGD Gaussian noise via seeded Box-Muller, TMC-Shapley contribution
+  scorer with truncation.
+- `@gefi/node-agent` — Apache-2.0 licensed open-source contract: SQL /
+  NoSQL / Kafka adapter interfaces with stubs, synthetic linear DP-SGD
+  trainer, `StubAttestation` / `SgxAttestation` / `NitroAttestation`,
+  Merkle hash-chain audit log over canonical JSON, in-process feature
+  server.
+- `@gefi/feature-store` — `FeatureDefinition` registry, KV-backed +
+  in-memory regional caches with TTL, jurisdiction-enforced
+  `lookupFeature(...)` writing a `feature_lookups` lineage row per call,
+  Stub + HTTP `FeatureNodeClient`.
+- `@gefi/onchain-federation` — Stub + Real Base clients for the four
+  Solidity contracts, sharing a single legacy-tx broadcaster
+  (`broadcastBaseTx`). `computeRewards(...)` splits a wei pool by
+  Shapley score with deterministic floor-rounding (remainder poured
+  into the largest allocation so Σ payouts == pool exactly).
+
+**Contracts (`infrastructure/contracts/`)**
+- `foundry.toml`, `README.md` (forge build/test instructions), and
+  `src/{Ownable,ModelRegistry,ContributionLedger,RewardDistributor,
+  KYCRegistry}.sol` + 4 `.t.sol` test suites + `script/Deploy.s.sol`.
+- Sandbox cannot run forge; operator runs in CI.
+
+**API + worker wiring**
+- `0003_init_federation.sql` adds 8 tables: `federation_rounds`,
+  `federation_participants`, `federation_updates`, `contribution_scores`,
+  `feature_definitions`, `feature_lookups`, `reward_distributions`,
+  `kyc_whitelist`.
+- `ApiEnv` extended with `BASE_RPC_URL`, `BASE_CHAIN_ID`,
+  `BASE_FEDERATION_*_ADDRESS`, `BASE_REWARD_PRIVATE_KEY`,
+  `FEDERATION_INTERNAL_TOKEN`, `FEATURE_STORE_REGION_PREFIX`.
+- `workers/api/src/handlers/federation/{rounds,features,rewards}.ts`:
+  10 routes — round CRUD (admin), node-signed `submit-update` (bearer
+  = `FEDERATION_INTERNAL_TOKEN`), aggregate + on-chain commit (admin),
+  feature lookup / definition, reward distribute (KYC-gated),
+  contributions read, KYC whitelist add. Vector payloads stored in R2
+  under `federation/rounds/<id>/updates/<participant>.f64`.
+
+**Tests / build**
+- 385 / 385 passing (was 320 + 65 new). Includes a 3-node consortium
+  integration test (`packages/federation/src/integration.test.ts`) that
+  runs FedAvg with Bonawitz masking, verifies masked aggregate equals
+  plaintext FedAvg to ~1e-9, scores TMC-Shapley, splits a 1 ETH pool,
+  and asserts `StubRewardDistributor` recorded the right calls.
+- `pnpm -r typecheck` green. `pnpm --filter @gefi/worker-api run build`
+  (wrangler dry-run) green.
+
+**Docs**
+- `infrastructure/cloudflare/FEDERATION-SETUP.md` — operator runbook
+  (env vars, migrations, deploy, round lifecycle, node-agent, feature
+  store, KYC, test surface, failure modes, sandbox limitations).
+
+What's NOT here yet:
 - Persona dashboards on `app.gefi.io` → **Task #7**.
 
 ## How to preview locally

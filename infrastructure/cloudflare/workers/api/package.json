@@ -13,9 +13,13 @@
   "dependencies": {
     "@gefi/auth": "workspace:*",
     "@gefi/billing": "workspace:*",
+    "@gefi/federation": "workspace:*",
+    "@gefi/feature-store": "workspace:*",
     "@gefi/integrations": "workspace:*",
     "@gefi/marketplace": "workspace:*",
     "@gefi/model-gateway": "workspace:*",
+    "@gefi/node-agent": "workspace:*",
+    "@gefi/onchain-federation": "workspace:*",
     "@gefi/reference-models": "workspace:*",
     "@gefi/search-index": "workspace:*",
     "@gefi/shared-headers": "workspace:*",

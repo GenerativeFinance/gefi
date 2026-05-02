@@ -1,5 +1,5 @@
 {
-  "name": "@gefi/marketplace",
+  "name": "@gefi/feature-store",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -7,8 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./registry": "./src/registry.ts",
-    "./anchor": "./src/anchor.ts",
-    "./chain-tx": "./src/chain-tx.ts",
+    "./lookup": "./src/lookup.ts",
+    "./cache": "./src/cache.ts",
     "./types": "./src/types.ts"
   },
   "scripts": {
@@ -16,9 +16,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@gefi/shared-types": "workspace:*",
-    "@noble/curves": "^1.9.7",
-    "@noble/hashes": "^1.8.0"
+    "@gefi/shared-types": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240620.0",
