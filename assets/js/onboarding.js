@@ -114,7 +114,15 @@
         showError(err, "Your session expired. Please sign in again.");
         return;
       }
-      fetch(apiBase() + "/v1/auth/onboard", {
+      // CRITICAL: include `?region=` so the edge routes the call to
+      // the correct regional sibling. The user has no GeFi claims yet
+      // (this is the call that creates them), so the edge would
+      // otherwise fall back to `cf.country` geolocation — which can
+      // pin a user who *selected* "EU" onto the US data plane simply
+      // because their IP is in the US. The query parameter takes
+      // precedence over both the JWT claim and `cf.country` (see
+      // `pickRegion` in `@gefi/shared-router`).
+      fetch(apiBase() + "/v1/auth/onboard?region=" + encodeURIComponent(s.jurisdiction), {
         method: "POST",
         headers: {
           Authorization: "Bearer " + t,
@@ -206,7 +214,12 @@
       showError(err, "Onboarding state missing. Please start again.");
       return;
     }
-    fetch(apiBase() + "/v1/kyc/start", {
+    // Include `?region=` as a belt-and-braces measure — by this step
+    // the refreshed JWT carries `jurisdiction`, but if the refresh
+    // raced or the JWT was minted by an older Action revision, the
+    // explicit override keeps routing aligned with the user's choice.
+    var kycRegionParam = s.jurisdiction ? "?region=" + encodeURIComponent(s.jurisdiction) : "";
+    fetch(apiBase() + "/v1/kyc/start" + kycRegionParam, {
       method: "POST",
       headers: { Authorization: "Bearer " + t, "Content-Type": "application/json", "X-Gefi-Onboarding-Flow": flowId() },
       body: "{}",

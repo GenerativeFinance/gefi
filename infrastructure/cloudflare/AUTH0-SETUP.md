@@ -219,6 +219,26 @@ wrangler secret put OPENSANCTIONS_API_KEY --env eu
 # Repeat for --env us, --env staging.
 ```
 
+### Onboarding region-routing contract
+
+The first call a fresh user makes is `POST /v1/auth/onboard`. By
+definition that user has no `jurisdiction` claim yet (their tenant
+doesn't exist), so the edge router cannot use the JWT to route. Two
+explicit overrides take precedence over `cf.country` geolocation:
+
+1. The `?region=eu` (or `us`) **query parameter** on the URL.
+2. The JWT's `jurisdiction` claim once `app_metadata.gefi` is
+   written.
+
+The Jekyll onboarding flow (`assets/js/onboarding.js`) sends
+`?region=` on every `/v1/auth/onboard` and `/v1/kyc/start` call so
+data-residency is governed by the user's deliberate selection
+*before* claims exist. A regional sibling that receives an
+`/v1/auth/onboard` whose body `jurisdiction` doesn't match its
+`WORKER_REGION` returns `400 wrong_region_for_onboarding`, so a
+crafted-URL attack can't slip a user past the data plane they
+chose.
+
 ### Webhook URLs to configure in each provider dashboard
 
 * Onfido: `https://api.gefi.io/v1/kyc/webhook/onfido` (HMAC-SHA256 of

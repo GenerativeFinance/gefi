@@ -278,6 +278,72 @@ describe("Onboarding (loose auth)", () => {
     expect(membershipsInsert?.bindings).toContain("us");
   });
 
+  it("public edge forwards /v1/auth/onboard to the region from ?region= even when cf.country disagrees", async () => {
+    // Why: a freshly-signed-up user has NO `jurisdiction` claim yet
+    // (their tenant doesn't exist), so the edge cannot route from
+    // the JWT. If we relied on `cf.country` we'd land an EU-selecting
+    // user on the US data plane simply because their IP geolocates
+    // to the US — a data-residency breach. The `?region=` query
+    // param is the explicit signal the onboarding form sends, and
+    // `pickRegion` in `@gefi/shared-router` lets the override beat
+    // both the JWT claim and `cf.country`.
+    const captured: Array<{ url: string; edgeJwt: string | null }> = [];
+    const euBinding: Fetcher = {
+      fetch: async (req: Request) => {
+        captured.push({ url: req.url, edgeJwt: req.headers.get("X-Gefi-Edge-JWT") });
+        return new Response(JSON.stringify({ ok: true, forwarded: "eu" }), {
+          status: 201,
+          headers: { "content-type": "application/json" },
+        });
+      },
+    } as unknown as Fetcher;
+    const usBinding: Fetcher = {
+      fetch: async () => {
+        throw new Error("US binding must NOT be called when ?region=eu wins over cf.country");
+      },
+    } as unknown as Fetcher;
+
+    // Edge worker: API_PUBLIC_URL is the un-prefixed host so
+    // `isRegionalSibling` returns false and forwarding is enabled.
+    const edgeEnv: ApiEnv = {
+      ENVIRONMENT: "prod",
+      WORKER_REGION: "us",
+      API_PUBLIC_URL: "https://api.gefi.io",
+      SITE_PUBLIC_URL: "https://gefi.io",
+      AUTH0_DOMAIN,
+      AUTH0_AUDIENCE: AUDIENCE,
+      INTERNAL_SIGNING_KEY: EDGE_SECRET,
+      DB: scriptedD1().db,
+      ARTIFACTS: { head: async () => null } as unknown as R2Bucket,
+      CACHE: memKv({ [jwksCacheKey(AUTH0_DOMAIN)]: JSON.stringify({ keys: [publicJwk] }) }),
+      VECTORS: { describe: async () => ({}) } as unknown as VectorizeIndex,
+      COMPLIANCE: { fetch: async () => new Response("ok", { status: 200 }) } as unknown as Fetcher,
+      REGIONAL_EU: euBinding,
+      REGIONAL_US: usBinding,
+    } as ApiEnv;
+
+    // No GeFi claims yet — this is a fresh signup.
+    const userToken = await signUserToken({ sub: "auth0|fresh", email: "eu-user@example.com" });
+    // Cf.country is `US` (geolocation says US) but the user picked
+    // EU on the form, so the request URL carries `?region=eu`.
+    const req = new Request("https://api.gefi.io/v1/auth/onboard?region=eu", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${userToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ jurisdiction: "eu", entity_type: "retail", display_name: "Berlin Co" }),
+    });
+    Object.defineProperty(req, "cf", { value: { country: "US" } });
+
+    const res = await worker.fetch(req, edgeEnv, ctx);
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { ok: boolean; forwarded: string };
+    expect(body.forwarded).toBe("eu");
+    // Forwarded exactly once — to EU, never to US.
+    expect(captured).toHaveLength(1);
+    expect(captured[0]?.edgeJwt).toBeTruthy();
+    // The X-Gefi-Region response header is set by the edge.
+    expect(res.headers.get("X-Gefi-Region")).toBe("eu");
+  });
+
   it("rejects an onboard whose jurisdiction != WORKER_REGION on a regional sibling", async () => {
     const env = regionalEnv({ region: "us" });
     const edge = await signInternalJwt("us", EDGE_SECRET);
