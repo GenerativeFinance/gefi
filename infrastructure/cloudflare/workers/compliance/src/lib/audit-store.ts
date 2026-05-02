@@ -48,9 +48,10 @@ export interface AuditInsert {
 }
 
 /**
- * Insert an audit event. Returns false on the UNIQUE(event_hash) collision
- * (= duplicate fire of the same event), true on a fresh insert. Any other
- * D1 error throws.
+ * Insert an audit event. Returns false ONLY on a UNIQUE(event_hash) collision
+ * (= duplicate fire of the same event).  A UNIQUE(region, chain_index)
+ * collision is a real concurrency bug — we re-throw it so the caller can
+ * surface it and the chain is NOT silently corrupted.
  */
 export async function insertAuditEvent(db: D1Database, evt: AuditInsert): Promise<boolean> {
   try {
@@ -77,13 +78,23 @@ export async function insertAuditEvent(db: D1Database, evt: AuditInsert): Promis
     return true;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("UNIQUE") || msg.includes("constraint")) return false;
+    // UNIQUE(event_hash): safe duplicate — same event fired twice.
+    if (msg.includes("audit_events.event_hash")) return false;
+    // UNIQUE(region, chain_index): chain-index collision → concurrent writes.
+    // Re-throw so the handler returns 502 and the caller retries.
+    if (msg.includes("idx_audit_region_index") || msg.includes("audit_events.chain_index")) throw err;
+    // Any other UNIQUE/constraint error also propagates.
+    if (msg.includes("UNIQUE") || msg.includes("constraint")) throw err;
     throw err;
   }
 }
 
-/** Read every audit row for `region` ordered by chain index ASC. */
-export async function listAuditEvents(db: D1Database, region: Region): Promise<{
+/** Read audit rows for `region` ordered by chain index ASC, optionally bounded by chain_index range. */
+export async function listAuditEvents(
+  db: D1Database,
+  region: Region,
+  opts?: { minIndex?: number; maxIndex?: number },
+): Promise<{
   id: string;
   eventHash: string;
   prevHash: string;
@@ -91,14 +102,18 @@ export async function listAuditEvents(db: D1Database, region: Region): Promise<{
   region: Region;
   createdAt: number;
 }[]> {
+  const min = opts?.minIndex ?? 0;
+  const max = opts?.maxIndex ?? Number.MAX_SAFE_INTEGER;
   const res = await db
     .prepare(
       `SELECT id, event_hash AS eventHash, prev_hash AS prevHash, chain_index AS chainIndex, region, created_at AS createdAt
          FROM audit_events
         WHERE region = ?
+          AND chain_index >= ?
+          AND chain_index <= ?
         ORDER BY chain_index ASC`,
     )
-    .bind(region)
+    .bind(region, min, max)
     .all<{
       id: string;
       eventHash: string;
@@ -108,6 +123,18 @@ export async function listAuditEvents(db: D1Database, region: Region): Promise<{
       createdAt: number;
     }>();
   return res.results;
+}
+
+/**
+ * Fetch the chain_index for a given event_id so the proof handler can resolve
+ * which anchor batch covers it.
+ */
+export async function fetchEventChainIndex(db: D1Database, eventId: string): Promise<number | null> {
+  const row = await db
+    .prepare(`SELECT chain_index AS chainIndex FROM audit_events WHERE id = ?`)
+    .bind(eventId)
+    .first<{ chainIndex: number }>();
+  return row?.chainIndex ?? null;
 }
 
 /**
@@ -177,9 +204,6 @@ export async function seedAuditorDirectory(db: D1Database): Promise<{ inserted: 
   let skipped = 0;
   const now = Math.floor(Date.now() / 1000);
   for (const a of AUDITOR_SEED) {
-    // The schema only stores `sla_ack_hours` for auditors (the
-    // counter-sign window doubles as the auditor's ack SLA). Convert
-    // `slaSignDays * 24` so the on-disk units match the lawyer table.
     const res = await db
       .prepare(
         `INSERT OR IGNORE INTO auditor_directory
@@ -233,6 +257,46 @@ export async function seedLawyerDirectory(db: D1Database): Promise<{ inserted: n
         l.slaAckHours,
         now,
       )
+      .run();
+    const changes = (res.meta as { changes?: number } | undefined)?.changes ?? 0;
+    if (changes > 0) inserted += 1;
+    else skipped += 1;
+  }
+  return { inserted, skipped };
+}
+
+/**
+ * Populate `tenant_assignments` for a newly-onboarded tenant.
+ * Called from the `tenant_onboarded` event handler. Uses INSERT OR IGNORE so
+ * re-onboarding is idempotent — existing manual overrides are never clobbered.
+ *
+ * For each (jurisdiction, role) pair in the lawyer seed we write a default
+ * assignment row so `resolveAssignee` can return a real lawyer without a
+ * round-trip to the seed array.
+ */
+export async function seedTenantAssignments(
+  db: D1Database,
+  tenantId: string,
+  region: Region,
+): Promise<{ inserted: number; skipped: number }> {
+  let inserted = 0;
+  let skipped = 0;
+  const now = Math.floor(Date.now() / 1000);
+  // Pick one lawyer per (jurisdiction, role) whose region matches the tenant.
+  const regionLawyers = LAWYER_SEED.filter((l) => l.region === region);
+  // Deduplicate: one assignment per (jurisdiction, role).
+  const seen = new Set<string>();
+  for (const l of regionLawyers) {
+    const key = `${l.jurisdiction}:${l.role}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const res = await db
+      .prepare(
+        `INSERT OR IGNORE INTO tenant_assignments
+          (tenant_id, jurisdiction, role, lawyer_id, assigned_at)
+         VALUES (?, ?, ?, ?, ?)`,
+      )
+      .bind(tenantId, l.jurisdiction, l.role, l.id, now)
       .run();
     const changes = (res.meta as { changes?: number } | undefined)?.changes ?? 0;
     if (changes > 0) inserted += 1;

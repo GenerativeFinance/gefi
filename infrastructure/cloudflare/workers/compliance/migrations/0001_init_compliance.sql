@@ -16,7 +16,10 @@
 -- row breaks the chain and is detectable by re-walking from row N+1.
 --
 -- `chain_index` is a strictly-monotonic per-region integer so a regulator
--- can spot gaps without scanning the whole table.
+-- can spot gaps without scanning the whole table. The UNIQUE index on
+-- (region, chain_index) is the guard against concurrent append races —
+-- a second writer that computed the same index will get a constraint error,
+-- not silently overwrite the chain.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS audit_events (
   id              TEXT PRIMARY KEY,
@@ -29,44 +32,58 @@ CREATE TABLE IF NOT EXISTS audit_events (
   prev_hash       TEXT NOT NULL,                -- hex(sha-256), 64 chars; '0'*64 for genesis
   event_hash      TEXT NOT NULL UNIQUE,         -- hex(sha-256), 64 chars
   chain_index     INTEGER NOT NULL,
-  created_at      INTEGER NOT NULL
+  created_at      INTEGER NOT NULL              -- UNIX seconds UTC
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_audit_region_index ON audit_events(region, chain_index);
 CREATE INDEX IF NOT EXISTS idx_audit_tenant ON audit_events(tenant_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_audit_kind ON audit_events(kind, region, created_at);
+-- Day-bucket index allows O(1) scoping of daily anchoring queries.
+CREATE INDEX IF NOT EXISTS idx_audit_region_day ON audit_events(region, created_at);
 
 -- ----------------------------------------------------------------------------
 -- audit_anchors: daily Merkle root + on-chain anchor reference.
 --
--- A scheduled (or manually-invoked) job groups every audit event from a
--- given (region, day) into a Merkle tree, writes the root here, and posts
--- it to Polygon. `polygon_tx_hash` is NULL until the on-chain transaction
--- confirms; an external auditor can verify the chain by fetching the tx
--- and comparing `merkle_root`.
+-- One anchor row per (region, day_bucket). `day_bucket` is the UTC date
+-- string "YYYY-MM-DD" that partitions events into daily batches. The
+-- anchor covers only the events whose `created_at` falls within that UTC day.
+--
+-- An external auditor verifies a leaf by:
+--   1. GET /audit/proof/:event_id → leaf hash, sibling path, Merkle root,
+--      anchor.polygonTxHash.
+--   2. Recompute the root from leaf + path.
+--   3. Fetch the Polygon TX at polygonTxHash and confirm `data` commits the
+--      same root.
+--
+-- `polygon_tx_hash` is NULL until the off-Worker relay confirms the TX.
+-- The relay updates (polygon_tx_hash, polygon_block, status, anchored_at)
+-- once the TX is included in a finalized block.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS audit_anchors (
   id                  TEXT PRIMARY KEY,
   region              TEXT NOT NULL CHECK (region IN ('eu','us')),
-  -- Inclusive event-id range covered by this anchor.
+  day_bucket          TEXT NOT NULL,            -- "YYYY-MM-DD" UTC
+  -- Inclusive event-id range covered by this anchor (ordered by chain_index).
   first_event_id      TEXT NOT NULL,
   last_event_id       TEXT NOT NULL,
   event_count         INTEGER NOT NULL,
   merkle_root         TEXT NOT NULL,            -- hex(sha-256)
-  polygon_tx_hash     TEXT,                     -- NULL until confirmed
+  polygon_tx_hash     TEXT,                     -- NULL until relay confirms
   polygon_block       INTEGER,
   status              TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','anchored','failed')),
   created_at          INTEGER NOT NULL,
   anchored_at         INTEGER
 );
-CREATE INDEX IF NOT EXISTS idx_anchors_region_status ON audit_anchors(region, status, created_at);
+-- One anchor per (region, day, root) — prevents duplicate inserts.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_anchors_region_day_root ON audit_anchors(region, day_bucket, merkle_root);
+CREATE INDEX IF NOT EXISTS idx_anchors_region_day ON audit_anchors(region, day_bucket, created_at);
+CREATE INDEX IF NOT EXISTS idx_anchors_status ON audit_anchors(status, created_at);
 
 -- ----------------------------------------------------------------------------
 -- lawyer_directory + auditor_directory: vetted local counsel per jurisdiction.
 --
 -- Seeded by `POST /admin/seed-directory`. Email is the routing target; the
--- PGP fingerprint is used by the mailer to encrypt outbound notifications
--- (real PGP in prod, stub fingerprint in dev). `sla_ack_hours` is the
--- contractual response SLA we expect from this counsel.
+-- PGP fingerprint is used by the mailer to encrypt outbound notifications.
+-- `sla_ack_hours` is the contractual response SLA for this counsel.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS lawyer_directory (
   id                TEXT PRIMARY KEY,
@@ -98,8 +115,12 @@ CREATE TABLE IF NOT EXISTS auditor_directory (
 CREATE INDEX IF NOT EXISTS idx_auditor_juris ON auditor_directory(jurisdiction, active);
 
 -- ----------------------------------------------------------------------------
--- tenant_assignments: per-tenant default lawyer per jurisdiction. Created on
--- onboarding (Task #3 emits `tenant_onboarded` → engine populates this).
+-- tenant_assignments: per-tenant default lawyer per (jurisdiction, role).
+--
+-- Populated on `tenant_onboarded` by `seedTenantAssignments()` so every new
+-- tenant is immediately routable without a manual setup step. Operators can
+-- override individual rows via direct D1 edits or a future admin API.
+-- INSERT OR IGNORE semantics mean re-onboarding never clobbers overrides.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tenant_assignments (
   tenant_id     TEXT NOT NULL,

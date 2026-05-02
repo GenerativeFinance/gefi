@@ -64,6 +64,7 @@ interface CaseActionRow {
 interface AnchorRow {
   id: string;
   region: Region;
+  day_bucket: string;
   first_event_id: string;
   last_event_id: string;
   event_count: number;
@@ -183,38 +184,44 @@ function runQueryFirst(db: FakeDb, sql: string, args: unknown[]): unknown {
     const r = filtered[0];
     return r ? { eventHash: r.event_hash, chainIndex: r.chain_index } : null;
   }
-  // SELECT audit row by id
-  if (sql.startsWith("SELECT id, region, event_hash AS eventHash, chain_index AS chainIndex FROM audit_events WHERE id =")) {
+  // SELECT audit row by id (proof handler now also fetches created_at)
+  if (sql.startsWith("SELECT id, region, event_hash AS eventHash, chain_index AS chainIndex")) {
     const id = args[0] as string;
     const r = db.audit.find((x) => x.id === id);
-    return r ? { id: r.id, region: r.region, eventHash: r.event_hash, chainIndex: r.chain_index } : null;
+    return r ? { id: r.id, region: r.region, eventHash: r.event_hash, chainIndex: r.chain_index, createdAt: r.created_at } : null;
   }
   // SELECT health probe
   if (sql === "SELECT 1") {
     return { 1: 1 };
   }
-  // SELECT existing anchor
+  // SELECT existing anchor (idempotency check in /admin/anchor)
   if (sql.startsWith("SELECT id, polygon_tx_hash AS polygonTxHash, status FROM audit_anchors")) {
     const region = args[0] as Region;
-    const root = args[1] as string;
-    const r = db.anchors.find((a) => a.region === region && a.merkle_root === root);
+    const day = args[1] as string;
+    const root = args[2] as string;
+    const r = db.anchors.find((a) => a.region === region && a.day_bucket === day && a.merkle_root === root);
     return r ? { id: r.id, polygonTxHash: r.polygon_tx_hash, status: r.status } : null;
   }
-  // SELECT anchor for proof endpoint
-  if (sql.startsWith("SELECT id, region, polygon_tx_hash AS polygonTxHash, polygon_block AS polygonBlock,")) {
+  // SELECT anchor for proof endpoint (by region + day_bucket)
+  if (sql.startsWith("SELECT id, region, day_bucket AS dayBucket,")) {
     const region = args[0] as Region;
-    const root = args[1] as string;
-    const r = db.anchors.find((a) => a.region === region && a.merkle_root === root);
+    const day = args[1] as string;
+    const r = db.anchors
+      .filter((a) => a.region === region && a.day_bucket === day)
+      .sort((a, b) => b.created_at - a.created_at)[0];
     return r
       ? {
           id: r.id,
           region: r.region,
+          dayBucket: r.day_bucket,
+          firstEventId: r.first_event_id,
+          lastEventId: r.last_event_id,
+          eventCount: r.event_count,
+          merkleRoot: r.merkle_root,
           polygonTxHash: r.polygon_tx_hash,
           polygonBlock: r.polygon_block,
           status: r.status,
           anchoredAt: r.anchored_at,
-          firstEventId: r.first_event_id,
-          lastEventId: r.last_event_id,
         }
       : null;
   }
@@ -288,11 +295,13 @@ function runQueryFirst(db: FakeDb, sql: string, args: unknown[]): unknown {
 }
 
 function runQueryAll(db: FakeDb, sql: string, args: unknown[]): unknown[] {
-  // List audit events for a region
+  // List audit events for a region (optionally bounded by chain_index range via created_at range is done post-filter)
   if (sql.startsWith("SELECT id, event_hash AS eventHash, prev_hash AS prevHash, chain_index AS chainIndex, region, created_at AS createdAt FROM audit_events")) {
     const region = args[0] as Region;
+    const minIdx = (args[1] as number | undefined) ?? 0;
+    const maxIdx = (args[2] as number | undefined) ?? Number.MAX_SAFE_INTEGER;
     return db.audit
-      .filter((r) => r.region === region)
+      .filter((r) => r.region === region && r.chain_index >= minIdx && r.chain_index <= maxIdx)
       .sort((a, b) => a.chain_index - b.chain_index)
       .map((r) => ({
         id: r.id,
@@ -368,11 +377,20 @@ function runQueryRun(db: FakeDb, sql: string, args: unknown[]): { changes: numbe
     db.caseActions.push({ id, case_id, kind, status, payload_json, result_json, created_at, completed_at });
     return { changes: 1 };
   }
-  // INSERT audit_anchors
+  // INSERT audit_anchors (now includes day_bucket)
   if (sql.startsWith("INSERT INTO audit_anchors")) {
-    const [id, region, first_event_id, last_event_id, event_count, merkle_root, polygon_tx_hash, polygon_block, status, created_at, anchored_at] =
-      args as [string, Region, string, string, number, string, string | null, number | null, string, number, number | null];
-    db.anchors.push({ id, region, first_event_id, last_event_id, event_count, merkle_root, polygon_tx_hash, polygon_block, status, created_at, anchored_at });
+    const [id, region, day_bucket, first_event_id, last_event_id, event_count, merkle_root, polygon_tx_hash, polygon_block, status, created_at, anchored_at] =
+      args as [string, Region, string, string, string, number, string, string | null, number | null, string, number, number | null];
+    db.anchors.push({ id, region, day_bucket, first_event_id, last_event_id, event_count, merkle_root, polygon_tx_hash, polygon_block, status, created_at, anchored_at });
+    return { changes: 1 };
+  }
+  // INSERT OR IGNORE tenant_assignments
+  if (sql.startsWith("INSERT OR IGNORE INTO tenant_assignments")) {
+    const [tenant_id, jurisdiction, role, lawyer_id] = args as [string, string, string, string];
+    if (db.assignments.some((a) => a.tenant_id === tenant_id && a.jurisdiction === jurisdiction && a.role === role)) {
+      return { changes: 0 };
+    }
+    db.assignments.push({ tenant_id, jurisdiction, role, lawyer_id });
     return { changes: 1 };
   }
   // INSERT OR IGNORE lawyer_directory
@@ -571,6 +589,7 @@ describe("gefi-compliance worker", () => {
   });
 
   it("appends a Merkle anchor row from /admin/anchor", async () => {
+    const day = "2023-11-14"; // UTC date for ts 1_700_000_000
     // One event then anchor.
     await worker.fetch(
       new Request("https://compliance/events", {
@@ -584,15 +603,16 @@ describe("gefi-compliance worker", () => {
     const res = await worker.fetch(
       new Request("https://compliance/admin/anchor", {
         method: "POST",
-        headers: { "content-type": "application/json", "content-length": "16" },
-        body: JSON.stringify({ region: "us" }),
+        headers: { "content-type": "application/json", "content-length": "40" },
+        body: JSON.stringify({ region: "us", day }),
       }),
       env,
       ctx,
     );
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { ok: boolean; merkleRoot: string; eventCount: number };
+    const body = (await res.json()) as { ok: boolean; merkleRoot: string; eventCount: number; day: string };
     expect(body.ok).toBe(true);
+    expect(body.day).toBe(day);
     expect(body.merkleRoot).toMatch(/^[a-f0-9]{64}$/);
     expect(body.eventCount).toBe(1);
     expect(db.anchors).toHaveLength(1);
@@ -600,6 +620,7 @@ describe("gefi-compliance worker", () => {
   });
 
   it("/admin/anchor is idempotent on the same root", async () => {
+    const day = "2023-11-14"; // UTC date for ts 1_700_000_000
     await worker.fetch(
       new Request("https://compliance/events", {
         method: "POST",
@@ -609,14 +630,23 @@ describe("gefi-compliance worker", () => {
       env,
       ctx,
     );
+    const anchorBody = JSON.stringify({ region: "us", day });
     const first = await worker.fetch(
-      new Request("https://compliance/admin/anchor", { method: "POST", headers: { "content-length": "0" } }),
+      new Request("https://compliance/admin/anchor", {
+        method: "POST",
+        headers: { "content-type": "application/json", "content-length": String(anchorBody.length) },
+        body: anchorBody,
+      }),
       env,
       ctx,
     );
     const firstBody = (await first.json()) as { merkleRoot: string };
     const second = await worker.fetch(
-      new Request("https://compliance/admin/anchor", { method: "POST", headers: { "content-length": "0" } }),
+      new Request("https://compliance/admin/anchor", {
+        method: "POST",
+        headers: { "content-type": "application/json", "content-length": String(anchorBody.length) },
+        body: anchorBody,
+      }),
       env,
       ctx,
     );
@@ -695,6 +725,33 @@ describe("gefi-compliance worker", () => {
     expect(body.source).toBe("synthetic");
     expect(body.attestation.region).toBe("us");
     expect(body.attestation.regulators).toContain("sec");
+  });
+
+  it("tenant_onboarded seeds tenant_assignments", async () => {
+    // First seed the lawyer directory so assignments can reference real lawyer ids.
+    await worker.fetch(
+      new Request("https://compliance/admin/seed-directory", { method: "POST" }),
+      env,
+      ctx,
+    );
+    const res = await worker.fetch(
+      new Request("https://compliance/events", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          kind: "tenant_onboarded",
+          tenantId: "t-onboard-1",
+          region: "us",
+          ts: 1_700_000_000,
+        }),
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    // Assignments should have been created for the new tenant.
+    const tenantAssignments = db.assignments.filter((a) => a.tenant_id === "t-onboard-1");
+    expect(tenantAssignments.length).toBeGreaterThan(0);
   });
 
   it("seeds the lawyer + auditor directories idempotently", async () => {

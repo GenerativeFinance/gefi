@@ -10,6 +10,11 @@
  * Routing is best-effort and idempotent: a double-fire of the same event
  * id is detected via the `audit_events` UNIQUE(event_hash) constraint and
  * we return 200 with `duplicate: true` so callers can safely retry.
+ *
+ * Special handling for `tenant_onboarded`:
+ *   After the audit row is written, `seedTenantAssignments` populates
+ *   `tenant_assignments` so the new tenant's cases are immediately routable
+ *   without a manual setup step.
  */
 
 import {
@@ -22,7 +27,7 @@ import {
 } from "@gefi/compliance-engine";
 import type { ComplianceEvent, Jurisdiction, ReviewerRole } from "@gefi/compliance-rules";
 import type { ComplianceEventKind, ComplianceSeverity, Region } from "@gefi/shared-types";
-import { d1RoutingDb, fetchPrevChainState, insertAuditEvent } from "../lib/audit-store.js";
+import { d1RoutingDb, fetchPrevChainState, insertAuditEvent, seedTenantAssignments } from "../lib/audit-store.js";
 import type { Handler } from "../router.js";
 
 interface IncomingEvent {
@@ -109,7 +114,18 @@ export const eventsHandler: Handler = async ({ env, request }) => {
     });
   }
 
-  // 3) Route triggered cases. Errors here are non-fatal — they are
+  // 3) For `tenant_onboarded` — seed default tenant assignments so the
+  //    new tenant is immediately routable. Errors here are non-fatal;
+  //    the audit row is already committed.
+  if (event.kind === "tenant_onboarded") {
+    try {
+      await seedTenantAssignments(env.DB, event.tenantId, event.region);
+    } catch (err) {
+      console.error("[gefi-compliance] seedTenantAssignments failed", err);
+    }
+  }
+
+  // 4) Route triggered cases. Errors here are non-fatal — they are
   //    surfaced in the response so the caller can retry the routing
   //    layer without re-appending the audit row.
   const mailer = resolveMailer(env);
@@ -125,7 +141,7 @@ export const eventsHandler: Handler = async ({ env, request }) => {
     { db: d1RoutingDb(env.DB), mailer, docusign },
   );
 
-  // 4) Hand each opened case to its Durable Object so the SLA timer is
+  // 5) Hand each opened case to its Durable Object so the SLA timer is
   //    armed via DO `alarm()`. The DO is the source of truth for the
   //    actively-ticking timer; the D1 row is the dashboard mirror.
   for (let i = 0; i < routing.caseIds.length; i++) {
