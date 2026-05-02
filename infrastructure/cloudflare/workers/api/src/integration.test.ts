@@ -632,6 +632,101 @@ describe("Marketplace + billing endpoints", () => {
     expect(billingInsert).toBeTruthy();
   });
 
+  it("POST /v1/billing/webhook handles checkout.session.completed (status='complete', subscription on .subscription)", async () => {
+    // Regression: the previous handler treated checkout.session.completed
+    // identically to customer.subscription.* — it wrote `obj.id` into
+    // stripe_subscription_id (a `cs_...` id, not `sub_...`) and
+    // `obj.status` into subscriptions.status (`'complete'` is NOT in
+    // the CHECK constraint, so the UPDATE would fail with a 500).
+    const { signStripePayload } = await import("@gefi/billing");
+    const secret = "whsec_cs";
+    const eventBody = JSON.stringify({
+      id: "evt_cs_1",
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          id: "cs_session_xyz",                  // ← session id, NOT sub id
+          object: "checkout.session",
+          status: "complete",                    // ← invalid for our CHECK
+          subscription: "sub_real_xyz",          // ← the actual sub id
+          customer: "cus_xyz",
+          metadata: { tenant_id: "tenant-cs" },
+        },
+      },
+    });
+    const ts = Math.floor(Date.now() / 1000);
+    const sig = await signStripePayload(eventBody, secret, ts);
+    const fake = scriptedD1();
+    const env = regionalEnv({ region: "us", db: fake.db });
+    (env as { STRIPE_WEBHOOK_SECRET?: string }).STRIPE_WEBHOOK_SECRET = secret;
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/webhook", {
+        method: "POST",
+        headers: { "X-Gefi-Edge-JWT": edge, "Content-Type": "application/json", "Stripe-Signature": sig },
+        body: eventBody,
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    // The UPDATE must bind a status from the CHECK-constraint set and
+    // the actual subscription id from `obj.subscription`.
+    const subUpdate = fake.calls.find((c) =>
+      /^UPDATE subscriptions SET status = 'active'/.test(c.sql) ||
+      (/^UPDATE subscriptions SET status = \?/.test(c.sql) && c.bindings[0] === "active"),
+    );
+    expect(subUpdate).toBeTruthy();
+    // Find the bound stripe_subscription_id value — must be sub_..., never cs_...
+    const allSubUpdates = fake.calls.filter((c) => /^UPDATE subscriptions/.test(c.sql));
+    const wroteSessionIdAsSubId = allSubUpdates.some((c) =>
+      c.bindings.some((b) => typeof b === "string" && b.startsWith("cs_")),
+    );
+    expect(wroteSessionIdAsSubId).toBe(false);
+    const wroteRealSubId = allSubUpdates.some((c) =>
+      c.bindings.some((b) => b === "sub_real_xyz"),
+    );
+    expect(wroteRealSubId).toBe(true);
+  });
+
+  it("POST /v1/billing/webhook coerces non-canonical subscription statuses", async () => {
+    // Stripe sends `incomplete_expired` and `unpaid` which our CHECK
+    // constraint forbids; the handler must coerce to allowed values.
+    const { signStripePayload } = await import("@gefi/billing");
+    const secret = "whsec_coerce";
+    const eventBody = JSON.stringify({
+      id: "evt_coerce_1",
+      type: "customer.subscription.updated",
+      data: {
+        object: {
+          id: "sub_coerce",
+          object: "subscription",
+          status: "incomplete_expired",
+          metadata: { tenant_id: "tenant-coerce" },
+        },
+      },
+    });
+    const ts = Math.floor(Date.now() / 1000);
+    const sig = await signStripePayload(eventBody, secret, ts);
+    const fake = scriptedD1();
+    const env = regionalEnv({ region: "us", db: fake.db });
+    (env as { STRIPE_WEBHOOK_SECRET?: string }).STRIPE_WEBHOOK_SECRET = secret;
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/webhook", {
+        method: "POST",
+        headers: { "X-Gefi-Edge-JWT": edge, "Content-Type": "application/json", "Stripe-Signature": sig },
+        body: eventBody,
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    const subUpdate = fake.calls.find((c) => /^UPDATE subscriptions SET status = \?/.test(c.sql));
+    expect(subUpdate).toBeTruthy();
+    expect(subUpdate!.bindings[0]).toBe("incomplete");
+  });
+
   it("POST /v1/billing/webhook is idempotent across duplicate deliveries", async () => {
     const { signStripePayload } = await import("@gefi/billing");
     const secret = "whsec_dup";

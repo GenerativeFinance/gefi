@@ -215,6 +215,37 @@ describe("@gefi/model-gateway run + replay", () => {
     expect(combined).toContain("data: ");
     expect(combined).toContain("event: done");
   });
+  it("replay round-trips when the original request used max_tokens (snake_case storage)", async () => {
+    // Regression: input_json is stored in canonical snake_case
+    // (max_tokens / temperature) but InferenceRequest uses camelCase
+    // (maxTokens / temperature). Without normalization in replayRun,
+    // the recomputed canonical hash diverged whenever the request
+    // included max_tokens — so the audit signal `inputShaMatches`
+    // could falsely report a mismatch on a perfectly correct replay.
+    const { db } = memRunsDb();
+    const result = await runModel(
+      { db },
+      [new DeterministicProvider()],
+      {
+        modelId: "mdl-mt",
+        versionId: "ver-mt",
+        tenantId: "t-mt",
+        userId: null,
+        jurisdiction: "us",
+        request: {
+          prompt: "Summarise filings",
+          region: "us",
+          maxTokens: 256,
+          temperature: 0.2,
+          context: [{ id: "doc-7", text: "Q3 revenue $1.2B" }],
+        },
+      },
+    );
+    const replay = await replayRun({ db }, result.runId);
+    expect(replay.inputShaMatches).toBe(true);
+    expect(replay.outputShaMatches).toBe(true);
+  });
+
   it("falls through to deterministic when first provider throws", async () => {
     const { db } = memRunsDb();
     const throwing = {

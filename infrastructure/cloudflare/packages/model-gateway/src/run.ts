@@ -157,6 +157,34 @@ export interface ReplayResult {
 }
 
 /**
+ * Convert a stored canonical-JSON record (snake_case fields, see
+ * `canonicaliseRequest`) back into a typed `InferenceRequest`
+ * (camelCase). The stored shape uses `max_tokens`/`temperature` while
+ * the type uses `maxTokens`/`temperature`; without this conversion the
+ * deterministic provider sees `undefined` for those fields and the
+ * recomputed canonical hash diverges from the stored `input_sha`.
+ */
+function storedRecordToRequest(j: Record<string, unknown>): InferenceRequest {
+  const ctxRaw = j.context;
+  const context = Array.isArray(ctxRaw)
+    ? ctxRaw.map((c) => {
+        const cc = c as Record<string, unknown>;
+        return { id: String(cc.id ?? ""), text: String(cc.text ?? "") };
+      })
+    : undefined;
+  return {
+    prompt: String(j.prompt ?? ""),
+    system: typeof j.system === "string" && j.system ? j.system : undefined,
+    maxTokens:
+      j.max_tokens === null || j.max_tokens === undefined ? undefined : Number(j.max_tokens),
+    temperature:
+      j.temperature === null || j.temperature === undefined ? undefined : Number(j.temperature),
+    region: j.region as Region,
+    context,
+  };
+}
+
+/**
  * Replay a run from its stored input. The replay always runs through the
  * deterministic provider — that way the regulator gets the same answer
  * every time, regardless of whether the original used a non-deterministic
@@ -169,12 +197,19 @@ export async function replayRun(deps: RunDeps, runId: string): Promise<ReplayRes
     .bind(runId)
     .first<Record<string, unknown>>();
   if (!row) throw new Error("replay_run_not_found");
-  const input = JSON.parse(String(row.input_json)) as ReturnType<typeof JSON.parse>;
+  const stored = JSON.parse(String(row.input_json)) as Record<string, unknown>;
+  const req = storedRecordToRequest(stored);
   const originalOutput = (JSON.parse(String(row.output_json)) as { text: string }).text;
   const det = new DeterministicProvider();
-  const replayResp = await det.generate(input as unknown as InferenceRequest);
+  const replayResp = await det.generate(req);
   const replayedSha = await sha256Hex(replayResp.text);
-  const recomputedInputSha = await sha256Hex(canonicaliseRequest(input as unknown as InferenceRequest));
+  // Recompute canonical input sha from the typed request. Equivalently
+  // we could `sha256Hex(String(row.input_json))` since input_json IS
+  // the canonical text, but recomputing through `canonicaliseRequest`
+  // also catches drift in the canonicalisation function itself — if a
+  // future refactor changes the canonical form, audits will surface
+  // the mismatch instead of silently re-blessing the new shape.
+  const recomputedInputSha = await sha256Hex(canonicaliseRequest(req));
   return {
     runId,
     originalProvider: String(row.provider),

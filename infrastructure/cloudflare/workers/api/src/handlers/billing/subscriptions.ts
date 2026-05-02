@@ -247,11 +247,48 @@ export const stripeWebhookHandler: Handler = async (rc) => {
     .run();
 
   switch (event.type) {
-    case "checkout.session.completed":
+    case "checkout.session.completed": {
+      // A Checkout Session is NOT a Subscription. `obj.id` is `cs_...`
+      // (the session id), not the subscription id — the actual sub id
+      // lives on `obj.subscription`. `obj.status` is one of
+      // `open|complete|expired`, none of which are valid for our
+      // `subscriptions.status` CHECK constraint
+      // (`trialing|active|past_due|canceled|incomplete`).
+      // We therefore: (a) read `obj.subscription` for the sub id,
+      // (b) map "complete" → "active", and (c) read trial fields from
+      // the session if Stripe forwarded them.
+      const stripeSubId = (obj.subscription as string | undefined) ?? null;
+      if (tenantId && stripeSubId) {
+        await rc.env.DB.prepare(
+          `UPDATE subscriptions SET status = 'active', stripe_subscription_id = ?, updated_at = ?
+           WHERE tenant_id = ? AND id = (SELECT id FROM subscriptions WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 1)`,
+        )
+          .bind(stripeSubId, now, tenantId, tenantId)
+          .run();
+      }
+      break;
+    }
     case "customer.subscription.created":
     case "customer.subscription.updated": {
+      // For `customer.subscription.*`, obj.id IS the subscription id
+      // and obj.status is one of the standard Stripe subscription
+      // statuses, which already line up with our CHECK constraint.
+      // `incomplete_expired` and `unpaid` are coerced to `incomplete`
+      // / `past_due` so we don't blow up on the constraint.
       const stripeSubId = (obj.id as string | undefined) ?? null;
-      const status = (obj.status as string | undefined) ?? "active";
+      const rawStatus = (obj.status as string | undefined) ?? "active";
+      const status =
+        rawStatus === "trialing" ||
+        rawStatus === "active" ||
+        rawStatus === "past_due" ||
+        rawStatus === "canceled" ||
+        rawStatus === "incomplete"
+          ? rawStatus
+          : rawStatus === "incomplete_expired"
+            ? "incomplete"
+            : rawStatus === "unpaid"
+              ? "past_due"
+              : "active";
       const periodEnd = obj.current_period_end as number | undefined;
       if (tenantId && stripeSubId) {
         await rc.env.DB.prepare(
