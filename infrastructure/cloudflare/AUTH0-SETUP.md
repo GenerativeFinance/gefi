@@ -87,20 +87,30 @@ GeFi access token.
 ```javascript
 // GeFi: hydrate custom claims + adaptive MFA.
 //
-// Reads tenant + jurisdiction + entity_type from `user.app_metadata`
-// (set by the onboarding API once the user finishes onboarding) and
-// pushes them into both the access token and ID token under the
-// `https://gefi.io/` namespace. Forces MFA on Pro/Enterprise tenants.
+// Reads tenant + jurisdiction + entity_type from
+// `event.user.app_metadata.gefi` — the SAME shape the gefi-api
+// Worker writes via the Management API after `/v1/auth/onboard`
+// (see `packages/auth/src/management.ts > GefiAppMetadata`). The
+// values are pushed into both the access token and ID token under
+// the `https://gefi.io/` namespace, which is what
+// `verifyAuth0Token` in `packages/auth/src/verify.ts` reads on the
+// Worker side. Forces MFA on Pro/Enterprise tenants.
+//
+// CONTRACT: keep this read-path aligned with the WRITE-path in
+// `Auth0Management.updateAppMetadata`. The two are versioned
+// together — if you ever rename a key, change BOTH or refreshed
+// tokens silently lose claims and protected endpoints start
+// returning `auth_onboarding_incomplete`.
 exports.onExecutePostLogin = async (event, api) => {
   const NS = "https://gefi.io/";
-  const meta = event.user.app_metadata || {};
+  const gefi = (event.user.app_metadata && event.user.app_metadata.gefi) || {};
   const claims = {
-    tenant_id: meta.tenant_id || null,
-    jurisdiction: meta.jurisdiction || null,   // "eu" | "us"
-    entity_type: meta.entity_type || null,     // retail | professional | institutional | data_provider
-    subscription_tier: meta.subscription_tier || "free",
-    kyc_tier: meta.kyc_tier || "none",
-    roles: meta.roles || ["member"],           // see RBAC matrix
+    tenant_id: gefi.tenant_id || null,
+    jurisdiction: gefi.jurisdiction || null,   // "eu" | "us"
+    entity_type: gefi.entity_type || null,     // retail | professional | institutional | data_provider
+    subscription_tier: gefi.subscription_tier || "free",
+    kyc_tier: gefi.kyc_tier || "none",
+    roles: gefi.roles || ["member"],           // see RBAC matrix
   };
   for (const [k, v] of Object.entries(claims)) {
     api.accessToken.setCustomClaim(`${NS}${k}`, v);
@@ -112,6 +122,15 @@ exports.onExecutePostLogin = async (event, api) => {
   }
 };
 ```
+
+When `gefi` is absent (a brand-new user who hasn't completed
+`/v1/auth/onboard` yet) all claims are `null` and the user lands on
+the loose-auth onboarding endpoints only. Once onboarding writes
+`app_metadata.gefi` and the user refreshes their token, this Action
+populates the namespaced claims and protected endpoints (KYC, API
+keys, models) start working. There is no D1 fall-back here — the
+Action is purely a mirror of `app_metadata.gefi`, which is itself
+written by the API directly from D1 at onboard time.
 
 Drag this Action into the **Login** flow.
 
@@ -149,10 +168,15 @@ M2M token itself is cached in the `CACHE` KV namespace at
 `auth0:m2m:{client_id}` for half its `expires_in` window.
 
 If `AUTH0_M2M_CLIENT_ID` / `AUTH0_M2M_CLIENT_SECRET` are missing in
-dev/staging the API logs a warning and continues — the post-login
-Action will still hydrate claims from D1 on the user's next login.
-In prod the warning is escalated; configure these secrets before
-opening signups.
+dev/staging, `/v1/auth/onboard` logs a warning and skips the
+Management API write. The user's tenant still lives in D1 (source
+of truth) but their Auth0 user has no `app_metadata.gefi`, so
+post-login token claims will stay `null` and protected endpoints
+will keep returning `auth_onboarding_incomplete` until the operator
+either backfills `app_metadata.gefi` manually (Auth0 dashboard →
+Users → User Details → Metadata) or wires the M2M secrets and
+re-runs onboarding. In prod the warning is escalated to an error;
+configure these secrets before opening signups.
 
 The Worker code reads `AUTH0_DOMAIN` to fetch JWKS at
 `${AUTH0_DOMAIN}.well-known/jwks.json` (KV-cached for an hour) and
