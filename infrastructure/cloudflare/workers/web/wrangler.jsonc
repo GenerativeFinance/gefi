@@ -1,0 +1,44 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // gefi-web sits in front of the apex domain (gefi.io and www.gefi.io) and
+  // injects the strict edge security headers. The actual content is served
+  // either by GitHub Pages (today, via origin pull) or by a future Cloudflare
+  // Pages project bound to ASSETS — both code paths are handled in src/index.ts.
+  "name": "gefi-web",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "workers_dev": false,
+  "vars": {
+    "ENVIRONMENT": "dev",
+    "WORKER_REGION": "us",
+    "API_PUBLIC_URL": "http://localhost:8787",
+    "SITE_PUBLIC_URL": "http://localhost:8788"
+  },
+  "env": {
+    "staging": {
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "WORKER_REGION": "us",
+        "API_PUBLIC_URL": "https://staging-api.gefi.io",
+        "SITE_PUBLIC_URL": "https://staging.gefi.io"
+      },
+      "routes": [
+        { "pattern": "staging.gefi.io/*", "zone_name": "gefi.io" }
+      ]
+    },
+    "prod": {
+      "vars": {
+        "ENVIRONMENT": "prod",
+        "WORKER_REGION": "us",
+        "API_PUBLIC_URL": "https://api.gefi.io",
+        "SITE_PUBLIC_URL": "https://gefi.io"
+      },
+      "routes": [
+        { "pattern": "gefi.io/*", "zone_name": "gefi.io" },
+        { "pattern": "www.gefi.io/*", "zone_name": "gefi.io" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@gefi/worker-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "wrangler deploy --dry-run --outdir=dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@gefi/shared-headers": "workspace:*",
+    "@gefi/shared-router": "workspace:*",
+    "@gefi/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240620.0",
+    "typescript": "^5.5.3",
+    "vitest": "^1.6.0",
+    "wrangler": "^3.62.0"
+  }
+}

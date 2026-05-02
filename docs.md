@@ -11,7 +11,9 @@ The full developer documentation lives at
 
 ## Quickstart
 
-1. [Create an account](https://app.gefi.io/sign-up) and complete the standard KYC.
+1. Create an account ([request access](/contact/?topic=sales) — the
+   self-serve sign-up at `app.gefi.io` ships with Task #7) and complete the
+   standard KYC.
 2. Mint an API key in **Settings → API keys**.
 3. Subscribe to a model from the [catalogue](/models/).
 4. Call it:

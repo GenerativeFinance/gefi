@@ -1,0 +1,9 @@
+# Local-only secrets for `wrangler dev`. Copy this file to `.dev.vars` (in
+# each Worker's directory, OR at this repo root if running with the
+# workspace) and fill in real values for local development.
+#
+# In CI / staging / prod these are set with `wrangler secret put` instead —
+# see infrastructure/cloudflare/README.md.
+
+# Symmetric key the public router signs internal JWTs with. >= 32 chars.
+INTERNAL_SIGNING_KEY="dev-only-key-please-change-me-32+chars-locally"

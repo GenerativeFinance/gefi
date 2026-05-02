@@ -46,7 +46,7 @@ So we built one that does.
   Enterprise tier ships with that option; the question is whether we make it
   the default for EU paid tenants.
 
-If any of this is interesting, you can [start free](https://app.gefi.io/sign-up)
+If any of this is interesting, you can [request early access](/contact/?topic=sales) (the self-serve sign-up at `app.gefi.io` opens with our next release)
 or [book a demo](/contact/?topic=demo). If it's *very* interesting,
 [we're hiring](mailto:careers@gefi.io).
 

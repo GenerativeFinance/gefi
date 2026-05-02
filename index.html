@@ -4,12 +4,23 @@ title: AI financial models — federated, audited, accountable
 description: GeFi is the marketplace for AI financial models. Discover, subscribe to, and contribute to federated, audit-ready models for investing, risk, fraud, compliance, and trade finance.
 ---
 
+{%- comment -%}
+  Gate the hero CTA the same way every other "Get started" / "Sign in"
+  surface does — see _includes/header.html and _includes/cta.html. Until
+  app.gefi.io ships (Task #7) we route to the contact form so the hero
+  CTA never points at a not-yet-live URL.
+{%- endcomment -%}
+{%- assign hero_primary_url = site.app.signup_url -%}
+{%- unless site.app.enabled -%}
+  {%- assign hero_primary_url = site.app.fallback_url | default: '/contact/?topic=sales' -%}
+{%- endunless -%}
+
 {% include hero.html
    eyebrow="Marketplace + Federation + Compliance"
    title="AI financial models that pass the audit."
    lead="GeFi is where investors, banks, and quants discover, subscribe to, and contribute to federated AI models — with provable training data, hash-chained inference logs, and compliance routing per jurisdiction."
    primary_label="Get started free"
-   primary_url=site.app.signup_url
+   primary_url=hero_primary_url
    secondary_label="Browse models"
    secondary_url="/models/"
    note="No card required. 100 free inference calls a day on the Free tier." %}

@@ -1,0 +1,120 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // gefi-api is the public REST/RPC surface. The default deployment is the
+  // jurisdiction-routing edge on api.gefi.io. Two regional siblings,
+  // gefi-api-eu and gefi-api-us, are deployed via the `eu` and `us`
+  // environments below to eu.api.gefi.io / us.api.gefi.io. The edge
+  // dispatches forwarded traffic to a regional sibling via the
+  // service-binding (REGIONAL_EU / REGIONAL_US) once they exist.
+  //
+  // For first-deploy bootstrap, comment out the `services` section, deploy
+  // the regional Workers first, then re-enable and re-deploy the edge.
+  "name": "gefi-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "workers_dev": false,
+  "vars": {
+    "ENVIRONMENT": "dev",
+    "WORKER_REGION": "us",
+    "API_PUBLIC_URL": "http://localhost:8787",
+    "SITE_PUBLIC_URL": "http://localhost:8788"
+  },
+  // Local dev bindings. Each environment overrides these with real IDs.
+  "d1_databases": [
+    { "binding": "DB", "database_name": "gefi-api-dev", "database_id": "00000000-0000-0000-0000-000000000000" }
+  ],
+  "r2_buckets": [
+    { "binding": "ARTIFACTS", "bucket_name": "gefi-artifacts-dev" }
+  ],
+  "kv_namespaces": [
+    { "binding": "CACHE", "id": "00000000000000000000000000000000" }
+  ],
+  "vectorize": [
+    { "binding": "VECTORS", "index_name": "gefi-vectors-dev" }
+  ],
+  "services": [
+    { "binding": "COMPLIANCE", "service": "gefi-compliance" }
+  ],
+  "env": {
+    "staging": {
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "WORKER_REGION": "us",
+        "API_PUBLIC_URL": "https://staging-api.gefi.io",
+        "SITE_PUBLIC_URL": "https://staging.gefi.io"
+      },
+      "routes": [{ "pattern": "staging-api.gefi.io/*", "zone_name": "gefi.io" }],
+      "d1_databases": [
+        { "binding": "DB", "database_name": "gefi-api-staging", "database_id": "REPLACE_WITH_STAGING_DB_ID" }
+      ],
+      "r2_buckets": [{ "binding": "ARTIFACTS", "bucket_name": "gefi-artifacts-staging" }],
+      "kv_namespaces": [{ "binding": "CACHE", "id": "REPLACE_WITH_STAGING_KV_ID" }],
+      "vectorize": [{ "binding": "VECTORS", "index_name": "gefi-vectors-staging" }],
+      "services": [
+        { "binding": "COMPLIANCE", "service": "gefi-compliance", "environment": "staging" }
+      ]
+    },
+    // Public edge router on api.gefi.io. Forwards to the regional sibling
+    // chosen by `pickRegion(cf.country)`.
+    "prod": {
+      "vars": {
+        "ENVIRONMENT": "prod",
+        "WORKER_REGION": "us",
+        "API_PUBLIC_URL": "https://api.gefi.io",
+        "SITE_PUBLIC_URL": "https://gefi.io"
+      },
+      "routes": [{ "pattern": "api.gefi.io/*", "zone_name": "gefi.io" }],
+      "d1_databases": [
+        { "binding": "DB", "database_name": "gefi-api-prod", "database_id": "REPLACE_WITH_PROD_DB_ID" }
+      ],
+      "r2_buckets": [{ "binding": "ARTIFACTS", "bucket_name": "gefi-artifacts-prod" }],
+      "kv_namespaces": [{ "binding": "CACHE", "id": "REPLACE_WITH_PROD_KV_ID" }],
+      "vectorize": [{ "binding": "VECTORS", "index_name": "gefi-vectors-prod" }],
+      "services": [
+        { "binding": "COMPLIANCE", "service": "gefi-compliance", "environment": "prod" }
+      ]
+    },
+    // Regional EU deployment. Same code, pinned to the EU data plane.
+    "eu": {
+      "name": "gefi-api-eu",
+      "vars": {
+        "ENVIRONMENT": "prod",
+        "WORKER_REGION": "eu",
+        "API_PUBLIC_URL": "https://eu.api.gefi.io",
+        "SITE_PUBLIC_URL": "https://gefi.io"
+      },
+      "routes": [{ "pattern": "eu.api.gefi.io/*", "zone_name": "gefi.io" }],
+      "d1_databases": [
+        { "binding": "DB", "database_name": "gefi-api-prod-eu", "database_id": "REPLACE_WITH_PROD_EU_DB_ID" }
+      ],
+      "r2_buckets": [{ "binding": "ARTIFACTS", "bucket_name": "gefi-artifacts-prod-eu" }],
+      "kv_namespaces": [{ "binding": "CACHE", "id": "REPLACE_WITH_PROD_EU_KV_ID" }],
+      "vectorize": [{ "binding": "VECTORS", "index_name": "gefi-vectors-prod-eu" }],
+      "services": [
+        { "binding": "COMPLIANCE", "service": "gefi-compliance", "environment": "prod" }
+      ]
+    },
+    // Regional US deployment.
+    "us": {
+      "name": "gefi-api-us",
+      "vars": {
+        "ENVIRONMENT": "prod",
+        "WORKER_REGION": "us",
+        "API_PUBLIC_URL": "https://us.api.gefi.io",
+        "SITE_PUBLIC_URL": "https://gefi.io"
+      },
+      "routes": [{ "pattern": "us.api.gefi.io/*", "zone_name": "gefi.io" }],
+      "d1_databases": [
+        { "binding": "DB", "database_name": "gefi-api-prod-us", "database_id": "REPLACE_WITH_PROD_US_DB_ID" }
+      ],
+      "r2_buckets": [{ "binding": "ARTIFACTS", "bucket_name": "gefi-artifacts-prod-us" }],
+      "kv_namespaces": [{ "binding": "CACHE", "id": "REPLACE_WITH_PROD_US_KV_ID" }],
+      "vectorize": [{ "binding": "VECTORS", "index_name": "gefi-vectors-prod-us" }],
+      "services": [
+        { "binding": "COMPLIANCE", "service": "gefi-compliance", "environment": "prod" }
+      ]
+    }
+  }
+}
