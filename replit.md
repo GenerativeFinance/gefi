@@ -154,7 +154,7 @@ backend / dashboards exist, without any dead links or console errors.
 | 2  | Cloudflare backend foundation (Workers + D1 + R2 + KV + Vectorize) | **In progress (this task).** |
 | 3  | Auth (Auth0 + JWT) + tenancy                                       | Pending        |
 | 4  | Compliance routing + audit log + trust portal                      | **Done.**      |
-| 5  | Marketplace + payments (Stripe + onchain)                          | Pending        |
+| 5  | Marketplace + payments (Stripe + onchain)                          | **Done.**      |
 | 6  | Federated learning network                                         | Pending        |
 | 7  | App / dashboards (`app.gefi.io`)                                   | Pending        |
 | 8  | Production hardening + status page + observability                 | Pending        |
@@ -303,6 +303,70 @@ routing, GDPR / CCPA fixtures, Merkle proof roundtrip, anchor
 idempotency, internal-token auth). `pnpm --filter
 @gefi/worker-compliance run build` (wrangler dry-run) succeeds with
 the new `CASE_DO` Durable Object binding.
+
+## Task #5 — Marketplace, billing & model gateway (DONE)
+
+The `gefi-api` Worker now serves the full marketplace surface:
+listing, version publish + R2-stored artifacts, admin approval,
+faceted search, Stripe-backed subscriptions + Connect payouts, a
+region-aware AI provider chain, deterministic replay, and the
+paper-trading sandbox. Operator runbook:
+`infrastructure/cloudflare/MARKETPLACE-SETUP.md`.
+
+New packages:
+
+- `packages/marketplace` — registry CRUD over D1, R2 artifact upload
+  with sha-256 + Polygon `ModelAnchor` (StubModelAnchor in dev,
+  real Polygon in prod via `POLYGON_*` secrets).
+- `packages/billing` — tier catalog (Free / Starter $99 / Pro $499 /
+  Enterprise $2 499), `StubStripe` + `RealStripe` (REST), HMAC-SHA256
+  webhook signature verify with constant-time compare + 300 s
+  tolerance, KV-cached entitlement counters with month / day
+  windows, dunning email builder, `StubMailer` + `RealMailer`
+  (Resend).
+- `packages/model-gateway` — provider abstraction (WorkersAi →
+  OpenAI → Anthropic → Together → Deterministic) with region-keyed
+  secrets, canonical input hashing for replay, SSE response
+  streaming, byte-identical `replayRun()` against the deterministic
+  provider.
+- `packages/search-index` — `LocalIndex` (in-process, faceted) +
+  `TypesenseIndex` (real HTTP). Jurisdiction-aware filter so the
+  EU edge never returns US-only listings.
+- `packages/reference-models` — two end-to-end examples:
+  `sentiment-from-filings` (RAG over a fixture corpus + deterministic
+  fallback label) and `portfolio-optimiser` (deterministic
+  mean-variance with risk aversion + long-only modes).
+
+D1: `workers/api/migrations/0002_init_marketplace.sql` adds
+`models`, `model_versions`, `model_metadata`, `model_runs`,
+`subscriptions`, `entitlements`, `model_reviews`, `paper_trades`,
+and `billing_events`. Every table is `tenant_id` + `jurisdiction`
+keyed.
+
+New endpoints (`gefi-api`):
+- Registry: `POST/GET /v1/models`, `GET /v1/models/:id`,
+  `PUT /v1/models/:id/metadata`, `POST /v1/models/:id/versions`,
+  `POST /v1/models/:id/approve`, `GET /v1/models/search`.
+- Gateway: `POST /v1/models/:id/run` (SSE),
+  `POST /v1/runs/:runId/replay`, `POST /v1/models/:id/paper-trade`.
+- Billing: `POST /v1/billing/subscriptions`, `GET /v1/billing/portal`,
+  `POST /v1/billing/connect/onboarding`,
+  `POST /v1/billing/webhook` (open path — HMAC auth),
+  `GET /v1/entitlements`.
+
+Compliance triggers: `publishVersion` emits `model_listed`,
+`createSubscription` emits `subscription_created`. Both reuse the
+existing `gefi-compliance` service binding.
+
+Tests: 249 / 249 passing across 24 files (marketplace 6, billing
+16, model-gateway 14, search-index 8, reference-models 10, plus 6
+new integration tests in `workers/api/src/integration.test.ts` and
+the pre-existing 189). `pnpm --filter @gefi/worker-api run build`
+(wrangler dry-run) succeeds with the new D1 / R2 bindings unchanged.
+
+What's NOT here yet:
+- Federated learning orchestrator → **Task #6**.
+- Persona dashboards on `app.gefi.io` → **Task #7**.
 
 ## How to preview locally
 

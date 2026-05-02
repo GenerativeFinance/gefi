@@ -40,6 +40,22 @@ importers:
         specifier: ^1.6.0
         version: 1.6.1(@types/node@25.6.0)
 
+  packages/billing:
+    dependencies:
+      '@gefi/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240620.0
+        version: 4.20260502.1
+      typescript:
+        specifier: ^5.5.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@25.6.0)
+
   packages/compliance-engine:
     dependencies:
       '@gefi/compliance-rules':
@@ -79,6 +95,73 @@ importers:
         version: 1.6.1(@types/node@25.6.0)
 
   packages/integrations:
+    dependencies:
+      '@gefi/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240620.0
+        version: 4.20260502.1
+      typescript:
+        specifier: ^5.5.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@25.6.0)
+
+  packages/marketplace:
+    dependencies:
+      '@gefi/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240620.0
+        version: 4.20260502.1
+      typescript:
+        specifier: ^5.5.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@25.6.0)
+
+  packages/model-gateway:
+    dependencies:
+      '@gefi/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240620.0
+        version: 4.20260502.1
+      typescript:
+        specifier: ^5.5.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@25.6.0)
+
+  packages/reference-models:
+    dependencies:
+      '@gefi/marketplace':
+        specifier: workspace:*
+        version: link:../marketplace
+      '@gefi/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240620.0
+        version: 4.20260502.1
+      typescript:
+        specifier: ^5.5.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@25.6.0)
+
+  packages/search-index:
     dependencies:
       '@gefi/shared-types':
         specifier: workspace:*
@@ -136,9 +219,24 @@ importers:
       '@gefi/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@gefi/billing':
+        specifier: workspace:*
+        version: link:../../packages/billing
       '@gefi/integrations':
         specifier: workspace:*
         version: link:../../packages/integrations
+      '@gefi/marketplace':
+        specifier: workspace:*
+        version: link:../../packages/marketplace
+      '@gefi/model-gateway':
+        specifier: workspace:*
+        version: link:../../packages/model-gateway
+      '@gefi/reference-models':
+        specifier: workspace:*
+        version: link:../../packages/reference-models
+      '@gefi/search-index':
+        specifier: workspace:*
+        version: link:../../packages/search-index
       '@gefi/shared-headers':
         specifier: workspace:*
         version: link:../../packages/shared-headers

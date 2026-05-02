@@ -12,7 +12,12 @@
   },
   "dependencies": {
     "@gefi/auth": "workspace:*",
+    "@gefi/billing": "workspace:*",
     "@gefi/integrations": "workspace:*",
+    "@gefi/marketplace": "workspace:*",
+    "@gefi/model-gateway": "workspace:*",
+    "@gefi/reference-models": "workspace:*",
+    "@gefi/search-index": "workspace:*",
     "@gefi/shared-headers": "workspace:*",
     "@gefi/shared-router": "workspace:*",
     "@gefi/shared-types": "workspace:*"

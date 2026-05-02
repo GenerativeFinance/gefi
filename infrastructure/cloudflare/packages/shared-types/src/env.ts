@@ -125,6 +125,53 @@ export interface IntegrationSecrets {
   OPENSANCTIONS_API_KEY?: string;
 }
 
+/**
+ * Stripe credentials. All optional — when missing the billing service
+ * falls back to a deterministic stub that records subscriptions in D1
+ * but never makes a network call. In production the resolver throws.
+ */
+export interface StripeSecrets {
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_PUBLISHABLE_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_CONNECT_CLIENT_ID?: string;
+  STRIPE_TAX_ENABLED?: string;
+  /** Public-facing return URL after a Stripe Checkout / Connect flow. */
+  STRIPE_RETURN_URL?: string;
+}
+
+/**
+ * Resend (transactional email) credentials used for dunning + receipt
+ * emails. Optional in dev — without them the mailer logs to D1.
+ */
+export interface ResendSecrets {
+  RESEND_API_KEY?: string;
+  RESEND_FROM_ADDRESS?: string;
+}
+
+/**
+ * AI provider credentials used by the model gateway when Workers AI
+ * is unavailable or unsuitable. EU-jurisdiction tenants hit EU
+ * endpoints only — see `model-gateway/providers.ts`.
+ */
+export interface AiProviderSecrets {
+  OPENAI_API_KEY_US?: string;
+  OPENAI_API_KEY_EU?: string;
+  ANTHROPIC_API_KEY_US?: string;
+  ANTHROPIC_API_KEY_EU?: string;
+  TOGETHER_API_KEY?: string;
+}
+
+/**
+ * Typesense / Meilisearch credentials. Optional — the LocalIndex stub
+ * (in-process inverted index) is used in dev/test when no host is set.
+ */
+export interface SearchSecrets {
+  TYPESENSE_HOST?: string;
+  TYPESENSE_API_KEY?: string;
+  TYPESENSE_COLLECTION?: string;
+}
+
 /** Bindings exposed to `gefi-api`. */
 export interface ApiEnv
   extends CommonVars,
@@ -132,7 +179,11 @@ export interface ApiEnv
     Auth0Vars,
     Auth0M2MSecrets,
     IntegrationSecrets,
-    ComplianceInternalSecrets {
+    ComplianceInternalSecrets,
+    StripeSecrets,
+    ResendSecrets,
+    AiProviderSecrets,
+    SearchSecrets {
   /** Primary OLTP store for tenant + user + subscription rows. */
   DB: D1Database;
   /** Object store for uploaded artifacts (filings, model weights, etc.). */
@@ -141,6 +192,12 @@ export interface ApiEnv
   CACHE: KVNamespace;
   /** Vector index for similarity search across the model + research catalogue. */
   VECTORS: VectorizeIndex;
+  /**
+   * Workers AI binding — preferred provider for the model gateway.
+   * Optional so dev/test environments without a Workers-AI binding
+   * fall back to the stubbed provider chain.
+   */
+  AI?: { run: (model: string, input: unknown) => Promise<unknown> };
   /** Internal Service binding to the compliance Worker (RPC over fetch). */
   COMPLIANCE: Fetcher;
   /**

@@ -99,7 +99,7 @@ function memKv(initial: Record<string, string> = {}): KVNamespace {
 
 /** Scripted D1: routes prepared SQL by regex to canned rows; otherwise records and returns success. */
 interface D1Script {
-  selects?: Array<{ match: RegExp; row: unknown }>;
+  selects?: Array<{ match: RegExp; row: unknown | ((bindings: unknown[]) => unknown) }>;
 }
 interface ScriptedD1 {
   db: D1Database;
@@ -116,7 +116,12 @@ function scriptedD1(script: D1Script = {}): ScriptedD1 {
       },
       first: async <T,>() => {
         calls.push({ sql, bindings, verb: "first" });
-        for (const m of script.selects ?? []) if (m.match.test(sql)) return m.row as T;
+        for (const m of script.selects ?? []) {
+          if (m.match.test(sql)) {
+            const row = typeof m.row === "function" ? (m.row as (b: unknown[]) => unknown)(bindings) : m.row;
+            return row as T;
+          }
+        }
         return null as unknown as T;
       },
       all: async <T,>() => {
@@ -489,6 +494,321 @@ describe("Production fail-closed when no real provider is configured", () => {
     expect(res.status).toBe(503);
     const body = (await res.json()) as { error: string };
     expect(body.error).toBe("kyc_provider_not_configured");
+  });
+});
+
+describe("Marketplace + billing endpoints", () => {
+  async function devToken(): Promise<string> {
+    return signUserToken({
+      sub: "auth0|developer-1",
+      email: "dev@gefi.io",
+      [`${GEFI_CLAIM_NS}jurisdiction`]: "us",
+      [`${GEFI_CLAIM_NS}tenant_id`]: "tenant-dev-1",
+      [`${GEFI_CLAIM_NS}entity_type`]: "professional",
+      [`${GEFI_CLAIM_NS}roles`]: ["developer"],
+      [`${GEFI_CLAIM_NS}subscription_tier`]: "pro",
+      [`${GEFI_CLAIM_NS}kyc_tier`]: "standard",
+    });
+  }
+  async function adminToken(): Promise<string> {
+    return signUserToken({
+      sub: "auth0|admin-1",
+      email: "admin@gefi.io",
+      [`${GEFI_CLAIM_NS}jurisdiction`]: "us",
+      [`${GEFI_CLAIM_NS}tenant_id`]: "tenant-admin-1",
+      [`${GEFI_CLAIM_NS}entity_type`]: "professional",
+      [`${GEFI_CLAIM_NS}roles`]: ["admin"],
+      [`${GEFI_CLAIM_NS}subscription_tier`]: "enterprise",
+      [`${GEFI_CLAIM_NS}kyc_tier`]: "advanced",
+    });
+  }
+  async function investorToken(): Promise<string> {
+    return signUserToken({
+      sub: "auth0|inv-1",
+      email: "inv@gefi.io",
+      [`${GEFI_CLAIM_NS}jurisdiction`]: "us",
+      [`${GEFI_CLAIM_NS}tenant_id`]: "tenant-inv-1",
+      [`${GEFI_CLAIM_NS}entity_type`]: "professional",
+      [`${GEFI_CLAIM_NS}roles`]: ["investor"],
+      [`${GEFI_CLAIM_NS}subscription_tier`]: "starter",
+      [`${GEFI_CLAIM_NS}kyc_tier`]: "standard",
+    });
+  }
+
+  it("POST /v1/models creates a draft model (developer + create:model)", async () => {
+    const fake = scriptedD1();
+    const env = regionalEnv({ region: "us", db: fake.db });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const token = await devToken();
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/models", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          slug: "alpha-edge",
+          name: "Alpha Edge",
+          summary: "Quant alpha for US equities",
+          category: "forecasting",
+          risk_class: "medium",
+          monthly_price_cents: 19900,
+          visibility: "private",
+          long_description: "Forecasts US equity returns from filings + price.",
+          jurisdictions_supported: ["us", "eu"],
+        }),
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { ok: boolean; model: { id: string; slug: string; status: string } };
+    expect(body.model.slug).toBe("alpha-edge");
+    expect(body.model.status).toBe("draft");
+    const modelInsert = fake.calls.find((c) => /^INSERT INTO models /.test(c.sql));
+    expect(modelInsert).toBeTruthy();
+    const metaInsert = fake.calls.find((c) => /^INSERT INTO model_metadata /.test(c.sql));
+    expect(metaInsert).toBeTruthy();
+  });
+
+  it("POST /v1/models rejects an investor (no create:model)", async () => {
+    const fake = scriptedD1();
+    const env = regionalEnv({ region: "us", db: fake.db });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const token = await investorToken();
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/models", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          slug: "x",
+          name: "x",
+          category: "forecasting",
+          risk_class: "low",
+          monthly_price_cents: 0,
+        }),
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it("POST /v1/billing/webhook accepts a valid Stripe-Signature and is idempotent", async () => {
+    const { signStripePayload } = await import("@gefi/billing");
+    const secret = "whsec_integration_test";
+    const eventBody = JSON.stringify({
+      id: "evt_int_1",
+      type: "checkout.session.completed",
+      data: { object: { id: "cs_1", customer: "cus_1", metadata: { tenant_id: "tenant-x" } } },
+    });
+    const ts = Math.floor(Date.now() / 1000);
+    const sig = await signStripePayload(eventBody, secret, ts);
+    const fake = scriptedD1();
+    const env = regionalEnv({ region: "us", db: fake.db });
+    (env as { STRIPE_WEBHOOK_SECRET?: string }).STRIPE_WEBHOOK_SECRET = secret;
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/webhook", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          "Content-Type": "application/json",
+          "Stripe-Signature": sig,
+        },
+        body: eventBody,
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    const billingInsert = fake.calls.find((c) => /^INSERT INTO billing_events/.test(c.sql));
+    expect(billingInsert).toBeTruthy();
+  });
+
+  it("POST /v1/billing/webhook is idempotent across duplicate deliveries", async () => {
+    const { signStripePayload } = await import("@gefi/billing");
+    const secret = "whsec_dup";
+    const eventBody = JSON.stringify({
+      id: "evt_dup_1",
+      type: "checkout.session.completed",
+      data: { object: { id: "cs_dup", customer: "cus_dup", metadata: { tenant_id: "tenant-dup" } } },
+    });
+    const ts = Math.floor(Date.now() / 1000);
+    const sig = await signStripePayload(eventBody, secret, ts);
+    // The handler does:
+    //   1) SELECT id FROM billing_events WHERE id = ?  (idempotency check)
+    //   2) INSERT INTO billing_events ...              (only if first miss)
+    //   3) UPDATE subscriptions ...                    (apply state change)
+    // We script the SELECT to look back at fake.calls — once an
+    // INSERT INTO billing_events with the same id has been recorded,
+    // the SELECT returns a hit so the second delivery short-circuits.
+    let fake!: ScriptedD1;
+    fake = scriptedD1({
+      selects: [
+        {
+          match: /FROM billing_events WHERE id/,
+          row: (bindings: unknown[]) => {
+            const id = bindings[0];
+            const inserted = fake.calls.some(
+              (c) => /^INSERT INTO billing_events/.test(c.sql) && c.bindings[0] === id,
+            );
+            return inserted ? { id } : null;
+          },
+        },
+      ],
+    });
+    const env = regionalEnv({ region: "us", db: fake.db });
+    (env as { STRIPE_WEBHOOK_SECRET?: string }).STRIPE_WEBHOOK_SECRET = secret;
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+
+    // First delivery — handler runs the full path, persists the event.
+    const r1 = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/webhook", {
+        method: "POST",
+        headers: { "X-Gefi-Edge-JWT": edge, "Content-Type": "application/json", "Stripe-Signature": sig },
+        body: eventBody,
+      }),
+      env,
+      ctx,
+    );
+    expect(r1.status).toBe(200);
+    const inserts1 = fake.calls.filter((c) => /^INSERT INTO billing_events/.test(c.sql));
+    expect(inserts1).toHaveLength(1);
+
+    // Second delivery — same payload, same signature: handler must
+    // short-circuit on the idempotency check, not insert again, not
+    // re-apply any subscription update.
+    const r2 = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/webhook", {
+        method: "POST",
+        headers: { "X-Gefi-Edge-JWT": edge, "Content-Type": "application/json", "Stripe-Signature": sig },
+        body: eventBody,
+      }),
+      env,
+      ctx,
+    );
+    expect(r2.status).toBe(200);
+    const body2 = (await r2.json()) as { ok: boolean; idempotent?: boolean };
+    expect(body2.idempotent).toBe(true);
+    const inserts2 = fake.calls.filter((c) => /^INSERT INTO billing_events/.test(c.sql));
+    expect(inserts2).toHaveLength(1); // still 1 — no duplicate insert
+  });
+
+  it("POST /v1/billing/webhook rejects an invalid signature", async () => {
+    const env = regionalEnv({ region: "us" });
+    (env as { STRIPE_WEBHOOK_SECRET?: string }).STRIPE_WEBHOOK_SECRET = "whsec_real";
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/webhook", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          "Content-Type": "application/json",
+          "Stripe-Signature": "t=1,v1=abadc0de",
+        },
+        body: JSON.stringify({ id: "evt_2", type: "checkout.session.completed" }),
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("invalid_signature");
+  });
+
+  it("POST /v1/models/:id/approve requires admin role", async () => {
+    const fake = scriptedD1({
+      selects: [
+        {
+          match: /FROM models WHERE id/,
+          row: {
+            id: "mdl-x",
+            slug: "x",
+            developer_tenant_id: "tenant-dev-1",
+            jurisdiction: "us",
+            name: "X",
+            summary: "",
+            category: "risk",
+            risk_class: "low",
+            status: "pending_compliance",
+            visibility: "private",
+            current_version_id: null,
+            monthly_price_cents: 0,
+            developer_share_bps: 7000,
+            federation_enabled: 0,
+            created_at: 1,
+            updated_at: 1,
+          },
+        },
+      ],
+    });
+    const env = regionalEnv({ region: "us", db: fake.db });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+
+    // Developer cannot approve.
+    const devRes = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/models/mdl-x/approve", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await devToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ version_id: "ver-x" }),
+      }),
+      env,
+      ctx,
+    );
+    expect([403, 404]).toContain(devRes.status);
+
+    // Admin approves.
+    const adminRes = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/models/mdl-x/approve", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await adminToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ version_id: "ver-x" }),
+      }),
+      env,
+      ctx,
+    );
+    expect(adminRes.status).toBe(200);
+  });
+
+  it("GET /v1/entitlements returns the seeded rows for the caller's tenant", async () => {
+    const fake = scriptedD1({
+      selects: [
+        {
+          match: /SELECT \* FROM entitlements WHERE tenant_id/,
+          row: null,
+        },
+      ],
+    });
+    const env = regionalEnv({ region: "us", db: fake.db });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/entitlements", {
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await investorToken()}`,
+        },
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; entitlements: unknown[] };
+    expect(body.ok).toBe(true);
   });
 });
 

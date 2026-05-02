@@ -19,4 +19,8 @@ export type {
   Region,
   SubscriptionTier,
   WebEnv,
+  StripeSecrets,
+  ResendSecrets,
+  AiProviderSecrets,
+  SearchSecrets,
 } from "./env.js";

@@ -55,6 +55,27 @@ import { kycWebhookHandler } from "./handlers/kyc/webhook.js";
 import { dsarHandler } from "./handlers/legal/dsar.js";
 import { subpoenaHandler } from "./handlers/legal/subpoena.js";
 import { residencyHandler as complianceResidencyHandler } from "./handlers/compliance/residency.js";
+import {
+  approveModelHandler,
+  createModelHandler,
+  getModelHandler,
+  listModelsHandler,
+  publishVersionHandler,
+  searchModelsHandler,
+  updateMetadataHandler,
+} from "./handlers/marketplace/models.js";
+import {
+  paperTradeHandler,
+  replayRunHandler,
+  runModelHandler,
+} from "./handlers/marketplace/runs.js";
+import {
+  billingPortalHandler,
+  connectOnboardingHandler,
+  createSubscriptionHandler,
+  listEntitlementsHandler,
+  stripeWebhookHandler,
+} from "./handlers/billing/subscriptions.js";
 import { Router, type RouteContext } from "./router.js";
 
 const REGIONAL_HOST_RE = /^https:\/\/(eu|us)\.api\./;
@@ -70,7 +91,8 @@ function isOpenPath(pathname: string): boolean {
   return (
     pathname === "/health" ||
     pathname === "/_health" ||
-    pathname.startsWith("/v1/kyc/webhook")
+    pathname.startsWith("/v1/kyc/webhook") ||
+    pathname === "/v1/billing/webhook"
   );
 }
 
@@ -102,7 +124,25 @@ const router = new Router()
   .post("/v1/legal/dsar", dsarHandler)
   .post("/v1/legal/subpoena", subpoenaHandler)
   // Customer-facing data residency
-  .get("/v1/compliance/residency", complianceResidencyHandler);
+  .get("/v1/compliance/residency", complianceResidencyHandler)
+  // Marketplace — model registry
+  .post("/v1/models", createModelHandler)
+  .get("/v1/models", listModelsHandler)
+  .get("/v1/models/search", searchModelsHandler)
+  .get("/v1/models/:id", getModelHandler)
+  .put("/v1/models/:id/metadata", updateMetadataHandler)
+  .post("/v1/models/:id/versions", publishVersionHandler)
+  .post("/v1/models/:id/approve", approveModelHandler)
+  // Marketplace — gateway
+  .post("/v1/models/:id/run", runModelHandler)
+  .post("/v1/runs/:runId/replay", replayRunHandler)
+  .post("/v1/models/:id/paper-trade", paperTradeHandler)
+  // Billing
+  .post("/v1/billing/subscriptions", createSubscriptionHandler)
+  .get("/v1/billing/portal", billingPortalHandler)
+  .post("/v1/billing/connect/onboarding", connectOnboardingHandler)
+  .get("/v1/entitlements", listEntitlementsHandler)
+  .post("/v1/billing/webhook", stripeWebhookHandler);
 
 async function forwardToRegion(
   request: Request,

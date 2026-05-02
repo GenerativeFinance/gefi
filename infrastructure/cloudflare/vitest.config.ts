@@ -43,6 +43,11 @@ export default defineConfig({
       { find: "@gefi/shared-headers", replacement: new URL("./packages/shared-headers/src/index.ts", import.meta.url).pathname },
       { find: "@gefi/shared-router", replacement: new URL("./packages/shared-router/src/index.ts", import.meta.url).pathname },
       { find: "@gefi/shared-types", replacement: new URL("./packages/shared-types/src/index.ts", import.meta.url).pathname },
+      { find: "@gefi/marketplace", replacement: new URL("./packages/marketplace/src/index.ts", import.meta.url).pathname },
+      { find: "@gefi/billing", replacement: new URL("./packages/billing/src/index.ts", import.meta.url).pathname },
+      { find: "@gefi/model-gateway", replacement: new URL("./packages/model-gateway/src/index.ts", import.meta.url).pathname },
+      { find: "@gefi/search-index", replacement: new URL("./packages/search-index/src/index.ts", import.meta.url).pathname },
+      { find: "@gefi/reference-models", replacement: new URL("./packages/reference-models/src/index.ts", import.meta.url).pathname },
     ],
   },
 });
