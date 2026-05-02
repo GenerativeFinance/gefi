@@ -95,6 +95,15 @@ export const createSubscriptionHandler: Handler = async (rc) => {
   }
 
   const now = Math.floor(Date.now() / 1000);
+  // Correlation key — embed the local subscription id in Stripe
+  // metadata at create time so webhook events can match the exact
+  // local row regardless of how many concurrent checkouts the tenant
+  // has open. Without this we'd have to guess via "latest by tenant",
+  // which breaks for parallel checkouts and tier upgrades.
+  const subId = newId("sub");
+  const stripeMetadata: Record<string, string> = { subscription_id: subId };
+  if (body.kind === "model" && body.model_id) stripeMetadata.model_id = body.model_id;
+
   const session = await stripe.createCheckoutSession({
     customerEmail: c.email ?? `${c.sub}@noemail.gefi.io`,
     tenantId: c.tenant_id,
@@ -102,15 +111,22 @@ export const createSubscriptionHandler: Handler = async (rc) => {
     successUrl: rc.env.STRIPE_RETURN_URL ?? `${rc.env.SITE_PUBLIC_URL}/billing/success`,
     cancelUrl: `${rc.env.SITE_PUBLIC_URL}/billing/cancel`,
     trialDays: trialDays > 0 ? trialDays : undefined,
-    metadata: body.kind === "model" && body.model_id ? { model_id: body.model_id } : undefined,
+    metadata: stripeMetadata,
   });
 
-  const subId = newId("sub");
+  // Free tier needs no Stripe payment, so we mark it active and seed
+  // entitlements at create time. Every other tier (and per-model
+  // subscriptions) starts `incomplete` and is promoted to `active`
+  // ONLY by the Stripe webhook handler after payment confirms — see
+  // the "fail closed" comment in the webhook below for why.
+  const isFreeTier = body.kind === "tier" && body.tier === "free";
+  const initialStatus = isFreeTier ? "active" : "incomplete";
+
   await rc.env.DB.prepare(
     `INSERT INTO subscriptions (id, tenant_id, jurisdiction, kind, tier, model_id, status,
      stripe_customer_id, stripe_subscription_id, trial_ends_at, current_period_end,
      monthly_price_cents, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, 'incomplete', ?, NULL, ?, NULL, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, NULL, ?, ?, ?)`,
   )
     .bind(
       subId,
@@ -119,6 +135,7 @@ export const createSubscriptionHandler: Handler = async (rc) => {
       body.kind,
       body.kind === "tier" ? body.tier : null,
       body.kind === "model" ? body.model_id : null,
+      initialStatus,
       session.customerId,
       trialDays > 0 ? now + trialDays * 86400 : null,
       monthlyCents,
@@ -127,10 +144,8 @@ export const createSubscriptionHandler: Handler = async (rc) => {
     )
     .run();
 
-  // Provision tier entitlements immediately (Stripe webhook will mark
-  // active later — until then quota uses the tier limits anyway).
-  if (body.kind === "tier") {
-    await seedTierEntitlements({ db: rc.env.DB, kv: rc.env.CACHE }, c.tenant_id, tierOrThrow(body.tier!), now);
+  if (isFreeTier) {
+    await seedTierEntitlements({ db: rc.env.DB, kv: rc.env.CACHE }, c.tenant_id, tierOrThrow("free"), now);
   }
 
   await emitComplianceEvent(rc.env, {
@@ -235,10 +250,15 @@ export const stripeWebhookHandler: Handler = async (rc) => {
 
   const now = Math.floor(Date.now() / 1000);
   const obj = event.data?.object ?? {};
-  const tenantId =
-    (obj.metadata as Record<string, string> | undefined)?.tenant_id ??
-    (obj.tenant_id as string | undefined) ??
-    null;
+  const meta = (obj.metadata as Record<string, string> | undefined) ?? {};
+  const tenantId = meta.tenant_id ?? (obj.tenant_id as string | undefined) ?? null;
+  // Stable correlation key set by createSubscriptionHandler. Present
+  // on both checkout.session.completed (Session metadata) AND
+  // customer.subscription.* (forwarded via subscription_data[metadata]
+  // in RealStripe). Falling back to "latest by tenant" only when this
+  // is absent keeps backwards compatibility with sessions opened
+  // before this handler shipped.
+  const localSubId = meta.subscription_id ?? null;
 
   await rc.env.DB.prepare(
     `INSERT INTO billing_events (id, type, tenant_id, payload_json, processed_at) VALUES (?, ?, ?, ?, ?)`,
@@ -246,25 +266,60 @@ export const stripeWebhookHandler: Handler = async (rc) => {
     .bind(event.id, event.type, tenantId, JSON.stringify(event), now)
     .run();
 
+  // Helper: locate the local subscription row by correlation key OR
+  // (legacy) latest-by-tenant. Returns the row id + tier so the
+  // caller can decide whether to seed entitlements.
+  async function locateLocalSub(): Promise<{ id: string; kind: string; tier: string | null } | null> {
+    if (localSubId) {
+      const row = await rc.env.DB.prepare(
+        "SELECT id, kind, tier FROM subscriptions WHERE id = ? LIMIT 1",
+      )
+        .bind(localSubId)
+        .first<{ id: string; kind: string; tier: string | null }>();
+      if (row) return row;
+    }
+    if (!tenantId) return null;
+    const fallback = await rc.env.DB.prepare(
+      "SELECT id, kind, tier FROM subscriptions WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 1",
+    )
+      .bind(tenantId)
+      .first<{ id: string; kind: string; tier: string | null }>();
+    return fallback ?? null;
+  }
+
+  // Seed/refresh entitlements when a tier subscription becomes
+  // chargeable. We DO NOT seed in createSubscriptionHandler for paid
+  // tiers — that was a billing-bypass: a tenant could create a
+  // subscription, get full quotas, and never actually pay. Seeding
+  // here means "active or trialing on Stripe ⇒ entitlements granted".
+  async function seedIfTierActive(localSub: { kind: string; tier: string | null } | null, status: string): Promise<void> {
+    if (!localSub || !tenantId) return;
+    if (localSub.kind !== "tier" || !localSub.tier) return;
+    if (status !== "active" && status !== "trialing") return;
+    try {
+      const tier = tierOrThrow(localSub.tier);
+      await seedTierEntitlements({ db: rc.env.DB, kv: rc.env.CACHE }, tenantId, tier, now);
+    } catch (err) {
+      console.warn("[gefi-api] seed_tier_entitlements_failed", err);
+    }
+  }
+
   switch (event.type) {
     case "checkout.session.completed": {
-      // A Checkout Session is NOT a Subscription. `obj.id` is `cs_...`
-      // (the session id), not the subscription id — the actual sub id
-      // lives on `obj.subscription`. `obj.status` is one of
-      // `open|complete|expired`, none of which are valid for our
-      // `subscriptions.status` CHECK constraint
-      // (`trialing|active|past_due|canceled|incomplete`).
-      // We therefore: (a) read `obj.subscription` for the sub id,
-      // (b) map "complete" → "active", and (c) read trial fields from
-      // the session if Stripe forwarded them.
+      // Checkout Session is NOT a Subscription. `obj.id` is `cs_...`,
+      // the actual sub id is on `obj.subscription`. `obj.status`
+      // ('open'|'complete'|'expired') is also NOT in our
+      // `subscriptions.status` CHECK constraint, so we coerce.
       const stripeSubId = (obj.subscription as string | undefined) ?? null;
-      if (tenantId && stripeSubId) {
+      const local = await locateLocalSub();
+      if (local && stripeSubId) {
         await rc.env.DB.prepare(
           `UPDATE subscriptions SET status = 'active', stripe_subscription_id = ?, updated_at = ?
-           WHERE tenant_id = ? AND id = (SELECT id FROM subscriptions WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 1)`,
+           WHERE id = ?`,
         )
-          .bind(stripeSubId, now, tenantId, tenantId)
+          .bind(stripeSubId, now, local.id)
           .run();
+        await seedIfTierActive(local, "active");
       }
       break;
     }
@@ -290,13 +345,15 @@ export const stripeWebhookHandler: Handler = async (rc) => {
               ? "past_due"
               : "active";
       const periodEnd = obj.current_period_end as number | undefined;
-      if (tenantId && stripeSubId) {
+      const local = await locateLocalSub();
+      if (local && stripeSubId) {
         await rc.env.DB.prepare(
           `UPDATE subscriptions SET status = ?, stripe_subscription_id = ?, current_period_end = ?, updated_at = ?
-           WHERE tenant_id = ? AND id = (SELECT id FROM subscriptions WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 1)`,
+           WHERE id = ?`,
         )
-          .bind(status, stripeSubId, periodEnd ?? null, now, tenantId, tenantId)
+          .bind(status, stripeSubId, periodEnd ?? null, now, local.id)
           .run();
+        await seedIfTierActive(local, status);
       }
       break;
     }
@@ -312,23 +369,23 @@ export const stripeWebhookHandler: Handler = async (rc) => {
         });
         await mailer.send({ ...tmpl, to: customerEmail });
       }
-      if (tenantId) {
+      const local = await locateLocalSub();
+      if (local) {
         await rc.env.DB.prepare(
-          `UPDATE subscriptions SET status = 'past_due', updated_at = ?
-           WHERE tenant_id = ? AND id = (SELECT id FROM subscriptions WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 1)`,
+          `UPDATE subscriptions SET status = 'past_due', updated_at = ? WHERE id = ?`,
         )
-          .bind(now, tenantId, tenantId)
+          .bind(now, local.id)
           .run();
       }
       break;
     }
     case "customer.subscription.deleted": {
-      if (tenantId) {
+      const local = await locateLocalSub();
+      if (local) {
         await rc.env.DB.prepare(
-          `UPDATE subscriptions SET status = 'canceled', updated_at = ?
-           WHERE tenant_id = ? AND id = (SELECT id FROM subscriptions WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 1)`,
+          `UPDATE subscriptions SET status = 'canceled', updated_at = ? WHERE id = ?`,
         )
-          .bind(now, tenantId, tenantId)
+          .bind(now, local.id)
           .run();
       }
       break;

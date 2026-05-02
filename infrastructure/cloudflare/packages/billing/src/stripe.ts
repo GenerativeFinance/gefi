@@ -148,6 +148,14 @@ export class RealStripe implements StripeClient {
     if (input.metadata) {
       for (const [k, v] of Object.entries(input.metadata)) {
         body[`metadata[${k}]`] = v;
+        // Forward the same metadata onto the Subscription Stripe will
+        // create from this Checkout Session. Without this, the metadata
+        // we set on the Session is NOT visible on the
+        // `customer.subscription.created`/`updated` webhook events,
+        // because Stripe carries Session-level metadata only on the
+        // Session object itself. We need a stable correlation key on
+        // both event families to update the right local row.
+        body[`subscription_data[metadata][${k}]`] = v;
       }
     }
     const out = await this.post<{ id: string; url: string; customer: string }>("/checkout/sessions", body);

@@ -83,6 +83,36 @@ export const runModelHandler: Handler = async (rc) => {
   const version = await getVersion(d, model.currentVersionId);
   if (!version) return Response.json({ ok: false, error: "version_missing" }, { status: 404 });
 
+  // Per-model subscription gate. Quotas alone (requests/tokens/
+  // inferences) are tenant-wide and DO NOT prove the caller has paid
+  // for THIS model — without this check, any tenant on any tier could
+  // run any paid public model just by passing the generic quota
+  // checks below. Owners are exempt (they don't pay themselves) and
+  // free models (monthlyPriceCents == 0) are exempt by definition.
+  // Everyone else must hold an `active` or `trialing` subscription
+  // row of `kind='model'` for this model.
+  if (!isOwner && (model.monthlyPriceCents ?? 0) > 0) {
+    const sub = await rc.env.DB.prepare(
+      `SELECT id FROM subscriptions
+       WHERE tenant_id = ? AND model_id = ? AND kind = 'model'
+         AND status IN ('active','trialing')
+       LIMIT 1`,
+    )
+      .bind(c.tenant_id, model.id)
+      .first<{ id: string }>();
+    if (!sub) {
+      return Response.json(
+        {
+          ok: false,
+          error: "model_subscription_required",
+          model_id: model.id,
+          monthly_price_cents: model.monthlyPriceCents,
+        },
+        { status: 402 },
+      );
+    }
+  }
+
   let body: RunBody;
   try {
     body = (await rc.request.json()) as RunBody;

@@ -650,13 +650,27 @@ describe("Marketplace + billing endpoints", () => {
           status: "complete",                    // ← invalid for our CHECK
           subscription: "sub_real_xyz",          // ← the actual sub id
           customer: "cus_xyz",
-          metadata: { tenant_id: "tenant-cs" },
+          // The handler embeds `subscription_id` in Checkout Session
+          // metadata at create time; the webhook reads it back as the
+          // correlation key so concurrent checkouts can't cross-talk.
+          metadata: { tenant_id: "tenant-cs", subscription_id: "sub_local_xyz" },
         },
       },
     });
     const ts = Math.floor(Date.now() / 1000);
     const sig = await signStripePayload(eventBody, secret, ts);
-    const fake = scriptedD1();
+    const fake = scriptedD1({
+      selects: [
+        // Correlation-key lookup: handler issues this with bindings=[localSubId].
+        {
+          match: /FROM subscriptions WHERE id = \? LIMIT 1/,
+          row: (bindings: unknown[]) =>
+            bindings[0] === "sub_local_xyz"
+              ? { id: "sub_local_xyz", kind: "tier", tier: "starter" }
+              : null,
+        },
+      ],
+    });
     const env = regionalEnv({ region: "us", db: fake.db });
     (env as { STRIPE_WEBHOOK_SECRET?: string }).STRIPE_WEBHOOK_SECRET = secret;
     const edge = await signInternalJwt("us", EDGE_SECRET);
@@ -687,6 +701,19 @@ describe("Marketplace + billing endpoints", () => {
       c.bindings.some((b) => b === "sub_real_xyz"),
     );
     expect(wroteRealSubId).toBe(true);
+    // Correlation-key contract: the UPDATE WHERE clause must bind the
+    // local subscription id from metadata, NOT use the legacy
+    // "latest by tenant" subselect. We assert the bound id and that
+    // no UPDATE issued the old `ORDER BY created_at DESC LIMIT 1`
+    // subselect.
+    const wroteLocalSubId = allSubUpdates.some((c) =>
+      c.bindings.some((b) => b === "sub_local_xyz"),
+    );
+    expect(wroteLocalSubId).toBe(true);
+    const usedLatestByTenantSubselect = allSubUpdates.some((c) =>
+      /ORDER BY created_at DESC LIMIT 1/.test(c.sql),
+    );
+    expect(usedLatestByTenantSubselect).toBe(false);
   });
 
   it("POST /v1/billing/webhook coerces non-canonical subscription statuses", async () => {
@@ -702,13 +729,23 @@ describe("Marketplace + billing endpoints", () => {
           id: "sub_coerce",
           object: "subscription",
           status: "incomplete_expired",
-          metadata: { tenant_id: "tenant-coerce" },
+          metadata: { tenant_id: "tenant-coerce", subscription_id: "sub_local_coerce" },
         },
       },
     });
     const ts = Math.floor(Date.now() / 1000);
     const sig = await signStripePayload(eventBody, secret, ts);
-    const fake = scriptedD1();
+    const fake = scriptedD1({
+      selects: [
+        {
+          match: /FROM subscriptions WHERE id = \? LIMIT 1/,
+          row: (bindings: unknown[]) =>
+            bindings[0] === "sub_local_coerce"
+              ? { id: "sub_local_coerce", kind: "tier", tier: "pro" }
+              : null,
+        },
+      ],
+    });
     const env = regionalEnv({ region: "us", db: fake.db });
     (env as { STRIPE_WEBHOOK_SECRET?: string }).STRIPE_WEBHOOK_SECRET = secret;
     const edge = await signInternalJwt("us", EDGE_SECRET);
@@ -725,6 +762,197 @@ describe("Marketplace + billing endpoints", () => {
     const subUpdate = fake.calls.find((c) => /^UPDATE subscriptions SET status = \?/.test(c.sql));
     expect(subUpdate).toBeTruthy();
     expect(subUpdate!.bindings[0]).toBe("incomplete");
+    // `incomplete` is NOT an activation — entitlements MUST NOT be
+    // seeded here. This is the inverse of the activation test below.
+    const seedCalls = fake.calls.filter((c) => /^INSERT INTO entitlements/.test(c.sql));
+    expect(seedCalls).toHaveLength(0);
+  });
+
+  it("POST /v1/billing/subscriptions does NOT seed tier entitlements before payment confirmation", async () => {
+    // Regression: previously, createSubscriptionHandler called
+    // seedTierEntitlements at INSERT time with status='incomplete' —
+    // i.e. before any Stripe webhook had confirmed payment. That
+    // granted full paid-tier quotas to a tenant who could (a) abandon
+    // the checkout, (b) fail the card, or (c) never pay at all. The
+    // fix moves seeding into the webhook activation paths
+    // (checkout.session.completed and customer.subscription.* with
+    // status in {active, trialing}). For paid tiers, the create
+    // endpoint must issue an INSERT INTO subscriptions (status
+    // 'incomplete') and NOTHING into entitlements.
+    const fake = scriptedD1();
+    const env = regionalEnv({ region: "us", db: fake.db });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/subscriptions", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await devToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ kind: "tier", tier: "pro" }),
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(201);
+    const subInsert = fake.calls.find((c) => /^INSERT INTO subscriptions/.test(c.sql));
+    expect(subInsert).toBeTruthy();
+    // Status binding: position 6 (id, tenant, jurisdiction, kind, tier, model_id, status, ...).
+    expect(subInsert!.bindings[6]).toBe("incomplete");
+    const entInserts = fake.calls.filter((c) => /^INSERT INTO entitlements/.test(c.sql));
+    expect(entInserts).toHaveLength(0);
+  });
+
+  it("POST /v1/billing/subscriptions seeds free-tier entitlements at create time (no Stripe payment)", async () => {
+    // The free tier doesn't go through Stripe at all — there's no
+    // webhook to wait for. The handler must seed entitlements at
+    // create time AND mark the row 'active' so quota lookups work
+    // immediately. (The 3 INSERTs are requests_per_day,
+    // tokens_per_month, inferences_per_month.)
+    const fake = scriptedD1();
+    const env = regionalEnv({ region: "us", db: fake.db });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/subscriptions", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await devToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ kind: "tier", tier: "free" }),
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(201);
+    const subInsert = fake.calls.find((c) => /^INSERT INTO subscriptions/.test(c.sql));
+    expect(subInsert!.bindings[6]).toBe("active");
+    const entInserts = fake.calls.filter((c) => /^INSERT INTO entitlements/.test(c.sql));
+    expect(entInserts.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("POST /v1/billing/webhook seeds tier entitlements ONLY when status flips to active", async () => {
+    // The activation half of the deferred-seed contract: when Stripe
+    // confirms payment via customer.subscription.updated with
+    // status=active, the webhook must look up the local row's tier
+    // and provision the tier-shaped entitlements. The handler reads
+    // `tier` from the local row (NOT from Stripe metadata) so a
+    // forged metadata.tier can't escalate quotas.
+    const { signStripePayload } = await import("@gefi/billing");
+    const secret = "whsec_activate";
+    const eventBody = JSON.stringify({
+      id: "evt_activate_1",
+      type: "customer.subscription.updated",
+      data: {
+        object: {
+          id: "sub_stripe_activate",
+          object: "subscription",
+          status: "active",
+          current_period_end: 1_900_000_000,
+          metadata: { tenant_id: "tenant-activate", subscription_id: "sub_local_activate" },
+        },
+      },
+    });
+    const ts = Math.floor(Date.now() / 1000);
+    const sig = await signStripePayload(eventBody, secret, ts);
+    const fake = scriptedD1({
+      selects: [
+        {
+          match: /FROM subscriptions WHERE id = \? LIMIT 1/,
+          row: (bindings: unknown[]) =>
+            bindings[0] === "sub_local_activate"
+              ? { id: "sub_local_activate", kind: "tier", tier: "pro" }
+              : null,
+        },
+      ],
+    });
+    const env = regionalEnv({ region: "us", db: fake.db });
+    (env as { STRIPE_WEBHOOK_SECRET?: string }).STRIPE_WEBHOOK_SECRET = secret;
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/webhook", {
+        method: "POST",
+        headers: { "X-Gefi-Edge-JWT": edge, "Content-Type": "application/json", "Stripe-Signature": sig },
+        body: eventBody,
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    // 1) UPDATE was scoped to the exact local id (correlation key),
+    //    not the legacy latest-by-tenant subselect.
+    const subUpdate = fake.calls.find((c) => /^UPDATE subscriptions SET status = \?/.test(c.sql));
+    expect(subUpdate).toBeTruthy();
+    expect(subUpdate!.bindings[0]).toBe("active");
+    expect(subUpdate!.bindings.includes("sub_local_activate")).toBe(true);
+    expect(/ORDER BY created_at DESC LIMIT 1/.test(subUpdate!.sql)).toBe(false);
+    // 2) Entitlements were seeded — 3 INSERT INTO entitlements rows
+    //    (requests_per_day, tokens_per_month, inferences_per_month).
+    const entInserts = fake.calls.filter((c) => /^INSERT INTO entitlements/.test(c.sql));
+    expect(entInserts.length).toBeGreaterThanOrEqual(3);
+    const features = entInserts.map((c) => c.bindings[1]);
+    expect(features).toContain("requests_per_day");
+    expect(features).toContain("tokens_per_month");
+    expect(features).toContain("inferences_per_month");
+  });
+
+  it("POST /v1/models/:id/run returns 402 when caller has no active subscription to a paid model", async () => {
+    // Per-model entitlement gate: tenant quotas (requests/tokens/
+    // inferences) are tenant-wide and DO NOT prove the caller has
+    // paid for THIS model. Without this check, any tenant on any
+    // tier could run any paid public model just by passing generic
+    // quota checks. Free models (monthlyPriceCents == 0) bypass;
+    // owners bypass; everyone else needs an active or trialing
+    // subscription row of kind='model' for this model.
+    const m = marketplaceD1({
+      model: {
+        id: "mdl-paid",
+        slug: "mdl-paid",
+        developer_tenant_id: "tenant-other-1",   // ← caller is "tenant-inv-1"
+        name: "Paid Model",
+        slug_canonical: "mdl-paid",
+        summary: "x",
+        category: "research",
+        risk_class: "low",
+        jurisdiction: "us",
+        status: "approved",
+        visibility: "public",
+        current_version_id: "ver-paid",
+        monthly_price_cents: 9900,                // ← non-zero ⇒ gate engages
+        developer_share_bps: 7000,
+        federation_enabled: 0,
+        created_at: 0,
+        updated_at: 0,
+      },
+      version: { id: "ver-paid", model_id: "mdl-paid", version: "1.0.0", artifact_r2_key: "x", artifact_sha256: "y", manifest_json: "{}", chain_tx_hash: null, created_at: 0 },
+      metadata: { long_description: "", inputs_json: "[]", outputs_json: "[]", metrics_json: "{}", risk_json: "{}", jurisdictions_supported_json: "[]" },
+      entitlements: [
+        // Caller has wide-open tenant quotas — proves the 402 is the
+        // model gate, not a quota denial.
+        { tenant_id: "tenant-inv-1", feature: "requests_per_day",     limit_value: 1000, used_value: 0, period: "day",   resets_at: null },
+        { tenant_id: "tenant-inv-1", feature: "tokens_per_month",     limit_value: 0,    used_value: 0, period: "month", resets_at: null },
+        { tenant_id: "tenant-inv-1", feature: "inferences_per_month", limit_value: 1000, used_value: 0, period: "month", resets_at: null },
+      ],
+    });
+    const env = regionalEnv({ region: "us", db: m.db });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/models/mdl-paid/run", {
+        method: "POST",
+        headers: { "X-Gefi-Edge-JWT": edge, Authorization: `Bearer ${await investorToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: "hello", max_tokens: 32, no_stream: true }),
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(402);
+    const body = (await res.json()) as { ok: boolean; error: string; model_id: string; monthly_price_cents: number };
+    expect(body.ok).toBe(false);
+    expect(body.error).toBe("model_subscription_required");
+    expect(body.model_id).toBe("mdl-paid");
+    expect(body.monthly_price_cents).toBe(9900);
   });
 
   it("POST /v1/billing/webhook is idempotent across duplicate deliveries", async () => {
