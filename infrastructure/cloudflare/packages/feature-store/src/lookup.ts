@@ -59,8 +59,20 @@ export interface FeatureNodeClient {
  * orchestrator was issued at federation-setup time.
  */
 export class HttpFeatureNodeClient implements FeatureNodeClient {
-  constructor(private readonly bearer: string, private readonly fetchImpl: typeof fetch = fetch) {}
+  constructor(
+    private readonly bearer: string,
+    private readonly fetchImpl: typeof fetch = fetch,
+    private readonly allowInsecureForTests: boolean = false,
+  ) {}
   async fetch(endpoint: string, feature: string, key: string): Promise<NodeFetchResult> {
+    // Encrypted-transport gate: feature data crosses tenant boundaries
+    // and must travel over TLS. Plaintext `http://` endpoints are
+    // refused outright; `stub://` is handled by `StubFeatureNodeClient`,
+    // never this path. The test override exists only so unit tests can
+    // point at an in-process loopback fixture.
+    if (!this.allowInsecureForTests && !endpoint.startsWith("https://")) {
+      throw new Error(`feature_endpoint_not_https: ${endpoint.slice(0, 16)}…`);
+    }
     const res = await this.fetchImpl(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${this.bearer}` },
@@ -94,6 +106,8 @@ export interface LookupDeps {
   client: FeatureNodeClient;
   /** Caller's region — must match the feature's jurisdiction. */
   callerRegion: Region;
+  /** True when the caller is a global admin (bypasses owner ACL). */
+  callerIsAdmin?: boolean;
   /** Optional clock override for tests. */
   nowFn?: () => number;
 }
@@ -107,6 +121,15 @@ export async function lookupFeature(
   if (!def) return { ok: false, error: "feature_not_found" };
   if (def.jurisdiction !== deps.callerRegion) {
     return { ok: false, error: "cross_jurisdiction" };
+  }
+  // Tenant-ACL: only the feature's owner tenant (or a global admin)
+  // may read it. Cross-tenant sharing is intentionally not in v1 — it
+  // would need an explicit `feature_share_grants` table and consent
+  // workflow. Without this gate, any authenticated tenant in the same
+  // region could read any feature slug, which violates multi-tenant
+  // data isolation.
+  if (!deps.callerIsAdmin && def.ownerTenantId !== req.tenantId) {
+    return { ok: false, error: "feature_forbidden" };
   }
   const cacheKey = cacheKeyFor(req.feature, req.key);
   const t0 = Date.now();

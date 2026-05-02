@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MemoryFeatureCache, cacheKeyFor } from "./cache.js";
-import { lookupFeature, StubFeatureNodeClient } from "./lookup.js";
+import { lookupFeature, StubFeatureNodeClient, HttpFeatureNodeClient } from "./lookup.js";
 import type { FeatureRegistry } from "./registry.js";
 import type { FeatureDefinition, FeatureLookup } from "./types.js";
 
@@ -99,17 +99,47 @@ describe("feature-store / lookup", () => {
     const client = new StubFeatureNodeClient();
     const r = await lookupFeature(
       { registry: reg as unknown as FeatureRegistry, cache, client, callerRegion: "us" },
-      { tenantId: "t1", feature: "price_volatility", key: "AAPL" },
+      { tenantId: "t_owner", feature: "price_volatility", key: "AAPL" },
     );
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toBe("cross_jurisdiction");
+  });
+
+  it("rejects cross-tenant read with feature_forbidden", async () => {
+    const reg = new FakeRegistry();
+    reg.put(makeDef());
+    const client = new StubFeatureNodeClient();
+    client.put("price_volatility", "AAPL", 0.32);
+    const r = await lookupFeature(
+      { registry: reg as unknown as FeatureRegistry, cache: new MemoryFeatureCache(), client, callerRegion: "us" },
+      { tenantId: "t_other", feature: "price_volatility", key: "AAPL" },
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("feature_forbidden");
+  });
+
+  it("admin caller bypasses owner ACL", async () => {
+    const reg = new FakeRegistry();
+    reg.put(makeDef());
+    const client = new StubFeatureNodeClient();
+    client.put("price_volatility", "AAPL", 0.32);
+    const r = await lookupFeature(
+      { registry: reg as unknown as FeatureRegistry, cache: new MemoryFeatureCache(), client, callerRegion: "us", callerIsAdmin: true },
+      { tenantId: "t_other", feature: "price_volatility", key: "AAPL" },
+    );
+    expect(r.ok).toBe(true);
+  });
+
+  it("HttpFeatureNodeClient refuses non-https endpoints", async () => {
+    const c = new HttpFeatureNodeClient("tok");
+    await expect(c.fetch("http://insecure.example/feat", "f", "k")).rejects.toThrow(/feature_endpoint_not_https/);
   });
 
   it("returns feature_not_found when no def", async () => {
     const reg = new FakeRegistry();
     const r = await lookupFeature(
       { registry: reg as unknown as FeatureRegistry, cache: new MemoryFeatureCache(), client: new StubFeatureNodeClient(), callerRegion: "us" },
-      { tenantId: "t", feature: "nope", key: "x" },
+      { tenantId: "t_owner", feature: "nope", key: "x" },
     );
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toBe("feature_not_found");
@@ -123,7 +153,7 @@ describe("feature-store / lookup", () => {
     client.put("price_volatility", "AAPL", 0.32, "v3");
     const r = await lookupFeature(
       { registry: reg as unknown as FeatureRegistry, cache, client, callerRegion: "us" },
-      { tenantId: "t1", feature: "price_volatility", key: "AAPL" },
+      { tenantId: "t_owner", feature: "price_volatility", key: "AAPL" },
     );
     expect(r.ok).toBe(true);
     if (r.ok) {
@@ -144,11 +174,11 @@ describe("feature-store / lookup", () => {
     client.put("price_volatility", "AAPL", { vol: 0.4 });
     await lookupFeature(
       { registry: reg as unknown as FeatureRegistry, cache, client, callerRegion: "us" },
-      { tenantId: "t1", feature: "price_volatility", key: "AAPL" },
+      { tenantId: "t_owner", feature: "price_volatility", key: "AAPL" },
     );
     const r = await lookupFeature(
       { registry: reg as unknown as FeatureRegistry, cache, client, callerRegion: "us" },
-      { tenantId: "t1", feature: "price_volatility", key: "AAPL" },
+      { tenantId: "t_owner", feature: "price_volatility", key: "AAPL" },
     );
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.cached).toBe(true);
@@ -161,7 +191,7 @@ describe("feature-store / lookup", () => {
     reg.put(makeDef());
     const r = await lookupFeature(
       { registry: reg as unknown as FeatureRegistry, cache: new MemoryFeatureCache(), client: new StubFeatureNodeClient(), callerRegion: "us" },
-      { tenantId: "t1", feature: "price_volatility", key: "MISSING" },
+      { tenantId: "t_owner", feature: "price_volatility", key: "MISSING" },
     );
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.startsWith("fetch_failed:")).toBe(true);
@@ -176,8 +206,8 @@ describe("feature-store / lookup", () => {
     c1.put("price_volatility", "AAPL", { x: 1 });
     const c2 = new StubFeatureNodeClient();
     c2.put("price_volatility", "AAPL", { x: 1 });
-    const r1 = await lookupFeature({ registry: reg as unknown as FeatureRegistry, cache: cache1, client: c1, callerRegion: "us" }, { tenantId: "t", feature: "price_volatility", key: "AAPL" });
-    const r2 = await lookupFeature({ registry: reg as unknown as FeatureRegistry, cache: cache2, client: c2, callerRegion: "us" }, { tenantId: "t", feature: "price_volatility", key: "AAPL" });
+    const r1 = await lookupFeature({ registry: reg as unknown as FeatureRegistry, cache: cache1, client: c1, callerRegion: "us" }, { tenantId: "t_owner", feature: "price_volatility", key: "AAPL" });
+    const r2 = await lookupFeature({ registry: reg as unknown as FeatureRegistry, cache: cache2, client: c2, callerRegion: "us" }, { tenantId: "t_owner", feature: "price_volatility", key: "AAPL" });
     expect(r1.ok && r2.ok).toBe(true);
     if (r1.ok && r2.ok) expect(r1.resultSha256).toBe(r2.resultSha256);
   });

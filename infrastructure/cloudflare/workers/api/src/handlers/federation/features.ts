@@ -55,7 +55,13 @@ export const lookupFeatureHandler: Handler = async (rc) => {
   const cache = new KvFeatureCache(rc.env.CACHE, regionalCachePrefix(rc.env));
   const client = clientFor(rc.env, def.sourceEndpoint);
   const result = await lookupFeature(
-    { registry, cache, client, callerRegion: c.jurisdiction },
+    {
+      registry,
+      cache,
+      client,
+      callerRegion: c.jurisdiction,
+      callerIsAdmin: c.roles.includes("admin"),
+    },
     {
       tenantId: c.tenant_id,
       feature: body.feature,
@@ -64,7 +70,12 @@ export const lookupFeatureHandler: Handler = async (rc) => {
     },
   );
   if (!result.ok) {
-    const status = result.error === "cross_jurisdiction" ? 403 : 400;
+    const status =
+      result.error === "cross_jurisdiction" || result.error === "feature_forbidden"
+        ? 403
+        : result.error === "feature_not_found"
+        ? 404
+        : 400;
     return Response.json(result, { status });
   }
   return Response.json(result);
@@ -92,6 +103,13 @@ export const createFeatureDefinitionHandler: Handler = async (rc) => {
   }
   if (body.jurisdiction !== rc.env.WORKER_REGION) {
     return Response.json({ ok: false, error: "jurisdiction_must_match_region" }, { status: 400 });
+  }
+  // Encrypted-transport gate at registration time. We accept `https://`
+  // for production endpoints and `stub://` for dev/test fixtures. Any
+  // other scheme (including bare `http://`) is rejected so a definition
+  // can never be created with a plaintext source endpoint.
+  if (!/^(https:\/\/|stub:\/\/)/.test(body.source_endpoint)) {
+    return Response.json({ ok: false, error: "source_endpoint_not_https" }, { status: 400 });
   }
   const registry = new FeatureRegistry(rc.env.DB);
   const existing = await registry.findBySlug(body.slug);
