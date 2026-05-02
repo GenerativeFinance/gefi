@@ -61,8 +61,29 @@ function mapParticipant(row: Record<string, unknown>): FederationParticipant {
     acceptedAt: row.accepted_at == null ? null : Number(row.accepted_at),
     submittedAt: row.submitted_at == null ? null : Number(row.submitted_at),
     sampleCount: Number(row.sample_count),
+    nodeTokenHash: (row.node_token_hash as string | null) ?? null,
   };
 }
+
+/** sha256(hex) of a UTF-8 string. Used to hash the per-participant bearer. */
+async function sha256Hex(s: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  const bytes = new Uint8Array(buf);
+  let out = "";
+  for (let i = 0; i < bytes.length; i++) out += bytes[i]!.toString(16).padStart(2, "0");
+  return out;
+}
+
+/** Random 32-byte hex bearer for participant authentication. */
+function newParticipantToken(): string {
+  const a = new Uint8Array(32);
+  crypto.getRandomValues(a);
+  let out = "";
+  for (let i = 0; i < a.length; i++) out += a[i]!.toString(16).padStart(2, "0");
+  return out;
+}
+
+export { sha256Hex };
 
 function mapUpdate(row: Record<string, unknown>): FederationUpdate {
   return {
@@ -193,20 +214,44 @@ export class FederationStore {
       .run();
   }
 
-  async invite(input: InviteParticipantInput): Promise<FederationParticipant> {
+  async invite(input: InviteParticipantInput): Promise<{ participant: FederationParticipant; nodeToken: string }> {
     const ts = input.ts ?? Math.floor(Date.now() / 1000);
     const id = newId("fp");
+    // Mint a fresh per-participant bearer. Caller surfaces the raw token
+    // EXACTLY ONCE (in the invite response) — only its sha256 hits D1, so
+    // a DB read can never recover the bearer.
+    const nodeToken = newParticipantToken();
+    const nodeTokenHash = await sha256Hex(nodeToken);
     await this.db
       .prepare(
         `INSERT INTO federation_participants (
-          id, round_id, tenant_id, jurisdiction, status, invited_at, sample_count
-        ) VALUES (?,?,?,?,?,?,?)`,
+          id, round_id, tenant_id, jurisdiction, status, invited_at, sample_count, node_token_hash
+        ) VALUES (?,?,?,?,?,?,?,?)`,
       )
-      .bind(id, input.roundId, input.tenantId, input.jurisdiction, "invited", ts, 0)
+      .bind(id, input.roundId, input.tenantId, input.jurisdiction, "invited", ts, 0, nodeTokenHash)
       .run();
     const row = await this.getParticipant(id);
     if (!row) throw new Error("participant_invite_failed");
-    return row;
+    return { participant: row, nodeToken };
+  }
+
+  /**
+   * Constant-time-ish verification that `rawToken` matches the stored
+   * `node_token_hash` for `participantId`. Returns false (not throws) on
+   * unknown participant so the caller can return a uniform 401.
+   */
+  async verifyParticipantToken(participantId: string, rawToken: string): Promise<boolean> {
+    const p = await this.getParticipant(participantId);
+    if (!p || !p.nodeTokenHash) return false;
+    const provided = await sha256Hex(rawToken);
+    // Both strings are sha256-hex (length 64), so we can do a length-equal
+    // char-by-char compare without short-circuiting on first mismatch.
+    if (provided.length !== p.nodeTokenHash.length) return false;
+    let diff = 0;
+    for (let i = 0; i < provided.length; i++) {
+      diff |= provided.charCodeAt(i) ^ p.nodeTokenHash.charCodeAt(i);
+    }
+    return diff === 0;
   }
 
   async accept(input: AcceptParticipantInput): Promise<void> {

@@ -85,6 +85,11 @@ CREATE TABLE IF NOT EXISTS federation_participants (
   accepted_at         INTEGER,
   submitted_at        INTEGER,
   sample_count        INTEGER NOT NULL DEFAULT 0,
+  -- sha256(hex) of the per-participant bearer token issued at invite-time.
+  -- The raw token is returned exactly once (in the invite response) and is
+  -- required as `X-Participant-Token` on `POST /rounds/:id/updates` so a
+  -- compromised orchestrator-trust token can't impersonate other nodes.
+  node_token_hash     TEXT,
   UNIQUE (round_id, tenant_id)
 );
 CREATE INDEX IF NOT EXISTS idx_participants_round ON federation_participants(round_id);

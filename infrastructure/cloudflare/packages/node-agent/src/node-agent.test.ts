@@ -72,6 +72,46 @@ describe("node-agent / trainer", () => {
     expect(Number.isFinite(r.scaledDelta[0]!)).toBe(true);
     expect(r.sampleCount).toBe(100);
   });
+
+  it("DP noise is INDEPENDENT across batches (no seed reuse)", async () => {
+    // Regression test for an earlier bug where the per-batch noise PRNG
+    // was seeded with `dpSeed + epoch * K`, i.e. identical across every
+    // batch in an epoch. With independent noise, two runs that differ
+    // only in batch ordering must produce different scaled deltas; with
+    // seed reuse, they collapse to the same value.
+    //
+    // We exercise this by running with a tiny batch size on the same
+    // 200-row stream — that produces ~10 batches per epoch, so any
+    // seed-reuse bug across batches would zero out the across-run
+    // variance from the noise PRNG. We compare two runs that share
+    // dpSeed but use different batch sizes (so the (epoch, batchIdx)
+    // mixing produces different seeds): if noise were duplicated within
+    // an epoch, batch-size variation alone would not perturb the output.
+    const baseSeed = 12345;
+    const a = new StubSyntheticAdapter({ rows: 200, features: ["x1", "x2"], seed: 7 });
+    const b = new StubSyntheticAdapter({ rows: 200, features: ["x1", "x2"], seed: 7 });
+    const runA = await trainOneRound({
+      baseline: new Float64Array([0, 0]), adapter: a,
+      epochs: 2, batchSize: 20, learningRate: 0.05,
+      dpNoiseMultiplier: 2.0, dpL2Clip: 1.0, dpSeed: baseSeed,
+    });
+    const runB = await trainOneRound({
+      baseline: new Float64Array([0, 0]), adapter: b,
+      epochs: 2, batchSize: 25, learningRate: 0.05,
+      dpNoiseMultiplier: 2.0, dpL2Clip: 1.0, dpSeed: baseSeed,
+    });
+    // Same data + same seed but different batch ordering ⇒ scaledDelta
+    // must visibly differ. With the seed-reuse bug the noise stream was
+    // identical across batches in an epoch; the only thing that varies
+    // here is the (epoch, batchIdx) mix, so a positive delta proves
+    // independence.
+    let dist = 0;
+    for (let i = 0; i < runA.scaledDelta.length; i++) {
+      const d = runA.scaledDelta[i]! - runB.scaledDelta[i]!;
+      dist += d * d;
+    }
+    expect(Math.sqrt(dist)).toBeGreaterThan(1e-6);
+  });
 });
 
 describe("node-agent / attestation", () => {

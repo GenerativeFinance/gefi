@@ -242,6 +242,86 @@ describe("TMC-Shapley", () => {
   });
 });
 
+describe("FederationStore / per-participant auth", () => {
+  // Minimal in-memory D1 fake: holds one participant row keyed by id, lets
+  // `invite` write it and `getParticipant` read it. We only exercise the
+  // queries `invite` and `verifyParticipantToken` actually issue.
+  function makeFakeDb() {
+    const rows = new Map<string, Record<string, unknown>>();
+    return {
+      rows,
+      prepare(sql: string) {
+        const isInsert = /^INSERT INTO federation_participants/i.test(sql);
+        const isSelect = /^SELECT \* FROM federation_participants WHERE id = \?$/i.test(sql);
+        let bound: unknown[] = [];
+        const stmt: {
+          bind: (...args: unknown[]) => typeof stmt;
+          run: () => Promise<void>;
+          first: <T>() => Promise<T | null>;
+          all: () => Promise<{ results: unknown[] }>;
+        } = {
+          bind(...args: unknown[]) { bound = args; return stmt; },
+          async run() {
+            if (isInsert) {
+              const [id, round_id, tenant_id, jurisdiction, status, invited_at, sample_count, node_token_hash] = bound;
+              rows.set(String(id), { id, round_id, tenant_id, jurisdiction, status, invited_at, sample_count, node_token_hash });
+            }
+          },
+          async first<T>() {
+            if (isSelect) return (rows.get(String(bound[0])) as T | undefined) ?? null;
+            return null;
+          },
+          async all() { return { results: [] }; },
+        };
+        return stmt;
+      },
+    };
+  }
+
+  it("invite mints a fresh raw token and persists only the sha256", async () => {
+    const { FederationStore } = await import("./store.js");
+    const fake = makeFakeDb();
+    const store = new FederationStore(fake as unknown as D1Database);
+    const r = await store.invite({ roundId: "r1", tenantId: "t_a", jurisdiction: "us" });
+    expect(r.nodeToken).toMatch(/^[0-9a-f]{64}$/);
+    const row = [...fake.rows.values()][0]!;
+    // Raw token is NEVER stored — only its sha256 hex (length 64).
+    expect(row.node_token_hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(row.node_token_hash).not.toBe(r.nodeToken);
+    // Verifying the raw token must succeed.
+    expect(await store.verifyParticipantToken(r.participant.id, r.nodeToken)).toBe(true);
+  });
+
+  it("rejects token from a sibling participant (impersonation resistance)", async () => {
+    const { FederationStore } = await import("./store.js");
+    const fake = makeFakeDb();
+    const store = new FederationStore(fake as unknown as D1Database);
+    const a = await store.invite({ roundId: "r1", tenantId: "t_a", jurisdiction: "us" });
+    const b = await store.invite({ roundId: "r1", tenantId: "t_b", jurisdiction: "us" });
+    // A's token is valid for A, but presenting it as B must fail.
+    expect(await store.verifyParticipantToken(a.participant.id, a.nodeToken)).toBe(true);
+    expect(await store.verifyParticipantToken(b.participant.id, a.nodeToken)).toBe(false);
+    expect(await store.verifyParticipantToken(a.participant.id, b.nodeToken)).toBe(false);
+  });
+
+  it("rejects token for unknown participant id", async () => {
+    const { FederationStore } = await import("./store.js");
+    const fake = makeFakeDb();
+    const store = new FederationStore(fake as unknown as D1Database);
+    const a = await store.invite({ roundId: "r1", tenantId: "t_a", jurisdiction: "us" });
+    expect(await store.verifyParticipantToken("fp_does_not_exist", a.nodeToken)).toBe(false);
+  });
+
+  it("rejects empty / wrong-length tokens", async () => {
+    const { FederationStore } = await import("./store.js");
+    const fake = makeFakeDb();
+    const store = new FederationStore(fake as unknown as D1Database);
+    const a = await store.invite({ roundId: "r1", tenantId: "t_a", jurisdiction: "us" });
+    expect(await store.verifyParticipantToken(a.participant.id, "")).toBe(false);
+    expect(await store.verifyParticipantToken(a.participant.id, "deadbeef")).toBe(false);
+  });
+});
+
 describe("3-node consortium round (integration)", () => {
   it("Bonawitz-masked FedAvg recovers the plaintext FedAvg result", async () => {
     // Three participants train a 4-dim model. Each submits a masked

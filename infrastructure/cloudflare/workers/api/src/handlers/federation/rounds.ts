@@ -135,11 +135,21 @@ export const inviteParticipantHandler: Handler = async (rc) => {
     return Response.json({ ok: false, error: "jurisdiction_mismatch" }, { status: 400 });
   }
   const existing = await store.findParticipantByTenant(id, body.tenant_id);
-  if (existing) return Response.json({ ok: true, participant: existing }, { status: 200 });
-  const participant = await store.invite({ roundId: id, tenantId: body.tenant_id, jurisdiction: body.jurisdiction });
+  if (existing) {
+    // Re-invite is idempotent at the participant level — the original
+    // node token was already returned at first-invite time and is the
+    // only copy. We do not re-mint here so a leak of the orchestrator
+    // role can't rotate-and-impersonate.
+    return Response.json({ ok: true, participant: existing }, { status: 200 });
+  }
+  const { participant, nodeToken } = await store.invite({ roundId: id, tenantId: body.tenant_id, jurisdiction: body.jurisdiction });
   // Promote round to "invite" once the first participant is invited.
   if (round.status === "init") await store.setRoundStatus(id, "invite");
-  return Response.json({ ok: true, participant }, { status: 201 });
+  // node_token is returned EXACTLY ONCE — the orchestrator forwards it
+  // to the node-agent over its OOB channel and we never store the raw
+  // value in D1 (only sha256). Subsequent reads of this participant
+  // will not include `node_token`.
+  return Response.json({ ok: true, participant, node_token: nodeToken }, { status: 201 });
 };
 
 interface SubmitUpdateBody {
@@ -165,11 +175,23 @@ interface SubmitUpdateBody {
 export const submitUpdateHandler: Handler = async (rc) => {
   const id = rc.params["id"];
   if (!id) return Response.json({ ok: false, error: "id_required" }, { status: 400 });
+  // Two-factor node auth: the shared FEDERATION_INTERNAL_TOKEN gates the
+  // *endpoint* (only the orchestrator's trust boundary should reach here)
+  // AND the participant-bound `X-Participant-Token` proves the caller is
+  // the actual node holding the bearer minted at invite time. A leak of
+  // either factor alone cannot impersonate a participant: the shared
+  // bearer can't synthesise a per-participant secret (32 random bytes
+  // never persisted raw), and the per-participant bearer can't cross the
+  // orchestrator gate without also stealing the shared bearer.
   const expected = rc.env.FEDERATION_INTERNAL_TOKEN;
   if (!expected) return Response.json({ ok: false, error: "federation_misconfigured" }, { status: 500 });
   const provided = rc.request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") ?? null;
   if (!provided || provided !== expected) {
     return Response.json({ ok: false, error: "node_token_required" }, { status: 401 });
+  }
+  const participantToken = rc.request.headers.get("X-Participant-Token");
+  if (!participantToken) {
+    return Response.json({ ok: false, error: "participant_token_required" }, { status: 401 });
   }
   let body: SubmitUpdateBody;
   try { body = (await rc.request.json()) as SubmitUpdateBody; } catch { return Response.json({ ok: false, error: "invalid_body" }, { status: 400 }); }
@@ -187,6 +209,13 @@ export const submitUpdateHandler: Handler = async (rc) => {
   const participant = await store.getParticipant(body.participant_id);
   if (!participant || participant.roundId !== id) {
     return Response.json({ ok: false, error: "participant_not_found" }, { status: 404 });
+  }
+  // Participant-bound auth check. We deliberately compare AFTER loading
+  // the row (constant memory cost regardless of whether the participant
+  // exists) and use the constant-time-ish helper in the store.
+  const tokenOk = await store.verifyParticipantToken(participant.id, participantToken);
+  if (!tokenOk) {
+    return Response.json({ ok: false, error: "participant_token_invalid" }, { status: 401 });
   }
   if (participant.tenantId !== body.tenant_id) {
     return Response.json({ ok: false, error: "tenant_mismatch" }, { status: 403 });

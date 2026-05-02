@@ -72,6 +72,8 @@ export interface FederationParticipant {
   acceptedAt: number | null;
   submittedAt: number | null;
   sampleCount: number;
+  /** sha256(hex) of the participant-bound bearer; null for legacy rows. */
+  nodeTokenHash: string | null;
 }
 
 export interface FederationUpdate {
