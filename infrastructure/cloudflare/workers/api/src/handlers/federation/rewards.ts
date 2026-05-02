@@ -84,10 +84,16 @@ export const distributeRewardsHandler: Handler = async (rc) => {
   // The mirror lives in D1 (`kyc_whitelist`) for hot-path checks; the
   // on-chain gate in RewardDistributor.sol catches anything that slips
   // through (defence in depth).
+  // Filter by jurisdiction AND active expiry — an entry whose
+  // `expires_at` is in the past is treated as not whitelisted, matching
+  // KYCRegistry.sol semantics. NULL expiry = never expires.
   const allowed = new Set<string>();
   const kycRows = await rc.env.DB.prepare(
-    `SELECT recipient_address FROM kyc_whitelist WHERE jurisdiction = ?`,
-  ).bind(round.jurisdiction).all<{ recipient_address: string }>();
+    `SELECT recipient_address FROM kyc_whitelist
+       WHERE jurisdiction = ?
+         AND (expires_at IS NULL OR expires_at >= ?)`,
+  ).bind(round.jurisdiction, Math.floor(Date.now() / 1000))
+    .all<{ recipient_address: string }>();
   for (const row of kycRows.results ?? []) allowed.add(row.recipient_address.toLowerCase());
 
   const distributor = rewardsClient(rc.env);

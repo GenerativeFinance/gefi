@@ -17,6 +17,7 @@ import {
   fedAvg,
   aggregateAndAverage,
   aggregateFingerprint,
+  tmcShapley,
   type PlaintextUpdate,
   type MaskedUpdate,
 } from "@gefi/federation";
@@ -277,6 +278,28 @@ export const aggregateRoundHandler: Handler = async (rc) => {
       submitted: updates.length, required: round.minParticipants,
     }, { status: 409 });
   }
+  // Cohort-consistency check for secure-aggregation rounds.
+  // Bonawitz pairwise masks only cancel iff every accepted cohort
+  // member submits. Dropouts leave residual masks that unbalance the
+  // sum unless the orchestrator runs `unmaskWithRecovery` with the
+  // survivors' shared-mask shares — a flow we don't yet expose
+  // through this handler. Reject the aggregate so a partial cohort
+  // can't silently produce a poisoned model.
+  if (round.secureAggregation) {
+    const participants = await store.listParticipants(id);
+    const accepted = participants.filter((p) => p.status === "accepted" || p.status === "submitted");
+    const submittedIds = new Set(updates.map((u) => u.participantId));
+    const dropouts = accepted.filter((p) => !submittedIds.has(p.id)).map((p) => p.id);
+    if (dropouts.length > 0) {
+      return Response.json({
+        ok: false,
+        error: "secure_agg_cohort_incomplete",
+        submitted: updates.length,
+        accepted: accepted.length,
+        dropouts,
+      }, { status: 409 });
+    }
+  }
 
   // Pull each participant's vector from R2, FedAvg-weight by samples.
   // We accumulate in-place to keep memory bounded — we never hold all
@@ -344,6 +367,50 @@ export const aggregateRoundHandler: Handler = async (rc) => {
 
   await store.setRoundAggregate(round.id, sha, chainTxHash);
   await store.setRoundStatus(round.id, "aggregate");
+
+  // Compute and persist contribution scores. The reward distributor reads
+  // `contribution_scores` to weight payouts, so this MUST run before
+  // moving the round to `distribute`.
+  //
+  // For plaintext rounds we run TMC-Shapley with each participant's
+  // submitted vector as the model and a synthetic ridge-regression
+  // validation set derived from the FedAvg aggregate (the participants'
+  // weighted mean acts as the held-out target). For secure-aggregation
+  // rounds we cannot see individual vectors at the orchestrator (by
+  // design), so we fall back to sample-count proportional scoring —
+  // identical to FedAvg's contribution weighting.
+  let scoreRows: Array<{ tenantId: string; score: number; permutations: number }>;
+  if (round.secureAggregation || plaintext.length === 0) {
+    const totalSamples = updates.reduce((s, u) => s + u.sampleCount, 0) || 1;
+    scoreRows = updates.map((u) => ({
+      tenantId: u.tenantId,
+      score: u.sampleCount / totalSamples,
+      permutations: 0,
+    }));
+  } else {
+    // Build a small synthetic validation set: rows = participant vectors,
+    // target = inner-product with the FedAvg aggregate. This rewards
+    // participants whose updates align with the consensus model and
+    // penalises adversarial / drifted updates. The vector dimension can
+    // be large, so cap evaluation rows at min(participants, 32) for
+    // bounded CPU cost on the Worker.
+    const X = plaintext.slice(0, 32).map((p) => p.vector);
+    const y = new Float64Array(X.length);
+    for (let i = 0; i < X.length; i++) {
+      const v = X[i]!;
+      let dot = 0;
+      for (let k = 0; k < v.length; k++) dot += v[k]! * aggregate[k]!;
+      y[i] = dot;
+    }
+    const shap = tmcShapley({ participants: plaintext, X, y, permutations: 6 });
+    scoreRows = plaintext.map((p, i) => ({
+      tenantId: p.tenantId,
+      score: shap.scores[i] ?? 0,
+      permutations: shap.permutationsSampled,
+    }));
+  }
+  await store.writeContributions(round.id, scoreRows);
+
   await store.setRoundStatus(round.id, "distribute");
 
   return Response.json({
@@ -353,6 +420,7 @@ export const aggregateRoundHandler: Handler = async (rc) => {
     aggregate_dim: aggregate.length,
     chain_tx_hash: chainTxHash,
     participants: updates.length,
+    contributions_persisted: scoreRows.length,
   });
 };
 
