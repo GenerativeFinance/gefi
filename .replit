@@ -39,6 +39,7 @@ localPort = 24678
 externalPort = 3001
 
 [deployment]
-deploymentTarget = "autoscale"
+deploymentTarget = "static"
 run = ["node", "dist/index.js"]
-build = ["npm", "run", "build"]
+build = ["sh", "-c", "bundle config set --local path 'vendor/bundle' && bundle install && JEKYLL_ENV=production bundle exec jekyll build"]
+publicDir = "_site"
