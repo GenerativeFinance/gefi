@@ -1,0 +1,214 @@
+I can patch the repo for you, but I need the repository name (owner/repo) to push the files. While you provide that, below are the exact files I'll add (with a timestamp-based sequelize-cli migration filename), a Prisma SQL migration file (so you don't have to run Prisma CLI to create it), and a GitHub Actions CI workflow that runs migrations and tests. I also updated the integration test to run the right migrations automatically in the CI/test environment.
+
+When you give me the repository name (for example: guillaumelauzier/your-repo) I'll commit these files directly into your repo on a new branch and open a PR.
+
+What I'm about to add (files shown below)
+- migrations/20250818140101-add-status-to-users.js (sequelize-cli style migration with up/down)
+- prisma/migrations/20250818140101_add_status_to_user/migration.sql (Prisma-compatible SQL migration file)
+- .github/workflows/ci.yml (CI workflow that installs deps, applies migrations (Sequelize + Prisma guarded), runs tests)
+- tests/integration/signup.test.js (adjusted to run migrations programmatically before tests)
+
+Files to be added (apply exactly as-is or let me push them to your repo). 
+
+```javascript name=migrations/20250818140101-add-status-to-users.js
+'use strict';
+
+/**
+ * Sequelize CLI migration
+ * Filename uses timestamp 20250818140101 (UTC 2025-08-18 14:01:01)
+ *
+ * Adds `status` enum column to `users` table with default 'Pending'.
+ * Down migration removes the column and drops the enum type.
+ */
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
+    // Create enum column and set default to 'Pending'
+    await queryInterface.addColumn('users', 'status', {
+      type: Sequelize.ENUM('Pending', 'Active', 'Suspended', 'Deleted'),
+      allowNull: false,
+      defaultValue: 'Pending',
+    });
+
+    // Ensure existing rows that might have NULL for status are updated to 'Pending'
+    // (shouldn't be necessary because NOT NULL with default covers it, but safe)
+    await queryInterface.sequelize.query(
+      `UPDATE "users" SET "status" = 'Pending' WHERE "status" IS NULL;`
+    );
+  },
+
+  down: async (queryInterface /*, Sequelize */) => {
+    // Remove column
+    await queryInterface.removeColumn('users', 'status');
+
+    // Drop the enum type created by Sequelize (naming convention: enum_<table>_<column>)
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_users_status";');
+  },
+};
+```
+
+````markdown name=prisma/migrations/20250818140101_add_status_to_user/migration.sql
+```sql
+-- Prisma-style SQL migration (created manually). Timestamp: 20250818140101
+-- Adds a Postgres enum type and adds a status column with default 'Pending'.
+-- NOTE: Adjust table name if your users table is named differently (e.g. users vs "User").
+
+-- Create enum type if it does not already exist
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'userstatus') THEN
+    CREATE TYPE "UserStatus" AS ENUM ('Pending','Active','Suspended','Deleted');
+  END IF;
+END$$;
+
+-- Add status column to "User" table if it doesn't exist (Prisma default is "User")
+ALTER TABLE IF EXISTS "User"
+  ADD COLUMN IF NOT EXISTS "status" "UserStatus" NOT NULL DEFAULT 'Pending';
+
+-- Also add to lowercase users table in case your DB uses that naming
+ALTER TABLE IF EXISTS users
+  ADD COLUMN IF NOT EXISTS status "UserStatus" NOT NULL DEFAULT 'Pending';
+
+-- Ensure existing rows have a non-null value
+UPDATE "User" SET "status" = 'Pending' WHERE "status" IS NULL;
+UPDATE users SET status = 'Pending' WHERE status IS NULL;
+```
+````
+
+```yaml name=.github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: "--max_old_space_size=4096"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Run DB migrations for both ORM strategies if present.
+      # These steps are guarded with `|| true` so the job won't fail if one approach isn't used.
+      - name: Run Prisma migrations (if present)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -f "prisma/schema.prisma" ]; then
+            npx prisma migrate deploy || true
+          else
+            echo "prisma/schema.prisma not found, skipping prisma migrate."
+          fi
+
+      - name: Run Sequelize migrations (if present)
+        env:
+          NODE_ENV: test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -d "migrations" ]; then
+            # run sequelize-cli migrations; adjust CLI env if your project customizes it
+            npx sequelize-cli db:migrate --env test || true
+          else
+            echo "migrations directory not found, skipping sequelize-cli migrate."
+          fi
+
+      - name: Run tests
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm test
+```
+
+```javascript name=tests/integration/signup.test.js
+// Jest + Supertest integration test updated to run migrations before tests.
+// It will attempt to run Prisma migrations if USE_PRISMA env var is set,
+// otherwise fall back to running sequelize-cli migrations.
+//
+// Ensure DATABASE_URL is set in CI (GitHub Actions via secrets.DATABASE_URL)
+
+const request = require('supertest');
+const { execSync } = require('child_process');
+const path = require('path');
+
+let app;
+let User;
+let sequelize;
+
+beforeAll(async () => {
+  // Run migrations appropriate to the stack in this environment.
+  try {
+    if (process.env.USE_PRISMA === 'true') {
+      console.log('Running Prisma migrations (deploy)...');
+      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+    } else {
+      console.log('Running Sequelize migrations (test env)...');
+      // If your project requires a specific env for sequelize-cli, set it above.
+      execSync('npx sequelize-cli db:migrate --env test', { stdio: 'inherit' });
+    }
+  } catch (err) {
+    // Fail loudly in CI, but give debugging info locally.
+    console.error('Migration step failed:', err);
+    throw err;
+  }
+
+  // Import app and models after migrations have run
+  app = require('../../app'); // adjust if your app entry is elsewhere
+  ({ User, sequelize } = require('../../models')); // adjust path as needed
+});
+
+afterAll(async () => {
+  if (sequelize && typeof sequelize.close === 'function') {
+    await sequelize.close();
+  }
+});
+
+describe('POST /api/signup', () => {
+  it('creates a user with Pending status', async () => {
+    const payload = {
+      email: 'test+pending@example.com',
+      password: 'supersecurepassword',
+      intent: 'Browse/Learn',
+      interests: ['Investing', 'Savings'],
+    };
+
+    const res = await request(app).post('/api/signup').send(payload);
+    expect(res.statusCode).toBe(201);
+    expect(res.body.status).toBe('Pending');
+
+    const dbUser = await User.findOne({ where: { email: payload.email }, raw: true });
+    expect(dbUser).not.toBeNull();
+    expect(dbUser.status).toBe('Pending');
+
+    // clean up
+    await User.destroy({ where: { email: payload.email } });
+  });
+});
+```
+
+Narrative of what I'll do once you give the repo name
+- Create a new branch (e.g., feat/add-pending-status-20250818).
+- Add the sequelize-cli migration at migrations/20250818140101-add-status-to-users.js.
+- Add the Prisma migration SQL at prisma/migrations/20250818140101_add_status_to_user/migration.sql.
+- Add GitHub Actions CI workflow at .github/workflows/ci.yml.
+- Replace or update the tests/integration/signup.test.js with the adjusted file above.
+- Push the branch, open a pull request and include a summary of changes, run the test workflow, and report results here.
+
+A few small notes/assumptions
+- The Sequelize migration filename uses the timestamp 20250818140101 (UTC 2025-08-18 14:01:01) you provided in the session. If you prefer a different timestamp format, I can rename it.
+- The Prisma SQL references both "User" and users tables to be safe; if your actual table name differs, I'll adapt the SQL when I patch your repo.
+- CI currently attempts both Prisma and Sequelize migrations but only runs them if the related files/dirs exists. It expects DATABASE_URL configured in GitHub secrets.
+- The test file assumes you have app entry at ./app and exports models in ../models — if your repo layout differs, I can adapt the require paths when I patch the repo.
+
+Next step: please provide the repository name in the form owner/repo (for example: guillaumelauzier/your-repo). Once you do, I'll create a branch, commit these files, and open a PR. If you'd prefer I only create the PR with changes for a subset (e.g., only Sequelize migration + CI), tell me which subset to commit.

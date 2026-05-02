@@ -1,0 +1,91 @@
+To address your query, I’ll break it down into three parts: identifying report options for generating new reports for investors, fixing the error mentioned, and enabling this functionality as a Replit prompt. The image attachment descriptions provide key context, so I’ll use them to inform the solution.
+
+---
+
+### Report Options for Generating New Reports for Investors
+Based on the "Investor Reports" section in Image 3 and Image 6, the following report options are available for generating new reports tailored to investors:
+- **Monthly AI Performance Review**: Includes metrics like model accuracy (e.g., 85.3% from Image 0), total earnings (e.g., 8,450 GeFi from Image 2), and updates (e.g., "Last updated: Jan 15, 2025" from Image 6). This report highlights AI model performance over a month.
+- **Risk & Compliance Analysis**: Covers risk metrics and compliance status (e.g., "CPA Compliant," "ISO 27001 Certified" from Image 5), updated daily as noted in Image 3. Ideal for investors interested in risk management and regulatory adherence.
+- **Portfolio Optimization**: Offers AI-powered suggestions for asset allocation and expected returns, as indicated in Image 6. This report focuses on optimizing investment portfolios.
+
+These options align with investor interests in performance, risk, and strategic insights, drawing from metrics like "GeFi Balance," "Total Earnings," and "Model Accuracy" seen across the images.
+
+---
+
+### Fixing the Error
+Image 5 shows an error: **"Generation Failed"** with the message **"400: {\"success\":false,\"error\":\"Report name and type are required\"}"**. This indicates that the report generation failed because the required fields—report name and type—were missing.
+
+#### Steps to Fix:
+1. **Enter a Report Name**: Provide a unique name, e.g., "Q3 2025 Investor Summary," in the report generation form.
+2. **Select a Report Type**: Choose from the available options (e.g., Monthly AI Performance Review, Risk & Compliance Analysis, Portfolio Optimization) via a dropdown or similar input.
+3. **Submit Correctly**: Ensure both fields are filled before clicking "Generate New Report" (seen in Image 3). The interface likely includes these inputs below the button.
+
+This resolves the HTTP 400 Bad Request error by meeting the platform’s validation requirements.
+
+---
+
+### Enabling as a Replit Prompt
+To enable report generation as a Replit prompt, you can create a Python script that simulates the process or interacts with the platform’s API (if available). Since API details aren’t provided, I’ll present a script that mimics the interface’s behavior, prompting for inputs and validating them.
+
+#### Steps:
+1. **Set Up Replit**: Create a Python project in Replit.
+2. **Script Logic**: Prompt for report name and type, validate inputs, and simulate generation.
+3. **Error Handling**: Mirror the error from Image 5 if inputs are missing.
+
+Here’s the script:
+
+<xaiArtifact artifact_id="66737dbb-4bc3-49ff-8906-9fc3fadd9ac6" artifact_version_id="945d3a6e-eab6-4662-b921-1f851e383fca" title="report_generator.py" contentType="text/python">
+import time
+
+# Available report types
+report_types = [
+    "Monthly AI Performance Review",
+    "Risk & Compliance Analysis",
+    "Portfolio Optimization"
+]
+
+# Simulate report generation
+def generate_report(name, type_):
+    if not name or not type_:
+        return {"success": False, "error": "Report name and type are required"}
+    time.sleep(1)  # Simulate processing
+    return {"success": True, "report": f"{type_} - {name}"}
+
+# User input prompt
+print("Available report types:")
+for i, report in enumerate(report_types, 1):
+    print(f"{i}. {report}")
+try:
+    choice = int(input("Select a report type (number): ")) - 1
+    selected_type = report_types[choice]
+except (ValueError, IndexError):
+    print("Invalid selection. Exiting.")
+    exit(1)
+
+report_name = input("Enter report name: ")
+
+# Generate report
+result = generate_report(report_name, selected_type)
+
+# Output result
+if result["success"]:
+    print(f"Report generated: {result['report']}")
+else:
+    print(f"Error: {result['error']}")
+</xaiArtifact>
+
+#### How It Works:
+- **Run in Replit**: Paste this into a Replit Python project and run it.
+- **Input**: Select a report type (1-3) and enter a name.
+- **Output**: If both inputs are provided, it “generates” a report; otherwise, it shows the same error as Image 5.
+
+For a real API integration, you’d replace the `generate_report` function with an API call (e.g., using `requests`), but this simulation mirrors the platform’s behavior based on the images.
+
+---
+
+### Summary
+- **Report Options**: Monthly AI Performance Review, Risk & Compliance Analysis, Portfolio Optimization.
+- **Fix Error**: Provide a report name and type before generating.
+- **Replit Prompt**: Use the provided Python script to simulate report generation, adaptable to an API if available.
+
+This solution leverages the image descriptions to meet your needs comprehensively.

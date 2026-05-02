@@ -1,0 +1,80 @@
+Thanks — I looked through the code and the likely causes. The model detail page historically only resolved a small set of route patterns and had several hard-coded id → route redirects; other pages (and older links) use /ai-models/:id, so visiting /ai-models/19 can fail if the page doesn’t parse that pathname or if you want id 19 to redirect to a dedicated route that isn’t yet mapped.
+
+Two safe fixes you can apply (pick one):
+
+1) Quick, explicit redirect for id 19
+- Add /ai-models/:id support (if not already present) and add a mapping so /ai-models/19 redirects to the canonical page you want (replace /your-target-route with the actual route).
+
+Code patch (update client/src/pages/model-detail.tsx — small excerpt):
+
+```typescript name=client/src/pages/model-detail.tsx
+// ...imports...
+import { useRoute } from "wouter";
+// ...
+
+export default function ModelDetail() {
+  // Try known route patterns (include /ai-models/:id)
+  const [, modelRouteParams] = useRoute("/model/:id");
+  const [, marketplaceRouteParams] = useRoute("/marketplace/:id");
+  const [, aiModelsRouteParams] = useRoute("/ai-models/:id"); // <-- add this
+
+  const idParamRaw =
+    modelRouteParams?.id ??
+    marketplaceRouteParams?.id ??
+    aiModelsRouteParams?.id ??
+    (typeof window !== "undefined"
+      ? (window.location.pathname.match(/\/(?:model|marketplace|models|ai-models)\/(\d+)/) || [])[1]
+      : undefined);
+
+  const idParam = idParamRaw ? String(idParamRaw) : undefined;
+
+  useEffect(() => {
+    if (!idParam) return;
+
+    // existing special mappings...
+    if (idParam === "19") {
+      // set the correct canonical route for model 19 here:
+      window.location.href = "/your-target-route-for-model-19";
+      return;
+    }
+    // other mappings...
+  }, [idParam]);
+
+  // rest of file unchanged
+}
+```
+
+2) Robust approach: resolve /ai-models/:id and redirect only when the model indicates a special path
+- Instead of hard-coding many id → route redirects, fetch the model and, if the model object includes a canonical path/slug (or you derive one from model.name), redirect to that. This reduces future maintenance (no more adding id mappings).
+
+Example snippet (after your query fetch finishes — insert after model is available):
+
+```typescript name=client/src/pages/model-detail.tsx
+useEffect(() => {
+  if (!model) return;
+
+  // if backend provides a canonicalPath or slug, prefer that:
+  const redirectPath = (model as any).canonicalPath || (model as any).slug
+    ? `/${(model as any).canonicalPath || `models/${(model as any).slug}`}`
+    : null;
+
+  if (redirectPath) {
+    window.location.href = redirectPath;
+    return;
+  }
+
+  // fallback: if you still want to map specific ids:
+  if (String(model.id) === "19") {
+    window.location.href = "/your-target-route-for-model-19";
+  }
+}, [model]);
+```
+
+Notes and next steps I need from you
+- Do you want /ai-models/19 to:
+  - redirect to a specific custom page (if so, tell me the exact target path), or
+  - render the standard ModelDetail UI (no redirect), or
+  - use a backend-supplied slug/canonicalPath (I can show the patch that uses model.slug and also add a small backend field if needed)?
+- If you confirm the exact target path for model 19, I can provide the exact one-line patch to add to the file (or the full file patch) that you can apply/commit.
+
+If you prefer the robust approach (automatic redirect from model data), say so and I’ll give the complete small patch that (a) ensures /ai-models/:id is parsed, (b) fetches the model, and (c) redirects to model.canonicalPath (or derives a slug) when present.

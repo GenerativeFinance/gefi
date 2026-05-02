@@ -1,0 +1,84 @@
+Perfect 👌 — the list you have is a **solid foundation of mainstream AI finance models**. But if you want to go **deeper into very specialised models (including DeFi, blockchain, and niche quant finance)**, here’s an extended taxonomy:
+
+---
+
+## 🔹 9. **Decentralized Finance (DeFi) & Blockchain Models**
+
+Used in crypto markets, decentralized exchanges (DEXs), stablecoins, and lending protocols.
+
+* **Automated Market Maker (AMM) Models**
+
+  * Constant Product (Uniswap, Balancer), Constant Sum, Hybrid Curves (Curve Finance)
+* **Liquidity Mining & Yield Farming Optimizers**
+
+  * Reinforcement Learning agents that maximize APY across multiple protocols
+* **Smart Contract Risk Scoring Models**
+
+  * Graph Neural Networks (GNNs) for contract vulnerability detection
+  * Bayesian networks for protocol failure probability
+* **On-chain Anomaly Detection**
+
+  * Detecting rug pulls, flash-loan attacks, and wash trading using ML anomaly detection
+* **Stablecoin Risk Models**
+
+  * AI stress-testing for collateral ratios & peg stability
+* **Tokenomics Optimization Models**
+
+  * Evolutionary algorithms for incentive design in DAOs and DeFi protocols
+
+---
+
+## 🔹 10. **Market Microstructure & Execution Models**
+
+* **Reinforcement Learning Execution Agents** (optimal slicing of orders, minimizing slippage)
+* **Queue-Reactive Models** for limit order book dynamics
+* **Adversarial Learning Models** for detecting predatory HFT strategies
+
+---
+
+## 🔹 11. **Insurance & Actuarial AI Models**
+
+* **Bayesian Credibility Models** with AI enhancements
+* **Deep Survival Models** for claim prediction & life expectancy forecasting
+* **Generative Models** for synthetic claim scenario testing
+
+---
+
+## 🔹 12. **Corporate Finance & Valuation AI Models**
+
+* **LLM-driven DCF (Discounted Cash Flow) models** with scenario generation
+* **Hybrid ML models for M\&A deal success prediction**
+* **NLP-based Earnings Call Tone Analysis** for valuation impact
+
+---
+
+## 🔹 13. **Alternative Data Trading Models**
+
+* **Satellite imagery for retail traffic / crop yield forecasting**
+* **Social media sentiment LSTMs/Transformers**
+* **Audio AI for tone/emotion detection in CEO earnings calls**
+* **Supply Chain Disruption Predictors** (graph models for logistics risk)
+
+---
+
+## 🔹 14. **RegTech & Compliance AI Models**
+
+* **AML/KYC Anomaly Detection** using autoencoders + Bayesian networks
+* **Regulatory Document NLP Models** (extract compliance requirements from laws/filings)
+* **Entity Resolution Models** for linking clients across multiple financial systems
+
+---
+
+## 🔹 15. **Macro & Systemic Risk AI Models**
+
+* **Agent-Based Modeling + AI reinforcement learning** for financial contagion
+* **Stress Testing with GANs** for crisis scenario creation
+* **Climate + Macro hybrid models** (impact of temperature rise, carbon pricing, and monetary policy on asset classes)
+
+---
+
+✅ This extended set includes **specialized quant models, DeFi-native frameworks, and regulatory/macro systemic risk AI applications**.
+
+---
+
+👉 Do you want me to **organize all 15 categories into a master table**, mapping each model to **real-world finance applications (trading, DeFi, credit, ESG, etc.)**? That way, you’ll have a quick “AI Finance Model → Application” lookup.

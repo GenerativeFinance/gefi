@@ -1,0 +1,171 @@
+````markdown name=REPLIT_PROMPT_HRP_UI.md
+# Replit-ready Prompt — HRP (Hierarchical Risk Parity) Optimization Dashboard (React + Tailwind)
+
+Goal
+- Build a responsive, production-minded React + Tailwind UI for "Portfolio Optimization & HRP (AI-enhanced)" that balances quant insights (weights, risk decomposition, correlation) with executive clarity (allocation charts, performance scenarios).
+- The prompt below is designed to be pasted into a Replit AI/assistant or used with a code generator to produce a working app scaffold + components, mock data, and clear integration points for a backend/ML service.
+
+Tech stack (recommend)
+- React (Vite or Create React App)
+- Tailwind CSS
+- Charts: react-apexcharts (main charts), d3-hierarchy + d3-cluster (dendrogram/HRP tree), react-heatmap-grid (correlation heatmap) or custom canvas
+- CSV parsing: PapaParse
+- File upload UI: react-dropzone (optional)
+- State: React Context + hooks (or Zustand)
+- Optional: Axios or fetch for API calls
+
+Packages to install (example)
+- react, react-dom
+- tailwindcss, postcss, autoprefixer
+- react-apexcharts, apexcharts
+- d3, d3-hierarchy
+- papaparse
+- react-heatmap-grid
+- react-dropzone
+- axios
+
+Development notes for Replit
+- Create a new React project (Vite recommended).
+- Install Tailwind and configure per Tailwind docs (postcss).
+- Add the packages above.
+- Provide a /mock-api folder or a simple server file to serve sample JSON (or use client-side mock data).
+
+Functional Requirements (mapped to UI)
+1) Left Sidebar — Input Panel (compact, collapsible)
+- Data Sources:
+  - CSV/Excel upload: Accept CSV with columns like ticker, weight, returns, volatility (sample CSV provided below).
+  - API connectors: provide UI placeholders for Bloomberg / Yahoo / Quandl connectors (buttons + credential modal). These can call mock endpoints initially.
+- Optimization Options:
+  - Method selector: dropdown: Mean-Variance, Risk Parity, HRP, HRP + AI adjustment.
+  - Constraints UI: modal or inline inputs: max weight, min weight, sector allocations, custom constraints (add/remove).
+  - Risk tolerance slider: numeric slider with labels conservative (left) ↔ aggressive (right).
+- AI Adjustment Controls:
+  - Toggle: AI factor adjustments (on/off).
+  - AI factors: checkboxes: macro risk, sentiment, ESG tilt.
+  - Scenario selector: Base Case, Inflation Shock, Recession, Bull Market (multi-select or radio).
+- Buttons:
+  - Run Optimization (primary)
+  - Reset / Load Example Data
+
+2) Center Panel — Main Dashboard
+- Top: Header with the portfolio name, quick stats (total AUM, # assets).
+- Portfolio Allocation Visualization:
+  - Sunburst (or Treemap) by asset / sector.
+  - Pie chart: optimized HRP allocation vs original allocation (side-by-side).
+- Correlation & Clustering:
+  - Dendrogram: show HRP tree structure; interactive (hover reveals cluster members).
+  - Correlation heatmap: click a cell to highlight assets in allocation charts.
+- Performance Metrics:
+  - Numeric cards: Expected Return, Volatility, Sharpe, VaR, CVaR.
+- Scenario Simulation:
+  - Multi-line chart: portfolio returns under selected scenarios.
+  - Monte Carlo fan chart: show percentiles; allow horizon selection.
+
+3) Right Sidebar — Insights Panel
+- Risk Contribution Breakdown:
+  - Table: Asset | Allocation % | Risk Contribution % | AI Adjustment ( +/-% )
+  - Sortable and searchable.
+- Factor Exposure View:
+  - Horizontal bar chart: exposures (Market, Size, Momentum, ESG tilt, Macro).
+- Explainability Layer:
+  - AI-generated text block: "Why these allocations changed" and "Top drivers of allocation changes" (collapsible).
+  - Buttons: "Show advanced math" toggles to reveal formulas and decomposition.
+
+4) Export & Reporting
+- Export as CSV / Excel / JSON (optimized weights + metadata).
+- Download charts (PNG/PDF) — use chart library export options or html2canvas for screenshots.
+- Generate AI-written Portfolio Report (saves as .md or PDF) — a server API will call LLM to produce text (placeholder local generator for now).
+
+UX & Interactions
+- Step-based workflow: Upload → Configure → Run → Inspect → Export.
+- All charts sync on hover/selection. Example: hover an asset in the treemap highlights the row in the risk table and the heatmap.
+- Mobile friendly: left/right sidebars collapse into drawers; center charts stack vertically.
+- Accessibility: keyboard navigation, aria labels for major controls, colorblind-friendly palettes.
+
+Data contract & sample data
+- Sample CSV (header):
+  - ticker, sector, current_weight, avg_return, volatility
+- Example CSV row:
+  - AAPL,Technology,0.12,0.0012,0.025
+- Example mock JSON for optimization result (shape)
+  - {
+      "original": [{ ticker, sector, weight, ret, vol }],
+      "optimized": [{ ticker, sector, weight, ret, vol, riskContribution }],
+      "metrics": { expectedReturn, volatility, sharpe, var95, cvar95 },
+      "covarianceMatrix": { "AAPL": {"AAPL":0.0006,"MSFT":0.0004}, ... },
+      "hrpTree": { /* hierarchical cluster representation for dendrogram */ },
+      "scenarioPaths": { "Base Case": [...], "Inflation Shock":[...], ... }
+    }
+
+Implementation details / component structure (suggestion)
+- src/
+  - App.tsx — routing + layout wrapper
+  - pages/HRPStudio.tsx — main page wiring InputPanel, Dashboard, InsightsPanel
+  - components/
+    - InputPanel.tsx
+    - UploadCard.tsx (CSV upload + sample data)
+    - OptimizationControls.tsx
+    - Dashboard/
+      - AllocationCharts.tsx (Sunburst + Pie)
+      - CorrelationPanel.tsx (Heatmap)
+      - Dendrogram.tsx
+      - PerformanceMetrics.tsx
+      - ScenarioSimulation.tsx
+    - Insights/
+      - RiskTable.tsx
+      - FactorExposure.tsx
+      - Explainability.tsx
+    - ExportControls.tsx
+  - hooks/
+    - usePortfolioData.ts (load/parse CSV, fetch mock APIs)
+    - useOptimization.ts (runs optimization – for Replit start with simple HRP mock)
+  - utils/
+    - hrp.ts (implements HRP algorithm or wraps server call)
+    - charts.ts (helpers for converting data shapes)
+  - styles/
+    - tailwind.css
+
+Charts & visualization tips
+- Sunburst: use ApexCharts sunburst or a D3 implementation for interactivity.
+- Dendrogram: d3.hierarchy + d3.cluster to compute positions; render SVG paths.
+- Heatmap: react-heatmap-grid or custom canvas for performance.
+- Monte Carlo: precompute percentiles server-side or simulate client-side using simple returns distribution.
+
+Mock server / Replit API
+- /mock-api/optimize (POST) -> returns example optimized JSON above.
+- /mock-api/cov (GET) -> returns covariance matrix and historical returns time series.
+- For the Replit prompt, include a handler that returns sample data quickly so UI flows can be tested.
+
+Tailwind & layout examples (high-level)
+- Layout: grid with columns: 280px (left) | 1fr (center) | 360px (right).
+- Use sticky headers for panels; cards with rounded-lg, bg-gradient for executive highlights.
+- Color palette: muted dark containers + bright accent (blue/purple) for actionable elements.
+
+Deliverables for the Replit-ready prompt
+- Fully scaffolded React project in Replit with Tailwind configured.
+- Implemented UI components wired to mock API endpoints.
+- Sample CSV upload flow and a "Load Example Portfolio" button.
+- Working chart examples using the sample mock optimization result.
+- Export buttons with client-side CSV/JSON download.
+- README in project root with run instructions and notes on where to replace mock APIs with real backend/ML code.
+
+Prompt text to paste into Replit AI (concise)
+- "Create a Vite + React + Tailwind app named hrp-studio. Install dependencies: tailwindcss, react-apexcharts, apexcharts, d3, papaparse, react-heatmap-grid, react-dropzone, axios. Add a main page /hrp-studio that implements the UI layout described in this file (left InputPanel, center Dashboard, right InsightsPanel). Provide mock API endpoints under /mock-api that return sample JSON for optimization and covariance. Implement CSV upload using PapaParse and a 'Load Example Portfolio' button. Implement HRP visualization: sunburst, dendrogram (d3.cluster), correlation heatmap, and performance metric cards. All charts must be interactive and sync on hover/selection. Add export controls to download optimized portfolio as CSV/JSON and to export charts as PNG. Use Tailwind for styling and ensure mobile responsive layout. Include README with run instructions and how to replace mocks with real backends."
+
+Questions before I generate code
+- Preferred chart library? (I'll default to react-apexcharts + d3 for dendrogram)
+- Should the HRP computation be implemented client-side (JS) for demo, or should I mock a server endpoint and leave server-side implementation to you? (I can provide both options.)
+- Do you want the AI explainability block to call an LLM API, or should I seed the UI with placeholder explanations?
+- Any corporate color / branding to match (hex codes)?
+
+Next steps
+- If you confirm defaults above, I will generate a Replit-ready code scaffold: package.json, Tailwind config, mocked endpoints, and core React components (Upload, Controls, Charts, Insights) — ready to paste into a Replit project.
+- Or I can generate a single zip / git patch for your repo (I can adapt to your existing structure).
+
+Would you like me to:
+1) Generate the full Replit-ready code scaffold now (recommended), or
+2) Only produce a minimal prototype (UI only, with static sample data), or
+3) Produce the prompt only (you will run it in Replit AI yourself)?
+
+Reply with 1, 2 or 3 and answers to the quick questions above (chart lib preference, HRP client vs server, LLM explainability).
+````

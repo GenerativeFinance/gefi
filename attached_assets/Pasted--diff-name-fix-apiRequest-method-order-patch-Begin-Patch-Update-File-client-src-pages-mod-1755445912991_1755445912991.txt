@@ -1,0 +1,144 @@
+```diff name=fix-apiRequest-method-order.patch
+*** Begin Patch
+*** Update File: client/src/pages/model-detail.tsx
+@@
+-    async () => {
+-      if (!idParam) throw Object.assign(new Error("No model id provided"), { status: 400 });
+-      const resp = await apiRequest(`/api/ai-models/${idParam}`, "GET");
+-
+-      // If helper returned a Response-like object, check status & parse JSON
+-      if (resp && typeof (resp as any).status === "number" && typeof (resp as any).json === "function") {
+-        if (!(resp as any).ok) {
+-          // Try to read body message for better UX
+-          let body;
+-          try {
+-            body = await (resp as any).json();
+-          } catch (e) {
+-            // ignore parse errors
+-          }
+-          const msg = body?.message || `Failed to fetch model (status ${resp.status})`;
+-          const err: any = new Error(msg);
+-          err.status = resp.status;
+-          throw err;
+-        }
+-        return (resp as any).json();
+-      }
+-
+-      // If helper returned parsed JSON already
+-      return resp;
+-    },
++    async () => {
++      if (!idParam) throw Object.assign(new Error("No model id provided"), { status: 400 });
++      // apiRequest signature is apiRequest(method, url, data?, options?)
++      const resp = await apiRequest("GET", `/api/ai-models/${idParam}`);
++
++      // If helper returned a Response-like object, check status & parse JSON
++      if (resp && typeof (resp as any).status === "number" && typeof (resp as any).json === "function") {
++        if (!(resp as any).ok) {
++          // Try to read body message for better UX
++          let body;
++          try {
++            body = await (resp as any).json();
++          } catch (e) {
++            // ignore parse errors
++          }
++          const msg = body?.message || `Failed to fetch model (status ${resp.status})`;
++          const err: any = new Error(msg);
++          err.status = resp.status;
++          throw err;
++        }
++        return (resp as any).json();
++      }
++
++      // If helper returned parsed JSON already
++      return resp;
++    },
+*** End Patch
+*** Begin Patch
+*** Update File: client/src/pages/model-detail.tsx
+@@
+-    mutationFn: async () => {
+-      if (!idParam) throw new Error("No model id provided");
+-      const resp = await apiRequest(`/api/ai-models/${idParam}/subscribe`, "POST", {});
+-      if (resp && typeof (resp as any).json === "function") return (resp as any).json();
+-      return resp;
+-    },
++    mutationFn: async () => {
++      if (!idParam) throw new Error("No model id provided");
++      // apiRequest(method, url, data)
++      const resp = await apiRequest("POST", `/api/ai-models/${idParam}/subscribe`, {});
++      if (resp && typeof (resp as any).json === "function") return (resp as any).json();
++      return resp;
++    },
+*** End Patch
+*** Begin Patch
+*** Update File: client/src/pages/__tests__/model-detail.test.tsx
+@@
+-  beforeEach(() => {
+-    jest.clearAllMocks();
+-    // default mock returns ok response with JSON body
+-    apiRequest.mockImplementation(async (url: string, method = "GET") => {
+-      // return a Response-like object for most tests
+-      return {
+-        ok: true,
+-        status: 200,
+-        json: async () => ({ id: parseInt(String(url).split("/").pop() || "0", 10), name: "Test Model" }),
+-      };
+-    });
+-  });
++  beforeEach(() => {
++    jest.clearAllMocks();
++    // default mock returns ok response with JSON body
++    // apiRequest(method, url, ...)
++    apiRequest.mockImplementation(async (method: string, url: string) => {
++      // return a Response-like object for most tests
++      return {
++        ok: true,
++        status: 200,
++        json: async () => ({ id: parseInt(String(url).split("/").pop() || "0", 10), name: "Test Model" }),
++      };
++    });
++  });
+@@
+-    await waitFor(() => {
+-      expect(apiRequest).toHaveBeenCalledWith("/api/ai-models/5", "GET");
+-    });
++    await waitFor(() => {
++      expect(apiRequest).toHaveBeenCalledWith("GET", "/api/ai-models/5");
++    });
+@@
+-    await waitFor(() => {
+-      expect(apiRequest).toHaveBeenCalledWith("/api/ai-models/7", "GET");
+-    });
++    await waitFor(() => {
++      expect(apiRequest).toHaveBeenCalledWith("GET", "/api/ai-models/7");
++    });
+@@
+-    await waitFor(() => {
+-      expect(apiRequest).toHaveBeenCalledWith("/api/ai-models/9", "GET");
+-    });
++    await waitFor(() => {
++      expect(apiRequest).toHaveBeenCalledWith("GET", "/api/ai-models/9");
++    });
+*** End Patch
+```
+
+How this fixes the error
+- The project's apiRequest helper expects apiRequest(method, url, ...). When the arguments are passed in the wrong order (url first, method second) fetch receives an invalid method string (e.g. "/api/ai-models/5") which causes the runtime error "Method is not a valid HTTP token."
+- The patch corrects the order in ModelDetail (GET/POST) and updates the test to mock & assert the correct call signature.
+
+Apply the patch
+1. Save the patch to a file, e.g. fix-apiRequest-method-order.patch
+2. From your repo root run:
+   - git apply fix-apiRequest-method-order.patch
+   - git add client/src/pages/model-detail.tsx client/src/pages/__tests__/model-detail.test.tsx
+   - git commit -m "fix(model-detail): use correct apiRequest(method, url) signature and update tests"
+   - git push
+
+Run tests
+- npm test or npx jest client/src/pages/__tests__/model-detail.test.tsx
+
+If you'd like, I can:
+- Generate a full unified git patch including the earlier test + navigation changes combined with this fix, or
+- Open the PR for you with these fixes (I can provide the gh command or create it if you give access).
+Which would you prefer?

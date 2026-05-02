@@ -1,0 +1,84 @@
+I prepared a small data fix: add a model object with id: 12 to server/data/ai-models.js so requests to /ai-models/12 will return a valid model. Below is the code to insert (place inside the exported aiModelsData array alongside the other model objects — keep the same comma/array formatting as the file).
+
+```javascript name=server/data/ai-models.js
+// Insert this object into the `aiModelsData` array (keep ordering/format consistent with surrounding entries)
+{
+  id: 12,
+  name: "Market Regime Detector (Ensemble)",
+  description: "Detects market regime shifts using an ensemble of LSTM, Transformer and gradient-boosted models to adapt positioning and risk sizing in multi-asset portfolios.",
+  category: "Market Forecasting",
+  subcategory: "Regime Detection",
+  creator: "RegimeSense AI",
+  rating: 4.7,
+  totalRatings: 156,
+  price: "299.99",
+  monthlySubscribers: 420,
+  accuracy: 91.2,
+  riskLevel: "Medium",
+  aiTechnique: "Ensemble (LSTM + Transformer + XGBoost)",
+  targetUserType: "Portfolio Managers",
+  financialInstrument: "Multi-Asset",
+  tags: ["Market Regimes", "Ensemble", "LSTM", "Transformer", "Trend Detection", "Risk Management"],
+  features: {
+    realTimeAnalysis: true,
+    backtesting: true,
+    alertSystem: true,
+    apiAccess: true,
+    customDashboard: true,
+    explainableAI: true,
+    stressTesting: true,
+    portfolioAnalysis: true
+  },
+  performance: {
+    accuracy: 91.2,
+    auc: 0.89,
+    sharpeRatio: 1.8,
+    maxDrawdown: 6.5,
+    precision: 0.86,
+    recall: 0.88,
+    f1Score: 0.87,
+    responseTime: "< 750ms"
+  },
+  dataRequirements: [
+    "Price Time Series (tick/ohlc)",
+    "Volatility & Implied Volatility",
+    "Macro Indicators",
+    "Liquidity Metrics",
+    "Sentiment Signals"
+  ],
+  supportedRegions: ["Global", "US", "EU", "Asia-Pacific"],
+  complianceFrameworks: ["GDPR", "MiFID II"],
+  minInvestment: "20000.00",
+  isFeatured: false,
+  isActive: true,
+  createdAt: "2025-08-17T09:00:00Z",
+  lastUpdated: "2025-08-17T12:00:00Z",
+  technicalSpecs: {
+    modelTypes: ["LSTM", "Transformer", "Gradient Boosting"],
+    inputWindow: "30d",
+    forecastHorizon: ["1d", "3d", "7d"],
+    visualizations: ["Regime Heatmap", "Probability Time Series", "Position Suggestion Overlays"],
+    exportFormats: ["CSV", "JSON", "PDF"]
+  }
+},
+```
+
+I opened a pull request with this change so you can review and merge. Details:
+
+````list type="pr"
+data:
+    - url: https://github.com/GenerativeFinance/gefi/pull/1
+      state: "open"
+      draft: true
+      created_at: "2025-08-18T15:19:31Z"
+      title: "[WIP] Fix 404 for /ai-models/12 by adding model id 12 to server data"
+      number: 1
+      labels: []
+      author: "Copilot"
+      comments: 0
+````
+
+What I changed and next steps
+- Added a complete model object for id: 12 following the same shape as the other aiModelsData entries.
+- Next: please review the PR (look at server/data/ai-models.js changes). If it looks good, merge it and deploy — that will resolve the 404 for /ai-models/12.
+- If you want different field values (name, pricing, performance, timestamps, or to mark it as featured), tell me what to change and I’ll update the PR.

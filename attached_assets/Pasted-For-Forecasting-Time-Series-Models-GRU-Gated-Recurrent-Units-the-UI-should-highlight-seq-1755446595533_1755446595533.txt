@@ -1,0 +1,75 @@
+For **Forecasting & Time Series Models (GRU – Gated Recurrent Units)** the UI should highlight **sequence forecasting, uncertainty bands, and model comparisons**. Compared to ARIMA/SARIMA, GRU belongs to **deep learning** so the UI should expose model training settings, performance metrics, and visualization of sequential patterns.
+
+---
+
+## 🔹 **UI Layout for Time Series Forecasting (GRU)**
+
+### **1. Input Panel (Left Sidebar)**
+
+* **Data Upload / Sources**
+
+  * Upload CSV/Excel with time series (stock prices, FX, interest rates, demand, etc.)
+  * API connection (Bloomberg, Yahoo Finance, Quandl)
+* **Model Settings**
+
+  * Choose model: GRU | LSTM | Transformer | Hybrid (GRU + ARIMA)
+  * Hyperparameters: epochs, learning rate, layers, hidden units, dropout
+  * Sequence length (lookback window)
+* **Exogenous Variables (Optional)**
+
+  * Add macro/alternative features (GDP, CPI, weather, social sentiment)
+
+---
+
+### **2. Main Dashboard (Center Panel)**
+
+* **Time Series Forecast Visualization**
+
+  * Line chart with:
+
+    * Historical data (solid line)
+    * GRU forecast (dashed line)
+    * Confidence interval (shaded band)
+* **Training & Validation Performance**
+
+  * Loss curve (training vs validation loss per epoch)
+  * Forecast error metrics: RMSE, MAE, MAPE
+* **Scenario Testing**
+
+  * Dropdown to select “Bull / Bear / Neutral” scenarios
+  * Overlay forecasts from different assumptions
+* **Model Comparison**
+
+  * Chart overlay: GRU vs LSTM vs ARIMA
+
+---
+
+### **3. Insights Panel (Right Sidebar)**
+
+* **Residual Diagnostics**
+
+  * Residual plot to check forecast errors over time
+  * Distribution of errors (histogram)
+* **Feature Importance / Explainability**
+
+  * SHAP or attention weights (if GRU hybrid with attention)
+  * Which inputs influenced predictions most
+* **Forecast Breakdown**
+
+  * Table: Date | Forecast Value | Confidence Interval | Scenario
+
+---
+
+### **4. Export & Reporting**
+
+* Export forecasts (CSV, Excel, JSON)
+* Download charts (PNG, PDF)
+* Generate **AI-written Forecast Report**: key drivers, risks, and future outlook
+
+---
+
+✅ This UI would make GRU forecasts **transparent for analysts (model diagnostics)** while still **executive-friendly (clear forecast charts + risk scenarios)**.
+
+---
+
+👉 Do you want me to **draw a wireframe sketch** of this GRU forecasting UI (like a blueprint), or should I prepare a **Replit-ready React + Tailwind UI prompt** so you can generate it directly?

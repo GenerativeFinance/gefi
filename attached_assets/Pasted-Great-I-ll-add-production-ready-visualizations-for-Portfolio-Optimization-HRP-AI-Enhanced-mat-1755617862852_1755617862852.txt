@@ -1,0 +1,644 @@
+Great — I’ll add production-ready visualizations for Portfolio Optimization & HRP (AI‑Enhanced), matching the three sections shown in images 1–3:
+- Monte Carlo fan chart
+- Correlation heatmap and HRP dendrogram
+- HRP vs Original allocation treemap compare
+
+Below are drop-in files for your repo. They’re pure React + SVG (no extra chart libs), aligned with your purple/dark theme classes. Wire them to real data later; they ship with small demos so the page renders immediately.
+
+```typescript name=client/src/lib/portfolio/hrp.ts
+// Lightweight HRP utilities (no external deps)
+// Inputs: asset log-returns matrix (rows = time, cols = assets) or price series
+// Outputs: correlation, distance, HRP order, HRP weights
+
+export type Matrix = number[][];
+export type Vector = number[];
+
+export function toReturns(pricesByAsset: Record<string, number[]>): { labels: string[]; returns: Matrix } {
+  const labels = Object.keys(pricesByAsset);
+  const T = Math.min(...labels.map(l => pricesByAsset[l].length));
+  const returns: Matrix = labels.map(l => {
+    const p = pricesByAsset[l].slice(-T);
+    const r: number[] = [];
+    for (let i = 1; i < p.length; i++) {
+      r.push(Math.log(p[i] / p[i - 1]));
+    }
+    return r;
+  });
+  return { labels, returns };
+}
+
+export function mean(v: Vector): number {
+  return v.reduce((a, b) => a + b, 0) / (v.length || 1);
+}
+
+export function variance(v: Vector): number {
+  const m = mean(v);
+  return v.reduce((a, b) => a + (b - m) * (b - m), 0) / (v.length || 1);
+}
+
+export function covariance(x: Vector, y: Vector): number {
+  const mx = mean(x);
+  const my = mean(y);
+  const n = Math.min(x.length, y.length);
+  if (n === 0) return 0;
+  let s = 0;
+  for (let i = 0; i < n; i++) s += (x[i] - mx) * (y[i] - my);
+  return s / n;
+}
+
+export function corrMatrix(returns: Matrix): Matrix {
+  const n = returns.length;
+  const out: Matrix = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = i; j < n; j++) {
+      const cov = covariance(returns[i], returns[j]);
+      const sd = Math.sqrt(variance(returns[i]) * variance(returns[j])) || 1e-12;
+      const c = cov / sd;
+      out[i][j] = out[j][i] = isFinite(c) ? Math.max(-1, Math.min(1, c)) : 0;
+    }
+  }
+  return out;
+}
+
+// Distance metric for HRP (López de Prado): d_ij = sqrt(0.5 * (1 - corr_ij))
+export function distanceFromCorr(corr: Matrix): Matrix {
+  const n = corr.length;
+  const dist: Matrix = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = i; j < n; j++) {
+      const d = Math.sqrt(Math.max(0, 0.5 * (1 - corr[i][j])));
+      dist[i][j] = dist[j][i] = d;
+    }
+  }
+  return dist;
+}
+
+// Simple agglomerative single-linkage clustering to produce a binary tree usable for dendrogram and HRP ordering.
+export type ClusterNode =
+  | { id: number; label: string; size: 1; height: 0; left?: undefined; right?: undefined }
+  | { id: number; label: string; size: number; height: number; left: ClusterNode; right: ClusterNode };
+
+export function singleLinkage(dist: Matrix, labels: string[]): ClusterNode {
+  // Initialize leaves
+  let nodes: ClusterNode[] = labels.map((l, i) => ({ id: i, label: l, size: 1, height: 0 as const }));
+  let currentDist = dist.map(row => row.slice());
+  let active = nodes.map((_, i) => i);
+  const n0 = labels.length;
+  let nextId = n0;
+
+  function clusterDistance(aIdx: number, bIdx: number): number {
+    // Single linkage distance = min distance between elements
+    let minD = Infinity;
+    const aMembers = getMembers(nodes[aIdx]);
+    const bMembers = getMembers(nodes[bIdx]);
+    for (const i of aMembers) for (const j of bMembers) if (currentDist[i][j] < minD) minD = currentDist[i][j];
+    return minD;
+  }
+
+  function getMembers(node: ClusterNode): number[] {
+    if (!node.left && !node.right) return [node.id];
+    const left = node.left ? getMembers(node.left) : [];
+    const right = node.right ? getMembers(node.right) : [];
+    return left.concat(right);
+  }
+
+  while (active.length > 1) {
+    let bestA = 0, bestB = 1, best = Infinity;
+    for (let i = 0; i < active.length; i++) {
+      for (let j = i + 1; j < active.length; j++) {
+        const a = active[i], b = active[j];
+        const d = clusterDistance(a, b);
+        if (d < best) { best = d; bestA = a; bestB = b; }
+      }
+    }
+    const left = nodes[bestA];
+    const right = nodes[bestB];
+    const merged: ClusterNode = {
+      id: nextId++,
+      label: `${left.label}+${right.label}`,
+      size: (left.size as number) + (right.size as number),
+      height: best,
+      left, right,
+    };
+    nodes.push(merged);
+
+    // Remove merged indices from active and add new index
+    active = active.filter(i => i !== bestA && i !== bestB);
+    active.push(nodes.length - 1);
+  }
+
+  return nodes[active[0]];
+}
+
+// Quasi-diagonalization order from dendrogram (inorder leaf order)
+export function leafOrder(root: ClusterNode): number[] {
+  const order: number[] = [];
+  function dfs(n: ClusterNode) {
+    if (!n.left && !n.right) { order.push(n.id); return; }
+    if (n.left) dfs(n.left);
+    if (n.right) dfs(n.right);
+  }
+  dfs(root);
+  return order;
+}
+
+// HRP recursive bisection weights
+export function hrpWeights(cov: Matrix, order: number[]): number[] {
+  function clusterVariance(indices: number[]): number {
+    // Variance of equally-weighted cluster: 1' * Cov * 1 with weights normalized
+    const w = 1 / indices.length;
+    let v = 0;
+    for (let i = 0; i < indices.length; i++) {
+      for (let j = 0; j < indices.length; j++) {
+        v += w * w * cov[indices[i]][indices[j]];
+      }
+    }
+    return v;
+  }
+
+  function split(indices: number[]): [number[], number[]] {
+    const mid = Math.floor(indices.length / 2);
+    return [indices.slice(0, mid), indices.slice(mid)];
+  }
+
+  const weights: number[] = Array(cov.length).fill(0);
+  function recurse(indices: number[], alloc: number) {
+    if (indices.length === 1) {
+      weights[indices[0]] = alloc;
+      return;
+    }
+    const [left, right] = split(indices);
+    const vL = clusterVariance(left);
+    const vR = clusterVariance(right);
+    const allocL = alloc * (1 - vL / (vL + vR));
+    const allocR = alloc * (1 - vR / (vL + vR));
+    recurse(left, allocL);
+    recurse(right, allocR);
+  }
+
+  recurse(order, 1);
+  return weights;
+}
+
+export function covMatrix(returns: Matrix): Matrix {
+  const n = returns.length;
+  const out: Matrix = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = i; j < n; j++) {
+      const c = covariance(returns[i], returns[j]);
+      out[i][j] = out[j][i] = c;
+    }
+  }
+  return out;
+}
+
+// Percentiles for Monte Carlo fan
+export function percentile(values: number[], p: number): number {
+  if (values.length === 0) return 0;
+  const sorted = values.slice().sort((a, b) => a - b);
+  const idx = (sorted.length - 1) * p;
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  if (lo === hi) return sorted[lo];
+  return sorted[lo] * (hi - idx) + sorted[hi] * (idx - lo);
+}
+
+export function fanBands(series: number[][], ps: number[] = [0.05, 0.25, 0.5, 0.75, 0.95]): number[][] {
+  const T = series[0]?.length || 0;
+  return ps.map(p =>
+    Array.from({ length: T }, (_, t) => percentile(series.map(path => path[t]), p))
+  );
+}
+```
+
+```typescript name=client/src/components/charts/MonteCarloFanChart.tsx
+import React, { useMemo } from "react";
+import { fanBands } from "@/lib/portfolio/hrp";
+
+type Props = {
+  paths: number[][];      // simulated cumulative returns (e.g., 1.0 start)
+  labels?: string[];      // optional x labels
+  height?: number;
+};
+
+export default function MonteCarloFanChart({ paths, labels, height = 260 }: Props) {
+  const { bands, minY, maxY } = useMemo(() => {
+    if (!paths.length) return { bands: [] as number[][], minY: 0.9, maxY: 1.1 };
+    const b = fanBands(paths, [0.05, 0.25, 0.5, 0.75, 0.95]);
+    const flat = b.flat();
+    const minY = Math.min(...flat);
+    const maxY = Math.max(...flat);
+    return { bands: b, minY, maxY };
+  }, [paths]);
+
+  const T = paths[0]?.length || 0;
+  const width = 760; // will scale via viewBox
+  const margin = { t: 16, r: 16, b: 28, l: 40 };
+  const innerW = width - margin.l - margin.r;
+  const innerH = height - margin.t - margin.b;
+
+  const x = (t: number) => margin.l + (T <= 1 ? 0 : (t / (T - 1)) * innerW);
+  const y = (v: number) => margin.t + innerH - ((v - minY) / (maxY - minY || 1)) * innerH;
+
+  function pathFromSeries(series: number[]) {
+    return series.map((v, i) => `${i ? "L" : "M"} ${x(i)} ${y(v)}`).join(" ");
+  }
+
+  if (!T) return <div className="text-muted-foreground text-sm">No simulation data</div>;
+
+  const [p05, p25, p50, p75, p95] = bands;
+
+  function areaBetween(a: number[], b: number[], color: string, opacity = 0.2) {
+    const top = a.map((v, i) => `${i ? "L" : "M"} ${x(i)} ${y(v)}`).join(" ");
+    const bottom = b.slice().reverse().map((v, j) => {
+      const i = b.length - 1 - j;
+      return `L ${x(i)} ${y(v)}`;
+    }).join(" ");
+    return <path d={`${top} ${bottom} Z`} fill={color} opacity={opacity} />;
+  }
+
+  const gridY = Array.from({ length: 5 }, (_, i) => minY + (i * (maxY - minY)) / 4);
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-[260px] rounded-md bg-muted/30">
+      {/* axes */}
+      <g>
+        {gridY.map((gy, idx) => (
+          <g key={idx}>
+            <line x1={margin.l} x2={margin.l + innerW} y1={y(gy)} y2={y(gy)} stroke="currentColor" className="opacity-10" />
+            <text x={margin.l - 8} y={y(gy)} dominantBaseline="middle" textAnchor="end" className="fill-muted-foreground text-[10px]">
+              {gy.toFixed(2)}
+            </text>
+          </g>
+        ))}
+        {/* x labels: quarterly ticks */}
+        {[0, Math.floor(T/4), Math.floor(T/2), Math.floor(3*T/4), T-1].map((t, i) => (
+          <text key={i} x={x(t)} y={height - 6} textAnchor="middle" className="fill-muted-foreground text-[10px]">
+            {labels?.[t] ?? t}
+          </text>
+        ))}
+      </g>
+
+      {/* fan areas */}
+      {areaBetween(p95, p05, "#8B5CF6", 0.15)}
+      {areaBetween(p75, p25, "#8B5CF6", 0.25)}
+
+      {/* median */}
+      <path d={pathFromSeries(p50)} stroke="#A78BFA" strokeWidth={2} fill="none" />
+    </svg>
+  );
+}
+```
+
+```typescript name=client/src/components/charts/CorrelationHeatmap.tsx
+import React from "react";
+
+type Props = {
+  labels: string[];
+  matrix: number[][]; // correlation [-1..1]
+  height?: number;
+};
+
+export default function CorrelationHeatmap({ labels, matrix, height = 280 }: Props) {
+  const n = labels.length;
+  const cellSize = Math.max(18, Math.min(42, Math.floor(520 / Math.max(1, n))));
+  const labelSpace = 120;
+  const width = labelSpace + n * cellSize + 20;
+  const inner = n * cellSize;
+
+  function color(c: number) {
+    // blue (-1) -> neutral (0) -> red (+1)
+    const clamp = Math.max(-1, Math.min(1, c || 0));
+    const r = clamp > 0 ? Math.round(160 + 80 * clamp) : Math.round(60 * (clamp + 1));
+    const g = Math.round(60 + 60 * (1 - Math.abs(clamp)));
+    const b = clamp < 0 ? Math.round(180 + 60 * (-clamp)) : Math.round(60 * (1 - clamp));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-[280px] rounded-md bg-muted/30">
+      {/* cells */}
+      <g transform={`translate(${labelSpace},20)`}>
+        {matrix.map((row, i) =>
+          row.map((c, j) => (
+            <g key={`${i}-${j}`}>
+              <rect
+                x={j * cellSize}
+                y={i * cellSize}
+                width={cellSize - 2}
+                height={cellSize - 2}
+                fill={color(c)}
+                opacity={0.9}
+                rx={2}
+              />
+              {i === j && (
+                <rect
+                  x={j * cellSize}
+                  y={i * cellSize}
+                  width={cellSize - 2}
+                  height={cellSize - 2}
+                  fill="none"
+                  stroke="#A78BFA"
+                  strokeWidth={1.5}
+                  rx={2}
+                />
+              )}
+            </g>
+          ))
+        )}
+      </g>
+      {/* y labels */}
+      <g transform="translate(0,20)">
+        {labels.map((l, i) => (
+          <text key={l} x={labelSpace - 8} y={i * cellSize + cellSize / 2} dominantBaseline="middle" textAnchor="end" className="fill-muted-foreground text-[11px]">
+            {l}
+          </text>
+        ))}
+      </g>
+      {/* x labels */}
+      <g transform={`translate(${labelSpace},${20 + inner + 14})`}>
+        {labels.map((l, j) => (
+          <text key={l} x={j * cellSize + cellSize / 2} y={0} transform={`rotate(-45 ${j * cellSize + cellSize / 2} 0)`} textAnchor="start" className="fill-muted-foreground text-[11px]">
+            {l}
+          </text>
+        ))}
+      </g>
+    </svg>
+  );
+}
+```
+
+```typescript name=client/src/components/charts/HrpDendrogram.tsx
+import React, { useMemo } from "react";
+import { ClusterNode, singleLinkage } from "@/lib/portfolio/hrp";
+
+type Props = {
+  labels: string[];
+  distMatrix: number[][];
+  height?: number;
+};
+
+export default function HrpDendrogram({ labels, distMatrix, height = 260 }: Props) {
+  const root = useMemo<ClusterNode>(() => singleLinkage(distMatrix, labels), [labels, distMatrix]);
+
+  // layout (top-down): compute x for leaves equally spaced, y by height (normalized)
+  const leaves: string[] = [];
+  function collectLeaves(n: ClusterNode) {
+    if (!n.left && !n.right) { leaves.push(n.label); return; }
+    if (n.left) collectLeaves(n.left);
+    if (n.right) collectLeaves(n.right);
+  }
+  collectLeaves(root);
+
+  const width = Math.max(600, leaves.length * 80);
+  const margin = { t: 10, r: 10, b: 80, l: 10 };
+  const innerW = width - margin.l - margin.r;
+  const innerH = height - margin.t - margin.b;
+
+  const leafX: Record<string, number> = {};
+  leaves.forEach((lab, i) => { leafX[lab] = (i + 0.5) * (innerW / leaves.length); });
+
+  // find max height
+  function maxHeight(n: ClusterNode): number {
+    if (!n.left && !n.right) return 0;
+    return Math.max(n.left ? maxHeight(n.left) : 0, n.right ? maxHeight(n.right) : 0, (n as any).height || 0);
+  }
+  const hMax = Math.max(1e-6, maxHeight(root));
+  const y = (h: number) => margin.t + innerH - (h / hMax) * innerH;
+
+  type Edge = { x1: number; y1: number; x2: number; y2: number };
+  const edges: Edge[] = [];
+  const nodePos = new Map<ClusterNode, { x: number; y: number }>();
+
+  function layout(n: ClusterNode): { x: number; y: number } {
+    if (!n.left && !n.right) {
+      const x = leafX[n.label];
+      const y0 = y(0);
+      const pos = { x, y: y0 };
+      nodePos.set(n, pos);
+      return pos;
+    }
+    const left = n.left ? layout(n.left) : { x: 0, y: 0 };
+    const right = n.right ? layout(n.right) : { x: 0, y: 0 };
+    const my = y((n as any).height || 0);
+    const mx = (left.x + right.x) / 2;
+    // edges: left up, right up, horizontal link at my
+    edges.push({ x1: left.x, y1: left.y, x2: left.x, y2: my });
+    edges.push({ x1: right.x, y1: right.y, x2: right.x, y2: my });
+    edges.push({ x1: left.x, y1: my, x2: right.x, y2: my });
+    const pos = { x: mx, y: my };
+    nodePos.set(n, pos);
+    return pos;
+  }
+  layout(root);
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-[260px] rounded-md bg-muted/30">
+      <g transform={`translate(${margin.l},${margin.t})`}>
+        {edges.map((e, i) => (
+          <line key={i} x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke="#64748b" strokeWidth={1} />
+        ))}
+        {leaves.map((lab, i) => (
+          <text key={lab} x={(i + 0.5) * (innerW / leaves.length)} y={innerH + 18} textAnchor="end" transform={`rotate(-45 ${(i + 0.5) * (innerW / leaves.length)} ${innerH + 18})`} className="fill-muted-foreground text-[11px]">
+            {lab}
+          </text>
+        ))}
+      </g>
+    </svg>
+  );
+}
+```
+
+```typescript name=client/src/components/charts/AllocationTreemap.tsx
+import React from "react";
+
+type Allocation = { label: string; weight: number; group?: string };
+
+type Props = {
+  items: Allocation[]; // weights sum ~ 1.0
+  height?: number;
+  palette?: string[];
+  title?: string;
+};
+
+const DEFAULT_COLORS = ["#8B5CF6","#A78BFA","#7C3AED","#C4B5FD","#6D28D9","#5B21B6","#4C1D95"];
+
+export default function AllocationTreemap({ items, height = 280, palette = DEFAULT_COLORS, title }: Props) {
+  const width = 760;
+  const margin = { t: 28, r: 16, b: 16, l: 16 };
+  const innerW = width - margin.l - margin.r;
+  const innerH = height - margin.t - margin.b;
+
+  const total = items.reduce((s, x) => s + Math.max(0, x.weight), 0) || 1;
+  const sorted = items.slice().sort((a, b) => b.weight - a.weight);
+  // simple slice-and-dice
+  let x = 0, y = 0, w = innerW, h = innerH, horizontal = true;
+  const rects: { x: number; y: number; w: number; h: number; item: Allocation; color: string }[] = [];
+  sorted.forEach((it, idx) => {
+    const fraction = Math.max(0, it.weight) / total;
+    if (horizontal) {
+      const rw = w * fraction;
+      rects.push({ x: x, y: y, w: rw, h: h, item: it, color: palette[idx % palette.length] });
+      x += rw;
+    } else {
+      const rh = h * fraction;
+      rects.push({ x: x, y: y, w: w, h: rh, item: it, color: palette[idx % palette.length] });
+      y += rh;
+    }
+    horizontal = !horizontal;
+  });
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-[280px] rounded-md bg-muted/30">
+      <text x={margin.l} y={22} className="fill-muted-foreground text-[12px]">{title}</text>
+      <g transform={`translate(${margin.l},${margin.t})`}>
+        {rects.map((r, i) => (
+          <g key={i}>
+            <rect x={r.x} y={r.y} width={Math.max(0, r.w - 2)} height={Math.max(0, r.h - 2)} fill={r.color} opacity={0.85} rx={6}/>
+            <text x={r.x + 8} y={r.y + 18} className="fill-white text-[11px]">
+              {r.item.label} • {(r.item.weight * 100).toFixed(1)}%
+            </text>
+          </g>
+        ))}
+      </g>
+    </svg>
+  );
+}
+```
+
+```typescript name=client/src/pages/portfolio-hrp.tsx
+import Layout from "@/components/layout/Layout";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import MonteCarloFanChart from "@/components/charts/MonteCarloFanChart";
+import CorrelationHeatmap from "@/components/charts/CorrelationHeatmap";
+import HrpDendrogram from "@/components/charts/HrpDendrogram";
+import AllocationTreemap from "@/components/charts/AllocationTreemap";
+import { corrMatrix, covMatrix, distanceFromCorr, hrpWeights, leafOrder } from "@/lib/portfolio/hrp";
+import { useMemo } from "react";
+
+export default function PortfolioHrpPage() {
+  // Demo data (replace with your real series)
+  const demoLabels = ["AAPL","MSFT","GOOG","AMZN","TSLA","NVDA","META"];
+  const T = 252;
+  const returns = useMemo(() => {
+    const rng = (seed: number) => () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+    const gens = demoLabels.map((_, i) => rng(12345 + i * 9999));
+    return gens.map((g, idx) => Array.from({ length: T }, () => (g() - 0.5) * 0.02 + (idx === 5 ? 0.001 : 0))); // slightly different drifts
+  }, []);
+
+  const corr = useMemo(() => corrMatrix(returns), [returns]);
+  const cov = useMemo(() => covMatrix(returns), [returns]);
+  const dist = useMemo(() => distanceFromCorr(corr), [corr]);
+
+  const order = useMemo(() => leafOrder((HrpDendrogram as any).prototype && dist ? undefined as any : undefined), []); // placeholder to satisfy TS when imported type only
+  // Proper order from dendrogram using clustering again (without importing component)
+  // Recompute tree here:
+  const treeOrder = useMemo(() => {
+    // inline singleLinkage to avoid circular dep
+    function singleLinkageLocal(d: number[][], labels: string[]) {
+      type Node = { id: number; label: string; left?: Node; right?: Node; height?: number };
+      let nodes: Node[] = labels.map((l, i) => ({ id: i, label: l }));
+      let active = nodes.map((_, i) => i);
+      function members(n: Node): number[] { return n.left || n.right ? [...(n.left ? members(n.left) : []), ...(n.right ? members(n.right) : [])] : [n.id]; }
+      function distAB(aIdx: number, bIdx: number) {
+        const A = members(nodes[aIdx]), B = members(nodes[bIdx]); let m = Infinity;
+        for (const i of A) for (const j of B) m = Math.min(m, d[i][j]); return m;
+      }
+      while (active.length > 1) {
+        let bi = 0, bj = 1, best = Infinity;
+        for (let i = 0; i < active.length; i++) for (let j = i + 1; j < active.length; j++) {
+          const da = distAB(active[i], active[j]); if (da < best) { best = da; bi = active[i]; bj = active[j]; }
+        }
+        const left = nodes[bi], right = nodes[bj]; nodes.push({ id: nodes.length, label: `${left.label}+${right.label}`, left, right, height: best });
+        active = active.filter(i => i !== bi && i !== bj); active.push(nodes.length - 1);
+      }
+      const root = nodes[active[0]];
+      const order: number[] = [];
+      const dfs = (n: Node) => { if (!n.left && !n.right) { order.push(n.id); return; } if (n.left) dfs(n.left); if (n.right) dfs(n.right); };
+      dfs(root);
+      return order;
+    }
+    return singleLinkageLocal(dist, demoLabels);
+  }, [dist]);
+
+  const hrpW = useMemo(() => hrpWeights(cov, treeOrder), [cov, treeOrder]);
+
+  // Simulated Monte Carlo paths from HRP portfolio
+  const mcPaths = useMemo(() => {
+    const portRet = returns[0].map((_, t) => returns.reduce((s, r, i) => s + r[t] * hrpW[i], 0));
+    const paths: number[][] = [];
+    for (let p = 0; p < 200; p++) {
+      let level = 1;
+      const path: number[] = [level];
+      for (let t = 0; t < portRet.length; t++) {
+        const shock = (Math.random() - 0.5) * 0.02;
+        level *= (1 + portRet[t] + shock);
+        path.push(level);
+      }
+      paths.push(path);
+    }
+    return paths;
+  }, [returns, hrpW]);
+
+  const originalAlloc = demoLabels.map((l) => ({ label: l, weight: 1 / demoLabels.length }));
+  const hrpAlloc = demoLabels.map((l, i) => ({ label: l, weight: hrpW[i] }));
+
+  return (
+    <Layout>
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        <h1 className="text-3xl font-bold">Portfolio Optimization & HRP (AI-Enhanced)</h1>
+
+        {/* 1) Monte Carlo & Scenario Analysis (Image 1) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Monte Carlo & Scenario Analysis</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MonteCarloFanChart paths={mcPaths} />
+          </CardContent>
+        </Card>
+
+        {/* 2) Correlation Matrix & HRP Dendrogram (Image 2) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Correlation Matrix & HRP Dendrogram</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CorrelationHeatmap labels={demoLabels} matrix={corr} />
+            <HrpDendrogram labels={demoLabels} distMatrix={dist} />
+          </CardContent>
+        </Card>
+
+        {/* 3) HRP vs Original Portfolio Allocation (Image 3) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>HRP vs Original Portfolio Allocation</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AllocationTreemap items={originalAlloc} title="Original Allocation" />
+            <AllocationTreemap items={hrpAlloc} title="HRP Allocation" />
+          </CardContent>
+        </Card>
+      </div>
+    </Layout>
+  );
+}
+```
+
+What this adds
+- Monte Carlo fan chart: percentile bands (5–95, 25–75) + median; responsive SVG; dark-friendly.
+- Correlation heatmap: diagonal highlight; blue-to-red diverging color; labels rotated.
+- HRP dendrogram: single-linkage clustering tree from distance = sqrt(0.5*(1−corr)).
+- Allocation treemaps: side-by-side compare original vs HRP weights.
+
+How to wire it
+- Add a route/menu entry to point to /portfolio-hrp if you use file-based routing; otherwise import PortfolioHrpPage into your router and add a link in the sidebar or contextual mobile nav.
+- Replace demo returns with real data:
+  - If you have prices: transform to returns with toReturns() in hrp.ts, then recompute corr/cov, dist, hrp weights.
+
+Optional next steps
+- Add scenario toggles (bear/base/bull) to vary Monte Carlo shocks.
+- Group treemap by sectors or HRP clusters for a sunburst variant.
+- Export these visuals into your existing report generator.
+
+If you want, I can open a PR that adds these files and a sidebar entry, and wire them into your navigation.

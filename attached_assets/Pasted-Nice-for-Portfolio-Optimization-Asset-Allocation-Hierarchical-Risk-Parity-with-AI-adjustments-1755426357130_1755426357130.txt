@@ -1,0 +1,75 @@
+Nice — for **Portfolio Optimization & Asset Allocation (Hierarchical Risk Parity with AI adjustments)** the UI should balance **quant insights (weights, risk decomposition, correlation)** with **executive clarity (allocation charts, performance scenarios)**.
+
+Here’s the ideal design:
+
+---
+
+## 🔹 **UI Layout for Portfolio Optimization & HRP (AI-enhanced)**
+
+### **1. Input Panel (Left Sidebar)**
+
+* **Data Sources**
+
+  * Upload portfolio (tickers, weights, returns, volatilities) via CSV/Excel
+  * API connectors: Bloomberg, Yahoo Finance, Quandl
+* **Optimization Options**
+
+  * Choose method: Mean-Variance, Risk Parity, HRP, HRP + AI adjustment
+  * Constraints (max weight, min weight, sector/asset restrictions)
+  * Risk tolerance slider (conservative ↔ aggressive)
+* **AI Adjustment Controls**
+
+  * Toggle for AI factor adjustments (macro risk, sentiment, ESG tilt)
+  * Scenario selection: "Base Case, Inflation Shock, Recession, Bull Market"
+
+---
+
+### **2. Main Dashboard (Center Panel)**
+
+* **Portfolio Allocation Visualization**
+
+  * Sunburst chart / Treemap of portfolio weights by asset/sector
+  * Pie chart for HRP allocation vs. original portfolio
+* **Correlation & Clustering**
+
+  * Dendrogram (HRP tree structure)
+  * Correlation heatmap of assets
+* **Performance Metrics**
+
+  * Expected Return, Volatility, Sharpe Ratio
+  * Value at Risk (VaR), Conditional VaR
+* **Scenario Simulation**
+
+  * Line chart: portfolio returns under different market regimes
+  * Monte Carlo simulation results (fan chart)
+
+---
+
+### **3. Insights Panel (Right Sidebar)**
+
+* **Risk Contribution Breakdown**
+
+  * Table: Asset | Allocation % | Risk Contribution % | AI Adjustment
+* **Factor Exposure View**
+
+  * Bar chart: Exposure to factors (Market, Size, Momentum, ESG tilt, Macro risks)
+* **Explainability Layer**
+
+  * AI-generated explanation of why certain assets were overweight/underweight
+  * “Top Drivers of Allocation Changes”
+
+---
+
+### **4. Export & Reporting**
+
+* Export optimized portfolio as CSV/Excel/JSON
+* Download allocation charts as PNG/PDF
+* Generate **AI-written Portfolio Report**: allocation rationale, risk drivers, stress test results
+
+---
+
+✅ This UI helps **portfolio managers understand allocation decisions**, while also giving **executives & clients a clean view of diversification and risk control**.
+
+---
+
+👉 Do you want me to **draft a Replit-ready React + Tailwind UI prompt** for this HRP optimization dashboard (like we did with ARIMA & Credit Risk)?

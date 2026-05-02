@@ -1,0 +1,181 @@
+Here’s a small, client-only patch to deep-link the “Manage Contract” button on Portfolio AI Models directly to the corresponding contract in Contract Wallet, and auto-open that contract when the wallet page loads. Works out of the box on Replit.
+
+```typescript name=client/src/components/portfolio/StakeholderMetrics.tsx
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { BarChart3, Link as LinkIcon, Users } from "lucide-react";
+import { useLocation } from "wouter";
+
+type Props = {
+  model: {
+    id: number | string;
+    name: string;
+    dailyUsers?: number;
+    monthlyUsers?: number;
+    yearlyUsers?: number;
+    stakeholderSharePct?: number; // 0-100
+    roiPct?: number; // e.g., 12.5 => +12.5%
+    otherStakeholders?: number;
+    contractChain?: string; // e.g., "Solana" | "Ethereum" | "Base" | "Polygon"
+  };
+};
+
+export default function StakeholderMetrics({ model }: Props) {
+  const [, setLocation] = useLocation();
+
+  const chainParam =
+    (model.contractChain || "").toLowerCase().trim() || "solana";
+
+  const goToContractWallet = () => {
+    // Deep-link directly to Contract Wallet with preselection hints
+    // Supported params the wallet now reads: contractId, modelId, contractAddress, chain
+    const url = `/wallet?contractId=${encodeURIComponent(
+      String(model.id)
+    )}&model=${encodeURIComponent(model.name)}&chain=${encodeURIComponent(
+      chainParam
+    )}`;
+    setLocation(url);
+  };
+
+  return (
+    <Card className="border-dashed">
+      <CardContent className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">Daily Users</p>
+            <p className="text-lg font-semibold">{model.dailyUsers ?? 0}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">Monthly Users</p>
+            <p className="text-lg font-semibold">{model.monthlyUsers ?? 0}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">Yearly Users</p>
+            <p className="text-lg font-semibold">{model.yearlyUsers ?? 0}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">Stakeholder Share</p>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">
+                {(model.stakeholderSharePct ?? 0).toFixed(1)}%
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {model.otherStakeholders
+                  ? `${model.otherStakeholders} stakeholders`
+                  : "No other stakeholders"}
+              </span>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">ROI</p>
+            <p
+              className={`text-lg font-semibold ${
+                (model.roiPct ?? 0) >= 0 ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {(model.roiPct ?? 0) >= 0 ? "+" : ""}
+              {(model.roiPct ?? 0).toFixed(1)}%
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Users className="h-4 w-4" />
+            <span>{model.contractChain || "Solana"} Contract</span>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </Button>
+            <Button onClick={goToContractWallet} size="sm" className="gap-2">
+              <LinkIcon className="h-4 w-4" />
+              Manage Contract
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+```typescript name=client/src/pages/wallet.tsx
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter"; // ADD
+// ...existing imports remain
+
+export default function WalletPage() {
+  const [, /* setLocation */] = useLocation(); // ADD (we only read window.location.search below)
+  // existing hooks/states...
+  // const { user } = useAuth();
+  // const { toast } = useToast();
+  // const queryClient = useQueryClient();
+  const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterType, setFilterType] = useState("all");
+  const [selectedChain, setSelectedChain] = useState<string>("solana");
+  // ...rest of state
+
+  // Mock contracts (flContracts) defined here...
+  // const flContracts = [ ... ];
+
+  // NEW: auto-select a contract when arriving via deep-link
+  useEffect(() => {
+    try {
+      const search = typeof window !== "undefined" ? window.location.search : "";
+      if (!search) return;
+
+      const params = new URLSearchParams(search);
+
+      // Accept multiple hints
+      const byId =
+        params.get("contractId") ||
+        params.get("modelId") ||
+        params.get("id");
+      const byAddress = params.get("contractAddress");
+      const chain = params.get("chain");
+
+      if (chain) {
+        setSelectedChain(String(chain).toLowerCase());
+      }
+
+      let target: any | undefined;
+      if (byId) {
+        target = flContracts.find(
+          (c) => String(c.id) === String(byId)
+        );
+      }
+      if (!target && byAddress) {
+        const needle = String(byAddress).toLowerCase();
+        target = flContracts.find(
+          (c) => String(c.contractAddress || "").toLowerCase().includes(needle)
+        );
+      }
+
+      if (target) {
+        // Open the contract dialog by setting selectedContract
+        setSelectedContract(target);
+        // Optionally, you can scroll to the card:
+        // document.getElementById(`contract-${target.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    } catch {
+      // no-op on parse errors
+    }
+  // include flContracts so it re-runs if list changes
+  }, [/* flContracts could be stable; if not, add it here */]);
+
+  // ...rest of component unchanged
+}
+```
+
+Notes
+- Manage Contract now deep-links to /wallet with contractId, model name, and chain hint.
+- Contract Wallet reads the query string and:
+  - Sets the selected chain if provided.
+  - Pre-selects and opens the matching contract dialog by id or address.
+- No server changes; works in Replit immediately.
+
+If you’d like me to open a PR with these changes applied, say “Open a PR for Manage Contract deep-link” and I’ll push it.

@@ -1,0 +1,64 @@
+Replit Prompt: Risk Assessment AI Models UI
+Design a user interface for a financial AI model platform focusing on the "Risk Assessment" category. The UI should feature a dashboard-style layout with cards for each AI model, displaying key information and interactive buttons based on subscription status. The design should be clean, modern, and responsive, tailored for financial professionals.
+Requirements:
+Layout
+
+Use a card-based layout to display a list of AI models under the "Risk Assessment" category.
+Each card should have a dark background (black or dark gray), white text, and blue accents for buttons and icons.
+Include a navigation bar or sidebar with a dropdown menu for category filtering (e.g., "Risk Assessment," "Trading Strategies," etc.), inspired by the dropdown menu in Image 1 and Image 2.
+
+Card Elements
+
+Common Elements:
+Model Name: Displayed in bold white text (e.g., "Quantum Risk Predictor").
+Category Label: "Risk Assessment" in smaller white text below the model name.
+AI Icon: A robot or AI symbol (blue or purple) to the left of the model name.
+
+
+Subscribed Models:
+Metrics: Show performance metrics like:
+Performance (e.g., "+12.2%" in green),
+Accuracy (e.g., "94.2%"),
+Total Trades (e.g., "156"),
+P&L (e.g., "$284,750").
+
+
+Status: A green checkmark with "active" and a timestamp (e.g., "Updated 2 hours ago").
+Portfolio Allocation: A horizontal progress bar (e.g., 25% filled in blue).
+Monthly Fee: Displayed on the right (e.g., "$99/mo").
+Buttons:
+Configure: A button with a gear icon and "Configure" label, styled in blue with white text, for adjusting model settings.
+Analytics: A button with a bar chart icon and "Analytics" label, styled in blue with white text, for viewing detailed performance data.
+
+
+
+
+Unsubscribed Models:
+Description: A brief text (e.g., "Boost your portfolio by up to 15%!") in white.
+Potential Metrics: Show limited metrics like Accuracy (e.g., "91.5%") or a Rating (e.g., "4.8" with a star).
+Button:
+Details: A prominent button with a gradient background (e.g., blue-to-green) and "View Details" label in white text, encouraging users to explore and subscribe. Add a hover tooltip like "See how this model can enhance your investments!"
+
+
+
+
+
+Design Details
+
+Theme: Dark background with white text and blue accents for buttons/icons.
+Icons: Use intuitive icons (e.g., gear for Configure, chart for Analytics, robot for AI).
+Responsiveness: Ensure the layout adapts to different screen sizes, stacking cards vertically on smaller screens.
+Interactivity: Add hover effects on buttons (e.g., slight color change or shadow).
+
+Sample Data
+
+Include at least three model cards:
+One subscribed model (e.g., "Quantum Risk Predictor" with Configure and Analytics).
+Two unsubscribed models (e.g., "Risk Shield" and "Threat Analyzer" with Details buttons).
+
+
+
+Implementation
+
+Use HTML, CSS, and JavaScript to create the UI in Replit.
+Ensure a professional, user-friendly design with clear visual hierarchy.

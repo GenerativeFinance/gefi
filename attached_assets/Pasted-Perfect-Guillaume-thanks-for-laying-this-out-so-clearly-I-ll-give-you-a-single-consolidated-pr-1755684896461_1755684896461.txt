@@ -1,0 +1,218 @@
+Perfect, Guillaume — thanks for laying this out so clearly.
+I’ll give you a **single consolidated prompt for Replit** (so the dev can implement without ambiguity) **and** the **React + Tailwind starter code snippets** for the header, dropdown, marketplace, and integrations page.
+
+---
+
+# ✅ Prompt for Replit
+
+You are working on **GeFi**, a web app for AI-powered financial modeling. Please add support for external apps through an **App Marketplace** and **Integrations management**.
+
+### 1. App Marketplace Icon in Header
+
+* Add a new **App Marketplace icon** (grid of squares or shopping bag) to the **header**, positioned **between the bell icon and the theme toggle**.
+* Clicking it should route to `/app-marketplace`.
+* `/app-marketplace` should display a marketplace of external apps, grouped by categories:
+
+  * **Project Management** (Trello, Asana)
+  * **Messaging** (Slack, Discord)
+  * **Cloud Services** (AWS, Google Cloud, Microsoft Azure)
+  * **AI/Finance Tools** (TensorFlow, PyTorch, Alpha Vantage API, custom model builders)
+* Each app card must include:
+
+  * Icon, name, description
+  * **"Install / Connect"** button
+  * Connection details (e.g., OAuth, API key setup)
+* Installing an app should store config (mock it with local state first, prepare API endpoints later).
+
+---
+
+### 2. Integrations in User Dropdown
+
+* In the **user dropdown menu**, add a new item **“Integrations”** (plug/chain-link icon) between **User Access** and **Billing**.
+* Clicking it routes to `/integrations`.
+* `/integrations` should list all installed apps from the marketplace with:
+
+  * Status (Connected, Error, Disabled)
+  * Settings/config button
+  * Enable/disable toggle
+  * Uninstall option
+
+---
+
+### 3. Implementation Notes
+
+* **Frontend:** React + Tailwind.
+* **State Management:** Context API (or Redux if preferred).
+* **Data:** Start with mock JSON of apps and integrations.
+* **Theme:** Dark mode (consistent with GeFi’s black/dark blue background, white/light text, purple accent).
+* **Responsiveness:** Ensure layout works for both desktop and mobile.
+* **Backend stubs:** Provide placeholder API routes in Node.js (`/api/apps`, `/api/integrations`) for later.
+
+---
+
+# 🧩 Code Snippets (React + Tailwind)
+
+### Header Update (`Header.jsx`)
+
+```jsx
+import { Bell, Sun, Grid3x3 } from "lucide-react"; 
+import { Link } from "react-router-dom";
+
+export default function Header() {
+  return (
+    <header className="flex items-center justify-between px-4 py-2 bg-black text-white shadow">
+      {/* Left: Logo */}
+      <div className="flex items-center gap-2">
+        <img src="/logo.png" alt="GeFi" className="h-8" />
+        <span className="font-bold text-lg">GeFi</span>
+      </div>
+
+      {/* Right: Icons */}
+      <div className="flex items-center gap-4">
+        <Bell className="cursor-pointer" />
+        {/* New Marketplace Icon */}
+        <Link to="/app-marketplace">
+          <Grid3x3 className="cursor-pointer hover:text-purple-400" />
+        </Link>
+        <Sun className="cursor-pointer" />
+        
+        {/* Profile Dropdown (separate component) */}
+        <ProfileDropdown />
+      </div>
+    </header>
+  );
+}
+```
+
+---
+
+### User Dropdown Update (`ProfileDropdown.jsx`)
+
+```jsx
+import { User, Settings, Wallet, PlugZap, Users, CreditCard, Database, Key } from "lucide-react";
+import { Link } from "react-router-dom";
+
+export default function ProfileDropdown() {
+  return (
+    <div className="dropdown-menu bg-gray-900 text-white p-3 rounded-lg shadow-xl w-60">
+      <p className="font-bold">Guillaume Lauzier</p>
+      <p className="text-xs text-gray-400">guillaumelauzier@gmail.com</p>
+      <span className="bg-purple-600 text-xs px-2 py-1 rounded">Admin</span>
+
+      <div className="mt-2 flex flex-col gap-2">
+        <Link to="/profile" className="flex items-center gap-2 hover:text-purple-400"><User /> Profile</Link>
+        <Link to="/settings" className="flex items-center gap-2 hover:text-purple-400"><Settings /> Settings</Link>
+        <Link to="/wallet" className="flex items-center gap-2 hover:text-purple-400"><Wallet /> Wallet</Link>
+
+        {/* New Integrations Item */}
+        <Link to="/integrations" className="flex items-center gap-2 hover:text-purple-400"><PlugZap /> Integrations</Link>
+
+        <Link to="/user-access" className="flex items-center gap-2 hover:text-purple-400"><Users /> User Access</Link>
+        <Link to="/billing" className="flex items-center gap-2 hover:text-purple-400"><CreditCard /> Billing</Link>
+        <Link to="/storage" className="flex items-center gap-2 hover:text-purple-400"><Database /> Storage</Link>
+        <Link to="/api-access" className="flex items-center gap-2 hover:text-purple-400"><Key /> API Access</Link>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+### App Marketplace Page (`AppMarketplace.jsx`)
+
+```jsx
+import { useState } from "react";
+
+const mockApps = [
+  { id: 1, name: "Slack", category: "Messaging", description: "Team communication platform", icon: "/slack.png" },
+  { id: 2, name: "Asana", category: "Project Management", description: "Task & project tracking", icon: "/asana.png" },
+  { id: 3, name: "AWS", category: "Cloud Services", description: "Amazon Web Services cloud tools", icon: "/aws.png" },
+  { id: 4, name: "TensorFlow", category: "AI Tools", description: "Deep learning framework", icon: "/tf.png" }
+];
+
+export default function AppMarketplace() {
+  const [installed, setInstalled] = useState([]);
+
+  const handleInstall = (app) => {
+    if (!installed.includes(app.id)) {
+      setInstalled([...installed, app.id]);
+    }
+  };
+
+  return (
+    <div className="p-6 text-white bg-gray-950 min-h-screen">
+      <h1 className="text-2xl font-bold mb-4">App Marketplace</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {mockApps.map(app => (
+          <div key={app.id} className="bg-gray-800 p-4 rounded-xl shadow">
+            <img src={app.icon} alt={app.name} className="h-10 mb-2" />
+            <h2 className="text-lg font-semibold">{app.name}</h2>
+            <p className="text-sm text-gray-400">{app.description}</p>
+            <button 
+              onClick={() => handleInstall(app)} 
+              className="mt-3 bg-purple-600 px-3 py-1 rounded hover:bg-purple-700"
+            >
+              {installed.includes(app.id) ? "Installed" : "Install"}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+### Integrations Page (`Integrations.jsx`)
+
+```jsx
+import { useState } from "react";
+
+const mockInstalled = [
+  { id: 1, name: "Slack", status: "Connected" },
+  { id: 3, name: "AWS", status: "Error" }
+];
+
+export default function Integrations() {
+  const [apps, setApps] = useState(mockInstalled);
+
+  const handleToggle = (id) => {
+    setApps(apps.map(a => 
+      a.id === id ? { ...a, status: a.status === "Connected" ? "Disabled" : "Connected" } : a
+    ));
+  };
+
+  return (
+    <div className="p-6 text-white bg-gray-950 min-h-screen">
+      <h1 className="text-2xl font-bold mb-4">Integrations</h1>
+      <div className="flex flex-col gap-3">
+        {apps.map(app => (
+          <div key={app.id} className="flex justify-between items-center bg-gray-800 p-4 rounded-xl shadow">
+            <div>
+              <h2 className="font-semibold">{app.name}</h2>
+              <p className="text-xs text-gray-400">Status: {app.status}</p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => handleToggle(app.id)} className="bg-purple-600 px-3 py-1 rounded hover:bg-purple-700">
+                {app.status === "Connected" ? "Disable" : "Enable"}
+              </button>
+              <button className="bg-red-600 px-3 py-1 rounded hover:bg-red-700">Uninstall</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+👉 This gives you both:
+
+* A **clear Replit prompt** to direct the devs
+* Working **starter code** for Header, Dropdown, Marketplace, and Integrations
+
+Would you like me to also **add backend API stubs (Node.js/Express)** so the integrations can persist instead of only mock state?

@@ -1,0 +1,33 @@
+Below is a comprehensive feature set for a developer dashboard integrated into a platform like Replit, enabling developers to submit AI financial models, seek crowdfunding, collaborate, test, and deploy their work. Each feature is paired with a specific Replit prompt to guide the implementation step-by-step.
+
+Feature List and Replit Prompts
+1. Model Submission
+
+Description: Developers submit AI financial models with metadata (name, description, files) for crowdfunding and collaboration.
+Prompt:
+"Create a web app using Node.js and Express.js with a form for developers to submit AI financial models. Include fields for model name, description, and file upload (e.g., .py or .zip files). Store submissions in a SQLite database using Multer for file handling and validate required fields."
+2. Crowdfunding System
+
+Description: Developers set funding goals, and investors pledge money in exchange for stakes or bonuses.
+Prompt:
+"Extend the app to include crowdfunding. Allow developers to set a funding goal (e.g., $5000) for their model. Add a page listing models with funding progress (e.g., $2000/$5000) and a 'Pledge' button for investors to simulate contributions, updating the database accordingly."
+3. Collaboration Environment
+
+Description: Developers collaborate on models using version control and real-time editing tools.
+Prompt:
+"Integrate Git-based version control into the app using Replit’s built-in version control or GitHub API. Enable real-time collaboration with Replit’s multiplayer feature or a library like ShareDB, allowing multiple developers to edit model code simultaneously."
+4. Testing and Beta Testing
+
+Description: Fellow developers and initial investors test models in isolated environments and provide feedback.
+Prompt:
+"Add a testing feature where users can run models in isolated environments using Replit’s forking feature. Provide a testing interface to input data, execute the model, and view outputs. Include a feedback form to submit comments or issues, stored in the database."
+5. Deployment Options
+
+Description: Developers deploy completed models as APIs or services for public use.
+Prompt:
+"Implement a deployment feature where developers can deploy models as REST APIs using Replit’s hosting. Add a 'Deploy' button that generates a unique URL for the API, with basic logging for requests and errors."
+6. Developer Dashboard
+
+Description: A centralized interface to manage models, funding, collaboration, testing, and deployment.
+Prompt:
+"Build a dashboard page with React.js and Tailwind CSS, showing all submitted models, their funding status, collaboration activity, test results, and deployment options. Use Express.js to serve dynamic data from the SQLite database."

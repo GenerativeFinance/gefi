@@ -1,0 +1,322 @@
+I implemented a proper Sequelize migration (sequelized, up/down) and also created a Prisma schema snippet plus migration instructions so you can apply the change with whichever stack you use. I also included an updated Sequelize User model, a patched Express signup route that creates a "Pending" user, a small frontend snippet to call the endpoint, and an integration test to assert the created status is "Pending".
+
+Apply the files below to your repo (or tell me the repo and I can patch it directly). After the file blocks I include brief run instructions for both Sequelize and Prisma.
+
+```javascript name=migrations/20250818-add-status-to-users.js
+'use strict';
+
+/**
+ * Sequelize migration: add "status" enum column to users table with default "Pending".
+ *
+ * This uses a Postgres ENUM type. The down migration removes the column and drops the enum type.
+ *
+ * Usage (sequelize-cli):
+ *   npx sequelize-cli db:migrate --env <your-env>
+ */
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
+    // Add enum column (creates underlying Postgres enum type named: "enum_users_status")
+    await queryInterface.addColumn('users', 'status', {
+      type: Sequelize.ENUM('Pending', 'Active', 'Suspended', 'Deleted'),
+      allowNull: false,
+      defaultValue: 'Pending',
+    });
+
+    // Optional: if you want a DB-level check constraint instead of enum, you'd run raw SQL here.
+    // For Postgres the ENUM above is usually sufficient.
+  },
+
+  down: async (queryInterface, Sequelize) => {
+    // Remove column
+    await queryInterface.removeColumn('users', 'status');
+
+    // Drop enum type that Sequelize created (name depends on table/column)
+    // The default naming convention is: enum_<table>_<column>
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_users_status";');
+  }
+};
+```
+
+```javascript name=models/user.js
+// Sequelize user model (merge into your existing model file)
+module.exports = (sequelize, DataTypes) => {
+  const User = sequelize.define('User', {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      validate: { isEmail: true },
+    },
+    passwordHash: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    // New status field (enum)
+    status: {
+      type: DataTypes.ENUM('Pending', 'Active', 'Suspended', 'Deleted'),
+      allowNull: false,
+      defaultValue: 'Pending',
+    },
+    // Optional metadata fields
+    intent: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    interests: {
+      // store as JSON or TEXT depending on your existing schema and DB support
+      type: DataTypes.JSONB || DataTypes.TEXT,
+      allowNull: true,
+    },
+  }, {
+    tableName: 'users',
+    underscored: true,
+  });
+
+  User.associate = function(models) {
+    // associations...
+  };
+
+  return User;
+};
+```
+
+````markdown name=prisma/schema.prisma
+```prisma
+// Prisma schema snippet: add enum and status field to User model.
+// Replace or merge with your existing schema.prisma. This example assumes PostgreSQL.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserStatus {
+  Pending
+  Active
+  Suspended
+  Deleted
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String
+  status       UserStatus @default(Pending)
+  intent       String?
+  interests    Json?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+````
+
+Prisma migration instructions:
+- If you're already using Prisma:
+  1. Add the enum and status field to your schema.prisma (as shown above).
+  2. Run: npx prisma migrate dev --name add_status_to_user
+     - This will create a migration file and apply it to your local dev database.
+  3. For production, run: npx prisma migrate deploy
+  4. Update your server code to use the new Prisma Client (npx prisma generate if needed).
+- Notes if migrating from an existing non-enum column:
+  - If you already have a "status" TEXT column, you'll need a careful migration:
+    - Create a migration that adds a new enum column, copy values, drop old column, and rename new column.
+    - Or run raw SQL to create the enum type and alter the column to use it.
+
+```javascript name=routes/signup.js
+// Express route for signup (Sequelize). Merge/replace with your existing handler.
+// Make sure to adjust model import path to your project structure.
+
+const express = require('express');
+const router = express.Router();
+const bcrypt = require('bcrypt');
+const { body, validationResult } = require('express-validator');
+const { User } = require('../models'); // adjust path to your models index
+
+router.post(
+  '/api/signup',
+  body('email').isEmail(),
+  body('password').isLength({ min: 8 }),
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password, intent, interests } = req.body;
+
+    try {
+      // Prevent duplicates
+      const existing = await User.findOne({ where: { email } });
+      if (existing) {
+        return res.status(409).json({ error: 'Email already registered' });
+      }
+
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Create user with explicit status 'Pending' (model default will also handle this)
+      const newUser = await User.create({
+        email,
+        passwordHash,
+        intent: intent || null,
+        interests: interests || null,
+        status: 'Pending',
+      });
+
+      // TODO: create & send verification token/email here; see note below.
+
+      return res.status(201).json({
+        id: newUser.id,
+        email: newUser.email,
+        status: newUser.status,
+        message: 'Account created (Pending). Please check your email to verify.',
+      });
+    } catch (err) {
+      console.error('Signup error:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
+module.exports = router;
+```
+
+```javascript name=src/components/ChatbotSignup.js
+// Minimal frontend React handler to call the new signup endpoint.
+// Call createPendingAccount() when the chatbot reaches the "create account" step.
+
+import React, { useState } from 'react';
+import axios from 'axios';
+
+export default function ChatbotSignup({ collectedAnswers, onComplete }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const createPendingAccount = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const payload = {
+        email: collectedAnswers.email,
+        password: collectedAnswers.password,
+        intent: collectedAnswers.intent,
+        interests: collectedAnswers.interests,
+      };
+
+      const resp = await axios.post('/api/signup', payload);
+      const { status } = resp.data;
+
+      if (status === 'Pending') {
+        onComplete({
+          success: true,
+          message:
+            'Perfect! Your account was created in Pending status. Please check your email for a verification link to activate it.',
+          account: { id: resp.data.id, email: resp.data.email, status },
+        });
+      } else {
+        onComplete({ success: true, message: `Account created with status ${status}` });
+      }
+    } catch (err) {
+      console.error(err);
+      const errMsg = err.response?.data?.error || 'Failed to create account';
+      setError(errMsg);
+      onComplete({ success: false, message: errMsg });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={createPendingAccount} disabled={loading}>
+        {loading ? 'Creating account...' : 'Create my account'}
+      </button>
+      {error && <div className="error">{error}</div>}
+    </div>
+  );
+}
+```
+
+```javascript name=tests/integration/signup.test.js
+// Jest + Supertest integration test for signup → asserts status === 'Pending' created in DB.
+// Requires a test DB and proper env config. Adjust to your test setup.
+
+const request = require('supertest');
+const app = require('../../app'); // your Express app
+const { User, sequelize } = require('../../models');
+
+describe('POST /api/signup', () => {
+  beforeAll(async () => {
+    // Ensure DB is ready for tests -- sync/drop as required by your test strategy
+    await sequelize.sync({ force: true });
+  });
+
+  afterAll(async () => {
+    await sequelize.close();
+  });
+
+  it('creates a user with Pending status', async () => {
+    const payload = {
+      email: 'test+pending@example.com',
+      password: 'supersecurepassword',
+      intent: 'Browse/Learn',
+      interests: ['Investing', 'Savings'],
+    };
+
+    const res = await request(app).post('/api/signup').send(payload);
+    expect(res.statusCode).toBe(201);
+    expect(res.body.status).toBe('Pending');
+
+    const dbUser = await User.findOne({ where: { email: payload.email }, raw: true });
+    expect(dbUser).not.toBeNull();
+    expect(dbUser.status).toBe('Pending');
+
+    // clean up
+    await User.destroy({ where: { email: payload.email } });
+  });
+});
+```
+
+What I did and why, in short:
+- Created a Sequelize migration file (up/down) so you can safely add/remove the Postgres ENUM-backed status column via sequelize-cli.
+- Updated the Sequelize model to include the new enum field with default 'Pending'.
+- Provided a Prisma schema snippet that maps the same concept to Prisma enums and instructions to create/apply a migration using prisma migrate.
+- Provided an Express signup route that creates the user with status 'Pending' and returns a safe response (no password hash).
+- Provided a minimal React frontend hook to call the signup endpoint when the chatbot reaches the "create account" step.
+- Added a Jest + Supertest integration test example to assert the user is created with status 'Pending'.
+
+How to apply these changes locally:
+- If you use Sequelize (sequelize-cli):
+  1. Put migrations/20250818-add-status-to-users.js into your migrations folder.
+  2. Run: npx sequelize-cli db:migrate --env <env> (or the command you normally use).
+  3. Merge/update the models/user.js in your models directory (or adapt to your existing model file).
+  4. Restart server and test signup flow.
+
+- If you use Prisma:
+  1. Update prisma/schema.prisma using the snippet above (merge into your schema).
+  2. Run: npx prisma migrate dev --name add_status_to_user
+  3. Run: npx prisma generate if needed, and deploy migrations in production with npx prisma migrate deploy.
+
+- Tests:
+  - Ensure your test DB URL points to a test DB and run: npm test (or yarn test) — adjust the test file paths to fit your repo.
+
+Email verification and activation flow (recommended):
+- When creating a 'Pending' user, generate a time-limited verification token (store in verification_tokens table or sign a JWT).
+- Send verification link via email containing the token.
+- Expose a /api/verify-email?token=... endpoint that validates token and sets User.status = 'Active' once confirmed.
+- Expire old tokens and allow resending verification emails.
+
+If you want, I can:
+- Convert the Sequelize migration into a sequelize-cli migration with a timestamp-based filename and patch it directly in your repo (I can do that now if you provide the repository name: e.g., guillaumelauzier/your-repo).
+- Produce a Prisma migration SQL file instead of instructions.
+- Adjust the tests to your CI setup or create GitHub Actions to run the integration test.
+
+Tell me whether you want me to patch this repo directly (provide owner/repo) or supply the exact signup handler file from your codebase and I'll produce a precise patch.

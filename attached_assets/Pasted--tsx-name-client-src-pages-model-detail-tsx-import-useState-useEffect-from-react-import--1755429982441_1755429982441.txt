@@ -1,0 +1,229 @@
+```tsx name=client/src/pages/model-detail.tsx
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRoute } from "wouter";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import Layout from "@/components/layout/Layout";
+import {
+  Chart as ChartJS,
+  /*...*/
+} from "chart.js";
+
+/**
+ * ModelDetail
+ *
+ * Fixes:
+ * - Robust route parameter extraction to support multiple route patterns:
+ *   - /model/:id (primary)
+ *   - /marketplace/:id (legacy / alternate)
+ *   - fallback to parsing window.location.pathname
+ *
+ * Previously this page relied on a single useRoute("/marketplace/:id") which caused
+ * params to be undefined when the route was /model/:id (e.g. /model/5, /model/6...).
+ * This led to failed API calls and "Model Not Found" displays for valid model IDs.
+ *
+ * The updated logic:
+ * - Attempts to read params via useRoute for both patterns
+ * - Falls back to parsing the pathname for an ID
+ * - Uses the resolved idParam everywhere to fetch data and enable the query
+ */
+
+export default function ModelDetail() {
+  // try both route patterns (support legacy and current routes)
+  const [, paramsModel] = useRoute("/model/:id");
+  const [, paramsMarketplace] = useRoute("/marketplace/:id");
+
+  // resolve id from route params or fallback to parsing pathname
+  const resolvedIdFromRoute = paramsModel?.id ?? paramsMarketplace?.id;
+  const idFromPathname = typeof window !== "undefined"
+    ? (() => {
+        const m = window.location.pathname.match(/\/(?:model|marketplace)\/([^/]+)/);
+        return m ? m[1] : undefined;
+      })()
+    : undefined;
+
+  const idParam = resolvedIdFromRoute ?? idFromPathname;
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedTimePeriod, setSelectedTimePeriod] = useState("1year");
+  const [selectedRegion, setSelectedRegion] = useState("us");
+  const [selectedChartType, setSelectedChartType] = useState("line");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [marketCondition, setMarketCondition] = useState("normal");
+  const [animationSpeed, setAnimationSpeed] = useState(1000);
+
+  const { data: model, isLoading, error } = useQuery({
+    queryKey: ['/api/ai-models', idParam],
+    queryFn: async () => {
+      if (!idParam) throw new Error("No model id provided");
+      const response = await apiRequest(`/api/ai-models/${idParam}`, 'GET');
+      // apiRequest returns a fetch Response-like object in this repo; ensure json()
+      return response.json();
+    },
+    enabled: !!idParam,
+    retry: false,
+  });
+
+  const subscribeMutation = useMutation({
+    /*...subscription logic unchanged...*/
+  });
+
+  useEffect(() => {
+    if (error) {
+      console.error("Error loading model:", error);
+      // show a toast for non-404 errors (queryFn will throw if fetch failed)
+      if ((error as any)?.message) {
+        toast({
+          title: "Failed to load model",
+          description: String((error as any).message),
+        });
+      }
+    }
+  }, [error, toast]);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container mx-auto p-6 max-w-7xl">
+          <div className="text-center">
+            <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading model...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!idParam) {
+    return (
+      <Layout>
+        <div className="container mx-auto p-6 max-w-7xl">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-600 mb-4">Model Not Found</h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              No model id was provided in the URL.
+            </p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!model) {
+    return (
+      <Layout>
+        <div className="container mx-auto p-6 max-w-7xl">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-600 mb-4">Model Not Found</h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              The requested model could not be found.
+            </p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="container mx-auto p-6 max-w-7xl">
+        {/* Navigation Breadcrumb */}
+        {/* ...existing model rendering markup unchanged... */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{model.name}</CardTitle>
+            <CardDescription>{model.description}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Example: basic info */}
+            <div className="mb-4">
+              <Badge>{model.category}</Badge>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{model.summary}</p>
+            </div>
+
+            {/* Tabs and detailed sections (left intact) */}
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v)}>
+              <TabsList>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="documentation">Documentation</TabsTrigger>
+                <TabsTrigger value="pricing">Pricing</TabsTrigger>
+                <TabsTrigger value="reviews">Reviews</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Overview</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{model.documentation?.overview ?? model.description}</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="documentation">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Documentation</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{model.documentation?.methodology ?? "No documentation available."}</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="pricing">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Pricing</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{model.pricing?.description ?? "Pricing information not available."}</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="reviews">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Reviews</h3>
+                  {Array.isArray(model.reviews) && model.reviews.length > 0 ? (
+                    model.reviews.map((r: any, i: number) => (
+                      <div key={i} className="p-3 bg-gray-50 dark:bg-gray-800 rounded">
+                        <div className="flex justify-between">
+                          <div>
+                            <strong>{r.userName}</strong> <span className="text-sm text-gray-500">({r.userRole})</span>
+                          </div>
+                          <div className="text-sm text-gray-500">{new Date(r.date).toLocaleDateString()}</div>
+                        </div>
+                        <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{r.comment}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">No reviews yet.</p>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+    </Layout>
+  );
+}
+```
+
+Notes / rationale
+- The root cause for /model/5, /model/6, /model/7, /model/8 rendering as "Model Not Found" was that ModelDetail previously only attempted to read route params for the "/marketplace/:id" path. The app registers the page under "/model/:id" (and various other legacy paths), so params were undefined.
+- The updated component:
+  - Tries both "/model/:id" and "/marketplace/:id" via useRoute.
+  - Falls back to parsing window.location.pathname to extract an ID if both useRoute checks return nothing.
+  - Uses the resolved idParam to enable and key the React Query that fetches /api/ai-models/:id.
+  - Adds small defensive guards so users see a clear message if there's no id or if the model is not found.
+
+Next steps I can take if you want:
+- Update other places that might render a different "ModelProfile" component for /model/:id to ensure there's no conflicting routes in App.tsx (I can scan and consolidate duplicates).
+- Add unit/integration tests to assert that /model/:id resolves model ids correctly.
+- If models 5-8 still return "not found" after this change, I can check server ai-models data to ensure those IDs exist in server/data/ai-models.js and add them if missing.
+
+Would you like me to also scan and consolidate route definitions in client/src/App.tsx to ensure only one canonical mapping exists for model pages?
