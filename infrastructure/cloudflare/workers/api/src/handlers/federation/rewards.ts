@@ -106,9 +106,9 @@ export const distributeRewardsHandler: Handler = async (rc) => {
       const r = await distributor.distribute({ recipient: a.recipientAddress, amountWei: a.amountWei, roundId: round.id });
       await rc.env.DB.prepare(
         `INSERT INTO reward_distributions (
-           id, round_id, tenant_id, recipient_address, amount_wei, score,
-           chain_tx_hash, jurisdiction, distributed_at
-         ) VALUES (?,?,?,?,?,?,?,?,?)`,
+           id, round_id, tenant_id, recipient_address, wei_amount,
+           contribution_score, status, chain_tx_hash, created_at, updated_at
+         ) VALUES (?,?,?,?,?,?,?,?,?,?)`,
       )
         .bind(
           `rd_${crypto.randomUUID().replace(/-/g, "").slice(0, 24)}`,
@@ -117,8 +117,9 @@ export const distributeRewardsHandler: Handler = async (rc) => {
           a.recipientAddress.toLowerCase(),
           a.amountWei.toString(),
           a.score,
+          r.onChain ? "broadcast" : "confirmed",
           r.txHash,
-          round.jurisdiction,
+          now,
           now,
         )
         .run();
@@ -174,16 +175,26 @@ export const addKycWhitelistHandler: Handler = async (rc) => {
   const tx = await kyc.add(body.recipient_address, body.expires_at ?? null);
   const now = Math.floor(Date.now() / 1000);
   await rc.env.DB.prepare(
-    `INSERT OR REPLACE INTO kyc_whitelist (
-       recipient_address, tenant_id, jurisdiction, expires_at, chain_tx_hash, added_at
-     ) VALUES (?,?,?,?,?,?)`,
+    `INSERT INTO kyc_whitelist (
+       tenant_id, recipient_address, jurisdiction, expires_at,
+       chain_tx_hash, added_by, created_at, updated_at
+     ) VALUES (?,?,?,?,?,?,?,?)
+     ON CONFLICT(tenant_id) DO UPDATE SET
+       recipient_address = excluded.recipient_address,
+       jurisdiction      = excluded.jurisdiction,
+       expires_at        = excluded.expires_at,
+       chain_tx_hash     = excluded.chain_tx_hash,
+       added_by          = excluded.added_by,
+       updated_at        = excluded.updated_at`,
   )
     .bind(
-      body.recipient_address.toLowerCase(),
       body.tenant_id,
+      body.recipient_address.toLowerCase(),
       auth.claims.jurisdiction,
       body.expires_at ?? null,
       tx.txHash,
+      auth.claims.sub,
+      now,
       now,
     )
     .run();
