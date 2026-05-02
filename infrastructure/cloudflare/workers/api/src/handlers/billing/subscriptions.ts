@@ -56,6 +56,43 @@ export const createSubscriptionHandler: Handler = async (rc) => {
     return Response.json({ ok: false, error: "missing_model_id" }, { status: 400 });
   }
 
+  // Free tier must NEVER call Stripe — there is no Stripe price for
+  // it, and once a real STRIPE_SECRET_KEY is configured the checkout
+  // call would fail with an invalid-price error. Short-circuit here:
+  // insert the row as `active`, seed entitlements, return without a
+  // checkout_url. Any caller that needs a billing portal can hit the
+  // dedicated /v1/billing/portal endpoint after upgrading later.
+  if (body.kind === "tier" && body.tier === "free") {
+    const now = Math.floor(Date.now() / 1000);
+    const subId = newId("sub");
+    await rc.env.DB.prepare(
+      `INSERT INTO subscriptions (id, tenant_id, jurisdiction, kind, tier, model_id, status,
+       stripe_customer_id, stripe_subscription_id, trial_ends_at, current_period_end,
+       monthly_price_cents, created_at, updated_at)
+       VALUES (?, ?, ?, 'tier', 'free', NULL, 'active', NULL, NULL, NULL, NULL, 0, ?, ?)`,
+    )
+      .bind(subId, c.tenant_id, c.jurisdiction, now, now)
+      .run();
+    await seedTierEntitlements(
+      { db: rc.env.DB, kv: rc.env.CACHE },
+      c.tenant_id,
+      tierOrThrow("free"),
+      now,
+    );
+    await emitComplianceEvent(rc.env, {
+      kind: "subscription_created",
+      tenantId: c.tenant_id,
+      region: c.jurisdiction,
+      userId: c.sub,
+      severity: "info",
+      payload: { kind: "tier", tier: "free", modelId: "", monthlyCents: 0 },
+    });
+    return Response.json(
+      { ok: true, subscriptionId: subId, checkout_url: null, customer_id: null },
+      { status: 201 },
+    );
+  }
+
   const stripe = resolveStripe(rc.env);
   let priceId = body.price_id;
   let monthlyCents = 0;
@@ -114,19 +151,16 @@ export const createSubscriptionHandler: Handler = async (rc) => {
     metadata: stripeMetadata,
   });
 
-  // Free tier needs no Stripe payment, so we mark it active and seed
-  // entitlements at create time. Every other tier (and per-model
-  // subscriptions) starts `incomplete` and is promoted to `active`
-  // ONLY by the Stripe webhook handler after payment confirms — see
-  // the "fail closed" comment in the webhook below for why.
-  const isFreeTier = body.kind === "tier" && body.tier === "free";
-  const initialStatus = isFreeTier ? "active" : "incomplete";
-
+  // Paid tiers and per-model subscriptions start `incomplete` and
+  // are promoted to `active` ONLY by the Stripe webhook handler
+  // after payment confirms — see the "fail closed" comment in the
+  // webhook below for why. Free tier was already short-circuited at
+  // the top of this handler and never reaches this insert.
   await rc.env.DB.prepare(
     `INSERT INTO subscriptions (id, tenant_id, jurisdiction, kind, tier, model_id, status,
      stripe_customer_id, stripe_subscription_id, trial_ends_at, current_period_end,
      monthly_price_cents, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, NULL, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, 'incomplete', ?, NULL, ?, NULL, ?, ?, ?)`,
   )
     .bind(
       subId,
@@ -135,7 +169,6 @@ export const createSubscriptionHandler: Handler = async (rc) => {
       body.kind,
       body.kind === "tier" ? body.tier : null,
       body.kind === "model" ? body.model_id : null,
-      initialStatus,
       session.customerId,
       trialDays > 0 ? now + trialDays * 86400 : null,
       monthlyCents,
@@ -143,10 +176,6 @@ export const createSubscriptionHandler: Handler = async (rc) => {
       now,
     )
     .run();
-
-  if (isFreeTier) {
-    await seedTierEntitlements({ db: rc.env.DB, kv: rc.env.CACHE }, c.tenant_id, tierOrThrow("free"), now);
-  }
 
   await emitComplianceEvent(rc.env, {
     kind: "subscription_created",

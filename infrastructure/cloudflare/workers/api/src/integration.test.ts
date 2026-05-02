@@ -798,8 +798,10 @@ describe("Marketplace + billing endpoints", () => {
     expect(res.status).toBe(201);
     const subInsert = fake.calls.find((c) => /^INSERT INTO subscriptions/.test(c.sql));
     expect(subInsert).toBeTruthy();
-    // Status binding: position 6 (id, tenant, jurisdiction, kind, tier, model_id, status, ...).
-    expect(subInsert!.bindings[6]).toBe("incomplete");
+    // Paid-tier INSERT hardcodes 'incomplete' in the SQL (so a bug
+    // in binding order can't ever ship 'active' as the initial status).
+    expect(/'incomplete'/.test(subInsert!.sql)).toBe(true);
+    expect(/'active'/.test(subInsert!.sql)).toBe(false);
     const entInserts = fake.calls.filter((c) => /^INSERT INTO entitlements/.test(c.sql));
     expect(entInserts).toHaveLength(0);
   });
@@ -827,10 +829,63 @@ describe("Marketplace + billing endpoints", () => {
       ctx,
     );
     expect(res.status).toBe(201);
+    const body = (await res.json()) as { ok: boolean; checkout_url: string | null };
+    // No Stripe checkout for free tier — the response carries no URL.
+    expect(body.checkout_url).toBeNull();
+    // The free-tier INSERT hardcodes status='active' in SQL (not as a
+    // bound parameter) so we assert against the SQL text.
     const subInsert = fake.calls.find((c) => /^INSERT INTO subscriptions/.test(c.sql));
-    expect(subInsert!.bindings[6]).toBe("active");
+    expect(subInsert).toBeTruthy();
+    expect(/'active'/.test(subInsert!.sql)).toBe(true);
+    expect(/'free'/.test(subInsert!.sql)).toBe(true);
     const entInserts = fake.calls.filter((c) => /^INSERT INTO entitlements/.test(c.sql));
     expect(entInserts.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("POST /v1/billing/subscriptions kind=tier tier=free does NOT call Stripe even when STRIPE_SECRET_KEY is set", async () => {
+    // Regression: previously the handler called createCheckoutSession
+    // for ALL tiers including free. Once a real STRIPE_SECRET_KEY is
+    // configured, that route through RealStripe.createCheckoutSession
+    // would issue a network POST to api.stripe.com/v1/checkout/sessions
+    // with a synthetic `price_tier_free` price id — Stripe would reject
+    // it as an unknown price and free-tier onboarding would fail in
+    // production. The free-tier path must short-circuit BEFORE
+    // touching Stripe at all.
+    const fake = scriptedD1();
+    const env = regionalEnv({ region: "us", db: fake.db });
+    (env as { STRIPE_SECRET_KEY?: string }).STRIPE_SECRET_KEY = "sk_test_dummy";
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const originalFetch = globalThis.fetch;
+    const fetchCalls: string[] = [];
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      fetchCalls.push(url);
+      return originalFetch(input as Parameters<typeof originalFetch>[0], init);
+    }) as typeof fetch;
+    try {
+      const res = await worker.fetch(
+        new Request("https://us.api.gefi.io/v1/billing/subscriptions", {
+          method: "POST",
+          headers: {
+            "X-Gefi-Edge-JWT": edge,
+            Authorization: `Bearer ${await devToken()}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ kind: "tier", tier: "free" }),
+        }),
+        env,
+        ctx,
+      );
+      expect(res.status).toBe(201);
+      const body = (await res.json()) as { ok: boolean; checkout_url: string | null };
+      expect(body.ok).toBe(true);
+      expect(body.checkout_url).toBeNull();
+      // Critical: no outbound HTTP to Stripe.
+      const stripeCalls = fetchCalls.filter((u) => /api\.stripe\.com/.test(u));
+      expect(stripeCalls).toHaveLength(0);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   it("POST /v1/billing/webhook seeds tier entitlements ONLY when status flips to active", async () => {
