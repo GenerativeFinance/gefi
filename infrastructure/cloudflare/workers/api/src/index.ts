@@ -52,6 +52,9 @@ import {
 import { kycStartHandler } from "./handlers/kyc/start.js";
 import { kycStatusHandler } from "./handlers/kyc/status.js";
 import { kycWebhookHandler } from "./handlers/kyc/webhook.js";
+import { dsarHandler } from "./handlers/legal/dsar.js";
+import { subpoenaHandler } from "./handlers/legal/subpoena.js";
+import { residencyHandler as complianceResidencyHandler } from "./handlers/compliance/residency.js";
 import { Router, type RouteContext } from "./router.js";
 
 const REGIONAL_HOST_RE = /^https:\/\/(eu|us)\.api\./;
@@ -94,7 +97,12 @@ const router = new Router()
   .post("/v1/kyc/start", kycStartHandler)
   .get("/v1/kyc/status", kycStatusHandler)
   .post("/v1/kyc/webhook/:provider", kycWebhookHandler)
-  .post("/v1/kyc/webhook", kycWebhookHandler);
+  .post("/v1/kyc/webhook", kycWebhookHandler)
+  // Legal events that fan out to the compliance Worker
+  .post("/v1/legal/dsar", dsarHandler)
+  .post("/v1/legal/subpoena", subpoenaHandler)
+  // Customer-facing data residency
+  .get("/v1/compliance/residency", complianceResidencyHandler);
 
 async function forwardToRegion(
   request: Request,

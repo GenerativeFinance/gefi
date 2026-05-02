@@ -153,7 +153,7 @@ backend / dashboards exist, without any dead links or console errors.
 | 1  | Static Jekyll site on GitHub Pages                                 | **In progress (this task).** |
 | 2  | Cloudflare backend foundation (Workers + D1 + R2 + KV + Vectorize) | **In progress (this task).** |
 | 3  | Auth (Auth0 + JWT) + tenancy                                       | Pending        |
-| 4  | Compliance routing + audit log + trust portal                      | Pending        |
+| 4  | Compliance routing + audit log + trust portal                      | **Done.**      |
 | 5  | Marketplace + payments (Stripe + onchain)                          | Pending        |
 | 6  | Federated learning network                                         | Pending        |
 | 7  | App / dashboards (`app.gefi.io`)                                   | Pending        |
@@ -254,10 +254,55 @@ Tests: 100/100 (`packages/auth` 34, `packages/integrations` 18,
 
 What's NOT here yet (each lives in a downstream task):
 
-- Compliance rule engine + Merkle audit anchoring → **Task #4**.
 - Marketplace + Stripe + onchain billing → **Task #5**.
 - Federated learning orchestrator → **Task #6**.
 - Persona dashboards on `app.gefi.io` → **Task #7**.
+
+## Task #4 — Compliance engine + audit vault (DONE)
+
+The `gefi-compliance` Worker is now a real service: typed
+jurisdictional rule book, evaluator, Merkle hash-chained audit
+ledger, daily Polygon anchoring, lawyer/auditor directory + case
+routing, and per-tenant data-residency attestations. Operator
+runbook: `infrastructure/cloudflare/COMPLIANCE-SETUP.md`.
+
+New packages:
+
+- `packages/compliance-rules` — typed rules covering SEC, FINRA,
+  MiFID II, GDPR, CCPA, FCA, MAS, FINMA, DFSA, SAMA, AUSTRAC. Each
+  rule cites its source statute.
+- `packages/compliance-engine` — `evaluate()`, Merkle build /
+  proof / verify, mailer (MailChannels DKIM-signed) + Polygon
+  anchor + DocuSign provider abstractions with deterministic stubs
+  used in dev / tests, and the lawyer/auditor directory + routing
+  service that opens cases against local counsel.
+
+D1: `workers/compliance/migrations/0001_init_compliance.sql` adds
+`audit_events`, `audit_anchors`, `compliance_cases`, `case_actions`,
+`lawyer_directory`, `auditor_directory`, `tenant_assignments`,
+`data_residency_attestations`. Fresh DB — separate from `gefi-api`.
+
+Internal Worker endpoints (`COMPLIANCE_INTERNAL_TOKEN`-gated): `POST
+/events`, `POST /audit/append`, `GET /audit/proof/:id`, `GET/PATCH
+/cases[/:id]`, `GET /residency/:tenant_id`, `POST /admin/anchor`,
+`POST /admin/seed-directory`. Customer-facing routes on `gefi-api`:
+`POST /v1/legal/dsar`, `POST /v1/legal/subpoena`, `GET
+/v1/compliance/residency`. The `gefi-api` handlers for onboard +
+KYC webhook now emit `tenant_onboarded`, `kyc_declined`, and
+`sanction_hit` events to the compliance Worker (best-effort —
+failures are warned, never block the primary flow).
+
+`ComplianceCase` Durable Object owns per-case state (open →
+acknowledged → signed → closed) and SLA enforcement via `alarm()`,
+mirroring transitions back to D1 so the read-side `/cases` queries
+hit a normal index.
+
+Tests: 177/177 passing across 18 files (engine 47, rules 17,
+compliance worker 11 end-to-end including SEC `model_listed`
+routing, GDPR / CCPA fixtures, Merkle proof roundtrip, anchor
+idempotency, internal-token auth). `pnpm --filter
+@gefi/worker-compliance run build` (wrangler dry-run) succeeds with
+the new `CASE_DO` Durable Object binding.
 
 ## How to preview locally
 

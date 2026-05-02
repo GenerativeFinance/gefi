@@ -25,6 +25,7 @@
 import { resolveKycProvider } from "@gefi/integrations/kyc";
 import { resolveSanctionsProvider } from "@gefi/integrations/sanctions";
 import { kycSatisfies } from "@gefi/auth/kyc-tiers";
+import { emitComplianceEvent } from "../../lib/compliance-client.js";
 import type { Handler } from "../../router.js";
 import type { EntityType, KycTier, Region } from "@gefi/shared-types";
 
@@ -224,5 +225,35 @@ export const kycWebhookHandler: Handler = async (rc) => {
   }
 
   await rc.env.DB.batch(stmts);
+
+  // Emit compliance events post-batch so the audit chain entry only
+  // exists if the underlying state mutation actually committed.
+  // Failures here are warned, not fatal — the provider will retry the
+  // webhook and we'll re-emit on the next attempt.
+  if (outcomeBody["outcome"] === "blocked_by_sanctions") {
+    await emitComplianceEvent(rc.env, {
+      kind: "sanction_hit",
+      tenantId: tenantRow.id,
+      region: evidenceRow.jurisdiction,
+      severity: "high",
+      payload: {
+        evidenceId: evidenceRow.id,
+        provider: provider.name,
+      },
+    });
+  } else if (parsed.outcome === "declined") {
+    await emitComplianceEvent(rc.env, {
+      kind: "kyc_declined",
+      tenantId: tenantRow.id,
+      region: evidenceRow.jurisdiction,
+      severity: "warn",
+      payload: {
+        evidenceId: evidenceRow.id,
+        provider: provider.name,
+        reasonCount: parsed.reasonCodes.length,
+      },
+    });
+  }
+
   return Response.json(outcomeBody);
 };

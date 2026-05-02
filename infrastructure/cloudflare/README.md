@@ -269,9 +269,61 @@ D1 schema: `workers/api/migrations/0001_init_auth.sql` creates
 `sanction_hits`, `compliance_events`. Every row is keyed on
 `tenant_id` + `jurisdiction`.
 
+## Compliance engine (Task #4)
+
+Adds a self-contained jurisdictional rule book + a hash-chained audit
+ledger anchored to Polygon, served by the `gefi-compliance` Worker.
+Operator runbook: [`COMPLIANCE-SETUP.md`](./COMPLIANCE-SETUP.md).
+
+Surface area (internal — Service binding only, gated on
+`COMPLIANCE_INTERNAL_TOKEN`):
+
+- `POST /events` — receive a platform event, evaluate rules, append a
+  hash-chained audit row, route any triggered cases to local counsel.
+- `POST /audit/append` — append a free-form audit row (used by the
+  inference / training pipelines for verifiable run hashes).
+- `GET /audit/proof/:event_id` — Merkle inclusion proof + the latest
+  anchor row, sufficient for an external auditor to verify on-chain.
+- `GET /cases?tenant_id=…&status=…` + `GET/PATCH /cases/:id` — case
+  lifecycle (open → acknowledged → signed → closed, mirrored by the
+  `ComplianceCase` Durable Object's SLA `alarm()`).
+- `GET /residency/:tenant_id` — per-tenant data-plane attestation
+  (D1 / R2 / KV ids + applicable regulators).
+- `POST /admin/anchor` — close out the day's chain into a Merkle root
+  + Polygon transaction (idempotent on the same root).
+- `POST /admin/seed-directory` — seed `lawyer_directory` from the
+  static directory baked into the engine package.
+
+`gefi-api` proxies the customer-facing slice:
+
+- `POST /v1/legal/dsar` — public DSAR intake (anyone can file).
+- `POST /v1/legal/subpoena` — `compliance_officer` / `admin` only.
+- `GET /v1/compliance/residency` — tenant residency attestation.
+
+Packages:
+
+- [`packages/compliance-rules`](./packages/compliance-rules) — typed
+  rule book, 11 jurisdictions, each rule citing its source statute.
+- [`packages/compliance-engine`](./packages/compliance-engine) —
+  evaluator, Merkle primitives, mailer / Polygon-anchor / DocuSign
+  provider abstractions (deterministic stubs + live HTTP impls
+  guarded by secrets), lawyer/auditor directory + assignee picker,
+  routing service.
+
+D1 schema: `workers/compliance/migrations/0001_init_compliance.sql`
+creates `audit_events` (hash-chained), `audit_anchors` (Merkle root +
+Polygon tx), `compliance_cases`, `case_actions`, `lawyer_directory`,
+`auditor_directory`, `tenant_assignments`,
+`data_residency_attestations`. Lives on its own D1, separate from
+`gefi-api`.
+
+The audit chain is fully self-contained: even with no MailChannels /
+Polygon / DocuSign secrets configured, the chain still produces
+verifiable Merkle proofs locally, and CI can run the full suite
+without any Cloudflare account.
+
 ## What's NOT in this task
 
-- Compliance rule engine + audit Merkle anchoring → **Task #4**.
 - Marketplace + Stripe + onchain billing → **Task #5**.
 - Federated learning orchestrator → **Task #6**.
 - Persona dashboards (`app.gefi.io`) → **Task #7**.

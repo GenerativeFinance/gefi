@@ -22,6 +22,7 @@
 import { requireLooseAuth } from "../../middleware/auth.js";
 import { Auth0Management, type GefiAppMetadata } from "@gefi/auth/management";
 import { subscriptionToKycTier } from "@gefi/auth/kyc-tiers";
+import { emitComplianceEvent } from "../../lib/compliance-client.js";
 import type { Handler } from "../../router.js";
 import type { EntityType, Region, SubscriptionTier } from "@gefi/shared-types";
 
@@ -172,6 +173,25 @@ export const onboardHandler: Handler = async (rc) => {
     // onboarding at next login, but it's a misconfiguration.
     console.warn("[gefi-api] AUTH0_M2M_CLIENT_ID/SECRET missing in prod; relying on post-login Action only");
   }
+
+  // Emit `tenant_onboarded` to the compliance Worker. Best-effort: a
+  // transient binding failure must not block onboarding (the tenant
+  // row is the durable source of truth; the compliance event can be
+  // backfilled). We pass `entity_type` + `subscription_tier` in the
+  // payload because some MiFID/FCA rules fire only for institutional
+  // / enhanced-tier tenants.
+  await emitComplianceEvent(rc.env, {
+    kind: "tenant_onboarded",
+    tenantId,
+    region: body.jurisdiction,
+    userId: principal.sub,
+    severity: "info",
+    payload: {
+      entityType: body.entity_type,
+      subscriptionTier: subTier,
+      kycTier: "none",
+    },
+  });
 
   return Response.json(
     {

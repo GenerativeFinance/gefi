@@ -131,7 +131,8 @@ export interface ApiEnv
     CommonSecrets,
     Auth0Vars,
     Auth0M2MSecrets,
-    IntegrationSecrets {
+    IntegrationSecrets,
+    ComplianceInternalSecrets {
   /** Primary OLTP store for tenant + user + subscription rows. */
   DB: D1Database;
   /** Object store for uploaded artifacts (filings, model weights, etc.). */
