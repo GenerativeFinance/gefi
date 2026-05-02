@@ -215,6 +215,28 @@ CREATE INDEX IF NOT EXISTS idx_paper_tenant ON paper_trades(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_paper_model ON paper_trades(model_id);
 
 -- ----------------------------------------------------------------------------
+-- developer_payouts: per-developer-tenant Stripe Connect account state.
+-- One row per developer tenant. Created when the developer hits
+-- `POST /v1/billing/connect/onboarding`; charges_enabled / payouts_enabled
+-- are flipped to 1 by the `account.updated` webhook once Stripe completes
+-- KYC + payout-method verification. The model-subscription checkout flow
+-- refuses (503) in live mode unless `charges_enabled = 1`, so we can never
+-- collect a per-model subscription without a destination ready to receive
+-- the developer's share via `transfer_data.destination`.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS developer_payouts (
+  tenant_id          TEXT PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
+  stripe_account_id  TEXT NOT NULL UNIQUE,
+  charges_enabled    INTEGER NOT NULL DEFAULT 0,   -- 1 once Stripe says we can charge
+  payouts_enabled    INTEGER NOT NULL DEFAULT 0,   -- 1 once Stripe says we can pay out
+  details_submitted  INTEGER NOT NULL DEFAULT 0,   -- 1 once developer finishes onboarding
+  default_currency   TEXT,
+  created_at         INTEGER NOT NULL,
+  updated_at         INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_dev_payouts_account ON developer_payouts(stripe_account_id);
+
+-- ----------------------------------------------------------------------------
 -- billing_events: idempotent record of Stripe webhook deliveries.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS billing_events (

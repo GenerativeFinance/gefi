@@ -25,6 +25,33 @@ export interface CheckoutSessionInput {
   cancelUrl: string;
   trialDays?: number;
   metadata?: Record<string, string>;
+  /**
+   * Stripe Connect destination account id for the developer who owns
+   * this model (e.g. `acct_1XYZ...`). When set, RealStripe issues a
+   * destination charge: the platform charges the customer, takes a
+   * `applicationFeePercent` cut, and forwards the remainder to this
+   * connected account via `subscription_data[transfer_data][destination]`.
+   * Required for per-model subscriptions in live mode — the kind=model
+   * checkout handler refuses 503 when this is missing.
+   */
+  connectAccountId?: string;
+  /**
+   * Platform application fee, expressed as a percent (0–100, may
+   * include decimals). Combined with `connectAccountId` to determine
+   * how the destination charge splits. Computed from the model's
+   * `developer_share_bps` as `(10000 - bps) / 100` so a 7000 bps
+   * developer share leaves the platform a 30 % fee.
+   */
+  applicationFeePercent?: number;
+  /**
+   * Stripe Idempotency-Key. When present, RealStripe forwards it as
+   * `Idempotency-Key: <key>` so a retry of the same logical create
+   * request returns the original Checkout Session instead of opening
+   * a duplicate. The handler passes the local subscription id, which
+   * is unique per attempt and stable across in-flight retries. See
+   * https://docs.stripe.com/api/idempotent_requests
+   */
+  idempotencyKey?: string;
 }
 
 export interface CheckoutSession {
@@ -111,13 +138,26 @@ export class RealStripe implements StripeClient {
     this.taxEnabled = secrets.STRIPE_TAX_ENABLED === "true";
   }
 
-  private async post<T>(path: string, body: Record<string, string | number | boolean | undefined>): Promise<T> {
+  private async post<T>(
+    path: string,
+    body: Record<string, string | number | boolean | undefined>,
+    opts?: { idempotencyKey?: string },
+  ): Promise<T> {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${this.secretKey}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    };
+    // Stripe scopes idempotency keys per-endpoint, so the same key
+    // can safely be reused across different POSTs by upstream code.
+    // We forward only when the caller explicitly provides one to
+    // avoid silently dropping retries on lookups that don't carry
+    // a stable correlator.
+    if (opts?.idempotencyKey) {
+      headers["Idempotency-Key"] = opts.idempotencyKey;
+    }
     const res = await fetch(`${STRIPE_API}${path}`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.secretKey}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+      headers,
       body: formEncode(body),
     });
     if (!res.ok) {
@@ -158,8 +198,65 @@ export class RealStripe implements StripeClient {
         body[`subscription_data[metadata][${k}]`] = v;
       }
     }
-    const out = await this.post<{ id: string; url: string; customer: string }>("/checkout/sessions", body);
+    // Stripe Connect destination charges. For per-model subscriptions
+    // we route money to the developer's Connect account: Stripe
+    // creates the Subscription on the platform, charges the customer,
+    // takes our `application_fee_percent` cut, and forwards the
+    // remainder to `transfer_data[destination]` on every recurring
+    // invoice. Both fields must be set on `subscription_data` so they
+    // attach to the Subscription, not just the first invoice — Stripe
+    // would otherwise drop the split on renewals.
+    if (input.connectAccountId) {
+      body["subscription_data[transfer_data][destination]"] = input.connectAccountId;
+      if (
+        typeof input.applicationFeePercent === "number" &&
+        Number.isFinite(input.applicationFeePercent) &&
+        input.applicationFeePercent >= 0
+      ) {
+        // Sink-side clamp: Stripe rejects `application_fee_percent`
+        // outside [0, 100] with HTTP 400. We clamp upstream too via
+        // `applicationFeePercentFromBps` but a malformed direct caller
+        // could still arrive here with a value > 100; clamping here
+        // preserves the contract regardless of how the value was
+        // computed and keeps the wire request always-valid.
+        body["subscription_data[application_fee_percent]"] = Math.min(
+          100,
+          input.applicationFeePercent,
+        );
+      }
+    }
+    const out = await this.post<{ id: string; url: string; customer: string }>(
+      "/checkout/sessions",
+      body,
+      input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : undefined,
+    );
     return { id: out.id, url: out.url, customerId: out.customer };
+  }
+
+  /**
+   * Fetch the live state of a Connect account so the webhook can
+   * keep `developer_payouts` in sync (charges_enabled / payouts_enabled
+   * / details_submitted). Used by the `account.updated` webhook
+   * handler — the event payload itself already carries these fields,
+   * but exposing a fetch lets reconcilers backfill state when the
+   * webhook is replayed/missed.
+   */
+  async getAccount(accountId: string): Promise<{
+    id: string;
+    charges_enabled: boolean;
+    payouts_enabled: boolean;
+    details_submitted: boolean;
+    default_currency?: string;
+  }> {
+    const res = await fetch(`${STRIPE_API}/accounts/${encodeURIComponent(accountId)}`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${this.secretKey}` },
+    });
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      throw new Error(`stripe_error:${res.status}:${txt.slice(0, 240)}`);
+    }
+    return (await res.json()) as never;
   }
 
   async createPortalLink(input: PortalLinkInput): Promise<PortalLink> {

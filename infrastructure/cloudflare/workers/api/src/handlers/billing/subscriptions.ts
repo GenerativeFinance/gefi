@@ -9,14 +9,18 @@
  */
 
 import {
+  applicationFeePercentFromBps,
+  applyAccountUpdate,
   buildDunningEmail,
   consume as _consume,
+  getDeveloperPayout,
   listEntitlements,
   resolveMailer,
   resolveStripe,
   seedTierEntitlements,
   signStripePayload as _signStripePayload,
   tierOrThrow,
+  upsertDeveloperPayout,
   verifyStripeSignature,
 } from "@gefi/billing";
 import type { SubscriptionTier } from "@gefi/shared-types";
@@ -97,6 +101,11 @@ export const createSubscriptionHandler: Handler = async (rc) => {
   let priceId = body.price_id;
   let monthlyCents = 0;
   let trialDays = 0;
+  // Connect destination-charge fields, populated for kind=model only.
+  // RealStripe forwards them onto subscription_data so the split
+  // attaches to the Subscription itself (not just first invoice).
+  let connectAccountId: string | undefined;
+  let applicationFeePercent: number | undefined;
   if (body.kind === "tier") {
     const tier = tierOrThrow(body.tier!);
     monthlyCents = tier.monthlyCents;
@@ -123,9 +132,16 @@ export const createSubscriptionHandler: Handler = async (rc) => {
     // round-trips through the StubStripe checkout flow.
     priceId = priceId ?? tierPrice ?? `price_tier_${tier.tier}`;
   } else {
-    const row = await rc.env.DB.prepare("SELECT id, monthly_price_cents FROM models WHERE id = ?")
+    const row = await rc.env.DB.prepare(
+      "SELECT id, monthly_price_cents, developer_tenant_id, developer_share_bps FROM models WHERE id = ?",
+    )
       .bind(body.model_id!)
-      .first<{ id: string; monthly_price_cents: number }>();
+      .first<{
+        id: string;
+        monthly_price_cents: number;
+        developer_tenant_id: string;
+        developer_share_bps: number;
+      }>();
     if (!row) return Response.json({ ok: false, error: "model_not_found" }, { status: 404 });
     monthlyCents = Number(row.monthly_price_cents);
     // Symmetric to the tier path: in live mode (STRIPE_SECRET_KEY
@@ -140,6 +156,33 @@ export const createSubscriptionHandler: Handler = async (rc) => {
       return Response.json(
         { ok: false, error: "model_price_not_configured", model_id: row.id },
         { status: 503 },
+      );
+    }
+    // Stripe Connect destination charges. Per-model subscriptions
+    // route the developer's share to *their* Connect account; the
+    // platform keeps `application_fee_percent`. Refuse 503 in live
+    // mode unless the developer has finished onboarding AND Stripe
+    // has flipped `charges_enabled` to true — collecting money we
+    // can't actually pay out is a regulator-visible problem.
+    const payout = await getDeveloperPayout({ db: rc.env.DB }, row.developer_tenant_id);
+    if (rc.env.STRIPE_SECRET_KEY) {
+      if (!payout) {
+        return Response.json(
+          { ok: false, error: "developer_payouts_not_configured", model_id: row.id },
+          { status: 503 },
+        );
+      }
+      if (!payout.chargesEnabled) {
+        return Response.json(
+          { ok: false, error: "developer_payouts_not_ready", model_id: row.id },
+          { status: 503 },
+        );
+      }
+    }
+    if (payout) {
+      connectAccountId = payout.stripeAccountId;
+      applicationFeePercent = applicationFeePercentFromBps(
+        Number(row.developer_share_bps ?? 7000),
       );
     }
     priceId = priceId ?? `price_model_${row.id}`;
@@ -163,6 +206,15 @@ export const createSubscriptionHandler: Handler = async (rc) => {
     cancelUrl: `${rc.env.SITE_PUBLIC_URL}/billing/cancel`,
     trialDays: trialDays > 0 ? trialDays : undefined,
     metadata: stripeMetadata,
+    connectAccountId,
+    applicationFeePercent,
+    // Idempotency: reuse the local subscription id as Stripe's
+    // Idempotency-Key. A retried POST (transient network error,
+    // proxy timeout, etc.) returns the original Checkout Session
+    // instead of opening a duplicate — and the local row insert
+    // below remains a single attempt because the surrounding handler
+    // is a single request.
+    idempotencyKey: `sub:${subId}`,
   });
 
   // Paid tiers and per-model subscriptions start `incomplete` and
@@ -243,6 +295,22 @@ export const connectOnboardingHandler: Handler = async (rc) => {
       returnUrl: `${rc.env.SITE_PUBLIC_URL}/dashboard/payouts`,
       refreshUrl: `${rc.env.SITE_PUBLIC_URL}/dashboard/payouts/refresh`,
     });
+    // Persist (or re-confirm) the Connect account in `developer_payouts`
+    // immediately. The flags stay 0 until Stripe fires `account.updated`
+    // — so the kind=model checkout flow will continue to refuse 503
+    // until KYC + payout-method verification complete. Without this
+    // upsert, the per-model subscription path would never see a row
+    // for the developer, even after they finished onboarding.
+    await upsertDeveloperPayout(
+      { db: rc.env.DB },
+      {
+        tenantId: c.tenant_id,
+        stripeAccountId: link.accountId,
+        chargesEnabled: false,
+        payoutsEnabled: false,
+        detailsSubmitted: false,
+      },
+    );
     return Response.json({ ok: true, accountId: link.accountId, url: link.url });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "stripe_connect_error";
@@ -430,6 +498,34 @@ export const stripeWebhookHandler: Handler = async (rc) => {
         )
           .bind(now, local.id)
           .run();
+      }
+      break;
+    }
+    case "account.updated": {
+      // Stripe Connect: developer's Express account state changed.
+      // Mirror `charges_enabled` / `payouts_enabled` / `details_submitted`
+      // into `developer_payouts` so the kind=model checkout flow can
+      // observe readiness in O(1). Without this branch the row stays
+      // at 0/0/0 and live-mode model subscriptions remain refused
+      // forever even after the developer completes onboarding.
+      const accountId = (obj.id as string | undefined) ?? null;
+      if (accountId) {
+        const chargesEnabled = obj.charges_enabled === true;
+        const payoutsEnabled = obj.payouts_enabled === true;
+        const detailsSubmitted = obj.details_submitted === true;
+        const defaultCurrency =
+          typeof obj.default_currency === "string" ? (obj.default_currency as string) : null;
+        await applyAccountUpdate(
+          { db: rc.env.DB },
+          {
+            accountId,
+            chargesEnabled,
+            payoutsEnabled,
+            detailsSubmitted,
+            defaultCurrency,
+            ts: now,
+          },
+        );
       }
       break;
     }

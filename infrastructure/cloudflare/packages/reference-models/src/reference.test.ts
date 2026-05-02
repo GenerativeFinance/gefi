@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { executeReferenceModel, isReferenceSlug, REFERENCE_MODEL_SLUGS } from "./execute.js";
 import { assemblePrompt, deterministicSentiment, FIXTURE_FILINGS, retrieve } from "./sentiment.js";
 import { optimise } from "./optimiser.js";
 
@@ -112,5 +113,97 @@ describe("@gefi/reference-models optimiser", () => {
     expect(() =>
       optimise({ assets: [], correlation: [] }),
     ).toThrowError(/optimiser_empty_assets/);
+  });
+});
+
+describe("@gefi/reference-models executeReferenceModel", () => {
+  it("isReferenceSlug recognises both flagship slugs and rejects others", () => {
+    expect(isReferenceSlug("sentiment-from-filings")).toBe(true);
+    expect(isReferenceSlug("portfolio-optimiser")).toBe(true);
+    expect(isReferenceSlug("alpha-edge")).toBe(false);
+    expect(REFERENCE_MODEL_SLUGS).toEqual(["sentiment-from-filings", "portfolio-optimiser"]);
+  });
+
+  it("dispatches sentiment-from-filings to the deterministic RAG pipeline", async () => {
+    // The retriever scores by token overlap against the fixture
+    // filings, so the query must contain words that actually appear
+    // in the AAPL chunks ("Apple", "iPhone", "revenue", "services").
+    const out = await executeReferenceModel("sentiment-from-filings", {
+      prompt: "Apple iPhone revenue and services trends",
+      system: "ticker:AAPL",
+    });
+    expect(out.provider).toBe("reference");
+    expect(out.modelString).toBe("reference:sentiment-from-filings");
+    const parsed = JSON.parse(out.text) as { sentiment: string; evidence: Array<{ id: string }> };
+    expect(["BULLISH", "NEUTRAL", "BEARISH"]).toContain(parsed.sentiment);
+    expect(parsed.evidence.length).toBeGreaterThan(0);
+    // Bit-exact replay: identical inputs ⇒ identical output text.
+    const out2 = await executeReferenceModel("sentiment-from-filings", {
+      prompt: "Apple iPhone revenue and services trends",
+      system: "ticker:AAPL",
+    });
+    expect(out2.text).toBe(out.text);
+  });
+
+  it("dispatches portfolio-optimiser with a JSON-encoded payload", async () => {
+    const payload = {
+      assets: [
+        { symbol: "A", expectedReturn: 0.1, vol: 0.2 },
+        { symbol: "B", expectedReturn: 0.05, vol: 0.1 },
+      ],
+      correlation: [
+        [1, 0.3],
+        [0.3, 1],
+      ],
+      riskAversion: 1.0,
+      longOnly: true,
+    };
+    const out = await executeReferenceModel("portfolio-optimiser", {
+      prompt: JSON.stringify(payload),
+    });
+    expect(out.provider).toBe("reference");
+    expect(out.modelString).toBe("reference:portfolio-optimiser");
+    const parsed = JSON.parse(out.text) as {
+      weights: Array<{ symbol: string; weight: number }>;
+      sharpe: number;
+    };
+    expect(parsed.weights).toHaveLength(2);
+    const sumW = parsed.weights.reduce((s, w) => s + w.weight, 0);
+    expect(Math.abs(sumW - 1)).toBeLessThan(1e-3);
+  });
+
+  it("optimiser dispatch unwraps a { payload: ... } envelope", async () => {
+    const wrapped = {
+      payload: {
+        assets: [
+          { symbol: "X", expectedReturn: 0.08, vol: 0.15 },
+          { symbol: "Y", expectedReturn: 0.04, vol: 0.10 },
+        ],
+        correlation: [[1, 0], [0, 1]],
+      },
+    };
+    const out = await executeReferenceModel("portfolio-optimiser", {
+      prompt: JSON.stringify(wrapped),
+    });
+    const parsed = JSON.parse(out.text) as { weights: Array<{ symbol: string; weight: number }> };
+    expect(parsed.weights).toHaveLength(2);
+  });
+
+  it("rejects an unknown reference slug", async () => {
+    await expect(
+      executeReferenceModel("nope", { prompt: "x" }),
+    ).rejects.toThrow(/reference_unknown_slug/);
+  });
+
+  it("rejects optimiser invocations with malformed JSON", async () => {
+    await expect(
+      executeReferenceModel("portfolio-optimiser", { prompt: "not-json" }),
+    ).rejects.toThrow(/reference_optimiser_invalid_json/);
+  });
+
+  it("rejects optimiser invocations missing assets", async () => {
+    await expect(
+      executeReferenceModel("portfolio-optimiser", { prompt: JSON.stringify({}) }),
+    ).rejects.toThrow(/reference_optimiser_missing_assets/);
   });
 });

@@ -1545,6 +1545,428 @@ describe("Marketplace + billing endpoints", () => {
   });
 });
 
+describe("Marketplace Connect + reference-model wiring", () => {
+  async function devToken(): Promise<string> {
+    return signUserToken({
+      sub: "auth0|developer-2",
+      email: "dev2@gefi.io",
+      [`${GEFI_CLAIM_NS}jurisdiction`]: "us",
+      [`${GEFI_CLAIM_NS}tenant_id`]: "tenant-dev-2",
+      [`${GEFI_CLAIM_NS}entity_type`]: "professional",
+      [`${GEFI_CLAIM_NS}roles`]: ["developer"],
+      [`${GEFI_CLAIM_NS}subscription_tier`]: "pro",
+      [`${GEFI_CLAIM_NS}kyc_tier`]: "standard",
+    });
+  }
+  async function adminToken(): Promise<string> {
+    return signUserToken({
+      sub: "auth0|admin-2",
+      email: "admin2@gefi.io",
+      [`${GEFI_CLAIM_NS}jurisdiction`]: "us",
+      [`${GEFI_CLAIM_NS}tenant_id`]: "tenant-admin-2",
+      [`${GEFI_CLAIM_NS}entity_type`]: "professional",
+      [`${GEFI_CLAIM_NS}roles`]: ["admin"],
+      [`${GEFI_CLAIM_NS}subscription_tier`]: "enterprise",
+      [`${GEFI_CLAIM_NS}kyc_tier`]: "advanced",
+    });
+  }
+
+  it("POST /v1/billing/subscriptions kind=model in live mode refuses 503 when developer_payouts row is missing", async () => {
+    // Live-mode safety: we will not collect money for a model whose
+    // developer hasn't been onboarded into Connect — there's no
+    // payout destination, so the platform would silently keep 100%
+    // until reconciliation. Refuse the checkout with a precise error.
+    const fake = scriptedD1({
+      selects: [
+        {
+          match: /FROM models WHERE id/,
+          row: {
+            id: "mdl-conn",
+            developer_tenant_id: "tenant-dev-2",
+            monthly_price_cents: 9900,
+            developer_share_bps: 7000,
+          },
+        },
+        // No developer_payouts row — getDeveloperPayout returns null.
+      ],
+    });
+    const env = regionalEnv({ region: "us", db: fake.db });
+    (env as { STRIPE_SECRET_KEY?: string }).STRIPE_SECRET_KEY = "sk_test_dummy";
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/subscriptions", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await devToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          kind: "model",
+          model_id: "mdl-conn",
+          price_id: "price_real_dev_supplied",
+        }),
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as { ok: boolean; error: string };
+    expect(body.error).toBe("developer_payouts_not_configured");
+  });
+
+  it("POST /v1/billing/subscriptions kind=model in live mode refuses 503 when charges_enabled=0", async () => {
+    // The developer started onboarding but Stripe has not yet flipped
+    // `charges_enabled` (KYC pending). We MUST refuse — collecting
+    // money before charges are enabled is a regulator-visible failure.
+    const fake = scriptedD1({
+      selects: [
+        {
+          match: /FROM models WHERE id/,
+          row: {
+            id: "mdl-conn-2",
+            developer_tenant_id: "tenant-dev-2",
+            monthly_price_cents: 9900,
+            developer_share_bps: 7000,
+          },
+        },
+        {
+          match: /FROM developer_payouts WHERE tenant_id/,
+          row: {
+            tenant_id: "tenant-dev-2",
+            stripe_account_id: "acct_pending",
+            charges_enabled: 0,
+            payouts_enabled: 0,
+            details_submitted: 1,
+            default_currency: "usd",
+            created_at: 0,
+            updated_at: 0,
+          },
+        },
+      ],
+    });
+    const env = regionalEnv({ region: "us", db: fake.db });
+    (env as { STRIPE_SECRET_KEY?: string }).STRIPE_SECRET_KEY = "sk_test_dummy";
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/subscriptions", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await devToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          kind: "model",
+          model_id: "mdl-conn-2",
+          price_id: "price_real_dev_supplied",
+        }),
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as { ok: boolean; error: string };
+    expect(body.error).toBe("developer_payouts_not_ready");
+  });
+
+  it("POST /v1/billing/connect/onboarding upserts a developer_payouts row", async () => {
+    // The onboarding handler must persist the Connect account id so
+    // the kind=model path can find it on the next subscription
+    // request. Without this, the gate above would refuse forever.
+    const fake = scriptedD1();
+    const env = regionalEnv({ region: "us", db: fake.db });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/connect/onboarding", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await devToken()}`,
+          "Content-Type": "application/json",
+        },
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; accountId: string; url: string };
+    expect(body.ok).toBe(true);
+    expect(body.accountId).toMatch(/^acct_/);
+    const insert = fake.calls.find((c) => /^INSERT INTO developer_payouts/.test(c.sql));
+    expect(insert).toBeTruthy();
+    // Initial flags MUST be all-zero — Stripe only flips them via
+    // account.updated webhook after KYC + payout-method verify.
+    expect(insert!.bindings[2]).toBe(0);
+    expect(insert!.bindings[3]).toBe(0);
+    expect(insert!.bindings[4]).toBe(0);
+  });
+
+  it("POST /v1/billing/webhook account.updated updates the developer_payouts row", async () => {
+    const { signStripePayload } = await import("@gefi/billing");
+    const secret = "whsec_account_updated";
+    const eventBody = JSON.stringify({
+      id: "evt_acct_1",
+      type: "account.updated",
+      data: {
+        object: {
+          id: "acct_real_xyz",
+          object: "account",
+          charges_enabled: true,
+          payouts_enabled: true,
+          details_submitted: true,
+          default_currency: "usd",
+        },
+      },
+    });
+    const ts = Math.floor(Date.now() / 1000);
+    const sig = await signStripePayload(eventBody, secret, ts);
+    const fake = scriptedD1({
+      selects: [
+        {
+          match: /FROM developer_payouts WHERE stripe_account_id/,
+          row: (bindings: unknown[]) =>
+            bindings[0] === "acct_real_xyz"
+              ? {
+                  tenant_id: "tenant-dev-2",
+                  stripe_account_id: "acct_real_xyz",
+                  charges_enabled: 0,
+                  payouts_enabled: 0,
+                  details_submitted: 0,
+                  default_currency: null,
+                  created_at: 0,
+                  updated_at: 0,
+                }
+              : null,
+        },
+      ],
+    });
+    const env = regionalEnv({ region: "us", db: fake.db });
+    (env as { STRIPE_WEBHOOK_SECRET?: string }).STRIPE_WEBHOOK_SECRET = secret;
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/webhook", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          "Content-Type": "application/json",
+          "Stripe-Signature": sig,
+        },
+        body: eventBody,
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    const update = fake.calls.find((c) => /^UPDATE developer_payouts/.test(c.sql));
+    expect(update).toBeTruthy();
+    // Bind shape: [chargesEnabled, payoutsEnabled, detailsSubmitted,
+    //              defaultCurrency, ts, accountId]
+    expect(update!.bindings[0]).toBe(1);
+    expect(update!.bindings[1]).toBe(1);
+    expect(update!.bindings[2]).toBe(1);
+    expect(update!.bindings[3]).toBe("usd");
+    expect(update!.bindings[5]).toBe("acct_real_xyz");
+  });
+
+  it("GET /v1/models/:id returns reviews + subscriber_count + compliance_proof", async () => {
+    // Detail-page enrichment regression. The list endpoint returns
+    // ModelCards; the detail endpoint must additionally surface the
+    // trust signals investors evaluate before subscribing.
+    // Inline scripted DB so we control both .first() and .all() — the
+    // shared scriptedD1 helper has empty .all() returns by default.
+    const calls: Array<{ sql: string; bindings: unknown[] }> = [];
+    const modelRow = {
+      id: "mdl-detail",
+      slug: "alpha-detail",
+      developer_tenant_id: "tenant-dev-2",
+      jurisdiction: "us",
+      name: "Alpha Detail",
+      summary: "x",
+      long_description: "x",
+      category: "forecasting",
+      risk_class: "medium",
+      status: "approved",
+      visibility: "public",
+      current_version_id: "ver-detail",
+      monthly_price_cents: 9900,
+      developer_share_bps: 7000,
+      federation_enabled: 0,
+      created_at: 0,
+      updated_at: 0,
+    };
+    const versionRow = {
+      id: "ver-detail",
+      model_id: "mdl-detail",
+      version: "1.0.0",
+      artifact_r2_key: "k",
+      artifact_sha256: "sha-detail-abcdef",
+      artifact_size: 100,
+      manifest_json: "{}",
+      chain_tx_hash: "0xdeadbeef",
+      approved_at: 1700000000,
+      created_at: 0,
+    };
+    const metaRow = {
+      long_description: "details",
+      inputs_json: "[]",
+      outputs_json: "[]",
+      metrics_json: "{}",
+      risk_json: "{}",
+      jurisdictions_supported_json: '["us","eu"]',
+    };
+    const reviewRows = [
+      { id: "rev1", tenant_id: "tenant-inv-A", rating: 5, body: "great", created_at: 100 },
+      { id: "rev2", tenant_id: "tenant-inv-B", rating: 3, body: "ok",    created_at: 90 },
+    ];
+    const prepare = (sql: string) => {
+      let bindings: unknown[] = [];
+      const stmt = {
+        bind(...args: unknown[]) { bindings = args; return stmt; },
+        async first<T>() {
+          calls.push({ sql, bindings });
+          if (/SELECT \* FROM models WHERE id = \? OR slug = \?/.test(sql)) {
+            return ((bindings[0] === modelRow.id || bindings[0] === modelRow.slug) ? { ...modelRow } : null) as T;
+          }
+          if (/SELECT \* FROM model_versions WHERE id = \?/.test(sql)) {
+            return (bindings[0] === versionRow.id ? { ...versionRow } : null) as T;
+          }
+          if (/FROM model_metadata WHERE model_id/.test(sql)) {
+            return { ...metaRow } as T;
+          }
+          if (/COUNT\(\*\)\s+AS\s+n\s+FROM\s+subscriptions/.test(sql)) {
+            return { n: 42 } as T;
+          }
+          if (/AVG\(rating\)/.test(sql)) {
+            return { avg: 4, n: 2 } as T;
+          }
+          return null as T;
+        },
+        async all<T>() {
+          calls.push({ sql, bindings });
+          if (/FROM\s+model_versions\s+WHERE\s+model_id/.test(sql)) {
+            return { results: [{ ...versionRow }] as T[], success: true } as never;
+          }
+          if (/FROM\s+model_reviews\s+WHERE\s+model_id/.test(sql)) {
+            return { results: reviewRows.map((r) => ({ ...r })) as T[], success: true } as never;
+          }
+          return { results: [] as T[], success: true } as never;
+        },
+        async run() { return { meta: { changes: 1 }, success: true } as never; },
+      };
+      return stmt as unknown as D1PreparedStatement;
+    };
+    const wrapped = {
+      prepare,
+      batch: async (s: D1PreparedStatement[]) => {
+        const r = []; for (const x of s) r.push(await (x as unknown as { run(): Promise<unknown> }).run()); return r as never;
+      },
+      exec: async () => ({ count: 0, duration: 0 }) as never,
+    } as unknown as D1Database;
+    const env = regionalEnv({ region: "us", db: wrapped });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/models/mdl-detail", {
+        method: "GET",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await devToken()}`,
+        },
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      ok: boolean;
+      model: { id: string };
+      reviews: Array<{ rating: number }>;
+      avg_rating: number | null;
+      subscriber_count: number;
+      compliance_proof: { artifactSha256: string; chainTxHash: string | null; approvedAt: number | null };
+    };
+    expect(body.ok).toBe(true);
+    expect(body.reviews).toHaveLength(2);
+    expect(body.avg_rating).toBe(4);
+    expect(body.subscriber_count).toBe(42);
+    expect(body.compliance_proof.artifactSha256).toBe("sha-detail-abcdef");
+    expect(body.compliance_proof.chainTxHash).toBe("0xdeadbeef");
+    expect(body.compliance_proof.approvedAt).toBe(1700000000);
+  });
+
+  it("POST /v1/admin/reference-models/seed requires admin role", async () => {
+    const fake = scriptedD1();
+    const env = regionalEnv({ region: "us", db: fake.db });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/admin/reference-models/seed", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await devToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(403);
+    const body = (await res.json()) as { ok: boolean; error: string };
+    expect(body.error).toBe("admin_required");
+  });
+
+  it("POST /v1/admin/reference-models/seed seeds both flagship slugs as an admin", async () => {
+    // Default scriptedD1 returns null for all SELECTs, so the seeder
+    // sees both slugs as missing and creates them. We assert two
+    // INSERT INTO models statements and two INSERT INTO model_versions
+    // statements + two UPDATE models for the approve step.
+    const fake = scriptedD1();
+    const env = regionalEnv({ region: "us", db: fake.db });
+    // Provide a stub R2 ARTIFACTS bucket with `put` since publishVersion
+    // writes the manifest bytes to R2. The default regionalEnv mock
+    // only stubs `head`.
+    (env as { ARTIFACTS?: R2Bucket }).ARTIFACTS = {
+      head: async () => null,
+      put: async () => ({ key: "stub", size: 0, etag: "stub" }),
+      get: async () => null,
+    } as unknown as R2Bucket;
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/admin/reference-models/seed", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await adminToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+      }),
+      env,
+      ctx,
+    );
+    if (res.status !== 200) {
+      // Pull error info into the assertion message for fast debugging.
+      const errBody = await res.text();
+      throw new Error(`seed failed: status=${res.status} body=${errBody}`);
+    }
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      ok: boolean;
+      seeded: string[];
+      skipped: string[];
+      models: Array<{ slug: string; status: string }>;
+    };
+    expect(body.ok).toBe(true);
+    expect(body.seeded).toContain("sentiment-from-filings");
+    expect(body.seeded).toContain("portfolio-optimiser");
+    expect(body.skipped).toEqual([]);
+    expect(body.models).toHaveLength(2);
+    const modelInserts = fake.calls.filter((c) => /^INSERT INTO models /.test(c.sql));
+    expect(modelInserts).toHaveLength(2);
+  });
+});
+
 describe("/v1/auth/me requires fully-onboarded claims", () => {
   it("returns 403 when the token is signature-valid but missing GeFi custom claims", async () => {
     const env = regionalEnv({ region: "us" });

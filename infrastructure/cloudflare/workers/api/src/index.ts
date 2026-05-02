@@ -62,6 +62,7 @@ import {
   listModelsHandler,
   publishVersionHandler,
   searchModelsHandler,
+  seedReferenceModelsHandler,
   updateMetadataHandler,
 } from "./handlers/marketplace/models.js";
 import {
@@ -133,6 +134,11 @@ const router = new Router()
   .put("/v1/models/:id/metadata", updateMetadataHandler)
   .post("/v1/models/:id/versions", publishVersionHandler)
   .post("/v1/models/:id/approve", approveModelHandler)
+  // Platform-admin: idempotent reference-model bootstrap. Required so
+  // the flagship `sentiment-from-filings` + `portfolio-optimiser`
+  // models are runnable through the live REST surface, not just
+  // discoverable as package exports.
+  .post("/v1/admin/reference-models/seed", seedReferenceModelsHandler)
   // Marketplace — gateway
   .post("/v1/models/:id/run", runModelHandler)
   .post("/v1/runs/:runId/replay", replayRunHandler)

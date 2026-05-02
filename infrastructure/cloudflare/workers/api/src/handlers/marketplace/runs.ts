@@ -7,8 +7,16 @@
  */
 
 import { getMetadata, getModel, getVersion, resolveModelAnchor } from "@gefi/marketplace";
-import { resolveProviderChain, runModel, replayRun, responseToSseStream, type InferenceRequest } from "@gefi/model-gateway";
+import {
+  resolveProviderChain,
+  runModel,
+  replayRun,
+  responseToSseStream,
+  type InferenceProvider,
+  type InferenceRequest,
+} from "@gefi/model-gateway";
 import { consume, consumeApiKey } from "@gefi/billing";
+import { executeReferenceModel, isReferenceSlug } from "@gefi/reference-models";
 import { requireAuth } from "../../middleware/auth.js";
 import type { Handler } from "../../router.js";
 
@@ -193,11 +201,46 @@ export const runModelHandler: Handler = async (rc) => {
     );
   }
 
-  const chain = resolveProviderChain({
-    region: c.jurisdiction,
-    ai: rc.env.AI,
-    secrets: rc.env,
-  });
+  // Reference-model dispatch. When the model's slug matches one of
+  // the registered reference slugs (`sentiment-from-filings` /
+  // `portfolio-optimiser`), we bypass the LLM provider chain and
+  // execute the package's deterministic logic directly. The result
+  // still flows through `runModel` so the same persistence path
+  // (model_runs row, input_sha/output_sha, quota reconciliation)
+  // applies — only the chain is swapped. Without this dispatch, the
+  // reference models would either hit the deterministic-echo provider
+  // (returning the prompt back as text) or 4xx because no provider
+  // succeeded for a structured optimiser payload.
+  const chain: InferenceProvider[] = isReferenceSlug(model.slug)
+    ? [
+        {
+          id: "deterministic",
+          modelString: `reference:${model.slug}`,
+          region: null,
+          generate: async (req) => {
+            const out = await executeReferenceModel(model.slug, {
+              prompt: req.prompt,
+              system: req.system,
+              context: req.context,
+              maxTokens: req.maxTokens,
+              temperature: req.temperature,
+            });
+            return {
+              text: out.text,
+              tokensIn: out.tokensIn,
+              tokensOut: out.tokensOut,
+              latencyMs: out.latencyMs,
+              provider: out.provider,
+              modelString: out.modelString,
+            };
+          },
+        },
+      ]
+    : resolveProviderChain({
+        region: c.jurisdiction,
+        ai: rc.env.AI,
+        secrets: rc.env,
+      });
   const inference: InferenceRequest = {
     prompt: body.prompt,
     system: body.system,

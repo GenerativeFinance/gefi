@@ -8,6 +8,7 @@
     ".": "./src/index.ts",
     "./tiers": "./src/tiers.ts",
     "./stripe": "./src/stripe.ts",
+    "./connect": "./src/connect.ts",
     "./entitlements": "./src/entitlements.ts",
     "./mailer": "./src/mailer.ts"
   },

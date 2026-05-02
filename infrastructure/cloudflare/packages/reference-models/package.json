@@ -7,7 +7,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./sentiment": "./src/sentiment.ts",
-    "./optimiser": "./src/optimiser.ts"
+    "./optimiser": "./src/optimiser.ts",
+    "./bootstrap": "./src/bootstrap.ts",
+    "./execute": "./src/execute.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

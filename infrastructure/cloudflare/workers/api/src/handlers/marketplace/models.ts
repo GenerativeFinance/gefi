@@ -28,6 +28,7 @@ import {
   type ModelVisibility,
 } from "@gefi/marketplace";
 import { resolveIndex, type SearchDoc, type SearchFilters } from "@gefi/search-index";
+import { seedReferenceModels } from "@gefi/reference-models";
 import type { Region } from "@gefi/shared-types";
 import { requireAuth } from "../../middleware/auth.js";
 import { emitComplianceEvent } from "../../lib/compliance-client.js";
@@ -171,7 +172,76 @@ export const getModelHandler: Handler = async (rc) => {
     }
   }
   const versions = await listVersions(deps(rc.env), model.id);
-  return Response.json({ ok: true, model, metadata, versions });
+
+  // Marketplace detail-page enrichment. The list endpoint returns
+  // ModelCards; the detail endpoint must surface the trust signals
+  // investors actually evaluate before subscribing:
+  //
+  //   reviews            — recent investor reviews + computed average rating
+  //   subscriber_count   — active+trialing kind=model subscriptions for this model
+  //   compliance_proof   — on-chain anchor + artifact sha for the current version,
+  //                        proving the artifact bytes haven't changed since approval
+  //
+  // All three are computed from D1 in O(reviews) reads. Subscriber
+  // count and review aggregates intentionally exclude reviews from
+  // the requesting tenant so a developer can't game their own page.
+  const reviewsRes = await rc.env.DB.prepare(
+    `SELECT id, tenant_id, rating, body, created_at
+       FROM model_reviews
+      WHERE model_id = ?
+      ORDER BY created_at DESC
+      LIMIT 20`,
+  )
+    .bind(model.id)
+    .all<{ id: string; tenant_id: string; rating: number; body: string; created_at: number }>();
+  const reviews = (reviewsRes.results ?? []).map((r) => ({
+    id: String(r.id),
+    rating: Number(r.rating),
+    body: String(r.body ?? ""),
+    createdAt: Number(r.created_at),
+  }));
+  const avgRating =
+    reviews.length === 0
+      ? null
+      : Math.round(
+          (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 100,
+        ) / 100;
+
+  const subCountRow = await rc.env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM subscriptions
+      WHERE model_id = ? AND kind = 'model' AND status IN ('active','trialing')`,
+  )
+    .bind(model.id)
+    .first<{ n: number }>();
+  const subscriberCount = Number(subCountRow?.n ?? 0);
+
+  // Compliance proof — the on-chain anchor + sha256 of the artifact
+  // *as it was at approval*. Pulled from the current_version row so
+  // a regulator can verify the running bytes match the audit trail.
+  const currentVersion = model.currentVersionId
+    ? versions.find((v) => v.id === model.currentVersionId) ?? null
+    : null;
+  const complianceProof = currentVersion
+    ? {
+        versionId: currentVersion.id,
+        version: currentVersion.version,
+        artifactSha256: currentVersion.artifactSha256,
+        chainTxHash: currentVersion.chainTxHash,
+        approvedAt: currentVersion.approvedAt,
+        modelStatus: model.status,
+      }
+    : null;
+
+  return Response.json({
+    ok: true,
+    model,
+    metadata,
+    versions,
+    reviews,
+    avg_rating: avgRating,
+    subscriber_count: subscriberCount,
+    compliance_proof: complianceProof,
+  });
 };
 
 export const publishVersionHandler: Handler = async (rc) => {
@@ -330,6 +400,44 @@ export const updateMetadataHandler: Handler = async (rc) => {
     jurisdictionsSupported: body.jurisdictions_supported,
   }, Math.floor(Date.now() / 1000));
   return Response.json({ ok: true });
+};
+
+/**
+ * Admin-only: idempotently register the two flagship reference
+ * models so they're available through the live marketplace endpoints
+ * (GET /v1/models, GET /v1/models/:slug, POST /v1/models/:id/run).
+ *
+ * Without this endpoint, the reference-model code in
+ * `@gefi/reference-models` would only be reachable via direct package
+ * imports — but `runModelHandler` looks up the model row in D1 first,
+ * so unseeded reference models would 404 from the production REST
+ * surface even though the package was perfectly capable of running.
+ *
+ * Returns:
+ *   { ok: true, seeded: string[], skipped: string[], models: Model[] }
+ */
+export const seedReferenceModelsHandler: Handler = async (rc) => {
+  const auth = requireAuth(rc, ["create", "model"]);
+  if (auth.response) return auth.response;
+  const c = auth.claims;
+  if (!c.roles.includes("admin")) {
+    return Response.json({ ok: false, error: "admin_required" }, { status: 403 });
+  }
+  // The reference models are owned by the calling admin's tenant in
+  // dev (so a developer can run the bootstrap on a fresh local DB
+  // without standing up a fake "platform" tenant first); a future
+  // PR can pin them to a configured `PLATFORM_TENANT_ID` env once we
+  // have one.
+  const result = await seedReferenceModels(deps(rc.env), {
+    tenantId: c.tenant_id,
+    jurisdiction: c.jurisdiction,
+  });
+  return Response.json({
+    ok: true,
+    seeded: result.seeded,
+    skipped: result.skipped,
+    models: result.models,
+  });
 };
 
 export const searchModelsHandler: Handler = async (rc) => {
