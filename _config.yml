@@ -135,9 +135,11 @@ plugins:
 
 exclude:
   - legacy/
+  - infrastructure/
   - node_modules/
   - vendor/
   - Gemfile
+  - package.json
   - README.md
   - replit.md
   - "*.md.bak"
