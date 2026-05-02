@@ -97,6 +97,14 @@ CREATE TABLE IF NOT EXISTS kyc_evidence (
   evidence_r2_key       TEXT,
   reason_codes_json     TEXT NOT NULL DEFAULT '[]',
   raw_payload_json      TEXT,
+  -- Provider-issued hosted-flow URL the user is redirected to. Stored
+  -- so a resuming user can pick the same session back up via
+  -- /v1/kyc/start without forcing the provider to mint a new applicant.
+  hosted_url            TEXT,
+  -- UNIX seconds; the provider's stated lifetime of `hosted_url`. The
+  -- /v1/kyc/start reuse path treats rows with `expires_at <= now()` as
+  -- stale and creates a fresh session instead.
+  expires_at            INTEGER,
   created_at            INTEGER NOT NULL,
   updated_at            INTEGER NOT NULL
 );

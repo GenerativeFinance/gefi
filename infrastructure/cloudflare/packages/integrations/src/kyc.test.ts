@@ -72,19 +72,84 @@ describe("OnfidoKycProvider", () => {
     expect(result.outcome).toBe("approved");
     expect(result.providerSessionId).toBe("check_abc");
   });
+
+  it("startSession does the documented two-step Onfido flow and returns the SDK URL", async () => {
+    const calls: Array<{ url: string; init?: RequestInit }> = [];
+    const fakeFetch = async (url: string, init?: RequestInit) => {
+      calls.push({ url, init });
+      if (url.endsWith("/applicants")) {
+        return new Response(JSON.stringify({ id: "applicant_xyz" }), {
+          status: 201,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      if (url.endsWith("/sdk_token")) {
+        return new Response(JSON.stringify({ token: "sdktok123" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      return new Response("not found", { status: 404 });
+    };
+    const live = new OnfidoKycProvider("token-x", "wh", "eu", fakeFetch as unknown as typeof fetch);
+    const session = await live.startSession(
+      { internalRef: "tenant_abc", entity: "retail", jurisdiction: "eu", details: { firstName: "Ada", lastName: "Lovelace", email: "ada@example.com" } },
+      "standard",
+    );
+    expect(calls).toHaveLength(2);
+    expect(calls[0]?.url).toContain("https://api.eu.onfido.com/v3.6/applicants");
+    expect(calls[1]?.url).toContain("https://api.eu.onfido.com/v3.6/sdk_token");
+    expect(session.providerSessionId).toBe("applicant_xyz");
+    expect(session.hostedUrl).toContain("token=sdktok123");
+    expect(session.expiresAt).toBeGreaterThan(Math.floor(Date.now() / 1000));
+  });
+
+  it("startSession surfaces a non-2xx applicant create as a thrown error", async () => {
+    const fakeFetch = async () => new Response("nope", { status: 401 });
+    const live = new OnfidoKycProvider("bad", "wh", "us", fakeFetch as unknown as typeof fetch);
+    await expect(
+      live.startSession({ internalRef: "t", entity: "retail", jurisdiction: "us", details: {} }, "basic"),
+    ).rejects.toThrow(/onfido_applicant_create_failed/);
+  });
 });
 
 describe("SumsubKycProvider (KYB)", () => {
   const provider = new SumsubKycProvider("app-token", "secret-key", "eu");
 
-  it("starts a hosted KYB session for an institution", async () => {
-    const session = await provider.startSession(
+  it("starts a hosted KYB session for an institution by calling the live applicant + websdkLink endpoints", async () => {
+    const calls: Array<{ url: string; init?: RequestInit }> = [];
+    const fakeFetch = async (url: string, init?: RequestInit) => {
+      calls.push({ url, init });
+      if (url.includes("/resources/applicants")) {
+        // X-App-Token header should be present on every call.
+        const headers = init?.headers as Record<string, string> | undefined;
+        expect(headers?.["X-App-Token"]).toBe("app-token");
+        expect(headers?.["X-App-Access-Sig"]).toMatch(/^[0-9a-f]+$/);
+        return new Response(JSON.stringify({ id: "applicant_inst_1" }), { status: 201 });
+      }
+      if (url.includes("/websdkLink")) {
+        return new Response(JSON.stringify({ url: "https://api.sumsub.com/idensic/l/eu/abc?ttl=86400" }), { status: 200 });
+      }
+      return new Response("not found", { status: 404 });
+    };
+    const live = new SumsubKycProvider("app-token", "secret-key", "eu", fakeFetch as unknown as typeof fetch);
+    const session = await live.startSession(
       { internalRef: "tenant_inst_1", entity: "institutional", jurisdiction: "eu", details: {} },
       "enhanced",
     );
-    expect(session.provider).toBe("sumsub");
-    expect(session.providerSessionId).toContain("sumsub_tenant_inst_1_enhanced-kyb-level");
-    expect(session.hostedUrl).toContain("sumsub.com");
+    expect(calls).toHaveLength(2);
+    expect(calls[0]?.url).toContain("levelName=enhanced-kyb-level");
+    expect(calls[1]?.url).toContain("/resources/sdkIntegrations/levels/enhanced-kyb-level/websdkLink");
+    expect(session.providerSessionId).toBe("applicant_inst_1");
+    expect(session.hostedUrl).toBe("https://api.sumsub.com/idensic/l/eu/abc?ttl=86400");
+  });
+
+  it("startSession throws if the applicant create call fails", async () => {
+    const fakeFetch = async () => new Response("err", { status: 500 });
+    const live = new SumsubKycProvider("a", "b", "us", fakeFetch as unknown as typeof fetch);
+    await expect(
+      live.startSession({ internalRef: "x", entity: "data_provider", jurisdiction: "us", details: {} }, "enhanced"),
+    ).rejects.toThrow(/sumsub_applicant_create_failed/);
   });
 
   it("rejects a webhook with no signature", async () => {

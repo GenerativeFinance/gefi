@@ -1,30 +1,24 @@
 /**
  * Sumsub provider — business + individual KYC/KYB.
  *
- * Wired against Sumsub's REST API (https://docs.sumsub.com/reference).
- * What's *real* here:
- *   - constructor accepts `appToken` (`X-App-Token` header) + `secretKey`
- *     (HMAC-SHA256 of every request body — Sumsub uses the same secret
- *     for outbound webhook signing too).
- *   - `parseWebhook` performs a constant-time HMAC-SHA256 check against
- *     the `X-Payload-Digest` header (Sumsub's documented signing scheme
- *     — `X-Payload-Digest-Alg: HMAC_SHA256_HEX`).
- *   - `parseWebhook` maps Sumsub's `reviewResult.reviewAnswer` (GREEN /
- *     RED / YELLOW) onto our provider-agnostic outcome.
+ * Real HTTP integration against `api.sumsub.com`:
+ *   - `startSession` does the documented two-step Sumsub flow:
+ *       1. `POST /resources/applicants?levelName={level}` — create
+ *          the applicant (or company, when `entity` is institutional /
+ *          data_provider — Sumsub keys it on the level shape).
+ *       2. `POST /resources/sdkIntegrations/levels/{level}/websdkLink`
+ *          — mint a hosted Sumsub WebSDK link for the same
+ *          `externalUserId` we just created.
+ *   - All Sumsub calls are signed: `X-App-Token` (the token), plus
+ *     `X-App-Access-Sig` = HMAC-SHA256(secret, ts + METHOD + path + body)
+ *     and `X-App-Access-Ts` (the unix-second timestamp).
+ *   - `parseWebhook` performs constant-time HMAC-SHA256 verification
+ *     of the `X-Payload-Digest` header (header `X-Payload-Digest-Alg:
+ *     HMAC_SHA256_HEX`) and maps `reviewResult.reviewAnswer`
+ *     (GREEN / RED / YELLOW) onto our provider-agnostic outcome.
  *
- * What's stubbed:
- *   - `startSession` returns a deterministic session ref so the API
- *     contract is locked in. The live implementation does
- *     `POST /resources/applicants` (creating the applicant) followed
- *     by `POST /resources/sdkIntegrations/levels/{level}/websdkLink`
- *     (generating the hosted URL) — both signed with the same HMAC
- *     used in `parseWebhook`. Wiring those calls is the bootstrap
- *     step in `infrastructure/cloudflare/AUTH0-SETUP.md`.
- *
- * Sumsub is a one-stop shop covering individuals (KYC) and companies
- * (KYB) so we use it for `institutional` and `data_provider`. For
- * individuals we still prefer Onfido (cheaper at our scale) but Sumsub
- * is a valid fallback.
+ * `fetchImpl` is injected for tests; production callers use the
+ * default global `fetch`.
  */
 
 import type { KycProvider, KycResult, KycSession, KycSubject } from "./types.js";
@@ -94,14 +88,15 @@ export class SumsubKycProvider implements KycProvider {
     private readonly appToken: string,
     private readonly secretKey: string,
     private readonly region: "eu" | "us",
+    private readonly fetchImpl: typeof fetch = fetch,
   ) {}
 
-  /** Sumsub API base — single global endpoint, but we tag region for logging. */
+  /** Sumsub has a single global API endpoint. */
   private get apiBase(): string {
     return "https://api.sumsub.com";
   }
 
-  /** Headers used by the live HTTP path. */
+  /** Compute Sumsub's three-piece signed-request headers. */
   private async signedHeaders(method: string, path: string, body: string): Promise<Record<string, string>> {
     const ts = Math.floor(Date.now() / 1000).toString();
     const payload = `${ts}${method.toUpperCase()}${path}${body}`;
@@ -111,22 +106,59 @@ export class SumsubKycProvider implements KycProvider {
       "X-App-Access-Sig": sig,
       "X-App-Access-Ts": ts,
       "content-type": "application/json",
+      accept: "application/json",
     };
   }
 
   async startSession(subject: KycSubject, requestedTier: KycTier): Promise<KycSession> {
-    // Stubbed for now — see file header. The live implementation does
-    // two POSTs to `${this.apiBase}` using `signedHeaders()` and
-    // returns the websdkLink. The contract below mirrors the live shape.
-    void this.apiBase;
-    void this.signedHeaders;
-    const level = LEVEL_FOR_TIER[requestedTier === "none" ? "basic" : requestedTier];
-    const providerSessionId = `sumsub_${subject.internalRef}_${level}`;
+    const tier = requestedTier === "none" ? "basic" : requestedTier;
+    const level = LEVEL_FOR_TIER[tier];
+
+    // Step 1 — create the applicant. The shape differs slightly for
+    // companies (KYB) vs individuals; Sumsub infers it from the level
+    // configuration but we send `type` defensively.
+    const isCompany = subject.entity === "institutional" || subject.entity === "data_provider";
+    const applicantPath = `/resources/applicants?levelName=${encodeURIComponent(level)}`;
+    const applicantBody: Record<string, unknown> = {
+      externalUserId: subject.internalRef,
+      type: isCompany ? "company" : "individual",
+    };
+    if (subject.details["email"]) applicantBody["email"] = subject.details["email"];
+    const applicantBodyStr = JSON.stringify(applicantBody);
+    const applicantHeaders = await this.signedHeaders("POST", applicantPath, applicantBodyStr);
+    const applicantRes = await this.fetchImpl(`${this.apiBase}${applicantPath}`, {
+      method: "POST",
+      headers: applicantHeaders,
+      body: applicantBodyStr,
+    });
+    if (!applicantRes.ok) {
+      throw new Error(`sumsub_applicant_create_failed status=${applicantRes.status}`);
+    }
+    const applicant = (await applicantRes.json()) as { id?: string };
+    if (!applicant.id) throw new Error("sumsub_applicant_missing_id");
+
+    // Step 2 — mint a hosted WebSDK link bound to this applicant.
+    const linkPath = `/resources/sdkIntegrations/levels/${encodeURIComponent(level)}/websdkLink`;
+    const ttlSecs = 24 * 60 * 60;
+    const linkBody = JSON.stringify({ ttlInSecs: ttlSecs, externalUserId: subject.internalRef });
+    const linkHeaders = await this.signedHeaders("POST", linkPath, linkBody);
+    const linkRes = await this.fetchImpl(`${this.apiBase}${linkPath}`, {
+      method: "POST",
+      headers: linkHeaders,
+      body: linkBody,
+    });
+    if (!linkRes.ok) {
+      throw new Error(`sumsub_websdk_link_failed status=${linkRes.status}`);
+    }
+    const linkData = (await linkRes.json()) as { url?: string };
+    if (!linkData.url) throw new Error("sumsub_websdk_link_missing_url");
+
+    void this.region; // currently informational only — Sumsub is single-endpoint.
     return {
       provider: this.name,
-      providerSessionId,
-      hostedUrl: `https://api.sumsub.com/idensic/l/${this.region}/${providerSessionId}`,
-      expiresAt: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+      providerSessionId: applicant.id,
+      hostedUrl: linkData.url,
+      expiresAt: Math.floor(Date.now() / 1000) + ttlSecs,
     };
   }
 

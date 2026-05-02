@@ -6,9 +6,13 @@
  * tier), persists the session as a `kyc_evidence` row in `pending`
  * status, and returns the hosted URL the client should redirect to.
  *
- * Idempotency: if a `pending` session already exists for this tenant
- * we return that one instead of creating a new one. Real providers
- * tolerate this — we just keep the same `provider_session_id`.
+ * Idempotency / resume: if a `pending` session already exists for
+ * this tenant at the same tier and the provider's hosted URL hasn't
+ * expired, we return that one (full payload — `id`, `provider`,
+ * `providerSessionId`, **`hostedUrl`**, `expiresAt`) so a returning
+ * user can pick the flow back up. Stale rows (no stored URL or
+ * `expires_at <= now()`) are skipped — we mint a fresh provider
+ * session instead.
  */
 
 import { resolveKycProvider } from "@gefi/integrations/kyc";
@@ -45,17 +49,42 @@ export const kycStartHandler: Handler = async (rc) => {
     );
   }
 
-  // Reuse an existing pending session if one is open.
+  // Reuse an existing pending session if one is open AND its hosted
+  // URL is still valid. We pull the same fields we'd return on the
+  // create path so the response shape is identical for callers.
+  const now = Math.floor(Date.now() / 1000);
   const existing = await rc.env.DB.prepare(
-    "SELECT id, provider, provider_session_id, requested_tier FROM kyc_evidence WHERE tenant_id = ? AND status = 'pending' ORDER BY created_at DESC LIMIT 1",
+    `SELECT id, provider, provider_session_id, requested_tier, hosted_url, expires_at
+       FROM kyc_evidence
+      WHERE tenant_id = ? AND status = 'pending'
+      ORDER BY created_at DESC LIMIT 1`,
   )
     .bind(c.tenant_id)
-    .first<{ id: string; provider: string; provider_session_id: string; requested_tier: string }>();
-  if (existing && existing.requested_tier === requestedTier) {
+    .first<{
+      id: string;
+      provider: string;
+      provider_session_id: string;
+      requested_tier: string;
+      hosted_url: string | null;
+      expires_at: number | null;
+    }>();
+  if (
+    existing &&
+    existing.requested_tier === requestedTier &&
+    existing.hosted_url &&
+    (existing.expires_at ?? 0) > now
+  ) {
     return Response.json({
       ok: true,
       reused: true,
-      session: { id: existing.id, provider: existing.provider, providerSessionId: existing.provider_session_id },
+      session: {
+        id: existing.id,
+        provider: existing.provider,
+        providerSessionId: existing.provider_session_id,
+        hostedUrl: existing.hosted_url,
+        expiresAt: existing.expires_at,
+        requestedTier,
+      },
     });
   }
 
@@ -80,13 +109,25 @@ export const kycStartHandler: Handler = async (rc) => {
   );
 
   const id = crypto.randomUUID();
-  const now = Math.floor(Date.now() / 1000);
   try {
     await rc.env.DB.prepare(
-      `INSERT INTO kyc_evidence (id, tenant_id, user_id, jurisdiction, provider, provider_session_id, requested_tier, status, created_at, updated_at)
-         VALUES (?, ?, NULL, ?, ?, ?, ?, 'pending', ?, ?)`,
+      `INSERT INTO kyc_evidence
+         (id, tenant_id, user_id, jurisdiction, provider, provider_session_id,
+          requested_tier, status, hosted_url, expires_at, created_at, updated_at)
+         VALUES (?, ?, NULL, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
     )
-      .bind(id, c.tenant_id, c.jurisdiction, session.provider, session.providerSessionId, requestedTier, now, now)
+      .bind(
+        id,
+        c.tenant_id,
+        c.jurisdiction,
+        session.provider,
+        session.providerSessionId,
+        requestedTier,
+        session.hostedUrl,
+        session.expiresAt,
+        now,
+        now,
+      )
       .run();
   } catch (err) {
     console.error("[gefi-api] kyc_evidence insert failed", err);

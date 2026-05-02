@@ -1,19 +1,21 @@
 /**
  * Onfido provider (individual KYC).
  *
- * Today this stubs out the actual HTTP call shape so the API contract is
- * locked in; real network calls are wired up against the live Onfido API
- * during the bootstrap step in `infrastructure/cloudflare/AUTH0-SETUP.md`.
+ * Real HTTP integration:
+ *   - `startSession` does the documented two-step Onfido flow:
+ *       1. `POST /v3.6/applicants`     → create the applicant.
+ *       2. `POST /v3.6/sdk_token`      → mint an SDK token bound to that
+ *                                       applicant + our SDK referrer.
+ *     The applicant id becomes our `providerSessionId` (so webhooks
+ *     correlate back to the same row), and the SDK token is embedded
+ *     in the `hostedUrl` returned to the caller. The dashboards (and
+ *     the Jekyll onboarding page) load Onfido's web SDK with that
+ *     token to render the verification flow inline.
+ *   - `parseWebhook` performs constant-time HMAC-SHA256 verification
+ *     of the `X-SHA2-Signature` header Onfido attaches.
  *
- * What's *real* here:
- *   - the constructor signature accepts `apiToken` from `env.ONFIDO_API_TOKEN`
- *   - `parseWebhook` performs a constant-time HMAC-SHA256 signature check
- *     against the X-SHA2-Signature header Onfido sends
- *
- * What's stubbed:
- *   - `startSession` returns a session ref derived from the subject; the
- *     real implementation does `POST /v3.6/applicants` + `POST /v3.6/sdk_token`
- *     against `api.{eu,us}.onfido.com` and returns the SDK token.
+ * `fetchImpl` is injected for tests; production callers use the
+ * default global `fetch`.
  */
 
 import type { KycProvider, KycResult, KycSession, KycSubject } from "./types.js";
@@ -68,6 +70,7 @@ export class OnfidoKycProvider implements KycProvider {
     private readonly apiToken: string,
     private readonly webhookSecret: string,
     private readonly region: "eu" | "us",
+    private readonly fetchImpl: typeof fetch = fetch,
   ) {}
 
   /** Onfido API base URL for this provider's region. */
@@ -75,23 +78,67 @@ export class OnfidoKycProvider implements KycProvider {
     return `https://api.${this.region}.onfido.com/v3.6`;
   }
 
-  /** Authorization header used by the live HTTP path; tests don't read this. */
+  /** Authorization header used by every Onfido call. */
   private authHeader(): string {
     return `Token token=${this.apiToken}`;
   }
 
-  async startSession(subject: KycSubject, requestedTier: KycTier): Promise<KycSession> {
-    // Stubbed for now — real impl posts to `${this.apiBase}/applicants` with
-    // `this.authHeader()` and returns the SDK token. The contract below
-    // mirrors what we'll store in D1 either way.
-    void this.apiBase;
-    void this.authHeader;
-    const providerSessionId = `onfido_${subject.internalRef}_${requestedTier}`;
+  async startSession(subject: KycSubject, _requestedTier: KycTier): Promise<KycSession> {
+    // Step 1 — create the applicant. Onfido needs at least first_name +
+    // last_name; we accept structured details when the caller provides
+    // them, otherwise derive a passable placeholder from the internal
+    // ref so the call still succeeds (the user re-enters their name in
+    // the SDK regardless).
+    const firstName = subject.details["firstName"] ?? "GeFi";
+    const lastName = subject.details["lastName"] ?? subject.internalRef.slice(-12);
+    const applicantBody: Record<string, unknown> = { first_name: firstName, last_name: lastName };
+    if (subject.details["email"]) applicantBody["email"] = subject.details["email"];
+
+    const applicantRes = await this.fetchImpl(`${this.apiBase}/applicants`, {
+      method: "POST",
+      headers: {
+        authorization: this.authHeader(),
+        "content-type": "application/json",
+        accept: "application/json",
+      },
+      body: JSON.stringify(applicantBody),
+    });
+    if (!applicantRes.ok) {
+      throw new Error(`onfido_applicant_create_failed status=${applicantRes.status}`);
+    }
+    const applicant = (await applicantRes.json()) as { id?: string };
+    if (!applicant.id) throw new Error("onfido_applicant_missing_id");
+
+    // Step 2 — mint an SDK token for this applicant. Onfido binds the
+    // token to a referrer pattern; `*://*.gefi.io/*` covers all our
+    // host variants (apex + dashboards + onboarding subdomain).
+    const tokenRes = await this.fetchImpl(`${this.apiBase}/sdk_token`, {
+      method: "POST",
+      headers: {
+        authorization: this.authHeader(),
+        "content-type": "application/json",
+        accept: "application/json",
+      },
+      body: JSON.stringify({ applicant_id: applicant.id, referrer: "*://*.gefi.io/*" }),
+    });
+    if (!tokenRes.ok) {
+      throw new Error(`onfido_sdk_token_failed status=${tokenRes.status}`);
+    }
+    const tokenData = (await tokenRes.json()) as { token?: string };
+    if (!tokenData.token) throw new Error("onfido_sdk_token_missing");
+
+    // Onfido SDK tokens live for 90 minutes by default.
+    const expiresAt = Math.floor(Date.now() / 1000) + 90 * 60;
     return {
       provider: this.name,
-      providerSessionId,
-      hostedUrl: `https://onfido.app/${this.region}/session/${providerSessionId}`,
-      expiresAt: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+      providerSessionId: applicant.id,
+      // The dashboards load Onfido's hosted SDK at this URL with the
+      // token mounted as a query string. Onfido also exposes a token
+      // exchange for their hosted "Studio" flow at `id.onfido.com`;
+      // we keep the SDK URL pattern because it works for both the
+      // embedded and redirect-style flows.
+      hostedUrl: `https://onfido.com/sdk/?token=${encodeURIComponent(tokenData.token)}`,
+      expiresAt,
     };
   }
 

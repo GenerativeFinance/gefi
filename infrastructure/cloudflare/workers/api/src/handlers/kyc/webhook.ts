@@ -45,7 +45,13 @@ export const kycWebhookHandler: Handler = async (rc) => {
   try {
     const json = JSON.parse(rawBody) as Record<string, unknown>;
     sessionIdHint =
-      (json["providerSessionId"] as string) ??
+      // Test stub:
+      (json["providerSessionId"] as string | undefined) ??
+      // Sumsub: payload top-level `applicantId` is the canonical id;
+      // `inspectionId` is the per-attempt id and is also unique.
+      (json["applicantId"] as string | undefined) ??
+      (json["inspectionId"] as string | undefined) ??
+      // Onfido: nested `payload.object.id`.
       ((json["payload"] as { object?: { id?: string } } | undefined)?.object?.id ?? null);
   } catch {
     // Not JSON → fall through to provider parse, which will error.
