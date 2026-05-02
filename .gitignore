@@ -35,3 +35,8 @@ legacy/build/
 # Misc cruft
 cookies.txt
 *.log
+
+# Agent / IDE scratch attachments. These accumulate prompts, pasted code,
+# and ad-hoc screenshots that aren't part of the published site. Anything
+# that needs to ship lives under assets/ instead.
+attached_assets/

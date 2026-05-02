@@ -17,6 +17,13 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # `actions/configure-pages` reads the Pages site settings to compute the
+    # base path. The action itself works on a public/enabled Pages site
+    # without `pages: write`, but we grant `pages: read` explicitly so the
+    # job is self-documenting and survives a future Pages-API tightening.
+    permissions:
+      contents: read
+      pages: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4.2.2
