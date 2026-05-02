@@ -1,0 +1,18 @@
+<section class="hero">
+  <div class="container narrow hero__inner">
+    {%- if include.eyebrow -%}<p class="eyebrow">{{ include.eyebrow }}</p>{%- endif -%}
+    <h1 class="hero__title">{{ include.title }}</h1>
+    {%- if include.lead -%}<p class="lead">{{ include.lead }}</p>{%- endif -%}
+    <div class="cta-row">
+      {%- if include.primary_label -%}
+        <a class="btn btn-primary btn-lg" href="{{ include.primary_url }}">{{ include.primary_label }}</a>
+      {%- endif -%}
+      {%- if include.secondary_label -%}
+        <a class="btn btn-ghost btn-lg" href="{{ include.secondary_url }}">{{ include.secondary_label }}</a>
+      {%- endif -%}
+    </div>
+    {%- if include.note -%}
+      <p class="muted small">{{ include.note }}</p>
+    {%- endif -%}
+  </div>
+</section>

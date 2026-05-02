@@ -1,0 +1,20 @@
+<a class="model-card" href="{{ include.model.url }}">
+  <header class="model-card__header">
+    <p class="eyebrow">{{ include.model.category }}</p>
+    {%- if include.model.federated -%}
+      <span class="badge badge--federated" title="Trained via federated learning">Federated</span>
+    {%- endif -%}
+  </header>
+  <h3>{{ include.model.title }}</h3>
+  {%- if include.model.lead -%}
+    <p class="muted">{{ include.model.lead }}</p>
+  {%- endif -%}
+  <footer class="model-card__footer">
+    {%- if include.model.risk -%}
+      <span class="badge badge--risk-{{ include.model.risk }}">Risk: {{ include.model.risk }}</span>
+    {%- endif -%}
+    {%- if include.model.price -%}
+      <span class="price-inline">${{ include.model.price }}<span class="price-period">/mo</span></span>
+    {%- endif -%}
+  </footer>
+</a>

@@ -1,0 +1,30 @@
+<header class="site-header" role="banner">
+  <div class="container site-header__inner">
+    <a class="site-header__brand" href="/">
+      <img src="{{ site.logo | relative_url }}" alt="" width="28" height="28" />
+      <span>{{ site.title }}</span>
+    </a>
+
+    <button class="nav-toggle" type="button" aria-controls="primary-nav" aria-expanded="false" data-nav-toggle>
+      <span class="sr-only">Toggle menu</span>
+      <span aria-hidden="true">&#9776;</span>
+    </button>
+
+    <nav id="primary-nav" class="site-nav" aria-label="Primary">
+      <ul>
+        {%- for item in site.nav -%}
+          <li>
+            <a href="{{ item.url }}"
+               {% if page.url == item.url or page.url contains item.url %}aria-current="page"{% endif %}>
+              {{ item.title }}
+            </a>
+          </li>
+        {%- endfor -%}
+      </ul>
+      <div class="site-nav__cta">
+        <a class="btn btn-ghost" href="{{ site.app.signin_url }}">Sign in</a>
+        <a class="btn btn-primary" href="{{ site.app.signup_url }}">Get started</a>
+      </div>
+    </nav>
+  </div>
+</header>

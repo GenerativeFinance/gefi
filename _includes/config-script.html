@@ -1,0 +1,10 @@
+<script>
+  window.GEFI_CONFIG = {
+    apiBaseUrl: {{ site.api.base_url | jsonify }},
+    endpoints: {
+      newsletter: {{ site.api.newsletter_endpoint | jsonify }},
+      contact:    {{ site.api.contact_endpoint    | jsonify }},
+      demo:       {{ site.api.demo_endpoint       | jsonify }}
+    }
+  };
+</script>

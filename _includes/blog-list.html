@@ -1,0 +1,15 @@
+<ul class="blog-list" role="list">
+  {%- for post in include.posts -%}
+    <li class="blog-item">
+      <p class="eyebrow">
+        <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %-d, %Y" }}</time>
+      </p>
+      <h3><a href="{{ post.url }}">{{ post.title }}</a></h3>
+      {%- if post.lead -%}
+        <p class="muted">{{ post.lead }}</p>
+      {%- elsif post.excerpt -%}
+        <p class="muted">{{ post.excerpt | strip_html | truncate: 180 }}</p>
+      {%- endif -%}
+    </li>
+  {%- endfor -%}
+</ul>

@@ -1,0 +1,129 @@
+title: GeFi
+tagline: AI financial models — federated, audited, accountable.
+description: >-
+  GeFi is the marketplace for AI financial models. Discover, subscribe to, and
+  contribute to federated, audit-ready models for investing, risk, fraud,
+  compliance, and trade finance.
+url: "https://gefi.io"
+baseurl: ""
+
+author:
+  name: GeFi
+  email: hello@gefi.io
+  twitter: gefi_io
+
+logo: /assets/img/logo.svg
+og_image: /assets/img/og-default.png
+twitter_handle: "@gefi_io"
+
+api:
+  base_url: "https://api.gefi.io"
+  newsletter_endpoint: "https://api.gefi.io/v1/newsletter/subscribe"
+  contact_endpoint:    "https://api.gefi.io/v1/contact"
+  demo_endpoint:       "https://api.gefi.io/v1/demo"
+
+app:
+  signin_url: "https://app.gefi.io/sign-in"
+  signup_url: "https://app.gefi.io/sign-up"
+
+nav:
+  - { title: "Models",     url: "/models/" }
+  - { title: "Features",   url: "/features/" }
+  - { title: "Pricing",    url: "/pricing/" }
+  - { title: "Research",   url: "/research/" }
+  - { title: "Docs",       url: "/docs/" }
+  - { title: "Blog",       url: "/blog/" }
+
+footer_nav:
+  product:
+    - { title: "Models",     url: "/models/" }
+    - { title: "Features",   url: "/features/" }
+    - { title: "Pricing",    url: "/pricing/" }
+    - { title: "Research",   url: "/research/" }
+    - { title: "Docs",       url: "/docs/" }
+  company:
+    - { title: "About",      url: "/about/" }
+    - { title: "Blog",       url: "/blog/" }
+    - { title: "Contact",    url: "/contact/" }
+  trust:
+    - { title: "Compliance & Trust", url: "/compliance/" }
+    - { title: "Status",             url: "https://status.gefi.io" }
+    - { title: "Privacy",            url: "/legal/privacy/" }
+    - { title: "Terms",              url: "/legal/terms/" }
+
+compliance_badges:
+  - { label: "SOC 2 Type II (in progress)" }
+  - { label: "ISO 27001 (in progress)" }
+  - { label: "ISO 42001 (in progress)" }
+  - { label: "GDPR" }
+  - { label: "CCPA" }
+
+subprocessors:
+  - { name: "Cloudflare",   purpose: "Edge compute, DNS, WAF, R2/D1/KV" }
+  - { name: "Stripe",       purpose: "Subscriptions and developer payouts" }
+  - { name: "Resend",       purpose: "Transactional email" }
+  - { name: "Auth0",        purpose: "Authentication and MFA" }
+  - { name: "Sumsub",       purpose: "KYC / KYB verification" }
+
+collections:
+  models:
+    output: true
+    permalink: /models/:slug/
+  research:
+    output: true
+    permalink: /research/:slug/
+
+defaults:
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: page
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+  - scope:
+      path: ""
+      type: models
+    values:
+      layout: model
+  - scope:
+      path: ""
+      type: research
+    values:
+      layout: page
+
+permalink: /blog/:year/:month/:day/:title/
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+  - jekyll-redirect-from
+
+exclude:
+  - legacy/
+  - node_modules/
+  - vendor/
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - replit.md
+  - "*.md.bak"
+  - .github/
+  - .agents/
+  - .local/
+  - .replit
+  - .DS_Store
+  - admin-fix-status.md
+  - BUG_FIXES_COMPLETED.md
+  - IMPLEMENTATION_SUMMARY.md
+  - OPTIMIZATION_SUMMARY.md
+  - cookies.txt
+  - storage/
+  - migrations/
+  - contracts/
+  - attached_assets/
+  - .cache/

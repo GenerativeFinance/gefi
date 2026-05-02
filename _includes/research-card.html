@@ -1,0 +1,10 @@
+<a class="research-card" href="{{ include.research.url }}">
+  <p class="eyebrow">{{ include.research.topic | default: "Research" }}</p>
+  <h3>{{ include.research.title }}</h3>
+  {%- if include.research.lead -%}
+    <p class="muted">{{ include.research.lead }}</p>
+  {%- endif -%}
+  <footer>
+    <span class="muted small">Read &rarr;</span>
+  </footer>
+</a>

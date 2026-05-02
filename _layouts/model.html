@@ -1,0 +1,68 @@
+---
+layout: default
+---
+<article class="container model-detail">
+  <p class="eyebrow"><a href="/models/">Models</a> &middot; {{ page.category }}</p>
+  <header class="model-detail__header">
+    <div>
+      <h1>{{ page.title }}</h1>
+      {%- if page.lead -%}
+        <p class="lead">{{ page.lead }}</p>
+      {%- endif -%}
+      <div class="badge-row">
+        {%- if page.risk -%}<span class="badge badge--risk-{{ page.risk }}">Risk: {{ page.risk }}</span>{%- endif -%}
+        {%- if page.maturity -%}<span class="badge">{{ page.maturity }}</span>{%- endif -%}
+        {%- if page.federated -%}<span class="badge badge--federated">Federated</span>{%- endif -%}
+        {%- if page.jurisdictions -%}
+          {%- for j in page.jurisdictions -%}<span class="badge badge--jurisdiction">{{ j }}</span>{%- endfor -%}
+        {%- endif -%}
+      </div>
+    </div>
+    <aside class="model-detail__rail">
+      <div class="model-detail__price">
+        {%- if page.price -%}
+          <span class="price">${{ page.price }}</span><span class="price-period">/ month</span>
+        {%- else -%}
+          <span class="price">Contact us</span>
+        {%- endif -%}
+      </div>
+      <a class="btn btn-primary btn-block" href="{{ site.app.signup_url }}">Subscribe</a>
+      <a class="btn btn-ghost btn-block" href="/contact/?model={{ page.slug }}">Talk to sales</a>
+    </aside>
+  </header>
+
+  <section class="prose">
+    {{ content }}
+  </section>
+
+  {%- if page.metrics -%}
+    <section class="model-detail__metrics">
+      <h2>Reported metrics</h2>
+      <dl class="metric-grid">
+        {%- for m in page.metrics -%}
+          <div>
+            <dt>{{ m.label }}</dt>
+            <dd>{{ m.value }}</dd>
+          </div>
+        {%- endfor -%}
+      </dl>
+      <p class="muted small">
+        Metrics are self-reported by the model author and verifiable on the audit log.
+      </p>
+    </section>
+  {%- endif -%}
+
+  <section class="model-detail__compliance">
+    <h2>Compliance posture</h2>
+    <ul class="compliance-list">
+      {%- for j in page.jurisdictions -%}
+        <li><strong>{{ j }}</strong> &mdash; reviewed and routed to local counsel.</li>
+      {%- endfor -%}
+    </ul>
+    <p>
+      Every run of this model is appended to a hash-chained audit log. Anyone with
+      a run id can fetch a Merkle inclusion proof &mdash; see the
+      <a href="/compliance/">Compliance &amp; Trust</a> page.
+    </p>
+  </section>
+</article>
