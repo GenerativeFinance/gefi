@@ -249,16 +249,33 @@ describe("Onboarding (loose auth)", () => {
       ctx,
     );
     expect(res.status).toBe(201);
-    const body = (await res.json()) as { ok: boolean; tenant: { id: string; slug: string }; next: { kyc_required: boolean; mfa_required: boolean } };
+    const body = (await res.json()) as {
+      ok: boolean;
+      tenant: { id: string; slug: string };
+      next: { kyc_required: boolean; mfa_required: boolean };
+      requires_token_refresh: boolean;
+      app_metadata_written: boolean;
+    };
     expect(body.ok).toBe(true);
     expect(body.tenant.slug.startsWith("acme-capital-")).toBe(true);
     expect(body.next.kyc_required).toBe(true);
     expect(body.next.mfa_required).toBe(true);
+    // The current token was issued before the tenant existed, so the
+    // client must refresh before calling /v1/kyc/start.
+    expect(body.requires_token_refresh).toBe(true);
+    // Without M2M secrets configured in this dev test env, the
+    // app_metadata write path is skipped (the post-login Action
+    // still hydrates claims on next login).
+    expect(body.app_metadata_written).toBe(false);
 
     // Three batched inserts: tenants, users, memberships.
     const inserts = fake.calls.filter((c) => /^INSERT INTO/.test(c.sql));
     const tables = inserts.map((c) => c.sql.split(/\s+/)[2]).sort();
     expect(tables).toEqual(["memberships", "tenants", "users"]);
+    // memberships INSERT now persists jurisdiction (denormalised
+    // from tenants for jurisdiction-scoped queries).
+    const membershipsInsert = inserts.find((c) => c.sql.includes("memberships"));
+    expect(membershipsInsert?.bindings).toContain("us");
   });
 
   it("rejects an onboard whose jurisdiction != WORKER_REGION on a regional sibling", async () => {

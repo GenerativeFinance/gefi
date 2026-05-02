@@ -208,7 +208,9 @@ Auth runs on Auth0 with RS256 tokens. The operator runbook is
 New packages:
 - `packages/auth` — JWKS cache (`jwks.ts`), RS256 verifier (`verify.ts`
   with both strict and `verifyAuth0TokenLoose` variants), 7-persona
-  RBAC matrix (`rbac.ts`), subscription→KYC tier map (`kyc-tiers.ts`).
+  RBAC matrix (`rbac.ts`), subscription→KYC tier map (`kyc-tiers.ts`),
+  Auth0 Management M2M client (`management.ts`) for writing
+  `app_metadata.gefi` after onboarding.
 - `packages/integrations` — `KycProvider` + `SanctionsProvider`
   interfaces, with `StubKycProvider`, `OnfidoKycProvider` (HMAC-SHA256
   `X-SHA2-Signature`), `SumsubKycProvider` (HMAC-SHA256

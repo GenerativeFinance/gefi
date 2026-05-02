@@ -52,13 +52,18 @@ CREATE INDEX IF NOT EXISTS idx_users_primary_tenant ON users(primary_tenant_id);
 -- The composite PK enforces at most one membership per (tenant, user).
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS memberships (
-  tenant_id   TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  user_id     TEXT NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
-  roles_json  TEXT NOT NULL,   -- JSON: ["admin","developer"]
-  created_at  INTEGER NOT NULL,
+  tenant_id    TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  user_id      TEXT NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
+  -- Denormalised from `tenants(jurisdiction)` so jurisdiction-scoped
+  -- queries (the regional siblings only ever look at one) don't need
+  -- to JOIN. Kept consistent at write-time by the onboard handler.
+  jurisdiction TEXT NOT NULL CHECK (jurisdiction IN ('eu','us')),
+  roles_json   TEXT NOT NULL,   -- JSON: ["admin","developer"]
+  created_at   INTEGER NOT NULL,
   PRIMARY KEY (tenant_id, user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_memberships_user ON memberships(user_id);
+CREATE INDEX IF NOT EXISTS idx_memberships_jurisdiction ON memberships(jurisdiction);
 
 -- ----------------------------------------------------------------------------
 -- api_keys: tenant-scoped API tokens, hashed at rest. Listing only ever

@@ -20,6 +20,8 @@
  */
 
 import { requireLooseAuth } from "../../middleware/auth.js";
+import { Auth0Management, type GefiAppMetadata } from "@gefi/auth/management";
+import { subscriptionToKycTier } from "@gefi/auth/kyc-tiers";
 import type { Handler } from "../../router.js";
 import type { EntityType, Region, SubscriptionTier } from "@gefi/shared-types";
 
@@ -119,22 +121,76 @@ export const onboardHandler: Handler = async (rc) => {
         now,
       ),
       rc.env.DB.prepare(
-        `INSERT INTO memberships (tenant_id, user_id, roles_json, created_at) VALUES (?, ?, ?, ?)`,
-      ).bind(tenantId, userId, JSON.stringify(["admin"]), now),
+        `INSERT INTO memberships (tenant_id, user_id, jurisdiction, roles_json, created_at) VALUES (?, ?, ?, ?, ?)`,
+      ).bind(tenantId, userId, body.jurisdiction, JSON.stringify(["admin"]), now),
     ]);
   } catch (err) {
     console.error("[gefi-api] onboard insert failed", err);
     return Response.json({ ok: false, error: "storage_failed" }, { status: 502 });
   }
 
+  // Write the GeFi claims onto Auth0 `app_metadata.gefi` via the
+  // Management API. The post-login Action (see AUTH0-SETUP.md §5)
+  // copies app_metadata.gefi onto every subsequent token, so the
+  // user's NEXT access token will carry the claims that
+  // `requireAuth` expects (`tenant_id`, `jurisdiction`, etc.). Their
+  // CURRENT token is unchanged, which is why the response below
+  // sets `requires_token_refresh: true` — the client must refresh
+  // before calling `/v1/kyc/start`.
+  //
+  // M2M secrets are optional: in dev/staging without them we just
+  // log + continue (the post-login Action will still hydrate claims
+  // on next login from D1 fall-back), but in prod the operator
+  // should configure them. Failures here are NEVER fatal to onboard
+  // (D1 is the source of truth) — the user can re-attempt the
+  // refresh path until the claims propagate.
+  const gefiClaims: GefiAppMetadata = {
+    tenant_id: tenantId,
+    jurisdiction: body.jurisdiction,
+    entity_type: body.entity_type,
+    subscription_tier: subTier,
+    kyc_tier: "none",
+    roles: ["admin"],
+  };
+  let appMetadataWritten = false;
+  if (rc.env.AUTH0_M2M_CLIENT_ID && rc.env.AUTH0_M2M_CLIENT_SECRET) {
+    try {
+      const mgmt = new Auth0Management(
+        rc.env.AUTH0_DOMAIN,
+        rc.env.AUTH0_M2M_CLIENT_ID,
+        rc.env.AUTH0_M2M_CLIENT_SECRET,
+        rc.env.CACHE,
+      );
+      await mgmt.updateAppMetadata(principal.sub, gefiClaims);
+      appMetadataWritten = true;
+    } catch (err) {
+      console.error("[gefi-api] auth0 app_metadata write failed", err);
+    }
+  } else if (rc.env.ENVIRONMENT === "prod") {
+    // Loud warning: in prod we want the M2M wired up so claim
+    // propagation is immediate. The user can still complete
+    // onboarding at next login, but it's a misconfiguration.
+    console.warn("[gefi-api] AUTH0_M2M_CLIENT_ID/SECRET missing in prod; relying on post-login Action only");
+  }
+
   return Response.json(
     {
       ok: true,
       tenant: { id: tenantId, slug },
+      // True iff the backend wrote `app_metadata.gefi` directly. When
+      // false, the Auth0 post-login Action will pick the claims up
+      // from D1 on next login; the user just needs to refresh.
+      app_metadata_written: appMetadataWritten,
+      // Always true — the user's CURRENT token was issued before the
+      // tenant existed, so it has no GeFi claims. The frontend MUST
+      // fetch a fresh token (silent refresh / interactive login)
+      // before calling `/v1/kyc/start`, or that call will 403 with
+      // `auth_onboarding_incomplete`.
+      requires_token_refresh: true,
       next: {
         // The client should call /v1/kyc/start next if the chosen tier
         // requires KYC (see kycSatisfies / subscriptionToKycTier).
-        kyc_required: subTier !== "free",
+        kyc_required: subscriptionToKycTier(subTier) !== "none",
         mfa_required: subTier === "pro" || subTier === "enterprise",
       },
     },

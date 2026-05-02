@@ -20,6 +20,7 @@ export default defineConfig({
       // `@gefi/auth/rbac` etc. need explicit aliases because vitest doesn't
       // honour `package.json#exports` for workspace packages by default.
       { find: "@gefi/auth/kyc-tiers", replacement: new URL("./packages/auth/src/kyc-tiers.ts", import.meta.url).pathname },
+      { find: "@gefi/auth/management", replacement: new URL("./packages/auth/src/management.ts", import.meta.url).pathname },
       { find: "@gefi/auth/verify", replacement: new URL("./packages/auth/src/verify.ts", import.meta.url).pathname },
       { find: "@gefi/auth/rbac", replacement: new URL("./packages/auth/src/rbac.ts", import.meta.url).pathname },
       { find: "@gefi/auth/jwks", replacement: new URL("./packages/auth/src/jwks.ts", import.meta.url).pathname },

@@ -25,3 +25,4 @@ export * from "./verify.js";
 export * from "./jwks.js";
 export * from "./rbac.js";
 export * from "./kyc-tiers.js";
+export * from "./management.js";

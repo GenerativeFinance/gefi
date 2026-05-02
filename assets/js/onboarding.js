@@ -132,18 +132,66 @@
           s.tenant = res.body.tenant;
           s.next = res.body.next || {};
           s.entity = body;
+          // The token the user is holding was issued before the
+          // tenant existed, so it has no GeFi claims. The next step
+          // (`/v1/kyc/start`) will refuse the call until we get a
+          // fresh token. Stash the requirement and run the refresh
+          // gate before we navigate.
+          s.requires_token_refresh = !!res.body.requires_token_refresh;
           writeState(s);
-          if (s.next.kyc_required) {
-            window.location.href = "/onboarding/identity/";
-          } else if (s.next.mfa_required) {
-            window.location.href = "/onboarding/security/";
-          } else {
-            clearState();
-            window.location.href = "/";
-          }
+          proceedAfterOnboard(s, t, err);
         })
         .catch(function () { showError(err, "Network error — please retry."); });
     });
+  }
+
+  /**
+   * After /v1/auth/onboard succeeds we need a token that carries the
+   * new GeFi claims. We probe `/v1/auth/me` with the existing token:
+   *   - 200 with `user.tenant_id` → token already refreshed (Auth0
+   *     Action was fast or the user got lucky) → continue.
+   *   - 403 (`auth_onboarding_incomplete`) → token is stale → bounce
+   *     through Auth0 for a silent refresh if we know the URL,
+   *     otherwise surface a clear "please sign in again" message.
+   */
+  function proceedAfterOnboard(state, accessToken, errorEl) {
+    fetch(apiBase() + "/v1/auth/me", {
+      headers: { Authorization: "Bearer " + accessToken },
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); })
+      .then(function (res) {
+        var hasFullClaims = res.ok && res.body && res.body.user && res.body.user.tenant_id;
+        if (hasFullClaims) {
+          navigateNext(state);
+          return;
+        }
+        var refreshUrl = window.GEFI_AUTH0_REFRESH_URL;
+        if (refreshUrl) {
+          var nextPath = state.next && state.next.kyc_required ? "/onboarding/identity/"
+            : (state.next && state.next.mfa_required ? "/onboarding/security/" : "/");
+          var returnTo = encodeURIComponent(window.location.origin + nextPath);
+          var sep = refreshUrl.indexOf("?") >= 0 ? "&" : "?";
+          window.location.href = refreshUrl + sep + "return_to=" + returnTo;
+          return;
+        }
+        showError(
+          errorEl,
+          "Almost done — please sign back in to refresh your session, then we'll pick up where we left off.",
+        );
+      })
+      .catch(function () { showError(errorEl, "Network error — please retry."); });
+  }
+
+  function navigateNext(state) {
+    var n = state.next || {};
+    if (n.kyc_required) {
+      window.location.href = "/onboarding/identity/";
+    } else if (n.mfa_required) {
+      window.location.href = "/onboarding/security/";
+    } else {
+      clearState();
+      window.location.href = "/";
+    }
   }
 
   function initIdentity() {

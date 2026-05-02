@@ -127,11 +127,32 @@ AUTH0_AUDIENCE   = https://staging-api.gefi.io          # staging
 AUTH0_AUDIENCE   = https://api.gefi.io                  # prod / eu / us
 
 # Secrets.
+# AUTH0_M2M_CLIENT_ID is a *var*, not a secret (it's safe to log) but the
+# secret half of the pair must be set per env.
+wrangler secret put AUTH0_M2M_CLIENT_ID     --env staging   # paste M2M client id
 wrangler secret put AUTH0_M2M_CLIENT_SECRET --env staging   # paste M2M secret
+wrangler secret put AUTH0_M2M_CLIENT_ID     --env prod
 wrangler secret put AUTH0_M2M_CLIENT_SECRET --env prod
+wrangler secret put AUTH0_M2M_CLIENT_ID     --env eu
 wrangler secret put AUTH0_M2M_CLIENT_SECRET --env eu
+wrangler secret put AUTH0_M2M_CLIENT_ID     --env us
 wrangler secret put AUTH0_M2M_CLIENT_SECRET --env us
 ```
+
+The M2M application authorises the **Auth0 Management API** (audience
+`https://{tenant}.auth0.com/api/v2/`) with the scopes
+`read:users` and `update:users_app_metadata`. After
+`/v1/auth/onboard` writes the new tenant to D1, the API uses these
+credentials to PATCH the user's `app_metadata.gefi` so the post-login
+Action (§5) can mirror those values onto the next access token. The
+M2M token itself is cached in the `CACHE` KV namespace at
+`auth0:m2m:{client_id}` for half its `expires_in` window.
+
+If `AUTH0_M2M_CLIENT_ID` / `AUTH0_M2M_CLIENT_SECRET` are missing in
+dev/staging the API logs a warning and continues — the post-login
+Action will still hydrate claims from D1 on the user's next login.
+In prod the warning is escalated; configure these secrets before
+opening signups.
 
 The Worker code reads `AUTH0_DOMAIN` to fetch JWKS at
 `${AUTH0_DOMAIN}.well-known/jwks.json` (KV-cached for an hour) and
