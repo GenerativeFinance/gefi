@@ -1,3 +1,18 @@
+{%- comment -%}
+  Pricing CTAs route to the app when it's live (site.app.enabled = true).
+  Otherwise they fall back to the contact form so we don't ship dead links.
+{%- endcomment -%}
+{%- if site.app.enabled -%}
+  {%- assign cta_free = site.app.signup_url -%}
+  {%- assign cta_starter = site.app.signup_url | append: '?tier=starter' -%}
+  {%- assign cta_pro = site.app.signup_url | append: '?tier=pro' -%}
+  {%- assign cta_inst = site.app.signup_url | append: '?tier=institutional' -%}
+{%- else -%}
+  {%- assign cta_free = '/contact/?topic=sales&tier=free' -%}
+  {%- assign cta_starter = '/contact/?topic=sales&tier=starter' -%}
+  {%- assign cta_pro = '/contact/?topic=sales&tier=pro' -%}
+  {%- assign cta_inst = '/contact/?topic=enterprise&tier=institutional' -%}
+{%- endif -%}
 <section class="section">
   <div class="container">
     <ul class="pricing-grid" role="list">
@@ -11,7 +26,7 @@
           <li>Paper trading sandbox</li>
           <li>Community support</li>
         </ul>
-        <a class="btn btn-ghost btn-block" href="{{ site.app.signup_url }}">Start free</a>
+        <a class="btn btn-ghost btn-block" href="{{ cta_free }}">{% if site.app.enabled %}Start free{% else %}Join the waitlist{% endif %}</a>
       </li>
 
       <li class="pricing-card">
@@ -24,7 +39,7 @@
           <li>Standard KYC tier</li>
           <li>Email support</li>
         </ul>
-        <a class="btn btn-ghost btn-block" href="{{ site.app.signup_url }}?tier=starter">Choose Starter</a>
+        <a class="btn btn-ghost btn-block" href="{{ cta_starter }}">{% if site.app.enabled %}Choose Starter{% else %}Talk to us{% endif %}</a>
       </li>
 
       <li class="pricing-card pricing-card--featured">
@@ -39,7 +54,7 @@
           <li>Priority support &amp; SLAs</li>
           <li>MFA enforced (TOTP / passkeys)</li>
         </ul>
-        <a class="btn btn-primary btn-block" href="{{ site.app.signup_url }}?tier=pro">Choose Pro</a>
+        <a class="btn btn-primary btn-block" href="{{ cta_pro }}">{% if site.app.enabled %}Choose Pro{% else %}Talk to us{% endif %}</a>
       </li>
 
       <li class="pricing-card">
@@ -53,7 +68,7 @@
           <li>Compliance routing to your counsel</li>
           <li>SOC 2 evidence pack on request</li>
         </ul>
-        <a class="btn btn-ghost btn-block" href="{{ site.app.signup_url }}?tier=institutional">Choose Institutional</a>
+        <a class="btn btn-ghost btn-block" href="{{ cta_inst }}">Talk to sales</a>
       </li>
 
       <li class="pricing-card">

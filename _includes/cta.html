@@ -1,9 +1,13 @@
+{%- assign cta_default = site.app.signup_url -%}
+{%- unless site.app.enabled -%}
+  {%- assign cta_default = site.app.fallback_url | default: '/contact/' -%}
+{%- endunless -%}
 <section class="section cta-band">
   <div class="container narrow cta-band__inner">
     <h2>{{ include.title | default: "Ready to put a federated AI model into your workflow?" }}</h2>
     {%- if include.lead -%}<p class="lead">{{ include.lead }}</p>{%- endif -%}
     <div class="cta-row">
-      <a class="btn btn-primary btn-lg" href="{{ include.primary_url | default: site.app.signup_url }}">
+      <a class="btn btn-primary btn-lg" href="{{ include.primary_url | default: cta_default }}">
         {{ include.primary_label | default: "Get started free" }}
       </a>
       <a class="btn btn-ghost btn-lg" href="{{ include.secondary_url | default: '/contact/' }}">

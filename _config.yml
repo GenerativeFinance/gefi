@@ -16,15 +16,31 @@ logo: /assets/img/logo.svg
 og_image: /assets/img/og-default.png
 twitter_handle: "@gefi_io"
 
+# Backend wiring.
+#
+# Forms POST JSON to these endpoints. While they are empty strings, the
+# client falls back to a "thanks, we'll be in touch" simulated success path
+# (see assets/js/forms.js). Once Task #2 (Cloudflare backend) ships, fill in
+# the URLs:
+#   newsletter_endpoint: "https://api.gefi.io/v1/newsletter/subscribe"
+#   contact_endpoint:    "https://api.gefi.io/v1/contact"
+#   demo_endpoint:       "https://api.gefi.io/v1/demo"
 api:
-  base_url: "https://api.gefi.io"
-  newsletter_endpoint: "https://api.gefi.io/v1/newsletter/subscribe"
-  contact_endpoint:    "https://api.gefi.io/v1/contact"
-  demo_endpoint:       "https://api.gefi.io/v1/demo"
+  base_url: ""
+  newsletter_endpoint: ""
+  contact_endpoint: ""
+  demo_endpoint: ""
 
+# App surface (app.gefi.io).
+#
+# `enabled: false` routes every "Sign in" / "Get started" / "Subscribe" CTA
+# to the contact page so we don't ship dead links. Flip to `true` once Task #7
+# (the dashboards) is live.
 app:
+  enabled: false
   signin_url: "https://app.gefi.io/sign-in"
   signup_url: "https://app.gefi.io/sign-up"
+  fallback_url: "/contact/?topic=sales"
 
 nav:
   - { title: "Models",     url: "/models/" }
@@ -108,7 +124,6 @@ exclude:
   - node_modules/
   - vendor/
   - Gemfile
-  - Gemfile.lock
   - README.md
   - replit.md
   - "*.md.bak"

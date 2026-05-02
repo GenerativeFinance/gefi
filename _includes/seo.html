@@ -44,14 +44,18 @@
   "name": "{{ page.title }}",
   "description": "{{ page_description | strip_html | strip_newlines | truncate: 200 }}",
   "brand": { "@type": "Brand", "name": "{{ site.title }}" },
-  "category": "{{ page.category }}",
-  {% if page.price %}"offers": {
+  "category": "{{ page.category | default: 'AI model' }}",
+  "url": "{{ page_url }}"
+  {%- if page.price -%}
+  ,
+  "offers": {
     "@type": "Offer",
     "price": "{{ page.price }}",
     "priceCurrency": "USD",
     "availability": "https://schema.org/InStock",
     "url": "{{ page_url }}"
-  }{% endif %}
+  }
+  {%- endif -%}
 }
 </script>
 {%- endif -%}

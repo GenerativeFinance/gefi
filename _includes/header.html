@@ -1,3 +1,9 @@
+{%- assign signin_url  = site.app.signin_url  -%}
+{%- assign signup_url  = site.app.signup_url  -%}
+{%- unless site.app.enabled -%}
+  {%- assign signin_url = site.app.fallback_url | default: '/contact/' -%}
+  {%- assign signup_url = site.app.fallback_url | default: '/contact/' -%}
+{%- endunless -%}
 <header class="site-header" role="banner">
   <div class="container site-header__inner">
     <a class="site-header__brand" href="/">
@@ -15,15 +21,15 @@
         {%- for item in site.nav -%}
           <li>
             <a href="{{ item.url }}"
-               {% if page.url == item.url or page.url contains item.url %}aria-current="page"{% endif %}>
+               {% if page.url == item.url %}aria-current="page"{% endif %}>
               {{ item.title }}
             </a>
           </li>
         {%- endfor -%}
       </ul>
       <div class="site-nav__cta">
-        <a class="btn btn-ghost" href="{{ site.app.signin_url }}">Sign in</a>
-        <a class="btn btn-primary" href="{{ site.app.signup_url }}">Get started</a>
+        <a class="btn btn-ghost" href="{{ signin_url }}">Sign in</a>
+        <a class="btn btn-primary" href="{{ signup_url }}">Get started</a>
       </div>
     </nav>
   </div>

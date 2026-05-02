@@ -1,178 +1,165 @@
-# GeFi - AI Financial Platform
+# GeFi.io — marketing & content site
 
-## Overview
-GeFi is a comprehensive AI-powered financial platform designed for developers to create and monetize AI financial models, and for investors to access advanced financial analytics and risk management tools. It integrates modern web technologies with machine learning to offer real-time portfolio management, risk assessment, and market insights.
+This repository is the **public marketing and content site** for GeFi
+(`https://gefi.io`). It is a static [Jekyll](https://jekyllrb.com/) site,
+built and deployed by GitHub Actions, served from GitHub Pages on the apex
+custom domain `gefi.io`.
 
-## Features
-- **AI Model Marketplace**: Discover, subscribe, and manage AI financial models
-- **Portfolio Management**: Real-time analytics and optimization
-- **Risk Management**: Monitoring, stress testing, and VaR calculation  
-- **Web3 & DeFi Integration**: Multi-wallet support for onchain payments
-- **Smart Contracts**: Transparent revenue sharing
-- **Advanced Analytics**: AI-generated market insights and reporting
+It is **not** the GeFi platform itself. The platform (APIs, dashboards,
+inference, federated training, audit log, compliance routing) lives on
+Cloudflare and is implemented across separate subdomains:
 
-## Technology Stack
+| Surface             | Where it lives                                | Repo / Task                                  |
+|---------------------|-----------------------------------------------|----------------------------------------------|
+| Marketing site      | GitHub Pages, `https://gefi.io`               | **This repo (Task #1).**                     |
+| API                 | Cloudflare Workers, `https://api.gefi.io`     | Task #2 — Cloudflare backend foundation.     |
+| App / dashboard     | Cloudflare Pages, `https://app.gefi.io`       | Tasks #3, #7 — auth & dashboards.            |
+| Trust portal        | Cloudflare Pages, `https://trust.gefi.io`     | Task #4 — compliance.                        |
+| Docs                | Jekyll, `https://docs.gefi.io`                | Task #1 follow-up.                           |
+| Status page         | External SaaS, `https://status.gefi.io`       | Task #8 — production hardening.              |
 
-### Frontend
-- **Framework**: React 18 with TypeScript
-- **Styling**: Tailwind CSS with shadcn/ui
-- **Routing**: Wouter
-- **State Management**: TanStack Query
-- **Build Tool**: Vite
+The previous monolithic React + Express + Drizzle prototype that used to
+live in this repo has been moved to [`legacy/`](./legacy/README.md) for
+reference while the new platform is built.
 
-### Backend
-- **Runtime**: Node.js with Express.js
-- **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: Replit Auth with OpenID Connect
-- **API Design**: RESTful endpoints
+## Project layout
 
-### Web3 Integration
-- **Web3 Modal**: Unified wallet connection interface
-- **WalletConnect**: Mobile wallet support
-- **MetaMask**: Browser extension support
-- **Ethers.js**: Ethereum interaction library
-
-## Environment Variables
-
-### Required
-```bash
-DATABASE_URL=postgresql://...  # PostgreSQL connection string
+```
+.
+├── _config.yml              # Jekyll site config
+├── Gemfile                  # Ruby gem dependencies
+├── CNAME                    # Custom domain (gefi.io)
+├── 404.html                 # Custom 404
+├── robots.txt               # Crawler directives + sitemap pointer
+├── .nojekyll                # Disable GitHub's classic Jekyll on Pages (we build via Actions)
+│
+├── index.html               # Home page
+├── features.md              # /features/
+├── pricing.md               # /pricing/
+├── models.md                # /models/  (catalogue index, lists _models)
+├── research.md              # /research/ (lists _research)
+├── docs.md                  # /docs/    (developer entry point)
+├── blog.md                  # /blog/    (lists _posts)
+├── about.md                 # /about/
+├── compliance.md            # /compliance/  (trust portal)
+├── contact.md               # /contact/
+├── legal/
+│   ├── privacy.md           # /legal/privacy/
+│   └── terms.md             # /legal/terms/
+│
+├── _layouts/                # default, page, post, model, pricing
+├── _includes/               # head, header, footer, hero, feature-grid,
+│                            # pricing-table, model-card, research-card,
+│                            # blog-list, cta, newsletter, seo, config-script
+├── assets/
+│   ├── css/main.css         # Hand-rolled CSS — no Tailwind, no SCSS
+│   ├── js/forms.js          # Tiny vanilla JS for nav + form submissions
+│   └── img/                 # logo.svg, favicon.svg, OG images
+│
+├── _models/                 # Marketplace catalogue (collection)
+├── _research/               # Research notes (collection)
+├── _posts/                  # Blog posts
+│
+├── .github/workflows/
+│   └── deploy-pages.yml     # CI: build + deploy to GitHub Pages
+├── docs/
+│   └── dns-setup.md         # DNS + Pages setup instructions
+│
+└── legacy/                  # Archived React/Express prototype (reference)
 ```
 
-### Optional - Web3 Configuration
+## Local development
+
+You need Ruby 3.x and Bundler installed.
+
 ```bash
-# RPC endpoint for blockchain interactions (recommended)
-NEXT_PUBLIC_ONCHAIN_RPC_URL=https://mainnet.infura.io/v3/YOUR_PROJECT_ID
-
-# Alternative: Infura project ID for WalletConnect
-NEXT_PUBLIC_INFURA_ID=your_infura_project_id
-
-# Receiver address for onchain payments (server-side)
-ONCHAIN_RECEIVER_ADDRESS=0x742d35Cc6634C0532925a3b8D24b693d54b32625
+bundle install
+bundle exec jekyll serve --livereload
 ```
 
-## Setup
+Open `http://localhost:4000`.
 
-1. **Install Dependencies**
-   ```bash
-   npm install
-   ```
+### On Replit
 
-2. **Environment Setup**
-   Create `.env.local` with your database URL and optional Web3 configuration.
+A "Start application" workflow is configured to run `bundle install` +
+`bundle exec jekyll serve` on port 5000. Open the preview pane after the
+workflow signals "Server running".
 
-3. **Database Setup**
-   ```bash
-   npm run db:push
-   ```
+> Replit is a developer convenience only. Production serving is GitHub
+> Pages — see below.
 
-4. **Build & Start**
-   ```bash
-   npm run build
-   npm start
-   ```
+## Deployment
 
-   Or for development:
-   ```bash
-   npm run dev
-   ```
+Pushing to `main` triggers `.github/workflows/deploy-pages.yml`, which:
 
-## Web3 Payments
+1. Sets up Ruby 3.2 with Bundler caching.
+2. Runs `bundle exec jekyll build` with `JEKYLL_ENV=production`.
+3. Uploads the built site as a Pages artifact.
+4. Deploys to GitHub Pages, which serves it on `https://gefi.io`.
 
-The platform supports onchain AI model subscriptions via Web3Modal integration:
+For the one-time DNS + Pages configuration steps, see
+[`docs/dns-setup.md`](./docs/dns-setup.md).
 
-### Supported Wallets
-- **MetaMask**: Browser extension
-- **WalletConnect**: Mobile wallets (Trust Wallet, Rainbow, etc.)
+## Adding content
 
-### Testing Onchain Payments
+### A blog post
 
-1. **Setup Test Environment**
-   ```bash
-   # Use Sepolia testnet endpoint
-   NEXT_PUBLIC_ONCHAIN_RPC_URL=https://sepolia.infura.io/v3/YOUR_PROJECT_ID
-   
-   # Or Goerli testnet
-   NEXT_PUBLIC_ONCHAIN_RPC_URL=https://goerli.infura.io/v3/YOUR_PROJECT_ID
-   ```
+Add `_posts/YYYY-MM-DD-slug.md`:
 
-2. **Test Wallets**
-   - Ensure MetaMask is connected to the same testnet
-   - Get test ETH from faucets:
-     - [Sepolia Faucet](https://sepoliafaucet.com/)
-     - [Goerli Faucet](https://goerlifaucet.com/)
+```yaml
+---
+title: "My new post"
+date: 2026-05-15
+author: Your Name
+lead: One-line teaser shown in lists and SEO.
+---
 
-3. **Test Flow**
-   - Navigate to AI Models page (`/ai-models`)
-   - Click the wallet icon (💳) next to any Subscribe button
-   - Connect your wallet via Web3Modal
-   - Create invoice and complete payment
-   - Verify transaction on testnet explorer
-
-### WalletConnect Testing
-- Open Web3Modal and select WalletConnect
-- Scan QR code with mobile wallet app
-- Complete payment on mobile device
-- Verify connection and transaction
-
-### Payment Flow
-1. **Connect Wallet**: Web3Modal supports MetaMask + WalletConnect
-2. **Create Invoice**: Server generates payment details
-3. **Send Transaction**: User approves and sends ETH
-4. **Verify Payment**: Server validates blockchain transaction
-5. **Activate Subscription**: AI model access granted
-
-## API Endpoints
-
-### Onchain Payment Routes
-- `POST /api/ai-models/:id/onchain-invoice` - Create payment invoice
-- `POST /api/ai-models/:id/verify-onchain` - Verify blockchain transaction
-
-### AI Models
-- `GET /api/ai-models` - List available models
-- `GET /api/ai-models/:id` - Get model details
-- `POST /api/ai-models/:id/subscribe` - Traditional subscription
-
-## Troubleshooting
-
-### Web3 Issues
-- **Connection Failed**: Ensure wallet is installed and unlocked
-- **Wrong Network**: Switch wallet to correct network (mainnet/testnet)
-- **Transaction Failed**: Check gas fees and wallet balance
-- **WalletConnect Issues**: Try refreshing the QR code
-
-### Build Issues
-- Run `npm install` to ensure all dependencies are installed
-- Check Node.js version (requires Node 16+)
-- Clear `node_modules` and reinstall if needed
-
-## Development
-
-### Adding New Payment Methods
-The Web3 integration is modular and can be extended:
-
-1. **Update `client/src/lib/web3.ts`** - Add new provider options
-2. **Modify `OnchainPaymentModal.tsx`** - Add UI for new wallet types
-3. **Extend server validation** - Support new blockchain networks
-
-### Testing Locally
-```bash
-# Install dependencies (skip puppeteer for faster installs)
-PUPPETEER_SKIP_DOWNLOAD=true npm install
-
-# Start development server
-npm run dev
+Markdown body…
 ```
 
-## Contributing
-1. Fork the repository
-2. Create feature branch
-3. Test changes locally
-4. Submit pull request with detailed description
+### A model
 
-## Support
-For issues with Web3 integration or onchain payments, please check:
-- Wallet connection status
-- Network configuration
-- Transaction logs in browser console
-- Server logs for payment verification
+Add `_models/<slug>.md` and it'll appear at `/models/<slug>/`. See an
+existing entry like [`_models/sentiment-from-filings.md`](./_models/sentiment-from-filings.md)
+for the front-matter shape (category, risk, maturity, federated, price,
+jurisdictions, metrics, lead).
+
+Set `featured: true` to surface it on the home page's "Featured models"
+section.
+
+### A research note
+
+Add `_research/<slug>.md` and it'll appear at `/research/<slug>/`. See
+[`_research/audit-log-design.md`](./_research/audit-log-design.md) for
+the front-matter shape.
+
+## Forms
+
+The newsletter and contact forms POST JSON to the endpoints configured
+under `api:` in `_config.yml`:
+
+```yaml
+api:
+  newsletter_endpoint: "https://api.gefi.io/v1/newsletter/subscribe"
+  contact_endpoint:    "https://api.gefi.io/v1/contact"
+  demo_endpoint:       "https://api.gefi.io/v1/demo"
+```
+
+Until those Cloudflare endpoints exist (Task #2), submissions log to the
+console and surface a friendly success message — no data is sent anywhere.
+Update `_config.yml` once the API is live.
+
+## What's intentionally **not** here
+
+- **No JavaScript framework.** No React, no Vue, no client-side router.
+  The marketing site is HTML + a small slice of vanilla JS.
+- **No Tailwind / SCSS.** One hand-rolled CSS file with CSS variables.
+  Easier to audit, smaller payload, no build step beyond Jekyll itself.
+- **No backend.** All backend functionality (auth, payments, inference,
+  audit log, federation) lives on Cloudflare under `api.gefi.io`.
+- **No Replit hosting in production.** GitHub Pages is canonical.
+
+## License
+
+To be confirmed before public launch. Treat the repository as
+all-rights-reserved until then.

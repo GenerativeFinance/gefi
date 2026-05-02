@@ -26,8 +26,12 @@ layout: default
           <span class="price">Contact us</span>
         {%- endif -%}
       </div>
-      <a class="btn btn-primary btn-block" href="{{ site.app.signup_url }}">Subscribe</a>
-      <a class="btn btn-ghost btn-block" href="/contact/?model={{ page.slug }}">Talk to sales</a>
+      {%- if site.app.enabled -%}
+        <a class="btn btn-primary btn-block" href="{{ site.app.signup_url }}?model={{ page.slug }}">Subscribe</a>
+      {%- else -%}
+        <a class="btn btn-primary btn-block" href="/contact/?topic=sales&amp;model={{ page.slug }}">Request access</a>
+      {%- endif -%}
+      <a class="btn btn-ghost btn-block" href="/contact/?topic=sales&amp;model={{ page.slug }}">Talk to sales</a>
     </aside>
   </header>
 

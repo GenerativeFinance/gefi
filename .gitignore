@@ -1,0 +1,37 @@
+# Jekyll
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+vendor/
+.bundle/
+
+# Ruby
+# (Gemfile.lock IS committed — deterministic builds for GitHub Pages CI.)
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Replit / agent scratch
+.cache/
+.local/
+.agents/
+.upm/
+.config/
+
+# Legacy Node/React app (kept under legacy/ for reference, but never installed)
+legacy/node_modules/
+legacy/dist/
+legacy/.next/
+legacy/build/
+
+# Misc cruft
+cookies.txt
+*.log

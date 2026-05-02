@@ -1,20 +1,44 @@
-/* Tiny vanilla JS: nav toggle + form submission to placeholder API endpoints. */
+/* GeFi marketing site — tiny vanilla JS layer.
+ *
+ *   1. Mobile nav toggle (the nav also works without JS — see CSS .no-js rules).
+ *   2. Generic form submit handler that POSTs JSON to the endpoints declared in
+ *      _config.yml. While those endpoints are empty strings, we surface a
+ *      simulated "thanks" message and log the payload to the console — Task #2
+ *      (Cloudflare backend) wires the real endpoints in.
+ */
 (function () {
   "use strict";
 
-  // --- Mobile nav toggle ---
+  /* --- Mobile nav toggle --- */
   var toggle = document.querySelector("[data-nav-toggle]");
   var nav = document.getElementById("primary-nav");
+
+  function closeNav() {
+    if (!nav || !toggle) return;
+    nav.classList.remove("is-open");
+    toggle.setAttribute("aria-expanded", "false");
+  }
+
   if (toggle && nav) {
     toggle.addEventListener("click", function () {
       var open = nav.classList.toggle("is-open");
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
     });
+
+    // Close the menu when a nav link is activated, so the next page doesn't
+    // load with the menu still flagged open in assistive tech.
+    nav.addEventListener("click", function (ev) {
+      var link = ev.target.closest("a");
+      if (link) closeNav();
+    });
+
+    // Esc closes the menu.
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape") closeNav();
+    });
   }
 
-  // --- Generic form handler ---
-  // Forms with `data-form="newsletter|contact|demo"` POST JSON to the matching
-  // endpoint configured in `_config.yml` and surface a status message.
+  /* --- Generic form handler --- */
   var endpoints = (window.GEFI_CONFIG && window.GEFI_CONFIG.endpoints) || {};
 
   function getStatus(form) {
@@ -47,7 +71,8 @@
 
     if (!endpoint) {
       // No backend yet — log and acknowledge for the visitor.
-      console.info("[gefi] " + kind + " submission (no API configured):", payload);
+      // (When the API ships, set the URL in _config.yml and this branch goes away.)
+      console.info("[gefi] " + kind + " submission (no API configured yet):", payload);
       setStatus(form, "Thanks! We'll be in touch shortly.", "ok");
       form.reset();
       return;

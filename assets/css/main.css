@@ -120,18 +120,32 @@ p  { margin: 0 0 var(--space-4); }
   display: none; background: none; border: 1px solid var(--color-border);
   border-radius: var(--radius-sm); padding: 6px 10px; font-size: 1.125rem; cursor: pointer;
 }
+/* If JS is unavailable we never want a hidden, un-toggleable menu. */
+.no-js .nav-toggle { display: none !important; }
 
 @media (max-width: 880px) {
-  .nav-toggle { display: inline-flex; }
-  .site-nav {
+  /* JS path: show the toggle, hide the nav until .is-open */
+  .js .nav-toggle { display: inline-flex; }
+  .js .site-nav {
     display: none; position: absolute; top: 100%; left: 0; right: 0;
     flex-direction: column; align-items: stretch; gap: var(--space-3);
     background: var(--color-surface); border-bottom: 1px solid var(--color-border);
     padding: var(--space-4) var(--space-5);
   }
-  .site-nav.is-open { display: flex; }
-  .site-nav ul { flex-direction: column; gap: var(--space-3); }
-  .site-nav__cta { flex-direction: column; }
+  .js .site-nav.is-open { display: flex; }
+  .js .site-nav ul { flex-direction: column; gap: var(--space-3); }
+  .js .site-nav__cta { flex-direction: column; }
+
+  /* No-JS fallback: nav stacks under the brand and is always visible. */
+  .no-js .site-header__inner { flex-wrap: wrap; }
+  .no-js .site-nav {
+    flex-basis: 100%;
+    flex-direction: column; align-items: stretch; gap: var(--space-3);
+    padding-top: var(--space-3); border-top: 1px solid var(--color-border);
+    margin-top: var(--space-3);
+  }
+  .no-js .site-nav ul { flex-direction: column; gap: var(--space-3); }
+  .no-js .site-nav__cta { flex-direction: column; }
 }
 
 /* Buttons */

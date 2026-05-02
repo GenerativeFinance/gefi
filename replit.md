@@ -1,88 +1,161 @@
-# GeFi - AI Financial Platform
+# GeFi.io — agent project notes
 
-## Overview
-GeFi is a comprehensive AI-powered financial platform designed for developers to create and monetize AI financial models, and for investors to access advanced financial analytics and risk management tools. It integrates modern web technologies with machine learning to offer real-time portfolio management, risk assessment, and market insights. The platform aims to become a central hub for AI in finance, providing capabilities for model marketplace, robust risk management, AI-generated reporting, and Web3/DeFi integration with smart contracts for revenue sharing.
+This file is the canonical agent-facing context for the GeFi.io project.
+Keep it short, opinionated, and current.
 
-## User Preferences
-Preferred communication style: Simple, everyday language.
+## What this repo is
 
-## System Architecture
+A **static Jekyll site** for GeFi's public marketing and content surface.
+It is hosted on **GitHub Pages** at the apex domain **`gefi.io`** and built
+by `.github/workflows/deploy-pages.yml` on every push to `main`.
 
-### Frontend
-- **Framework**: React 18 with TypeScript
-- **Styling**: Tailwind CSS with shadcn/ui
-- **Routing**: Wouter
-- **State Management**: TanStack Query
-- **Build Tool**: Vite
+It is **not** the GeFi platform itself. The platform (APIs, dashboards,
+auth, inference, federated training, audit log, compliance routing) is a
+**separate Cloudflare-based stack** built across subsequent tasks (`api.gefi.io`,
+`app.gefi.io`, `trust.gefi.io`, etc.).
 
-### Backend
-- **Runtime**: Node.js with Express.js (started via `npx tsx server/index.ts`)
-- **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: Multi-provider OAuth (Google, GitHub, LinkedIn) — all providers are optional; app starts cleanly without credentials
-- **Session Management**: Express sessions with PostgreSQL store
-- **API Design**: RESTful endpoints
+The previous **React + Vite + Express + Drizzle** monolith that used to
+live in this repo has been moved into [`legacy/`](./legacy/README.md) and is
+referenced — never deployed.
 
-### Data Storage
-- **Primary Database**: PostgreSQL via Neon serverless
-- **ORM**: Drizzle with TypeScript schema definitions
-- **Session Storage**: PostgreSQL-backed session store
-- **Migrations**: Drizzle Kit
+## Hosting model (do not get this wrong)
 
-### Key Features
-- **Authentication & Authorization**: Secure user authentication and role-based access control.
-- **Portfolio Management**: Real-time analytics and AI model integration for optimization.
-- **AI Model Marketplace**: Discovery, subscription, and developer tools for model management.
-- **Risk Management System**: Real-time monitoring, stress testing, and VaR calculation.
-- **Reporting & Analytics**: AI-generated market analysis and automated financial reporting.
-- **Web3 & DeFi Integration**: Wallet connectivity and multi-chain support for crypto assets.
-- **Smart Contracts**: Transparent revenue sharing and crowdfunding using Solidity.
-- **Advanced Backtesting Environment**: Comprehensive testing for AI financial models with historical data and performance metrics.
-- **Real-time Trading Platform**: Live market data via WebSockets and order management.
-- **Sentiment Visualizer**: AI-powered sentiment analysis across asset classes.
-- **Comprehensive User Profiles**: Role-specific profiles for various user types.
-- **Admin & Moderator Dashboards**: Tools for user management, content moderation, and analytics.
-- **AI Chatbot System**: Intelligent conversation management with personalized recommendations.
-- **Advanced Data Provider Tools**: Dataset upload/management and compliance tools.
-- **PDF Report Generation System**: Background processing for generating executive-quality financial reports.
-- **Account Creation & Calendly Integration**: Streamlined user signup with pending account workflow and demo booking.
-- **Model Subscription & Funding**: Features for managing AI model subscriptions and funding requests.
-- **Error Handling**: Comprehensive error boundary implementation and defensive data access.
-- **Profile Compatibility**: Defensive user lookup strategies for multiple authentication providers.
+- **Production hosting:** GitHub Pages, custom domain `gefi.io`.
+- **CI:** `.github/workflows/deploy-pages.yml` (Ruby 3.2 + Bundler + Jekyll 4.3).
+- **Replit hosting:** **none.** The Replit workflow is a local-preview
+  developer convenience only — it runs `bundle exec jekyll serve` on port 5000.
+- **No Replit `[deployment]` in `.replit`.** Do not add one. Do not suggest
+  "deploy via Replit". The user has explicitly excluded it.
 
-## External Dependencies
+## Tech stack
 
-- **@neondatabase/serverless**: PostgreSQL database connectivity
-- **drizzle-orm**: Type-safe database operations
-- **@tanstack/react-query**: Server state management
-- **passport**: Authentication middleware
-- **openid-client**: OpenID Connect authentication
-- **@radix-ui/***: Accessible UI primitives
-- **tailwindcss**: CSS framework
-- **class-variance-authority**: Component variant management
-- **lucide-react**: Icon library
-- **vite**: Build tool
-- **typescript**: Language
-- **drizzle-kit**: Database schema management
-- **Web3Modal**: Web3 wallet connection
-- **ethers.js**: Ethereum blockchain interaction
-- **Recharts**: Charting library
-- **Chart.js**: Charting library
+- **Site generator:** Jekyll 4.3
+- **Plugins:** `jekyll-feed`, `jekyll-sitemap`, `jekyll-seo-tag`, `jekyll-redirect-from`
+- **Markup:** Markdown + Liquid + plain HTML in layouts
+- **CSS:** one hand-rolled `assets/css/main.css` with CSS variables. No
+  Tailwind. No SCSS pipeline.
+- **JS:** one tiny `assets/js/forms.js` for the mobile nav + form POSTs.
+  No framework, no bundler, no NPM in this repo.
+- **Fonts:** Inter (UI) + JetBrains Mono (numerics) loaded from Google Fonts.
 
-## Replit Environment Notes
+## Repository layout
 
-### Startup
-- Server starts with: `NODE_ENV=development npx tsx server/index.ts` (tsx is in node_modules/.bin, not on PATH)
-- App serves on port 5000 (both API and frontend via Vite middleware)
+| Path                          | Purpose                                            |
+|-------------------------------|----------------------------------------------------|
+| `_config.yml`                 | Site config: title, URL, nav, API endpoints, collections, exclusions |
+| `Gemfile`                     | Ruby gems                                          |
+| `CNAME`                       | `gefi.io`                                          |
+| `.nojekyll`                   | Tells Pages we're using Actions, not classic build |
+| `index.html`                  | Home                                               |
+| `features.md` / `pricing.md` / `models.md` / `research.md` / `docs.md` / `blog.md` / `about.md` / `compliance.md` / `contact.md` | Top-level marketing pages |
+| `legal/privacy.md`, `legal/terms.md` | Placeholder legal pages                     |
+| `404.html`, `robots.txt`      | Standard utility pages                             |
+| `_layouts/`                   | `default`, `page`, `post`, `model`, `pricing`      |
+| `_includes/`                  | `head`, `header`, `footer`, `seo`, `hero`, `feature-grid`, `pricing-table`, `model-card`, `research-card`, `blog-list`, `cta`, `newsletter`, `config-script` |
+| `assets/css/main.css`         | The whole stylesheet                               |
+| `assets/js/forms.js`          | Nav toggle + generic form POST handler             |
+| `assets/img/*`                | Logo + favicon (SVG)                               |
+| `_models/*.md`                | Marketplace catalogue entries (collection)         |
+| `_research/*.md`              | Research notes (collection)                        |
+| `_posts/*.md`                 | Blog posts                                         |
+| `.github/workflows/deploy-pages.yml` | GitHub Actions Pages deploy                 |
+| `docs/dns-setup.md`           | DNS + Pages one-time setup                         |
+| `legacy/`                     | Archived React/Express prototype + its `README.md` |
 
-### Vite HMR (Hot Module Replacement)
-- HMR WebSocket path is explicitly set to `/__vite_hmr` in `server/vite.ts` to work through Replit's proxy
-- The app WebSocket (`/ws`) uses `noServer: true` and manual `upgrade` event routing so Vite can share the same HTTP server without conflicts
-- Translations loaded via `fetch('/src/locales/en.json')` instead of dynamic imports for browser compatibility
+## Branding tokens (used throughout the site)
 
-### OAuth
-- Google, GitHub, and LinkedIn OAuth are all optional — app starts cleanly with just warnings if credentials are missing
-- To enable OAuth, set: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`
+```
+--color-bg:      #FAFBFF;   --color-surface: #FFFFFF;
+--color-text:    #0B0E1A;   --color-muted:   #6B7280;
+--color-brand:   #6D5BFF;   --color-accent:  #22D3EE;
+--color-profit:  #16A34A;   --color-loss:    #DC2626;
+font-sans: "Inter";  font-mono: "JetBrains Mono";
+```
 
-### Web3
-- `@walletconnect/web3-provider` and `web3modal` use dynamic imports (not static) to avoid Node.js globals breaking the browser bundle
-- Browser globals (`global`, `Buffer`, `process`) shimmed via `client/src/polyfills.ts` and Vite `define` config
+Match these everywhere. The same palette is mirrored in the playground
+spec (`.local/tasks/`) so the marketing site and app surface feel
+continuous.
+
+## Two big config switches in `_config.yml`
+
+These two blocks decide whether the site looks "pre-launch" or "live":
+
+```yaml
+api:
+  newsletter_endpoint: ""   # empty -> JS shows simulated success
+  contact_endpoint: ""
+  demo_endpoint: ""
+
+app:
+  enabled: false            # false -> Sign in / Get started / Subscribe -> /contact/
+  signin_url: "https://app.gefi.io/sign-in"
+  signup_url: "https://app.gefi.io/sign-up"
+  fallback_url: "/contact/?topic=sales"
+```
+
+- **`api.*_endpoint`**: `assets/js/forms.js` only `fetch()`s when the endpoint
+  is a non-empty string. While they're empty, every form acknowledges with
+  "Thanks! We'll be in touch shortly." and logs the payload to the console —
+  no network call, no false error states. When Task #2 (the Cloudflare backend)
+  ships, fill in the URLs and redeploy. No code changes needed.
+- **`app.enabled`**: when `false`, every "Sign in" / "Get started" / "Subscribe"
+  CTA across `_includes/header.html`, `_includes/cta.html`,
+  `_includes/pricing-table.html`, and `_layouts/model.html` routes to
+  `app.fallback_url` instead of `app.signin_url` / `app.signup_url`. Flip to
+  `true` once Task #7 (the dashboards on `app.gefi.io`) is live.
+
+Both flags exist so the marketing site can ship to the apex domain BEFORE the
+backend / dashboards exist, without any dead links or console errors.
+
+## Working on this repo
+
+- **Never** add `package.json` or run `npm install` at the root. Node was
+  intentionally removed from this surface.
+- **Never** install Tailwind, SCSS, or any JS bundler at the root. Hand-write
+  CSS in `assets/css/main.css`.
+- **Never** add a Replit `[deployment]` block to `.replit`.
+- **Never** un-commit `Gemfile.lock`. Deterministic builds are non-negotiable
+  for the deploy CI.
+- **Always** keep `CNAME` set to `gefi.io`.
+- **Always** put new pages with a permalink (`permalink: /thing/`) so URLs
+  stay clean.
+- **Always** route any new app/auth CTA through `site.app.enabled` — see
+  `_includes/header.html` for the canonical pattern.
+- **Always** update this file when adding a new page type, layout, include,
+  collection, or major content section.
+
+## Progressive enhancement contract
+
+- The page works without JavaScript. The `<html class="no-js">` is swapped to
+  `class="js"` by an inline script in `_layouts/default.html`. CSS keys mobile-nav
+  behaviour off `.js` vs `.no-js` so no-JS visitors get a stacked, always-visible
+  nav instead of a permanently-hidden menu. Forms fall back to a `<noscript>`
+  block pointing at `mailto:hello@gefi.io`.
+- Don't break this. If you add a feature that needs JS, give it a no-JS path
+  too.
+
+## Project tasks (parent backlog at the time of writing)
+
+| #  | Title                                                              | State          |
+|----|--------------------------------------------------------------------|----------------|
+| 1  | Static Jekyll site on GitHub Pages                                 | **In progress (this task).** |
+| 2  | Cloudflare backend foundation (Workers + D1 + R2 + KV + Vectorize) | Pending        |
+| 3  | Auth (Auth0 + JWT) + tenancy                                       | Pending        |
+| 4  | Compliance routing + audit log + trust portal                      | Pending        |
+| 5  | Marketplace + payments (Stripe + onchain)                          | Pending        |
+| 6  | Federated learning network                                         | Pending        |
+| 7  | App / dashboards (`app.gefi.io`)                                   | Pending        |
+| 8  | Production hardening + status page + observability                 | Pending        |
+| 9–17 | Playground 8-phase parallel track                                | Pending        |
+
+If a future task contradicts the rules above, the rules above are wrong —
+update this file in the same change.
+
+## How to preview locally
+
+```bash
+bundle install
+bundle exec jekyll serve --host 0.0.0.0 --port 5000 --livereload
+```
+
+Or just hit "Run" — the configured workflow does the same thing.
