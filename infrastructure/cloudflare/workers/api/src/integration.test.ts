@@ -810,6 +810,84 @@ describe("Marketplace + billing endpoints", () => {
     const body = (await res.json()) as { ok: boolean; entitlements: unknown[] };
     expect(body.ok).toBe(true);
   });
+
+  it("POST /v1/billing/subscriptions maps tier → STRIPE_PRICE_* env var", async () => {
+    // Stub-Stripe path (no STRIPE_SECRET_KEY) so we don't make a network
+    // call. We assert that the Checkout session row written to D1 carries
+    // the env-configured price id, not the legacy synthetic `price_tier_*`
+    // fallback. The stub deterministically derives `cs_*` from
+    // `${tenantId}:${priceId}`, so a different priceId yields a
+    // different session id — that lets us prove the env var is what was
+    // wired through to Stripe.
+    const fakeWithEnv = scriptedD1();
+    const envWithEnv = regionalEnv({ region: "us", db: fakeWithEnv.db });
+    (envWithEnv as { STRIPE_PRICE_PRO?: string }).STRIPE_PRICE_PRO = "price_real_pro_xyz";
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const resWithEnv = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/subscriptions", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await devToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ kind: "tier", tier: "pro" }),
+      }),
+      envWithEnv,
+      ctx,
+    );
+    expect(resWithEnv.status).toBe(201);
+    const bodyWithEnv = (await resWithEnv.json()) as { checkout_url: string };
+
+    // Same call WITHOUT the env var → stub falls back to synthetic id,
+    // producing a different checkout URL. This proves the env-mapped
+    // path actually flows through to the Stripe client.
+    const fakeNoEnv = scriptedD1();
+    const envNoEnv = regionalEnv({ region: "us", db: fakeNoEnv.db });
+    const resNoEnv = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/subscriptions", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await devToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ kind: "tier", tier: "pro" }),
+      }),
+      envNoEnv,
+      ctx,
+    );
+    expect(resNoEnv.status).toBe(201);
+    const bodyNoEnv = (await resNoEnv.json()) as { checkout_url: string };
+    expect(bodyWithEnv.checkout_url).not.toBe(bodyNoEnv.checkout_url);
+  });
+
+  it("POST /v1/billing/subscriptions returns 503 in prod when tier price is not configured", async () => {
+    // With a real STRIPE_SECRET_KEY but no STRIPE_PRICE_* set, the
+    // handler must refuse rather than ship a synthetic id to live
+    // Stripe. Synthetic ids exist only for the StubStripe path.
+    const fake = scriptedD1();
+    const env = regionalEnv({ region: "us", db: fake.db });
+    (env as { STRIPE_SECRET_KEY?: string }).STRIPE_SECRET_KEY = "sk_test_dummy";
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/billing/subscriptions", {
+        method: "POST",
+        headers: {
+          "X-Gefi-Edge-JWT": edge,
+          Authorization: `Bearer ${await devToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ kind: "tier", tier: "starter" }),
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as { error: string; tier: string };
+    expect(body.error).toBe("tier_price_not_configured");
+    expect(body.tier).toBe("starter");
+  });
 });
 
 describe("/v1/auth/me requires fully-onboarded claims", () => {

@@ -56,9 +56,29 @@ async function sha256Hex(input: string): Promise<string> {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/** Canonicalise the request so the same logical input always produces the same sha. */
+/**
+ * Canonicalise the request so the same logical input always produces the
+ * same sha. We do a true deep canonical JSON: sort object keys recursively
+ * and serialise the result with no replacer. The previous implementation
+ * passed `Object.keys(stable).sort()` as JSON.stringify's replacer ARRAY,
+ * which globally filtered properties — nested context fields like
+ * `id`/`text` were stripped, so materially different prompts could collide
+ * on the same input_sha. That undermines audit replay guarantees.
+ */
+function canonicaliseValue(v: unknown): unknown {
+  if (v === null || v === undefined) return v;
+  if (typeof v !== "object") return v;
+  if (Array.isArray(v)) return v.map(canonicaliseValue);
+  const src = v as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(src).sort()) {
+    out[k] = canonicaliseValue(src[k]);
+  }
+  return out;
+}
+
 export function canonicaliseRequest(req: InferenceRequest): string {
-  const stable: Record<string, unknown> = {
+  const stable = {
     prompt: req.prompt,
     system: req.system ?? "",
     max_tokens: req.maxTokens ?? null,
@@ -66,7 +86,7 @@ export function canonicaliseRequest(req: InferenceRequest): string {
     region: req.region,
     context: (req.context ?? []).map((c) => ({ id: c.id, text: c.text })),
   };
-  return JSON.stringify(stable, Object.keys(stable).sort());
+  return JSON.stringify(canonicaliseValue(stable));
 }
 
 export async function runModel(

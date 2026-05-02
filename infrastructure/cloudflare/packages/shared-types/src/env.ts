@@ -138,6 +138,19 @@ export interface StripeSecrets {
   STRIPE_TAX_ENABLED?: string;
   /** Public-facing return URL after a Stripe Checkout / Connect flow. */
   STRIPE_RETURN_URL?: string;
+  /**
+   * Per-tier Stripe Price IDs. Populated per-environment via
+   * `wrangler secret put`. Required in production for any tier the
+   * tenant attempts to subscribe to (the handler returns 503 otherwise);
+   * absence in dev/staging falls back to a synthetic id that the
+   * StubStripe client knows how to handle.
+   *
+   * The `free` tier has no Stripe price — entitlements are seeded
+   * directly without a Checkout session.
+   */
+  STRIPE_PRICE_STARTER?: string;
+  STRIPE_PRICE_PRO?: string;
+  STRIPE_PRICE_ENTERPRISE?: string;
 }
 
 /**

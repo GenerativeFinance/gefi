@@ -167,6 +167,35 @@ describe("@gefi/model-gateway run + replay", () => {
     const b = canonicaliseRequest({ prompt: "X", region: "us", context: [{ id: "a", text: "1" }, { id: "b", text: "2" }] });
     expect(a).toBe(b);
   });
+  it("canonicaliseRequest preserves nested context fields (no key-array filter bug)", () => {
+    // Regression: the previous implementation passed
+    // `Object.keys(stable).sort()` as the JSON.stringify replacer ARRAY,
+    // which globally filtered property names. That stripped nested
+    // `id`/`text` fields, so two materially different contexts collapsed
+    // to the same input_sha — breaking audit replay.
+    const baseline = canonicaliseRequest({
+      prompt: "X",
+      region: "us",
+      context: [{ id: "doc-1", text: "Apple earnings beat by 5%" }],
+    });
+    const tampered = canonicaliseRequest({
+      prompt: "X",
+      region: "us",
+      context: [{ id: "doc-1", text: "Apple earnings missed by 5%" }],
+    });
+    expect(baseline).not.toBe(tampered);
+    // Baseline must actually contain the nested text — it was being
+    // dropped to `{}` previously.
+    expect(baseline).toContain("Apple earnings beat by 5%");
+    // Object key ordering is canonical (sorted) regardless of the
+    // input field order:
+    const reordered = canonicaliseRequest({
+      region: "us",
+      prompt: "X",
+      context: [{ text: "Apple earnings beat by 5%", id: "doc-1" }],
+    });
+    expect(reordered).toBe(baseline);
+  });
   it("responseToSseStream emits delta + done events", async () => {
     const stream = responseToSseStream({
       text: "abcdefgh",

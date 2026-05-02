@@ -64,9 +64,27 @@ export const createSubscriptionHandler: Handler = async (rc) => {
     const tier = tierOrThrow(body.tier!);
     monthlyCents = tier.monthlyCents;
     trialDays = tier.trialDays;
-    // In real prod the price id comes from a lookup table per env; for the
-    // stub flow we synthesise a stable one so the StubStripe path works.
-    priceId = priceId ?? `price_tier_${tier.tier}`;
+    // Map tier → env-configured Stripe price id. The `free` tier has no
+    // Stripe price (entitlements are seeded directly without checkout).
+    // In production with a real Stripe key, a missing tier price is a
+    // hard 503 — we won't quietly hand a synthetic id to live Stripe.
+    const tierPrice =
+      tier.tier === "starter"
+        ? rc.env.STRIPE_PRICE_STARTER
+        : tier.tier === "pro"
+          ? rc.env.STRIPE_PRICE_PRO
+          : tier.tier === "enterprise"
+            ? rc.env.STRIPE_PRICE_ENTERPRISE
+            : undefined; // "free"
+    if (rc.env.STRIPE_SECRET_KEY && !priceId && !tierPrice && tier.tier !== "free") {
+      return Response.json(
+        { ok: false, error: "tier_price_not_configured", tier: tier.tier },
+        { status: 503 },
+      );
+    }
+    // Stub path falls back to a stable synthetic id so dev/test still
+    // round-trips through the StubStripe checkout flow.
+    priceId = priceId ?? tierPrice ?? `price_tier_${tier.tier}`;
   } else {
     const row = await rc.env.DB.prepare("SELECT id, monthly_price_cents FROM models WHERE id = ?")
       .bind(body.model_id!)

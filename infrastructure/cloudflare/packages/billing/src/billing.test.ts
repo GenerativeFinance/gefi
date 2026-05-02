@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { tierOrThrow, TIERS } from "./tiers.js";
-import { resolveStripe, signStripePayload, StubStripe, verifyStripeSignature } from "./stripe.js";
+import { RealStripe, resolveStripe, signStripePayload, StubStripe, verifyStripeSignature } from "./stripe.js";
 import {
   consume,
   consumeApiKey,
@@ -189,6 +189,78 @@ describe("@gefi/billing stripe stub", () => {
     });
     expect(a.id).toBe(b.id);
     expect(a.customerId.startsWith("cus_")).toBe(true);
+  });
+});
+
+describe("@gefi/billing RealStripe wire format", () => {
+  // Capture the outgoing form-encoded body so we can assert Stripe-side
+  // field names. We never let the live `fetch` escape the test — every
+  // call is intercepted and given a synthetic Stripe response.
+  function captureFetch() {
+    const calls: Array<{ url: string; body: string }> = [];
+    const fetchImpl = (async (input: RequestInfo, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : (input as Request).url;
+      calls.push({ url, body: String(init?.body ?? "") });
+      const synth =
+        url.endsWith("/checkout/sessions")
+          ? { id: "cs_live_1", url: "https://stripe.test/cs", customer: "cus_live_1" }
+          : { id: "synth", url: "https://stripe.test/x" };
+      return new Response(JSON.stringify(synth), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }) as unknown as typeof fetch;
+    return { calls, fetchImpl };
+  }
+
+  it("encodes automatic_tax with the nested-bracket form Stripe expects", async () => {
+    const { calls, fetchImpl } = captureFetch();
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = fetchImpl;
+    try {
+      const stripe = new RealStripe({
+        STRIPE_SECRET_KEY: "sk_test_dummy",
+        STRIPE_TAX_ENABLED: "true",
+      });
+      await stripe.createCheckoutSession({
+        customerEmail: "x@y.com",
+        tenantId: "tenant-A",
+        priceId: "price_real",
+        successUrl: "https://gefi.io/ok",
+        cancelUrl: "https://gefi.io/no",
+      });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+    expect(calls).toHaveLength(1);
+    // The bug was sending `automatic_tax_enabled=true` (silently
+    // ignored by Stripe). Assert the bracket form is used and the
+    // legacy underscore form is NOT present.
+    const params = new URLSearchParams(calls[0]!.body);
+    expect(params.get("automatic_tax[enabled]")).toBe("true");
+    expect(params.get("automatic_tax_enabled")).toBeNull();
+    expect(params.get("line_items[0][price]")).toBe("price_real");
+    expect(params.get("metadata[tenant_id]")).toBe("tenant-A");
+  });
+
+  it("does not enable Stripe Tax when STRIPE_TAX_ENABLED is unset", async () => {
+    const { calls, fetchImpl } = captureFetch();
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = fetchImpl;
+    try {
+      const stripe = new RealStripe({ STRIPE_SECRET_KEY: "sk_test_dummy" });
+      await stripe.createCheckoutSession({
+        customerEmail: "x@y.com",
+        tenantId: "tenant-B",
+        priceId: "price_real",
+        successUrl: "https://gefi.io/ok",
+        cancelUrl: "https://gefi.io/no",
+      });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+    const params = new URLSearchParams(calls[0]!.body);
+    expect(params.get("automatic_tax[enabled]")).toBe("false");
   });
 });
 

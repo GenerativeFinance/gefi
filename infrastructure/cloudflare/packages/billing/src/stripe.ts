@@ -136,7 +136,11 @@ export class RealStripe implements StripeClient {
       success_url: input.successUrl,
       cancel_url: input.cancelUrl,
       "metadata[tenant_id]": input.tenantId,
-      automatic_tax_enabled: this.taxEnabled,
+      // Stripe expects nested form-bracket syntax for the automatic_tax
+      // hash — `automatic_tax_enabled=true` is silently ignored, which
+      // would mean Stripe Tax never activates in production. See:
+      // https://docs.stripe.com/api/checkout/sessions/create#create_checkout_session-automatic_tax-enabled
+      "automatic_tax[enabled]": this.taxEnabled,
     };
     if (input.trialDays && input.trialDays > 0) {
       body["subscription_data[trial_period_days]"] = input.trialDays;
