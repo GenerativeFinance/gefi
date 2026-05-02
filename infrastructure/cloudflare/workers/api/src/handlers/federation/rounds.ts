@@ -88,10 +88,6 @@ export const createRoundHandler: Handler = async (rc) => {
   if (!body.model_id || !body.jurisdiction || body.round_number === undefined) {
     return Response.json({ ok: false, error: "missing_required" }, { status: 400 });
   }
-  if (body.jurisdiction !== auth.claims.jurisdiction && !auth.claims.roles.includes("admin")) {
-    // Admin in tenant region may only create rounds in their own jurisdiction;
-    // a global federation admin would override via a different surface.
-  }
   // Per-jurisdiction enforcement: the round's jurisdiction MUST match the
   // worker region — federation rounds never leave the data plane that
   // hosts the participants.
@@ -345,40 +341,21 @@ export const aggregateRoundHandler: Handler = async (rc) => {
   const aggU8 = new Uint8Array(aggregate.buffer, aggregate.byteOffset, aggregate.byteLength);
   await rc.env.ARTIFACTS.put(aggKey, aggU8);
 
-  // On-chain commit — register model version + commit round.
-  const registry = modelRegistry(rc.env);
-  const ledger = contributionLedger(rc.env);
-  const versionTag = `v${round.roundNumber}`;
-  let chainTxHash: string | null = null;
-  try {
-    await registry.register({ modelId: round.modelId, versionId: versionTag, artifactSha256: sha });
-    const commit = await ledger.commit({
-      roundId: round.id,
-      modelId: round.modelId,
-      aggregateSha256: sha,
-      contributionsRoot: sha, // contributions root computed at distribute-time; placeholder for v1.
-    });
-    chainTxHash = commit.txHash;
-  } catch (err) {
-    console.error("[gefi-api] federation on-chain commit failed", err);
-    // Still record the off-chain aggregate so the operator can retry the
-    // chain commit out of band; the round just doesn't carry a tx hash.
-  }
-
-  await store.setRoundAggregate(round.id, sha, chainTxHash);
-  await store.setRoundStatus(round.id, "aggregate");
-
-  // Compute and persist contribution scores. The reward distributor reads
-  // `contribution_scores` to weight payouts, so this MUST run before
-  // moving the round to `distribute`.
+  // ----- 1. Compute contribution scores BEFORE the chain commit -----
+  //
+  // The on-chain `ContributionLedger.commit(...)` anchors a single
+  // `contributionsRoot`. That root must be a deterministic hash over
+  // the canonical contribution table for the round so any auditor can
+  // re-derive it from `contribution_scores` and prove the chain
+  // commitment matches the ledger row.
   //
   // For plaintext rounds we run TMC-Shapley with each participant's
-  // submitted vector as the model and a synthetic ridge-regression
-  // validation set derived from the FedAvg aggregate (the participants'
-  // weighted mean acts as the held-out target). For secure-aggregation
-  // rounds we cannot see individual vectors at the orchestrator (by
-  // design), so we fall back to sample-count proportional scoring —
-  // identical to FedAvg's contribution weighting.
+  // submitted vector as the model and a synthetic validation target
+  // derived from the FedAvg aggregate (the participants' weighted mean
+  // acts as the held-out target). For secure-aggregation rounds we
+  // cannot see individual vectors at the orchestrator (by design), so
+  // we fall back to sample-count proportional scoring — identical to
+  // FedAvg's contribution weighting.
   let scoreRows: Array<{ tenantId: string; score: number; permutations: number }>;
   if (round.secureAggregation || plaintext.length === 0) {
     const totalSamples = updates.reduce((s, u) => s + u.sampleCount, 0) || 1;
@@ -391,9 +368,8 @@ export const aggregateRoundHandler: Handler = async (rc) => {
     // Build a small synthetic validation set: rows = participant vectors,
     // target = inner-product with the FedAvg aggregate. This rewards
     // participants whose updates align with the consensus model and
-    // penalises adversarial / drifted updates. The vector dimension can
-    // be large, so cap evaluation rows at min(participants, 32) for
-    // bounded CPU cost on the Worker.
+    // penalises adversarial / drifted updates. Cap evaluation rows at 32
+    // for bounded CPU cost on the Worker.
     const X = plaintext.slice(0, 32).map((p) => p.vector);
     const y = new Float64Array(X.length);
     for (let i = 0; i < X.length; i++) {
@@ -411,6 +387,55 @@ export const aggregateRoundHandler: Handler = async (rc) => {
   }
   await store.writeContributions(round.id, scoreRows);
 
+  // ----- 2. Derive the canonical contributions root -----
+  //
+  // Sort by tenantId (stable across re-derivation), serialise as
+  // `<tenantId>:<score-as-fixed-binary64>:<permutations>` lines, hash.
+  // An auditor running the same canonicalisation against
+  // `contribution_scores` MUST get the same root.
+  const sorted = [...scoreRows].sort((a, b) => (a.tenantId < b.tenantId ? -1 : a.tenantId > b.tenantId ? 1 : 0));
+  const buf = new ArrayBuffer(8);
+  const dv = new DataView(buf);
+  const enc = new TextEncoder();
+  const lines: Uint8Array[] = [];
+  for (const r of sorted) {
+    dv.setFloat64(0, r.score, true);
+    let scoreHex = "";
+    for (let i = 0; i < 8; i++) scoreHex += new Uint8Array(buf)[i]!.toString(16).padStart(2, "0");
+    lines.push(enc.encode(`${r.tenantId}:${scoreHex}:${r.permutations}\n`));
+  }
+  const totalLen = lines.reduce((s, l) => s + l.length, 0);
+  const canonical = new Uint8Array(totalLen);
+  let off = 0;
+  for (const l of lines) { canonical.set(l, off); off += l.length; }
+  const rootBuf = await crypto.subtle.digest("SHA-256", canonical);
+  const rootBytes = new Uint8Array(rootBuf);
+  let contributionsRoot = "";
+  for (let i = 0; i < rootBytes.length; i++) contributionsRoot += rootBytes[i]!.toString(16).padStart(2, "0");
+
+  // ----- 3. On-chain commit with the real contributions root -----
+  const registry = modelRegistry(rc.env);
+  const ledger = contributionLedger(rc.env);
+  const versionTag = `v${round.roundNumber}`;
+  let chainTxHash: string | null = null;
+  try {
+    await registry.register({ modelId: round.modelId, versionId: versionTag, artifactSha256: sha });
+    const commit = await ledger.commit({
+      roundId: round.id,
+      modelId: round.modelId,
+      aggregateSha256: sha,
+      contributionsRoot,
+    });
+    chainTxHash = commit.txHash;
+  } catch (err) {
+    console.error("[gefi-api] federation on-chain commit failed", err);
+    // Still record the off-chain aggregate so the operator can retry the
+    // chain commit out of band; the round just doesn't carry a tx hash.
+  }
+
+  // ----- 4. Persist round-level state and advance status -----
+  await store.setRoundAggregate(round.id, sha, chainTxHash);
+  await store.setRoundStatus(round.id, "aggregate");
   await store.setRoundStatus(round.id, "distribute");
 
   return Response.json({
@@ -418,6 +443,7 @@ export const aggregateRoundHandler: Handler = async (rc) => {
     round_id: round.id,
     aggregate_sha256: sha,
     aggregate_dim: aggregate.length,
+    contributions_root: contributionsRoot,
     chain_tx_hash: chainTxHash,
     participants: updates.length,
     contributions_persisted: scoreRows.length,
