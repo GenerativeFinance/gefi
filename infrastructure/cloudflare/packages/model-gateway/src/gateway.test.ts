@@ -118,6 +118,67 @@ describe("@gefi/model-gateway provider chain", () => {
     const chain = resolveProviderChain({ region: "us", ai: fakeAi, secrets: {} });
     expect(chain[0]).toBeInstanceOf(WorkersAiProvider);
   });
+  it("EU residency: TogetherProvider is NEVER included in the EU chain", () => {
+    // Regression: Together's only documented endpoint is
+    // api.together.xyz with region=null (no enforceRegion refusal),
+    // so including it for EU calls would silently leak prompt +
+    // context to a non-EU datacenter. resolveProviderChain MUST omit
+    // Together for EU regardless of TOGETHER_API_KEY presence.
+    const chain = resolveProviderChain({
+      region: "eu",
+      secrets: {
+        TOGETHER_API_KEY: "k-together",
+        OPENAI_API_KEY_EU: "k-oa-eu",
+        ANTHROPIC_API_KEY_EU: "k-an-eu",
+      },
+    });
+    expect(chain.find((p) => p.id === "together")).toBeUndefined();
+    // Sanity: EU-keyed providers + deterministic tail still present.
+    const ids = chain.map((p) => p.id);
+    expect(ids).toContain("openai");
+    expect(ids).toContain("anthropic");
+    expect(ids[ids.length - 1]).toBe("deterministic");
+  });
+  it("EU residency: every provider in the EU chain is either EU-scoped or deterministic", () => {
+    // Stronger invariant — for any combination of keys, an EU chain
+    // must NEVER contain a provider whose `region` is null/`us` (the
+    // only exception is DeterministicProvider, which runs in-process
+    // inside the EU worker and never does outbound HTTP).
+    const chain = resolveProviderChain({
+      region: "eu",
+      secrets: {
+        // Throw all the US-only knobs at it — they should all be filtered.
+        OPENAI_API_KEY_US: "k-oa-us",
+        ANTHROPIC_API_KEY_US: "k-an-us",
+        TOGETHER_API_KEY: "k-together",
+        OPENAI_API_KEY_EU: "k-oa-eu",
+        ANTHROPIC_API_KEY_EU: "k-an-eu",
+      },
+    });
+    for (const p of chain) {
+      if (p.id === "deterministic") continue;
+      expect(p.region).toBe("eu");
+    }
+  });
+  it("EU residency: providers with region=null are excluded from the EU chain by construction", () => {
+    // Pin the contract: TogetherProvider has region=null (no per-call
+    // enforceRegion refusal), so the chain MUST exclude it for EU
+    // regardless of whether TOGETHER_API_KEY is set. This is the
+    // authoritative gate for EU residency.
+    expect(new TogetherProvider("k").region).toBeNull();
+    const chain = resolveProviderChain({
+      region: "eu",
+      secrets: { TOGETHER_API_KEY: "k-together" },
+    });
+    expect(chain.find((x) => x.id === "together")).toBeUndefined();
+  });
+  it("US chain still includes Together when TOGETHER_API_KEY is set", () => {
+    const chain = resolveProviderChain({
+      region: "us",
+      secrets: { TOGETHER_API_KEY: "k-together" },
+    });
+    expect(chain.find((x) => x.id === "together")).toBeDefined();
+  });
 });
 
 describe("@gefi/model-gateway WorkersAiProvider", () => {

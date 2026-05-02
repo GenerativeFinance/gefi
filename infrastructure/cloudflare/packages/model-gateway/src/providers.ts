@@ -283,7 +283,17 @@ export function resolveProviderChain(args: {
   const anthropicKey =
     args.region === "eu" ? args.secrets.ANTHROPIC_API_KEY_EU : args.secrets.ANTHROPIC_API_KEY_US;
   if (anthropicKey) chain.push(new AnthropicProvider(anthropicKey, args.region));
-  if (args.secrets.TOGETHER_API_KEY) chain.push(new TogetherProvider(args.secrets.TOGETHER_API_KEY));
+  // Together (api.together.xyz) has no documented EU-resident
+  // endpoint and the provider's `region` is `null` — meaning
+  // `enforceRegion` does NOT refuse EU traffic. Including it for EU
+  // requests would silently route prompt + context through a non-EU
+  // datacenter and violate residency. We therefore restrict Together
+  // to US-region calls. If/when Together publishes an EU endpoint,
+  // wire that in as a separate `TOGETHER_API_KEY_EU` secret + EU
+  // base URL and gate by region the same way OpenAI/Anthropic are.
+  if (args.region === "us" && args.secrets.TOGETHER_API_KEY) {
+    chain.push(new TogetherProvider(args.secrets.TOGETHER_API_KEY));
+  }
   chain.push(new DeterministicProvider());
   return chain;
 }
