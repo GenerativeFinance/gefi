@@ -1,0 +1,85 @@
+/**
+ * Lawyer + auditor directory data + per-tenant assignment helpers.
+ *
+ * The seed data here is committed alongside code so that a freshly-deployed
+ * compliance worker can populate its directory tables idempotently via
+ * `POST /admin/seed-directory`. Operator updates (adding a new lawyer,
+ * rotating contact details) replace the seed atomically.
+ *
+ * Real-world contracts are separately filed and DocuSign-signed; this
+ * directory is the routable index, not the legal contract record.
+ */
+
+import type { Jurisdiction, ReviewerRole } from "@gefi/compliance-rules";
+import type { Region } from "@gefi/shared-types";
+
+export interface LawyerSeed {
+  id: string;
+  jurisdiction: Jurisdiction;
+  region: Region;
+  role: ReviewerRole;
+  displayName: string;
+  firm: string;
+  email: string;
+  pgpFingerprint?: string;
+  slaAckHours: number;
+}
+
+/**
+ * Default-assignee table per jurisdiction. Real lawyers / auditors are
+ * onboarded by the operator post-launch; the seed below provisions
+ * placeholder mailboxes (`compliance+<juris>@gefi.io`) so the routing
+ * pipeline is testable and works on day-one without breaking when a real
+ * counsel hasn't been wired up yet.
+ *
+ * Each row is keyed by `id` so tenant_assignments can refer to it stably
+ * across redeploys.
+ */
+export const LAWYER_SEED: readonly LawyerSeed[] = [
+  // SEC + FINRA — US securities counsel.
+  { id: "sec-default", jurisdiction: "sec", region: "us", role: "securities_counsel", displayName: "Default SEC counsel", firm: "GeFi Counsel Network", email: "compliance+sec@gefi.io", slaAckHours: 24 },
+  { id: "sec-liaison", jurisdiction: "sec", region: "us", role: "regulator_liaison", displayName: "Default SEC liaison", firm: "GeFi Counsel Network", email: "compliance+sec-liaison@gefi.io", slaAckHours: 12 },
+  { id: "finra-aml", jurisdiction: "finra", region: "us", role: "aml_officer", displayName: "Default FINRA AML officer", firm: "GeFi Counsel Network", email: "compliance+finra-aml@gefi.io", slaAckHours: 24 },
+  { id: "finra-liaison", jurisdiction: "finra", region: "us", role: "regulator_liaison", displayName: "Default FINRA liaison", firm: "GeFi Counsel Network", email: "compliance+finra-liaison@gefi.io", slaAckHours: 24 },
+
+  // MiFID II — EU securities counsel.
+  { id: "mifid-default", jurisdiction: "mifid-ii", region: "eu", role: "securities_counsel", displayName: "Default MiFID counsel", firm: "GeFi Counsel Network", email: "compliance+mifid@gefi.io", slaAckHours: 24 },
+
+  // GDPR — privacy counsel.
+  { id: "gdpr-privacy", jurisdiction: "gdpr", region: "eu", role: "privacy_counsel", displayName: "Default GDPR DPO", firm: "GeFi Privacy Office", email: "privacy+gdpr@gefi.io", slaAckHours: 24 },
+
+  // CCPA — privacy counsel.
+  { id: "ccpa-privacy", jurisdiction: "ccpa", region: "us", role: "privacy_counsel", displayName: "Default CCPA counsel", firm: "GeFi Privacy Office", email: "privacy+ccpa@gefi.io", slaAckHours: 48 },
+
+  // FCA — UK regulator liaison + securities.
+  { id: "fca-securities", jurisdiction: "fca", region: "eu", role: "securities_counsel", displayName: "Default FCA counsel", firm: "GeFi UK Counsel", email: "compliance+fca@gefi.io", slaAckHours: 24 },
+  { id: "fca-liaison", jurisdiction: "fca", region: "eu", role: "regulator_liaison", displayName: "Default FCA liaison", firm: "GeFi UK Counsel", email: "compliance+fca-liaison@gefi.io", slaAckHours: 12 },
+
+  // MAS — Singapore.
+  { id: "mas-securities", jurisdiction: "mas", region: "us", role: "securities_counsel", displayName: "Default MAS counsel", firm: "GeFi APAC Counsel", email: "compliance+mas@gefi.io", slaAckHours: 24 },
+  { id: "mas-liaison", jurisdiction: "mas", region: "us", role: "regulator_liaison", displayName: "Default MAS liaison", firm: "GeFi APAC Counsel", email: "compliance+mas-liaison@gefi.io", slaAckHours: 1 },
+
+  // FINMA — Switzerland.
+  { id: "finma-securities", jurisdiction: "finma", region: "eu", role: "securities_counsel", displayName: "Default FINMA counsel", firm: "GeFi Swiss Counsel", email: "compliance+finma@gefi.io", slaAckHours: 24 },
+  { id: "finma-liaison", jurisdiction: "finma", region: "eu", role: "regulator_liaison", displayName: "Default FINMA liaison", firm: "GeFi Swiss Counsel", email: "compliance+finma-liaison@gefi.io", slaAckHours: 24 },
+
+  // DFSA — Dubai.
+  { id: "dfsa-securities", jurisdiction: "dfsa", region: "eu", role: "securities_counsel", displayName: "Default DFSA counsel", firm: "GeFi MENA Counsel", email: "compliance+dfsa@gefi.io", slaAckHours: 24 },
+  { id: "dfsa-aml", jurisdiction: "dfsa", region: "eu", role: "aml_officer", displayName: "Default DFSA AML officer", firm: "GeFi MENA Counsel", email: "compliance+dfsa-aml@gefi.io", slaAckHours: 24 },
+
+  // SAMA — Saudi.
+  { id: "sama-aml", jurisdiction: "sama", region: "eu", role: "aml_officer", displayName: "Default SAMA AML officer", firm: "GeFi MENA Counsel", email: "compliance+sama-aml@gefi.io", slaAckHours: 24 },
+  { id: "sama-liaison", jurisdiction: "sama", region: "eu", role: "regulator_liaison", displayName: "Default SAMA liaison", firm: "GeFi MENA Counsel", email: "compliance+sama-liaison@gefi.io", slaAckHours: 12 },
+
+  // AUSTRAC — Australia.
+  { id: "austrac-aml", jurisdiction: "austrac", region: "us", role: "aml_officer", displayName: "Default AUSTRAC AML officer", firm: "GeFi APAC Counsel", email: "compliance+austrac-aml@gefi.io", slaAckHours: 24 },
+  { id: "austrac-liaison", jurisdiction: "austrac", region: "us", role: "regulator_liaison", displayName: "Default AUSTRAC liaison", firm: "GeFi APAC Counsel", email: "compliance+austrac-liaison@gefi.io", slaAckHours: 12 },
+];
+
+/** Subset of `LAWYER_SEED` matching the requested role on the given jurisdiction. */
+export function pickDefaultLawyer(
+  jurisdiction: Jurisdiction,
+  role: ReviewerRole,
+): LawyerSeed | undefined {
+  return LAWYER_SEED.find((l) => l.jurisdiction === jurisdiction && l.role === role);
+}

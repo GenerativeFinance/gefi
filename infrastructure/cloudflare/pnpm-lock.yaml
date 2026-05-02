@@ -40,6 +40,41 @@ importers:
         specifier: ^1.6.0
         version: 1.6.1
 
+  packages/compliance-engine:
+    dependencies:
+      '@gefi/compliance-rules':
+        specifier: workspace:*
+        version: link:../compliance-rules
+      '@gefi/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240620.0
+        version: 4.20260502.1
+      typescript:
+        specifier: ^5.5.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1
+
+  packages/compliance-rules:
+    dependencies:
+      '@gefi/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240620.0
+        version: 4.20260502.1
+      typescript:
+        specifier: ^5.5.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1
+
   packages/integrations:
     dependencies:
       '@gefi/shared-types':
@@ -126,6 +161,12 @@ importers:
 
   workers/compliance:
     dependencies:
+      '@gefi/compliance-engine':
+        specifier: workspace:*
+        version: link:../../packages/compliance-engine
+      '@gefi/compliance-rules':
+        specifier: workspace:*
+        version: link:../../packages/compliance-rules
       '@gefi/shared-headers':
         specifier: workspace:*
         version: link:../../packages/shared-headers

@@ -1,9 +1,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // gefi-compliance is an internal Worker exposed only via Service binding
-  // from gefi-api (no public route). It owns the audit log table and the
-  // jurisdiction-rule cache. Real rule logic lands in Task #4 — for the
-  // foundation we ship the binding, /health, and a stubbed /audit/append.
+  // gefi-compliance — internal Worker reachable only via Service binding
+  // from gefi-api. Owns the audit vault, ComplianceCase Durable Objects,
+  // lawyer/auditor directory, and per-jurisdiction data residency surface.
+  // Internal-token auth gates every non-/health route.
   "name": "gefi-compliance",
   "main": "src/index.ts",
   "compatibility_date": "2026-04-01",
@@ -17,13 +17,21 @@
     "SITE_PUBLIC_URL": "http://localhost:8788"
   },
   "d1_databases": [
-    { "binding": "DB", "database_name": "gefi-compliance-dev", "database_id": "00000000-0000-0000-0000-000000000000" }
+    { "binding": "DB", "database_name": "gefi-compliance-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
   ],
   "r2_buckets": [
     { "binding": "EVIDENCE", "bucket_name": "gefi-evidence-dev" }
   ],
   "kv_namespaces": [
     { "binding": "CACHE", "id": "00000000000000000000000000000000" }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "CASE_DO", "class_name": "ComplianceCase" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_classes": ["ComplianceCase"] }
   ],
   "env": {
     "staging": {
@@ -34,10 +42,13 @@
         "SITE_PUBLIC_URL": "https://staging.gefi.io"
       },
       "d1_databases": [
-        { "binding": "DB", "database_name": "gefi-compliance-staging", "database_id": "REPLACE_WITH_STAGING_DB_ID" }
+        { "binding": "DB", "database_name": "gefi-compliance-staging", "database_id": "REPLACE_WITH_STAGING_DB_ID", "migrations_dir": "migrations" }
       ],
       "r2_buckets": [{ "binding": "EVIDENCE", "bucket_name": "gefi-evidence-staging" }],
-      "kv_namespaces": [{ "binding": "CACHE", "id": "REPLACE_WITH_STAGING_KV_ID" }]
+      "kv_namespaces": [{ "binding": "CACHE", "id": "REPLACE_WITH_STAGING_KV_ID" }],
+      "durable_objects": {
+        "bindings": [{ "name": "CASE_DO", "class_name": "ComplianceCase" }]
+      }
     },
     "prod": {
       "vars": {
@@ -47,10 +58,13 @@
         "SITE_PUBLIC_URL": "https://gefi.io"
       },
       "d1_databases": [
-        { "binding": "DB", "database_name": "gefi-compliance-prod", "database_id": "REPLACE_WITH_PROD_DB_ID" }
+        { "binding": "DB", "database_name": "gefi-compliance-prod", "database_id": "REPLACE_WITH_PROD_DB_ID", "migrations_dir": "migrations" }
       ],
       "r2_buckets": [{ "binding": "EVIDENCE", "bucket_name": "gefi-evidence-prod" }],
-      "kv_namespaces": [{ "binding": "CACHE", "id": "REPLACE_WITH_PROD_KV_ID" }]
+      "kv_namespaces": [{ "binding": "CACHE", "id": "REPLACE_WITH_PROD_KV_ID" }],
+      "durable_objects": {
+        "bindings": [{ "name": "CASE_DO", "class_name": "ComplianceCase" }]
+      }
     }
   }
 }

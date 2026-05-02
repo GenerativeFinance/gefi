@@ -11,6 +11,8 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
+    "@gefi/compliance-engine": "workspace:*",
+    "@gefi/compliance-rules": "workspace:*",
     "@gefi/shared-headers": "workspace:*",
     "@gefi/shared-types": "workspace:*"
   },
