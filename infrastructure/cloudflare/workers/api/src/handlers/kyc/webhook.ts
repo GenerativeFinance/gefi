@@ -32,9 +32,10 @@ export const kycWebhookHandler: Handler = async (rc) => {
   const provName = rc.params["provider"] ?? "stub";
   const rawBody = await rc.request.text();
   const signature =
-    rc.request.headers.get("X-SHA2-Signature") ??
-    rc.request.headers.get("X-Signature") ??
-    rc.request.headers.get("X-Stub-Signature");
+    rc.request.headers.get("X-SHA2-Signature") ??     // Onfido
+    rc.request.headers.get("X-Payload-Digest") ??     // Sumsub
+    rc.request.headers.get("X-Signature") ??          // Persona / generic
+    rc.request.headers.get("X-Stub-Signature");       // Tests only
 
   // Look up the kyc_evidence row first so we can resolve the right
   // provider for the entity type. We need to know the tenant before
@@ -71,7 +72,19 @@ export const kycWebhookHandler: Handler = async (rc) => {
     return Response.json({ ok: false, error: "tenant_not_found" }, { status: 404 });
   }
 
-  const provider = resolveKycProvider(tenantRow.entity_type, evidenceRow.jurisdiction, rc.env);
+  let provider;
+  try {
+    provider = resolveKycProvider(tenantRow.entity_type, evidenceRow.jurisdiction, rc.env);
+  } catch (err) {
+    // Production with no real provider configured: fail-closed. Don't
+    // mutate state, return 503 so the provider retries (or the
+    // operator notices in logs).
+    console.error("[gefi-api] kyc webhook provider unavailable", err);
+    return Response.json(
+      { ok: false, error: "kyc_provider_not_configured" },
+      { status: 503 },
+    );
+  }
   if (provider.name !== provName && provName !== "stub") {
     // The route param tells us which provider should be parsing.
     // Mismatch is fatal — providers shouldn't see each other's webhooks.
@@ -123,7 +136,16 @@ export const kycWebhookHandler: Handler = async (rc) => {
     // entity name) but loose for retail / professional. Once we
     // extend each `KycProvider` with a `extractScreeningSubject()`
     // method we should use that here instead.
-    const sanctions = resolveSanctionsProvider(rc.env);
+    let sanctions;
+    try {
+      sanctions = resolveSanctionsProvider(rc.env);
+    } catch (err) {
+      console.error("[gefi-api] sanctions provider unavailable", err);
+      return Response.json(
+        { ok: false, error: "sanctions_provider_not_configured" },
+        { status: 503 },
+      );
+    }
     const screen = await sanctions.screen({
       internalRef: tenantRow.id,
       jurisdiction: evidenceRow.jurisdiction,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   OpenSanctionsProvider,
+  SanctionsProviderNotConfiguredError,
   StubSanctionsProvider,
   resolveSanctionsProvider,
 } from "./sanctions/index.js";
@@ -100,8 +101,13 @@ describe("resolveSanctionsProvider factory", () => {
     const p = resolveSanctionsProvider({ OPENSANCTIONS_API_KEY: "k" });
     expect(p.name).toBe("opensanctions");
   });
-  it("falls back to the stub", () => {
-    const p = resolveSanctionsProvider({});
+  it("falls back to the stub in dev", () => {
+    const p = resolveSanctionsProvider({ ENVIRONMENT: "dev" });
     expect(p.name).toBe("stub");
+  });
+  it("THROWS in prod when no provider is configured (fail-closed)", () => {
+    expect(() => resolveSanctionsProvider({ ENVIRONMENT: "prod" })).toThrow(
+      SanctionsProviderNotConfiguredError,
+    );
   });
 });

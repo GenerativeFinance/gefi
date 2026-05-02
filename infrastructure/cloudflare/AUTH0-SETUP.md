@@ -139,29 +139,72 @@ The Worker code reads `AUTH0_DOMAIN` to fetch JWKS at
 
 ## 7. KYC and sanctions providers
 
-KYC is provider-agnostic; pick one per region & entity-type
-combination. The recommended defaults:
+KYC is provider-agnostic; the factory in `packages/integrations` picks
+a real provider based on `(entity_type, jurisdiction)` plus the
+secrets you've configured:
 
-* Retail / professional → **Onfido** (EU + US).
-* Institutional / data provider (KYB) → **Persona** or **Sumsub**.
-* Sanctions screening → **OpenSanctions** for the open list,
-  optionally **Refinitiv** or **Dow Jones** for the commercial list.
+* **Individual KYC** (`retail`, `professional`) →
+  - First choice: **Onfido** if `ONFIDO_API_TOKEN` +
+    `ONFIDO_WEBHOOK_SECRET` are set.
+  - Fallback: **Sumsub** if `SUMSUB_APP_TOKEN` + `SUMSUB_SECRET_KEY`
+    are set (Sumsub also covers individuals).
+* **Business KYB** (`institutional`, `data_provider`) →
+  - **Sumsub** if `SUMSUB_APP_TOKEN` + `SUMSUB_SECRET_KEY` are set.
+  - There is **no Onfido fallback for KYB** — Onfido does not do
+    company verification. A prod deploy with only Onfido configured
+    will refuse to serve `/v1/kyc/start` for institutional / data
+    provider tenants (503 `kyc_provider_not_configured`).
+* **Sanctions screening** → **OpenSanctions** if
+  `OPENSANCTIONS_API_KEY` is set; covers OFAC SDN, EU CFSP, UK HMT,
+  and PEPs through one API.
 
-For each provider create an account and store the API token + webhook
-secret as Wrangler secrets:
+### Fail-closed in production
+
+The factory checks `env.ENVIRONMENT`:
+
+* In `dev` / `staging`, missing secrets → deterministic stub providers
+  (useful for local development and tests).
+* In `prod`, missing secrets → the factory **throws**
+  `KycProviderNotConfiguredError` /
+  `SanctionsProviderNotConfiguredError`. The handlers
+  (`/v1/kyc/start` and `/v1/kyc/webhook`) catch the error and return
+  503 with `kyc_provider_not_configured` /
+  `sanctions_provider_not_configured`.
+
+This is on purpose. Falling back to the stub in prod would silently
+approve every applicant (the stub honours the outcome the caller
+sends). A misconfigured prod deploy must fail closed: the request
+fails until the operator fixes the secret rather than letting people
+slip through onboarding without real verification.
+
+### Wrangler secret commands
+
+For each region:
 
 ```bash
-wrangler secret put ONFIDO_API_TOKEN_EU --env eu
-wrangler secret put ONFIDO_WEBHOOK_SECRET_EU --env eu
+# Individual KYC — Onfido (preferred for retail/professional).
+wrangler secret put ONFIDO_API_TOKEN --env eu
+wrangler secret put ONFIDO_WEBHOOK_SECRET --env eu
+
+# Business KYB — Sumsub. Required for institutional / data_provider.
+# `SUMSUB_SECRET_KEY` is used both for outbound HMAC headers and for
+# verifying Sumsub's `X-Payload-Digest` webhook signature.
+wrangler secret put SUMSUB_APP_TOKEN --env eu
+wrangler secret put SUMSUB_SECRET_KEY --env eu
+
+# Sanctions.
 wrangler secret put OPENSANCTIONS_API_KEY --env eu
-# … and the same for `us`.
+
+# Repeat for --env us, --env staging.
 ```
 
-The provider factories in `packages/integrations/src` resolve at
-request time based on `(entity_type, jurisdiction)`. If a secret is
-missing the factory falls back to `StubKycProvider` /
-`StubSanctionsProvider` and **fails closed** — verifying users always
-returns "review", so production must have the real secrets in place.
+### Webhook URLs to configure in each provider dashboard
+
+* Onfido: `https://api.gefi.io/v1/kyc/webhook/onfido` (HMAC-SHA256 of
+  the body, sent as `X-SHA2-Signature: sha256=<hex>`).
+* Sumsub: `https://api.gefi.io/v1/kyc/webhook/sumsub` (HMAC-SHA256 of
+  the body using `SUMSUB_SECRET_KEY`, sent as `X-Payload-Digest:
+  <hex>` with `X-Payload-Digest-Alg: HMAC_SHA256_HEX`).
 
 ## 8. Smoke test
 

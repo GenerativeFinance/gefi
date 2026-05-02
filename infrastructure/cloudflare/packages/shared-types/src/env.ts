@@ -104,15 +104,23 @@ export interface Auth0M2MSecrets {
 }
 
 /**
- * Per-provider KYC + sanctions API keys. All optional — when missing, the
- * respective provider falls back to the deterministic stub implementation
- * from `@gefi/integrations` (intended for dev / local tests, never prod).
+ * Per-provider KYC + sanctions API keys. All optional — when missing in
+ * dev/staging the respective provider falls back to the deterministic
+ * stub from `@gefi/integrations`. In production the factory throws
+ * rather than falling back, so a misconfigured prod fails closed.
+ *
+ * `*_WEBHOOK_SECRET` is the per-provider webhook-signing secret used
+ * by `parseWebhook` to verify the `X-SHA2-Signature` / `X-Payload-Digest`
+ * headers each provider sends.
  */
 export interface IntegrationSecrets {
   ONFIDO_API_TOKEN?: string;
+  ONFIDO_WEBHOOK_SECRET?: string;
   PERSONA_API_KEY?: string;
+  PERSONA_WEBHOOK_SECRET?: string;
   SUMSUB_APP_TOKEN?: string;
   SUMSUB_SECRET_KEY?: string;
+  SUMSUB_WEBHOOK_SECRET?: string;
   MIDDESK_API_KEY?: string;
   OPENSANCTIONS_API_KEY?: string;
 }

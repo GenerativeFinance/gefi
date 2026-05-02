@@ -59,7 +59,16 @@ export const kycStartHandler: Handler = async (rc) => {
     });
   }
 
-  const provider = resolveKycProvider(c.entity_type, c.jurisdiction, rc.env);
+  let provider;
+  try {
+    provider = resolveKycProvider(c.entity_type, c.jurisdiction, rc.env);
+  } catch (err) {
+    console.error("[gefi-api] kyc provider unavailable", err);
+    return Response.json(
+      { ok: false, error: "kyc_provider_not_configured" },
+      { status: 503 },
+    );
+  }
   const session = await provider.startSession(
     {
       internalRef: c.tenant_id,

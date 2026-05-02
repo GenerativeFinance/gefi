@@ -146,9 +146,13 @@ function regionalEnv(opts: {
   region: "eu" | "us";
   db?: D1Database;
   cache?: KVNamespace;
+  environment?: "dev" | "staging" | "prod";
 }): ApiEnv {
   return {
-    ENVIRONMENT: "prod",
+    // Default to "dev" so the integration tests exercise the stub
+    // KYC + sanctions providers. The dedicated "fail-closed in prod"
+    // tests below override this to "prod" and assert 503s.
+    ENVIRONMENT: opts.environment ?? "dev",
     WORKER_REGION: opts.region,
     API_PUBLIC_URL: `https://${opts.region}.api.gefi.io`,
     SITE_PUBLIC_URL: "https://gefi.io",
@@ -368,6 +372,40 @@ describe("KYC webhook → sanctions hit blocks tenant", () => {
     expect(sanctionInserts.length).toBe(0);
     const tenantPromotes = fake.calls.filter((c) => /^UPDATE tenants SET kyc_tier/.test(c.sql));
     expect(tenantPromotes.length).toBe(1);
+  });
+});
+
+describe("Production fail-closed when no real provider is configured", () => {
+  it("returns 503 from /v1/kyc/webhook in prod with no Onfido / Sumsub / OpenSanctions secrets", async () => {
+    const env = regionalEnv({
+      environment: "prod",
+      region: "us",
+      db: scriptedD1({
+        selects: [
+          {
+            match: /FROM kyc_evidence WHERE provider_session_id/,
+            row: { id: "evidence-x", tenant_id: "tenant-x", jurisdiction: "us", requested_tier: "standard" },
+          },
+          {
+            match: /FROM tenants WHERE id/,
+            row: { id: "tenant-x", entity_type: "professional", kyc_tier: "none", status: "pending_kyc", display_name: "Test" },
+          },
+        ],
+      }).db,
+    });
+    const edge = await signInternalJwt("us", EDGE_SECRET);
+    const res = await worker.fetch(
+      new Request("https://us.api.gefi.io/v1/kyc/webhook/stub", {
+        method: "POST",
+        headers: { "X-Gefi-Edge-JWT": edge, "Content-Type": "application/json", "X-Stub-Signature": "stub-ok" },
+        body: JSON.stringify({ providerSessionId: "stub_x", outcome: "approved", achievedTier: "standard", reasonCodes: [] }),
+      }),
+      env,
+      ctx,
+    );
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("kyc_provider_not_configured");
   });
 });
 

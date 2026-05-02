@@ -210,9 +210,21 @@ New packages:
   with both strict and `verifyAuth0TokenLoose` variants), 7-persona
   RBAC matrix (`rbac.ts`), subscription→KYC tier map (`kyc-tiers.ts`).
 - `packages/integrations` — `KycProvider` + `SanctionsProvider`
-  interfaces, with `StubKycProvider`, `OnfidoKycProvider`,
-  `StubSanctionsProvider`, `OpenSanctionsProvider`. Factories fall
-  back to stubs that fail-closed when secrets are missing.
+  interfaces, with `StubKycProvider`, `OnfidoKycProvider` (HMAC-SHA256
+  `X-SHA2-Signature`), `SumsubKycProvider` (HMAC-SHA256
+  `X-Payload-Digest`, KYB level mapping for institutional /
+  data_provider), `StubSanctionsProvider`, `OpenSanctionsProvider`.
+  Factories are **fail-closed in production**: in `prod` they throw
+  `KycProviderNotConfiguredError` /
+  `SanctionsProviderNotConfiguredError` rather than falling back to
+  the stub, and the handlers translate the throw to 503. Dev /
+  staging keep the stub fallback for local iteration and tests.
+- `assets/js/role-gate.js` — client-side RBAC primitive. Exports
+  `canPerform()` and a `<role-gate action subject>` web component
+  for plain Jekyll pages; the Task #7 React dashboards will import
+  the same module. A vitest sync test
+  (`packages/auth/src/role-gate-sync.test.ts`) fails the build if
+  this client mirror drifts from the server-side `rbac.ts`.
 
 D1: `workers/api/migrations/0001_init_auth.sql` creates `tenants`,
 `users`, `memberships`, `api_keys`, `kyc_evidence`, `sanction_hits`,

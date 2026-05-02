@@ -1,18 +1,38 @@
 /**
  * Sanctions provider factory.
  *
- * Returns the OpenSanctions provider when an API key is configured, or
- * the deterministic stub for tests / dev.
+ *   1. If `OPENSANCTIONS_API_KEY` is set → `OpenSanctionsProvider`
+ *      (real `api.opensanctions.org` calls).
+ *   2. Else:
+ *      a. If `ENVIRONMENT === "prod"` → **throw**
+ *         `sanctions_provider_not_configured`. Sanctions screening is
+ *         a regulatory must-have; a prod deploy without a configured
+ *         provider must never silently pass everyone through.
+ *      b. Else → `StubSanctionsProvider` for dev / tests.
  */
 
-import type { IntegrationSecrets } from "@gefi/shared-types";
+import type { DeployEnv, IntegrationSecrets } from "@gefi/shared-types";
 import { OpenSanctionsProvider } from "./opensanctions.js";
 import { StubSanctionsProvider } from "./stub.js";
 import type { SanctionsProvider } from "./types.js";
 
-export function resolveSanctionsProvider(secrets: IntegrationSecrets): SanctionsProvider {
-  if (secrets.OPENSANCTIONS_API_KEY) {
-    return new OpenSanctionsProvider(secrets.OPENSANCTIONS_API_KEY);
+export interface SanctionsProviderEnv extends IntegrationSecrets {
+  ENVIRONMENT?: DeployEnv;
+}
+
+export class SanctionsProviderNotConfiguredError extends Error {
+  constructor() {
+    super("sanctions_provider_not_configured");
+    this.name = "SanctionsProviderNotConfiguredError";
+  }
+}
+
+export function resolveSanctionsProvider(env: SanctionsProviderEnv): SanctionsProvider {
+  if (env.OPENSANCTIONS_API_KEY) {
+    return new OpenSanctionsProvider(env.OPENSANCTIONS_API_KEY);
+  }
+  if (env.ENVIRONMENT === "prod") {
+    throw new SanctionsProviderNotConfiguredError();
   }
   return new StubSanctionsProvider();
 }

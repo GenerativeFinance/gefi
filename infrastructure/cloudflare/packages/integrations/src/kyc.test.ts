@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { OnfidoKycProvider, StubKycProvider, resolveKycProvider } from "./kyc/index.js";
+import {
+  KycProviderNotConfiguredError,
+  OnfidoKycProvider,
+  StubKycProvider,
+  SumsubKycProvider,
+  resolveKycProvider,
+} from "./kyc/index.js";
 
 describe("StubKycProvider", () => {
   const stub = new StubKycProvider();
@@ -68,13 +74,60 @@ describe("OnfidoKycProvider", () => {
   });
 });
 
+describe("SumsubKycProvider (KYB)", () => {
+  const provider = new SumsubKycProvider("app-token", "secret-key", "eu");
+
+  it("starts a hosted KYB session for an institution", async () => {
+    const session = await provider.startSession(
+      { internalRef: "tenant_inst_1", entity: "institutional", jurisdiction: "eu", details: {} },
+      "enhanced",
+    );
+    expect(session.provider).toBe("sumsub");
+    expect(session.providerSessionId).toContain("sumsub_tenant_inst_1_enhanced-kyb-level");
+    expect(session.hostedUrl).toContain("sumsub.com");
+  });
+
+  it("rejects a webhook with no signature", async () => {
+    await expect(provider.parseWebhook("{}", null)).rejects.toThrow(/sumsub_webhook_signature_missing/);
+  });
+
+  it("rejects a webhook with the wrong signature", async () => {
+    await expect(provider.parseWebhook("{}", "00")).rejects.toThrow(/sumsub_webhook_signature_invalid/);
+  });
+
+  it("approves on reviewAnswer=GREEN with a valid HMAC", async () => {
+    const body = JSON.stringify({
+      applicantId: "abc123",
+      type: "applicantReviewed",
+      levelName: "enhanced-kyb-level",
+      reviewResult: { reviewAnswer: "GREEN", rejectLabels: [] },
+    });
+    const sig = await SumsubKycProvider.signForTest("secret-key", body);
+    const r = await provider.parseWebhook(body, sig);
+    expect(r.outcome).toBe("approved");
+    expect(r.achievedTier).toBe("enhanced");
+    expect(r.providerSessionId).toBe("abc123");
+  });
+
+  it("declines on reviewAnswer=RED", async () => {
+    const body = JSON.stringify({
+      applicantId: "xyz",
+      reviewResult: { reviewAnswer: "RED", rejectLabels: ["FORGED_DOCUMENT"] },
+    });
+    const sig = await SumsubKycProvider.signForTest("secret-key", body);
+    const r = await provider.parseWebhook(body, sig);
+    expect(r.outcome).toBe("declined");
+    expect(r.reasonCodes).toEqual(["FORGED_DOCUMENT"]);
+  });
+});
+
 describe("resolveKycProvider factory", () => {
-  it("falls back to the stub when no API key is configured", () => {
-    const p = resolveKycProvider("retail", "eu", {});
+  it("falls back to the stub in dev when no API keys are configured", () => {
+    const p = resolveKycProvider("retail", "eu", { ENVIRONMENT: "dev" });
     expect(p.name).toBe("stub");
   });
 
-  it("returns Onfido for individuals when both keys are present", () => {
+  it("returns Onfido for individuals when both Onfido keys are present", () => {
     const p = resolveKycProvider("retail", "eu", {
       ONFIDO_API_TOKEN: "x",
       ONFIDO_WEBHOOK_SECRET: "y",
@@ -82,11 +135,54 @@ describe("resolveKycProvider factory", () => {
     expect(p.name).toBe("onfido");
   });
 
-  it("falls back to the stub for institutions until Sumsub/Middesk land", () => {
+  it("returns Sumsub for individuals when only Sumsub keys are configured", () => {
+    const p = resolveKycProvider("professional", "us", {
+      SUMSUB_APP_TOKEN: "a",
+      SUMSUB_SECRET_KEY: "b",
+    });
+    expect(p.name).toBe("sumsub");
+  });
+
+  it("returns Sumsub for institutions when Sumsub is configured", () => {
     const p = resolveKycProvider("institutional", "us", {
+      SUMSUB_APP_TOKEN: "a",
+      SUMSUB_SECRET_KEY: "b",
+    });
+    expect(p.name).toBe("sumsub");
+  });
+
+  it("returns Sumsub for data providers when Sumsub is configured", () => {
+    const p = resolveKycProvider("data_provider", "eu", {
+      SUMSUB_APP_TOKEN: "a",
+      SUMSUB_SECRET_KEY: "b",
+    });
+    expect(p.name).toBe("sumsub");
+  });
+
+  it("does NOT route businesses to Onfido even when only Onfido is configured", () => {
+    // Onfido is individual-only; for businesses the factory must look
+    // for a KYB provider (Sumsub) and refuse to fall back to Onfido.
+    const p = resolveKycProvider("institutional", "eu", {
       ONFIDO_API_TOKEN: "x",
       ONFIDO_WEBHOOK_SECRET: "y",
+      ENVIRONMENT: "dev",
     });
     expect(p.name).toBe("stub");
+  });
+
+  it("THROWS in prod when no provider is configured for individuals (fail-closed)", () => {
+    expect(() => resolveKycProvider("retail", "eu", { ENVIRONMENT: "prod" })).toThrow(
+      KycProviderNotConfiguredError,
+    );
+  });
+
+  it("THROWS in prod when no KYB provider is configured for businesses (fail-closed)", () => {
+    expect(() =>
+      resolveKycProvider("institutional", "us", {
+        ONFIDO_API_TOKEN: "x",
+        ONFIDO_WEBHOOK_SECRET: "y",
+        ENVIRONMENT: "prod",
+      }),
+    ).toThrow(KycProviderNotConfiguredError);
   });
 });
