@@ -57,6 +57,7 @@ footer_nav:
     - { title: "Pricing",    url: "/pricing/" }
     - { title: "Research",   url: "/research/" }
     - { title: "Docs",       url: "/docs/" }
+    - { title: "Request demo", url: "/demo/" }
   company:
     - { title: "About",      url: "/about/" }
     - { title: "Blog",       url: "/blog/" }

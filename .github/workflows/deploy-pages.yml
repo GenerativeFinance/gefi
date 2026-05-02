@@ -50,9 +50,11 @@ jobs:
           grep -q "https://gefi.io" ./_site/sitemap.xml
 
       - name: HTML link & markup audit
+        # html-proofer is declared in the Gemfile, so `bundler-cache: true`
+        # in the Setup Ruby step has already installed it.
+        # External links are skipped — they target subdomains (api., app.,
+        # trust., docs., status.) that don't exist until later tasks ship.
         run: |
-          gem install --no-document html-proofer -v 5.0.9
-          # Ignore external links (they go to as-yet-unbuilt subdomains).
           bundle exec htmlproofer ./_site \
             --disable-external \
             --allow-hash-href \
