@@ -57,7 +57,13 @@
       ]
     },
     // Public edge router on api.gefi.io. Forwards to the regional sibling
-    // chosen by `pickRegion(cf.country)`.
+    // chosen by `pickRegion(cf.country)` over the REGIONAL_EU / REGIONAL_US
+    // service bindings below. First-deploy bootstrap order:
+    //   1. Deploy gefi-compliance (--env prod).
+    //   2. Deploy gefi-api with --env eu and --env us so the regional
+    //      Workers actually exist in the account.
+    //   3. Then deploy this `prod` env — the service bindings will resolve.
+    // The CI workflow runs these steps in that order automatically.
     "prod": {
       "vars": {
         "ENVIRONMENT": "prod",
@@ -73,7 +79,9 @@
       "kv_namespaces": [{ "binding": "CACHE", "id": "REPLACE_WITH_PROD_KV_ID" }],
       "vectorize": [{ "binding": "VECTORS", "index_name": "gefi-vectors-prod" }],
       "services": [
-        { "binding": "COMPLIANCE", "service": "gefi-compliance", "environment": "prod" }
+        { "binding": "COMPLIANCE", "service": "gefi-compliance", "environment": "prod" },
+        { "binding": "REGIONAL_EU", "service": "gefi-api-eu" },
+        { "binding": "REGIONAL_US", "service": "gefi-api-us" }
       ]
     },
     // Regional EU deployment. Same code, pinned to the EU data plane.

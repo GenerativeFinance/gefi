@@ -1,9 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
     "outDir": "dist",
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@gefi/shared-types": ["../shared-types/src/index.ts"]
+    }
   },
   "include": ["src/**/*"]
 }

@@ -32,6 +32,17 @@ legacy/dist/
 legacy/.next/
 legacy/build/
 
+# Cloudflare backend monorepo (Task #2). pnpm-lock.yaml IS committed —
+# deterministic builds for the deploy CI, mirroring Gemfile.lock.
+infrastructure/cloudflare/node_modules/
+infrastructure/cloudflare/**/node_modules/
+infrastructure/cloudflare/**/dist/
+infrastructure/cloudflare/.turbo/
+infrastructure/cloudflare/**/.turbo/
+infrastructure/cloudflare/**/.wrangler/
+infrastructure/cloudflare/**/.dev.vars
+infrastructure/cloudflare/**/*.tsbuildinfo
+
 # Misc cruft
 cookies.txt
 *.log

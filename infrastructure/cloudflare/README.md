@@ -1,0 +1,247 @@
+# GeFi Cloudflare backend
+
+This is the Cloudflare-native backend for **GeFi.io**. It is a pnpm +
+Turborepo monorepo containing three Workers and a small set of shared
+packages. The Jekyll marketing site at the repo root (Task #1) talks to
+this backend at `https://api.gefi.io`.
+
+## Layout
+
+```
+infrastructure/cloudflare/
+├── package.json                # workspace root
+├── pnpm-workspace.yaml
+├── turbo.json
+├── tsconfig.base.json
+├── vitest.config.ts
+├── packages/
+│   ├── shared-types/           # Env / Region / DeployEnv types
+│   ├── shared-headers/         # CSP, HSTS, COOP/COEP, Permissions-Policy
+│   └── shared-router/          # pickRegion(cf.country) + internal JWT
+└── workers/
+    ├── web/                    # gefi-web   — edge headers + redirects
+    ├── api/                    # gefi-api   — public REST + jurisdiction edge
+    └── compliance/             # gefi-compliance — internal-only Service
+```
+
+## Worker map
+
+| Worker            | Public hostnames                                     | Routing                                                    | Wrangler env  |
+|-------------------|------------------------------------------------------|------------------------------------------------------------|---------------|
+| `gefi-web`        | `gefi.io`, `www.gefi.io`                             | Header proxy in front of GH Pages (Pages binding optional) | `prod`        |
+| `gefi-api`        | `api.gefi.io`                                        | Public edge: picks a region from `cf.country` and forwards | `prod`        |
+| `gefi-api-eu`     | `eu.api.gefi.io`                                     | Regional sibling pinned to EU data plane                   | `eu`          |
+| `gefi-api-us`     | `us.api.gefi.io`                                     | Regional sibling pinned to US data plane                   | `us`          |
+| `gefi-compliance` | *(internal, Service binding only — no public route)* | Audit-log append + jurisdiction rule lookup                | `prod`        |
+
+Staging mirrors prod under `staging.gefi.io` / `staging-api.gefi.io`.
+
+## One-time bootstrap
+
+These steps need an authenticated Cloudflare account. They are NOT runnable
+from this Replit sandbox — perform them on your local machine.
+
+### 0. Install + log in
+
+```bash
+cd infrastructure/cloudflare
+pnpm install
+pnpm wrangler login              # browser OAuth, saves token to ~/.wrangler
+pnpm wrangler whoami             # confirms account + email
+```
+
+### 1. Create the bindings (D1, R2, KV, Vectorize)
+
+Run once per environment (`staging`, `prod`). Repeat the regional ones
+(`-eu`, `-us`) for the regional `gefi-api` deployments.
+
+```bash
+# D1 — primary OLTP store.
+pnpm wrangler d1 create gefi-api-prod
+pnpm wrangler d1 create gefi-api-prod-eu
+pnpm wrangler d1 create gefi-api-prod-us
+pnpm wrangler d1 create gefi-compliance-prod
+
+# R2 — object storage.
+pnpm wrangler r2 bucket create gefi-artifacts-prod
+pnpm wrangler r2 bucket create gefi-artifacts-prod-eu
+pnpm wrangler r2 bucket create gefi-artifacts-prod-us
+pnpm wrangler r2 bucket create gefi-evidence-prod
+
+# KV — hot cache + rate limit counters.
+pnpm wrangler kv namespace create gefi-cache-prod
+pnpm wrangler kv namespace create gefi-cache-prod-eu
+pnpm wrangler kv namespace create gefi-cache-prod-us
+pnpm wrangler kv namespace create gefi-compliance-cache-prod
+
+# Vectorize — embeddings index.
+pnpm wrangler vectorize create gefi-vectors-prod        --dimensions=768 --metric=cosine
+pnpm wrangler vectorize create gefi-vectors-prod-eu     --dimensions=768 --metric=cosine
+pnpm wrangler vectorize create gefi-vectors-prod-us     --dimensions=768 --metric=cosine
+```
+
+Each command prints an ID. Paste those IDs into the matching
+`REPLACE_WITH_*` placeholders in:
+
+- `workers/api/wrangler.jsonc`
+- `workers/compliance/wrangler.jsonc`
+
+### 2. Set Worker secrets
+
+Run once per environment + Worker. **The same `INTERNAL_SIGNING_KEY` value
+must be used for the public edge AND its regional siblings** — the edge
+signs the JWT, the regionals verify it. Generate the key once
+(`openssl rand -base64 48`) and paste the same string into all three
+prompts:
+
+```bash
+KEY=$(openssl rand -base64 48)
+
+# gefi-api: edge + EU sibling + US sibling, all sharing one secret.
+echo "$KEY" | pnpm --filter @gefi/worker-api wrangler secret put INTERNAL_SIGNING_KEY --env prod
+echo "$KEY" | pnpm --filter @gefi/worker-api wrangler secret put INTERNAL_SIGNING_KEY --env eu
+echo "$KEY" | pnpm --filter @gefi/worker-api wrangler secret put INTERNAL_SIGNING_KEY --env us
+
+# gefi-compliance.
+echo "$KEY" | pnpm --filter @gefi/worker-compliance wrangler secret put INTERNAL_SIGNING_KEY --env prod
+
+unset KEY
+```
+
+The regional siblings reject any non-`/health` request that arrives
+without a valid edge-signed JWT — direct calls to `eu.api.gefi.io` /
+`us.api.gefi.io` from a browser or `curl` will return `401`. This is
+deliberate: it's how the jurisdiction edge enforces residency.
+
+### 3. Configure DNS
+
+In the Cloudflare zone for **`gefi.io`** (proxied = ON, orange-cloud, for
+all of these):
+
+| Type    | Name                | Target / Notes                                                                   |
+|---------|---------------------|----------------------------------------------------------------------------------|
+| `A`     | `gefi.io`           | Apex; same four GitHub Pages IPs documented in `docs/dns-setup.md`               |
+| `CNAME` | `www.gefi.io`       | `<your-handle>.github.io`                                                        |
+| `CNAME` | `api.gefi.io`       | `gefi-api.<your-cf-account>.workers.dev` *(or just attach via Worker Routes)*    |
+| `CNAME` | `eu.api.gefi.io`    | `gefi-api-eu.<your-cf-account>.workers.dev`                                      |
+| `CNAME` | `us.api.gefi.io`    | `gefi-api-us.<your-cf-account>.workers.dev`                                      |
+| `CNAME` | `staging.gefi.io`   | `<your-handle>.github.io` *(separate Pages branch, optional)*                    |
+| `CNAME` | `staging-api.gefi.io`| `gefi-api.<your-cf-account>.workers.dev`                                        |
+
+In practice the simplest path for the Worker hostnames is to use Worker
+Routes (already declared in each `wrangler.jsonc`) plus a stub DNS record
+pointing at `100::` — Cloudflare's documented "no-op" for proxied-only
+hostnames.
+
+### 4. Deploy
+
+Order matters — the public edge has Service bindings to the regional
+siblings and to `gefi-compliance`, so those must exist first. The CI
+workflow does it for you (`workflow_dispatch` only); to run it manually:
+
+```bash
+# From infrastructure/cloudflare:
+
+# 1. Compliance (no dependencies).
+pnpm --filter @gefi/worker-compliance exec wrangler deploy --env prod
+
+# 2. Regional gefi-api siblings (only depend on gefi-compliance).
+pnpm --filter @gefi/worker-api exec wrangler deploy --env eu
+pnpm --filter @gefi/worker-api exec wrangler deploy --env us
+
+# 3. Public edge gefi-api (depends on regional siblings + compliance).
+pnpm --filter @gefi/worker-api exec wrangler deploy --env prod
+
+# 4. Web header-proxy (independent).
+pnpm --filter @gefi/worker-web exec wrangler deploy --env prod
+```
+
+Or trigger the GitHub Action — same order, fully scripted:
+
+```bash
+gh workflow run deploy-cloudflare.yml -f env=prod
+```
+
+### 5. Verify
+
+```bash
+# Public edge — should always be 200.
+curl -fsS https://api.gefi.io/health | jq
+# => { "ok": true, "worker": "gefi-api", "environment": "prod", "region": "us"|"eu", ... }
+
+# Regional /health is open for monitoring.
+curl -fsS https://eu.api.gefi.io/health | jq
+curl -fsS https://us.api.gefi.io/health | jq
+
+# Direct calls to a regional endpoint OTHER than /health must be 401 —
+# this is the jurisdiction-routing gate. If you get a 200 here something
+# is misconfigured (most likely INTERNAL_SIGNING_KEY isn't set).
+curl -i -fsS https://eu.api.gefi.io/ ; echo
+# => HTTP/2 401  …  {"ok":false,"error":"edge_jwt_required"}
+
+# Web surface.
+curl -fsS https://gefi.io/_health | jq
+# => { "ok": true, "worker": "gefi-web", ... }
+```
+
+Then flip the Jekyll site over by editing `_config.yml` at the repo root:
+
+```yaml
+api:
+  base_url: "https://api.gefi.io"
+  newsletter_endpoint: "https://api.gefi.io/v1/forms/newsletter"
+  contact_endpoint:    "https://api.gefi.io/v1/forms/contact"
+  demo_endpoint:       "https://api.gefi.io/v1/forms/demo"
+```
+
+…and the marketing site forms POST real submissions on the next Pages deploy.
+
+## Local development
+
+```bash
+cd infrastructure/cloudflare
+pnpm install
+pnpm test                                  # vitest, runs the unit tests
+pnpm typecheck                             # turbo run typecheck across the graph
+pnpm --filter @gefi/worker-api run dev     # wrangler dev, local D1/R2/KV emulation
+```
+
+Copy `.dev.vars.example` to `.dev.vars` in the Worker you're running and
+fill in `INTERNAL_SIGNING_KEY`. `wrangler dev` reads it automatically.
+
+## CI
+
+`.github/workflows/deploy-cloudflare.yml` has two jobs:
+
+- **`verify`** runs on every push that touches `infrastructure/cloudflare/**`.
+  Typechecks + runs vitest + does a `wrangler deploy --dry-run` for each
+  Worker. No Cloudflare credentials needed.
+- **`deploy`** runs on `workflow_dispatch` *only* — i.e. you trigger it
+  manually with `gh workflow run deploy-cloudflare.yml -f env=staging`.
+  Deploys `gefi-compliance` → `gefi-api` (eu) → `gefi-api` (us) →
+  `gefi-api` (edge) → `gefi-web` in that order, gated on the
+  `cloudflare-{staging,prod}` Environment in repo settings.
+
+The deploy job is intentionally manual so a fresh clone can land in `main`
+without crashing CI on missing secrets / un-filled `REPLACE_WITH_*`
+binding IDs. Once you've completed the bootstrap above, dispatch the
+workflow.
+
+Required repo Secrets:
+
+- `CLOUDFLARE_API_TOKEN` — token with the **Workers Scripts: Edit**,
+  **Workers KV Storage: Edit**, **Workers R2 Storage: Edit**,
+  **D1: Edit**, and **Vectorize: Edit** scopes for the GeFi account.
+- `CLOUDFLARE_ACCOUNT_ID` — your Cloudflare account ID.
+
+## What's NOT in this task
+
+- Real auth: Auth0 / RS256 / KYC / multi-tenancy → **Task #3**.
+- Compliance rule engine + audit Merkle anchoring → **Task #4**.
+- Marketplace + Stripe + onchain billing → **Task #5**.
+- Federated learning orchestrator → **Task #6**.
+- Persona dashboards (`app.gefi.io`) → **Task #7**.
+- TEE / sovereign cloud routing → later phases.
+
+This task is the **foundation** — bindings, Workers, jurisdiction edge,
+security headers, CI, /health. Everything else plugs into this scaffold.

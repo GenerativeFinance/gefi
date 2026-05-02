@@ -65,8 +65,19 @@ reference while the new platform is built.
 ├── docs/
 │   └── dns-setup.md         # DNS + Pages setup instructions
 │
+├── infrastructure/
+│   └── cloudflare/          # Cloudflare backend monorepo (Task #2):
+│                            # gefi-web, gefi-api, gefi-compliance Workers
+│                            # plus shared-headers / shared-router / shared-types
+│
 └── legacy/                  # Archived React/Express prototype (reference)
 ```
+
+The Cloudflare backend lives under [`infrastructure/cloudflare/`](./infrastructure/cloudflare/README.md)
+as a self-contained pnpm + Turborepo workspace — separate `package.json`,
+`pnpm-lock.yaml`, and `tsconfig.base.json` so the Jekyll site at the repo
+root never sees Node tooling. See that README for deploy instructions, DNS
+records, and Cloudflare bindings (D1, R2, KV, Vectorize).
 
 ## Local development
 
@@ -145,9 +156,11 @@ api:
   demo_endpoint:       "https://api.gefi.io/v1/demo"
 ```
 
-Until those Cloudflare endpoints exist (Task #2), submissions log to the
-console and surface a friendly success message — no data is sent anywhere.
-Update `_config.yml` once the API is live.
+Until those Cloudflare endpoints exist and DNS is live, submissions log
+to the console and surface a friendly success message — no data is sent
+anywhere. Once the backend (`infrastructure/cloudflare/`) is deployed and
+`api.gefi.io` resolves, fill in the URLs in `_config.yml` and the Jekyll
+site will start posting real submissions on the next Pages deploy.
 
 ## What's intentionally **not** here
 

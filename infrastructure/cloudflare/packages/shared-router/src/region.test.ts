@@ -8,24 +8,28 @@ describe("pickRegion", () => {
     }
   });
 
-  it("routes the UK to the EU data plane", () => {
-    expect(pickRegion("GB", "us")).toBe("eu");
+  it("routes the UK + EFTA to the EU data plane", () => {
+    for (const cc of ["GB", "CH", "NO"]) {
+      expect(pickRegion(cc, "us")).toBe("eu");
+    }
   });
 
-  it("routes US/CA/MX/BR to the US region", () => {
-    for (const cc of ["US", "CA", "MX", "BR"]) {
+  it("routes MENA countries to the EU region (closest until a MENA data plane exists)", () => {
+    for (const cc of ["AE", "SA", "IL", "EG", "TR"]) {
+      expect(pickRegion(cc, "us")).toBe("eu");
+    }
+  });
+
+  it("routes the Americas to the US region", () => {
+    for (const cc of ["US", "CA", "MX", "BR", "AR", "CL"]) {
       expect(pickRegion(cc, "eu")).toBe("us");
     }
   });
 
-  it("routes MENA countries to the MENA region", () => {
-    expect(pickRegion("AE", "us")).toBe("mena");
-    expect(pickRegion("SA", "us")).toBe("mena");
-  });
-
-  it("routes APAC countries to the APAC region", () => {
-    expect(pickRegion("SG", "us")).toBe("apac");
-    expect(pickRegion("JP", "us")).toBe("apac");
+  it("routes APAC countries to the US region (closest west-coast PoP)", () => {
+    for (const cc of ["SG", "JP", "AU", "IN", "KR"]) {
+      expect(pickRegion(cc, "eu")).toBe("us");
+    }
   });
 
   it("falls back to defaultRegion for unknown countries", () => {
@@ -47,21 +51,25 @@ describe("pickRegion", () => {
   it("ignores an invalid override and falls through to country", () => {
     expect(pickRegion("DE", "us", "moon")).toBe("eu");
     expect(pickRegion("DE", "us", "")).toBe("eu");
+    // Stretch labels are NOT valid overrides — pickRegion only accepts
+    // genuinely deployable regions.
+    expect(pickRegion("DE", "us", "mena")).toBe("eu");
+    expect(pickRegion("US", "eu", "apac")).toBe("us");
   });
 });
 
 describe("isRegion", () => {
-  it("accepts the four canonical regions", () => {
+  it("accepts the two canonical regions", () => {
     expect(isRegion("eu")).toBe(true);
     expect(isRegion("us")).toBe(true);
-    expect(isRegion("mena")).toBe(true);
-    expect(isRegion("apac")).toBe(true);
   });
 
-  it("rejects anything else", () => {
+  it("rejects anything else (including future stretch labels)", () => {
     expect(isRegion("EU")).toBe(false);
     expect(isRegion("global")).toBe(false);
     expect(isRegion("")).toBe(false);
+    expect(isRegion("mena")).toBe(false);
+    expect(isRegion("apac")).toBe(false);
   });
 });
 
@@ -69,7 +77,5 @@ describe("regionalApiHost", () => {
   it("maps each region to its subdomain", () => {
     expect(regionalApiHost("eu")).toBe("eu.api.gefi.io");
     expect(regionalApiHost("us")).toBe("us.api.gefi.io");
-    expect(regionalApiHost("mena")).toBe("mena.api.gefi.io");
-    expect(regionalApiHost("apac")).toBe("apac.api.gefi.io");
   });
 });

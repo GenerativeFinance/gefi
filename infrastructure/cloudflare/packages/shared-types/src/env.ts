@@ -11,8 +11,15 @@
  * Local `wrangler dev` emulates them in-memory unless `--remote` is passed.
  */
 
-/** A canonical region identifier. EU + US to start; MENA / APAC follow. */
-export type Region = "eu" | "us" | "mena" | "apac";
+/**
+ * A canonical region identifier.
+ *
+ * Two regions today: `eu` (Frankfurt-ish data plane) and `us` (Iowa-ish).
+ * Countries in MENA route to `eu` (closest), countries in APAC route to
+ * `us` (closest west-coast PoP). When dedicated MENA / APAC / LATAM data
+ * planes ship, expand this type and `pickRegion`'s lookup tables in step.
+ */
+export type Region = "eu" | "us";
 
 /** The runtime environment a Worker has been deployed into. */
 export type DeployEnv = "dev" | "staging" | "prod";
@@ -50,6 +57,16 @@ export interface ApiEnv extends CommonVars, CommonSecrets {
   VECTORS: VectorizeIndex;
   /** Internal Service binding to the compliance Worker (RPC over fetch). */
   COMPLIANCE: Fetcher;
+  /**
+   * Service binding to the EU regional sibling (`gefi-api-eu`). Only
+   * present on the public edge deployment (`api.gefi.io`). When the edge
+   * picks `region === "eu"` and this binding exists, the request is
+   * forwarded over the binding (signed with an internal JWT) instead of
+   * being handled locally.
+   */
+  REGIONAL_EU?: Fetcher;
+  /** Service binding to the US regional sibling (`gefi-api-us`). */
+  REGIONAL_US?: Fetcher;
 }
 
 /** Bindings exposed to `gefi-compliance`. */

@@ -32,7 +32,7 @@ async function appendAudit(env: ComplianceEnv, evt: AuditAppendRequest): Promise
 }
 
 export default {
-  async fetch(request: Request, env: ComplianceEnv): Promise<Response> {
+  async fetch(request: Request, env: ComplianceEnv, _ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
     if (url.pathname === "/health" || url.pathname === "/_health") {

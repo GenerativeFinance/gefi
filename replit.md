@@ -60,6 +60,7 @@ referenced — never deployed.
 | `_posts/*.md`                 | Blog posts                                         |
 | `.github/workflows/deploy-pages.yml` | GitHub Actions Pages deploy                 |
 | `docs/dns-setup.md`           | DNS + Pages one-time setup                         |
+| `infrastructure/cloudflare/`  | Cloudflare backend monorepo (Task #2). pnpm + Turborepo. Three Workers (`gefi-web`, `gefi-api`, `gefi-compliance`) + shared packages. Self-contained — own `package.json`, `pnpm-lock.yaml`, `tsconfig.base.json`. **Never** hoist node_modules from here to the repo root. |
 | `legacy/`                     | Archived React/Express prototype + its `README.md` |
 
 ## Branding tokens (used throughout the site)
@@ -96,8 +97,17 @@ app:
 - **`api.*_endpoint`**: `assets/js/forms.js` only `fetch()`s when the endpoint
   is a non-empty string. While they're empty, every form acknowledges with
   "Thanks! We'll be in touch shortly." and logs the payload to the console —
-  no network call, no false error states. When Task #2 (the Cloudflare backend)
-  ships, fill in the URLs and redeploy. No code changes needed.
+  no network call, no false error states. The Cloudflare backend (Task #2)
+  is now built — once it's deployed and DNS for `api.gefi.io` resolves, set:
+  ```yaml
+  api:
+    base_url: "https://api.gefi.io"
+    newsletter_endpoint: "https://api.gefi.io/v1/forms/newsletter"
+    contact_endpoint:    "https://api.gefi.io/v1/forms/contact"
+    demo_endpoint:       "https://api.gefi.io/v1/forms/demo"
+  ```
+  No JS code changes needed. The Worker accepts any JSON body and persists
+  it to D1; CORS is allow-listed to `https://gefi.io` + `https://www.gefi.io`.
 - **`app.enabled`**: when `false`, every "Sign in" / "Get started" / "Subscribe"
   CTA across `_includes/header.html`, `_includes/cta.html`,
   `_includes/pricing-table.html`, and `_layouts/model.html` routes to
@@ -110,12 +120,14 @@ backend / dashboards exist, without any dead links or console errors.
 ## Working on this repo
 
 - **Never** add `package.json` or run `npm install` at the root. Node was
-  intentionally removed from this surface.
+  intentionally removed from this surface. The Cloudflare backend lives
+  under `infrastructure/cloudflare/` and has its own `package.json` /
+  `pnpm-lock.yaml` / `node_modules` — keep it that way.
 - **Never** install Tailwind, SCSS, or any JS bundler at the root. Hand-write
   CSS in `assets/css/main.css`.
 - **Never** add a Replit `[deployment]` block to `.replit`.
-- **Never** un-commit `Gemfile.lock`. Deterministic builds are non-negotiable
-  for the deploy CI.
+- **Never** un-commit `Gemfile.lock` *or* `infrastructure/cloudflare/pnpm-lock.yaml`.
+  Deterministic builds are non-negotiable for both the Pages and Workers CI.
 - **Always** keep `CNAME` set to `gefi.io`.
 - **Always** put new pages with a permalink (`permalink: /thing/`) so URLs
   stay clean.
@@ -139,7 +151,7 @@ backend / dashboards exist, without any dead links or console errors.
 | #  | Title                                                              | State          |
 |----|--------------------------------------------------------------------|----------------|
 | 1  | Static Jekyll site on GitHub Pages                                 | **In progress (this task).** |
-| 2  | Cloudflare backend foundation (Workers + D1 + R2 + KV + Vectorize) | Pending        |
+| 2  | Cloudflare backend foundation (Workers + D1 + R2 + KV + Vectorize) | **In progress (this task).** |
 | 3  | Auth (Auth0 + JWT) + tenancy                                       | Pending        |
 | 4  | Compliance routing + audit log + trust portal                      | Pending        |
 | 5  | Marketplace + payments (Stripe + onchain)                          | Pending        |
@@ -150,6 +162,49 @@ backend / dashboards exist, without any dead links or console errors.
 
 If a future task contradicts the rules above, the rules above are wrong —
 update this file in the same change.
+
+## Cloudflare backend (`infrastructure/cloudflare/`)
+
+A pnpm + Turborepo workspace. Three Workers + three shared packages.
+
+```
+infrastructure/cloudflare/
+├── packages/
+│   ├── shared-types/     # Env / Region / DeployEnv interfaces
+│   ├── shared-headers/   # CSP, HSTS, COOP/COEP, Permissions-Policy
+│   └── shared-router/    # pickRegion(cf.country) + internal HS256 JWT
+└── workers/
+    ├── web/              # gefi-web   — edge headers + redirects on gefi.io
+    ├── api/              # gefi-api   — public REST + jurisdiction edge on api.gefi.io
+    └── compliance/       # gefi-compliance — internal Service binding only
+```
+
+Public hostnames: `api.gefi.io` (edge) → forwards to `eu.api.gefi.io` /
+`us.api.gefi.io` (regional siblings, same code, pinned `WORKER_REGION`).
+DNS, secrets, D1/R2/KV/Vectorize bootstrap commands, and verification
+steps are documented in `infrastructure/cloudflare/README.md`.
+
+CI: `.github/workflows/deploy-cloudflare.yml`. Requires repo Secrets
+`CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` and the
+`cloudflare-staging` / `cloudflare-prod` Environments configured in
+repo settings.
+
+Local dev:
+```bash
+cd infrastructure/cloudflare
+pnpm install
+pnpm test          # vitest, runs the unit tests (33+ tests across 5 files)
+pnpm typecheck     # turbo run typecheck across the graph
+pnpm --filter @gefi/worker-api run dev    # wrangler dev with local D1/R2/KV emulation
+```
+
+What's NOT here yet (each lives in a downstream task):
+
+- Real auth / multi-tenancy / Auth0 / RS256 → **Task #3**.
+- Compliance rule engine + Merkle audit anchoring → **Task #4**.
+- Marketplace + Stripe + onchain billing → **Task #5**.
+- Federated learning orchestrator → **Task #6**.
+- Persona dashboards on `app.gefi.io` → **Task #7**.
 
 ## How to preview locally
 

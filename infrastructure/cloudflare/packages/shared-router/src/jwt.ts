@@ -54,7 +54,7 @@ function base64UrlDecode(input: string): Uint8Array {
   return out;
 }
 
-async function importKey(secret: string, usage: KeyUsage): Promise<CryptoKey> {
+async function importKey(secret: string, usage: "sign" | "verify"): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     "raw",
     encoder.encode(secret),

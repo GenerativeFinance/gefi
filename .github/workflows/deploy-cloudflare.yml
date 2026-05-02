@@ -1,0 +1,141 @@
+name: Deploy Cloudflare backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infrastructure/cloudflare/**"
+      - ".github/workflows/deploy-cloudflare.yml"
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Target environment"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - prod
+
+# Defaults are read-only. The deploy job grants id-token for OIDC if/when
+# we move to OIDC-based Cloudflare auth; for now CLOUDFLARE_API_TOKEN is
+# the auth method.
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-${{ github.event.inputs.env || 'staging' }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: infrastructure/cloudflare
+
+jobs:
+  verify:
+    name: Typecheck + test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.0.0
+        with:
+          version: 10.26.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.0.4
+        with:
+          node-version: "20"
+          cache: pnpm
+          cache-dependency-path: infrastructure/cloudflare/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (turbo run typecheck)
+        run: pnpm typecheck
+
+      - name: Unit tests (vitest)
+        run: pnpm test
+
+      - name: Wrangler dry-run build (catches misconfigured bindings)
+        run: |
+          pnpm --filter @gefi/worker-web run build
+          pnpm --filter @gefi/worker-api run build
+          pnpm --filter @gefi/worker-compliance run build
+
+  deploy:
+    name: Deploy ${{ github.event.inputs.env || 'staging' }}
+    needs: verify
+    runs-on: ubuntu-latest
+    # Deploy is gated on workflow_dispatch only — push events run the
+    # `verify` job for fast CI signal but never trigger a real deploy.
+    # This avoids first-run failures when `cloudflare-staging` /
+    # `cloudflare-prod` Environment secrets and `REPLACE_WITH_*` binding
+    # IDs in wrangler.jsonc haven't been filled in yet. Trigger manually:
+    #   gh workflow run deploy-cloudflare.yml -f env=staging
+    if: github.event_name == 'workflow_dispatch'
+    # Production deploys require the `cloudflare-prod` Environment to be
+    # configured in repo settings with required reviewers. Staging uses
+    # the `cloudflare-staging` Environment. Both store CLOUDFLARE_API_TOKEN
+    # + CLOUDFLARE_ACCOUNT_ID as Environment secrets.
+    environment:
+      name: cloudflare-${{ github.event.inputs.env || 'staging' }}
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      DEPLOY_ENV: ${{ github.event.inputs.env || 'staging' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.0.0
+        with:
+          version: 10.26.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.0.4
+        with:
+          node-version: "20"
+          cache: pnpm
+          cache-dependency-path: infrastructure/cloudflare/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Order matters: gefi-api's Service binding depends on
+      # gefi-compliance existing in the target environment.
+      - name: Deploy gefi-compliance
+        run: pnpm --filter @gefi/worker-compliance exec wrangler deploy --env "$DEPLOY_ENV"
+
+      - name: Deploy gefi-api regional siblings (prod only)
+        if: env.DEPLOY_ENV == 'prod'
+        run: |
+          pnpm --filter @gefi/worker-api exec wrangler deploy --env eu
+          pnpm --filter @gefi/worker-api exec wrangler deploy --env us
+
+      - name: Deploy gefi-api (edge)
+        run: pnpm --filter @gefi/worker-api exec wrangler deploy --env "$DEPLOY_ENV"
+
+      - name: Deploy gefi-web
+        run: pnpm --filter @gefi/worker-web exec wrangler deploy --env "$DEPLOY_ENV"
+
+      - name: Smoke test /health
+        run: |
+          if [ "$DEPLOY_ENV" = "prod" ]; then
+            HOST="api.gefi.io"
+          else
+            HOST="staging-api.gefi.io"
+          fi
+          # Allow up to 30 s for the deploy to propagate to the edge.
+          for i in $(seq 1 6); do
+            if curl -fsS "https://$HOST/health" | tee /tmp/health.json; then
+              echo
+              break
+            fi
+            sleep 5
+          done
+          grep -q '"ok":true' /tmp/health.json

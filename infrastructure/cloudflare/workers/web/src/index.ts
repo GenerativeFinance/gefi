@@ -17,7 +17,7 @@ import { applyHeaders } from "@gefi/shared-headers";
 import type { WebEnv } from "@gefi/shared-types";
 
 export default {
-  async fetch(request: Request, env: WebEnv): Promise<Response> {
+  async fetch(request: Request, env: WebEnv, _ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
     // Health check, never goes to origin.

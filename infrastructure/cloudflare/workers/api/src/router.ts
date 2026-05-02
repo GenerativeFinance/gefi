@@ -1,11 +1,13 @@
 /**
  * Tiny method-and-path router for `gefi-api`.
  *
- * We deliberately don't take a dependency on Hono / itty-router / etc. for
- * this foundation — the API surface is small enough that a few hundred
- * lines of explicit code are easier to audit than a third-party router's
- * middleware chain. When the API surface gets larger (Task #5 / Task #7)
- * we can revisit.
+ * Implementation note: we use a small regex-based matcher rather than the
+ * `URLPattern` global so tests can run in Node (`URLPattern` is only a
+ * Workers / browser global). The matcher supports the two patterns we need
+ * for Task #2: literal paths (`/health`) and single-segment named params
+ * (`/v1/forms/:kind`). When the API surface gets larger we can swap in a
+ * fully featured router — every consumer of this module already accepts a
+ * `Handler` shape that won't change.
  */
 
 import type { ApiEnv } from "@gefi/shared-types";
@@ -26,21 +28,37 @@ export interface RouteContext {
 
 export type Handler = (rc: RouteContext) => Promise<Response> | Response;
 
-interface Route {
+interface CompiledRoute {
   method: Method;
-  pattern: URLPattern;
+  regex: RegExp;
+  paramNames: string[];
   handler: Handler;
 }
 
+function compilePattern(path: string): { regex: RegExp; paramNames: string[] } {
+  // Split into segments, escape literal segments, and convert `:name`
+  // segments into a single-segment capture group. Trailing slashes are
+  // tolerated (they match the same route).
+  const paramNames: string[] = [];
+  const parts = path.split("/").filter((p) => p.length > 0);
+  const compiledParts = parts.map((part) => {
+    if (part.startsWith(":")) {
+      paramNames.push(part.slice(1));
+      return "([^/]+)";
+    }
+    return part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  });
+  const body = compiledParts.length === 0 ? "" : `/${compiledParts.join("/")}`;
+  const regex = new RegExp(`^${body}/?$`);
+  return { regex, paramNames };
+}
+
 export class Router {
-  private readonly routes: Route[] = [];
+  private readonly routes: CompiledRoute[] = [];
 
   add(method: Method, path: string, handler: Handler): this {
-    this.routes.push({
-      method,
-      pattern: new URLPattern({ pathname: path }),
-      handler,
-    });
+    const { regex, paramNames } = compilePattern(path);
+    this.routes.push({ method, regex, paramNames, handler });
     return this;
   }
 
@@ -57,13 +75,15 @@ export class Router {
   match(method: string, url: URL): [Handler, Record<string, string>] | null {
     for (const route of this.routes) {
       if (route.method !== method) continue;
-      const m = route.pattern.exec({ pathname: url.pathname });
+      const m = route.regex.exec(url.pathname);
       if (!m) continue;
-      const groups = m.pathname.groups;
       const params: Record<string, string> = {};
-      for (const [k, v] of Object.entries(groups)) {
-        if (typeof v === "string") params[k] = decodeURIComponent(v);
-      }
+      route.paramNames.forEach((name, idx) => {
+        const captured = m[idx + 1];
+        if (typeof captured === "string") {
+          params[name] = decodeURIComponent(captured);
+        }
+      });
       return [route.handler, params];
     }
     return null;
