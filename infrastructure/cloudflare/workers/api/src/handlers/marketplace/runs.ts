@@ -8,7 +8,7 @@
 
 import { getMetadata, getModel, getVersion, resolveModelAnchor } from "@gefi/marketplace";
 import { resolveProviderChain, runModel, replayRun, responseToSseStream, type InferenceRequest } from "@gefi/model-gateway";
-import { consume } from "@gefi/billing";
+import { consume, consumeApiKey } from "@gefi/billing";
 import { requireAuth } from "../../middleware/auth.js";
 import type { Handler } from "../../router.js";
 
@@ -90,34 +90,75 @@ export const runModelHandler: Handler = async (rc) => {
     return Response.json({ ok: false, error: "invalid_body" }, { status: 400 });
   }
   if (!body.prompt) return Response.json({ ok: false, error: "missing_prompt" }, { status: 400 });
+  // Reject non-finite or non-positive max_tokens up front. Without this
+  // the preflight math (Math.max(1, Number(...))) would silently coerce
+  // garbage payloads (NaN, "abc", -1, Infinity) into the default budget,
+  // which would then be charged against the tenant cap.
+  if (body.max_tokens !== undefined) {
+    const mt = Number(body.max_tokens);
+    if (!Number.isFinite(mt) || mt <= 0 || !Number.isInteger(mt)) {
+      return Response.json({ ok: false, error: "invalid_max_tokens" }, { status: 400 });
+    }
+  }
 
-  // Quota: charge one inference + one request.
-  const quota = await consume(
-    { db: rc.env.DB, kv: rc.env.CACHE },
-    c.tenant_id,
-    "requests_per_day",
-    1,
-  );
-  if (!quota.allowed) {
+  // ---- Quota enforcement order (each is a hard 429 if denied) -----------
+  //   1. tenant requests_per_day      — broad throttle
+  //   2. per-API-key requests_per_day — fine-grained per-credential cap
+  //      (no row = inherits tenant cap, never blocks)
+  //   3. tenant tokens_per_month      — pre-flight at the caller's
+  //      requested max_tokens budget so we *never* run inference for a
+  //      tenant who's already over the token cap.
+  //   4. tenant inferences_per_month  — billing-tier cap, charged LAST
+  //      so a token-preflight denial doesn't leak an inference charge
+  //      against a tenant whose run never executed.
+  // After inference we reconcile the token charge to actual usage with
+  // a refund/topup so a caller asking for 2k but only using 100 isn't
+  // billed for 1.9k phantom tokens.
+  // ------------------------------------------------------------------------
+  const billingDeps = { db: rc.env.DB, kv: rc.env.CACHE };
+  const tenantReq = await consume(billingDeps, c.tenant_id, "requests_per_day", 1);
+  if (!tenantReq.allowed) {
     return Response.json(
-      { ok: false, error: "quota_exceeded", reason: quota.reason, remaining: quota.remaining },
+      { ok: false, error: "quota_exceeded", scope: "tenant", reason: tenantReq.reason, remaining: tenantReq.remaining },
       { status: 429 },
     );
   }
-  const inferenceQuota = await consume(
-    { db: rc.env.DB, kv: rc.env.CACHE },
-    c.tenant_id,
-    "inferences_per_month",
-    1,
-  );
-  if (!inferenceQuota.allowed) {
+  const keyReq = await consumeApiKey(billingDeps, c.sub, "requests_per_day", 1);
+  if (!keyReq.allowed) {
     return Response.json(
-      {
-        ok: false,
-        error: "quota_exceeded",
-        reason: inferenceQuota.reason,
-        remaining: inferenceQuota.remaining,
-      },
+      { ok: false, error: "quota_exceeded", scope: "api_key", reason: keyReq.reason, remaining: keyReq.remaining },
+      { status: 429 },
+    );
+  }
+  // Pre-flight tokens BEFORE inferences_per_month — charging the
+  // inference counter only after we know we'll actually run the model
+  // keeps the two counters consistent: an over-cap tenant never gets
+  // an inference charge for a request that never executed.
+  const PRE_TOKEN_BUDGET_DEFAULT = 1024;
+  const preTokens = Math.max(1, Number(body.max_tokens ?? PRE_TOKEN_BUDGET_DEFAULT));
+  const tokenPreflight = await consume(billingDeps, c.tenant_id, "tokens_per_month", preTokens);
+  if (!tokenPreflight.allowed) {
+    return Response.json(
+      { ok: false, error: "quota_exceeded", scope: "tenant", reason: tokenPreflight.reason, remaining: tokenPreflight.remaining, feature: "tokens_per_month" },
+      { status: 429 },
+    );
+  }
+  const inferenceQuota = await consume(billingDeps, c.tenant_id, "inferences_per_month", 1);
+  if (!inferenceQuota.allowed) {
+    // Refund the token preflight — a token preflight that succeeds
+    // shouldn't burn budget for a run that never happened. We can't
+    // simply skip the inference quota here because the tier guarantee
+    // is "≤ inferencesPerMonth model runs/month" and that ceiling has
+    // to hold even if the operator changes pricing.
+    await rc.env.DB.prepare(
+      `UPDATE entitlements SET used_value = MAX(0, used_value - ?), updated_at = ?
+       WHERE tenant_id = ? AND feature = 'tokens_per_month'`,
+    )
+      .bind(preTokens, Math.floor(Date.now() / 1000), c.tenant_id)
+      .run();
+    if (rc.env.CACHE) await rc.env.CACHE.delete(`entitlement:${c.tenant_id}:tokens_per_month`);
+    return Response.json(
+      { ok: false, error: "quota_exceeded", scope: "tenant", reason: inferenceQuota.reason, remaining: inferenceQuota.remaining, feature: "inferences_per_month" },
       { status: 429 },
     );
   }
@@ -149,30 +190,56 @@ export const runModelHandler: Handler = async (rc) => {
     },
   );
 
-  // Charge tokens after the run (we don't know the token count up front).
-  await consume({ db: rc.env.DB, kv: rc.env.CACHE }, c.tenant_id, "tokens_per_month", result.response.tokensIn + result.response.tokensOut);
+  // Reconcile tokens: settle the difference between the pre-charge and
+  // actual usage. If actual > preTokens we top up (and fail-close if
+  // the top-up would exceed the cap — the caller's response is still
+  // returned but a header flags overage so dashboards can alert). If
+  // actual < preTokens we issue a "refund" via a direct UPDATE since
+  // consume() can't go negative.
+  const actualTokens = result.response.tokensIn + result.response.tokensOut;
+  let tokenOverage = false;
+  if (actualTokens > preTokens) {
+    const top = await consume(billingDeps, c.tenant_id, "tokens_per_month", actualTokens - preTokens);
+    if (!top.allowed) tokenOverage = true;
+  } else if (actualTokens < preTokens) {
+    const refund = preTokens - actualTokens;
+    await rc.env.DB.prepare(
+      `UPDATE entitlements SET used_value = MAX(0, used_value - ?), updated_at = ?
+       WHERE tenant_id = ? AND feature = 'tokens_per_month'`,
+    )
+      .bind(refund, Math.floor(Date.now() / 1000), c.tenant_id)
+      .run();
+    if (rc.env.CACHE) {
+      await rc.env.CACHE.delete(`entitlement:${c.tenant_id}:tokens_per_month`);
+    }
+  }
 
   if (body.no_stream) {
-    return Response.json({
-      ok: true,
-      runId: result.runId,
-      inputSha: result.inputSha,
-      outputSha: result.outputSha,
-      response: result.response,
-    });
+    const headers: Record<string, string> = {};
+    if (tokenOverage) headers["X-Token-Overage"] = "1";
+    return Response.json(
+      {
+        ok: true,
+        runId: result.runId,
+        inputSha: result.inputSha,
+        outputSha: result.outputSha,
+        response: result.response,
+        tokenOverage,
+      },
+      { headers },
+    );
   }
 
   const stream = responseToSseStream(result.response);
-  return new Response(stream, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-store, no-transform",
-      "X-Run-Id": result.runId,
-      "X-Input-Sha": result.inputSha,
-      "X-Output-Sha": result.outputSha,
-    },
-  });
+  const sseHeaders: Record<string, string> = {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-store, no-transform",
+    "X-Run-Id": result.runId,
+    "X-Input-Sha": result.inputSha,
+    "X-Output-Sha": result.outputSha,
+  };
+  if (tokenOverage) sseHeaders["X-Token-Overage"] = "1";
+  return new Response(stream, { status: 200, headers: sseHeaders });
 };
 
 export const replayRunHandler: Handler = async (rc) => {

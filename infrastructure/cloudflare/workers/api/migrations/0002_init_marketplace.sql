@@ -54,6 +54,29 @@ CREATE TABLE IF NOT EXISTS model_versions (
 CREATE INDEX IF NOT EXISTS idx_versions_model ON model_versions(model_id);
 
 -- ----------------------------------------------------------------------------
+-- model_artifacts: one row per uploaded artifact blob. A `model_versions`
+-- row is canonical for "the version a developer published"; this side
+-- table records the storage facts (R2 key, size, sha-256, content-type)
+-- so we can reconcile R2 garbage / orphaned objects against D1, and so
+-- a single version can later carry multiple linked artifacts (eg. weights
+-- + tokenizer) without bloating the versions row.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS model_artifacts (
+  id              TEXT PRIMARY KEY,
+  model_id        TEXT NOT NULL REFERENCES models(id) ON DELETE CASCADE,
+  version_id      TEXT NOT NULL REFERENCES model_versions(id) ON DELETE CASCADE,
+  kind            TEXT NOT NULL DEFAULT 'weights' CHECK (kind IN ('weights','tokenizer','manifest','example','other')),
+  r2_key          TEXT NOT NULL,
+  sha256          TEXT NOT NULL,                 -- 64-hex content hash
+  size_bytes      INTEGER NOT NULL,
+  content_type    TEXT NOT NULL DEFAULT 'application/octet-stream',
+  created_at      INTEGER NOT NULL,
+  UNIQUE (version_id, kind, sha256)
+);
+CREATE INDEX IF NOT EXISTS idx_artifacts_version ON model_artifacts(version_id);
+CREATE INDEX IF NOT EXISTS idx_artifacts_sha ON model_artifacts(sha256);
+
+-- ----------------------------------------------------------------------------
 -- model_metadata: extended descriptive payload. Kept in a side table so the
 -- hot list query against `models` stays narrow.
 -- ----------------------------------------------------------------------------
@@ -133,6 +156,27 @@ CREATE TABLE IF NOT EXISTS entitlements (
   resets_at     INTEGER,                        -- unix seconds; null for total
   updated_at    INTEGER NOT NULL,
   PRIMARY KEY (tenant_id, feature)
+);
+
+-- ----------------------------------------------------------------------------
+-- api_key_quotas: per-API-key counters. The `entitlements` table is
+-- tenant-scoped; this one is *key*-scoped so a developer can hand out a
+-- read-only key with a 1k/day cap without raising the tenant ceiling.
+-- Mirrors the entitlements column shape so `consume()` semantics are
+-- identical (atomic conditional UPDATE, period reset, KV cache).
+-- The api_key_id column is unconstrained (no FK) so per-key quotas keep
+-- working after rotation deletes the parent key — auditors care about
+-- historical counters more than referential integrity here.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS api_key_quotas (
+  api_key_id    TEXT NOT NULL,
+  feature       TEXT NOT NULL,
+  limit_value   INTEGER NOT NULL DEFAULT 0,     -- 0 = inherit tenant cap (no per-key check)
+  used_value    INTEGER NOT NULL DEFAULT 0,
+  period        TEXT NOT NULL CHECK (period IN ('day','month','total')),
+  resets_at     INTEGER,
+  updated_at    INTEGER NOT NULL,
+  PRIMARY KEY (api_key_id, feature)
 );
 
 -- ----------------------------------------------------------------------------

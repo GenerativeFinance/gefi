@@ -291,12 +291,70 @@ export async function publishVersion(
     )
     .run();
 
-  const row = await deps.db
-    .prepare("SELECT * FROM model_versions WHERE id = ?")
+  // Mirror the storage facts into model_artifacts so a future GC
+  // reconciler can scan R2 against D1 by sha. The "weights" kind is
+  // the canonical primary blob; future versions can attach tokenizer /
+  // example artifacts under the same version_id without touching
+  // model_versions.
+  const artifactId = newId("art");
+  await deps.db
+    .prepare(
+      `INSERT INTO model_artifacts (id, model_id, version_id, kind, r2_key,
+       sha256, size_bytes, content_type, created_at)
+       VALUES (?, ?, ?, 'weights', ?, ?, ?, 'application/octet-stream', ?)`,
+    )
+    .bind(artifactId, input.modelId, versionId, r2Key, sha, bytes.byteLength, ts)
+    .run();
+
+  // Return the row shape directly — D1 has no RETURNING. The values are
+  // exactly what we just bound, so a re-read would only serialise behind
+  // the same write.
+  return {
+    id: versionId,
+    modelId: input.modelId,
+    version: input.version,
+    artifactR2Key: r2Key,
+    artifactSha256: sha,
+    artifactSize: bytes.byteLength,
+    manifestJson: JSON.stringify(input.manifest ?? {}),
+    chainTxHash: anchorResult.txHash,
+    approvedAt: null,
+    createdAt: ts,
+  };
+}
+
+export interface ArtifactRow {
+  id: string;
+  modelId: string;
+  versionId: string;
+  kind: "weights" | "tokenizer" | "manifest" | "example" | "other";
+  r2Key: string;
+  sha256: string;
+  sizeBytes: number;
+  contentType: string;
+  createdAt: number;
+}
+
+/** List the artifact records (R2 storage facts) for a given version. */
+export async function listArtifacts(deps: RegistryDeps, versionId: string): Promise<ArtifactRow[]> {
+  const { results } = await deps.db
+    .prepare(
+      `SELECT id, model_id, version_id, kind, r2_key, sha256, size_bytes,
+       content_type, created_at FROM model_artifacts WHERE version_id = ? ORDER BY created_at ASC`,
+    )
     .bind(versionId)
-    .first<Record<string, unknown>>();
-  if (!row) throw new Error("publishVersion_failed");
-  return versionRowToVersion(row);
+    .all<Record<string, unknown>>();
+  return (results ?? []).map((r) => ({
+    id: String(r.id),
+    modelId: String(r.model_id),
+    versionId: String(r.version_id),
+    kind: r.kind as ArtifactRow["kind"],
+    r2Key: String(r.r2_key),
+    sha256: String(r.sha256),
+    sizeBytes: Number(r.size_bytes),
+    contentType: String(r.content_type),
+    createdAt: Number(r.created_at),
+  }));
 }
 
 export async function approveVersion(

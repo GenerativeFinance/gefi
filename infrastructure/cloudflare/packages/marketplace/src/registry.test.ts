@@ -4,6 +4,7 @@ import {
   createModel,
   getMetadata,
   getModel,
+  listArtifacts,
   listModels,
   listVersions,
   modelToCard,
@@ -30,6 +31,7 @@ function memDb() {
   tables.set("models", []);
   tables.set("model_versions", []);
   tables.set("model_metadata", []);
+  tables.set("model_artifacts", []);
 
   function prepare(sql: string) {
     let bindings: unknown[] = [];
@@ -57,7 +59,9 @@ function memDb() {
       },
       async all<T>() {
         let rows: Row[] = [];
-        if (/FROM models/.test(sql)) {
+        if (/FROM model_artifacts WHERE version_id = \?/.test(sql)) {
+          rows = (tables.get("model_artifacts") ?? []).filter((r) => r.version_id === bindings[0]);
+        } else if (/FROM models/.test(sql)) {
           rows = [...(tables.get("models") ?? [])];
           if (/jurisdiction = \?/.test(sql)) {
             const idx = sql.split("?").length;
@@ -134,6 +138,18 @@ function memDb() {
             m.status = "approved";
             m.updated_at = bindings[1];
           }
+        } else if (/^INSERT INTO model_artifacts /.test(sql)) {
+          tables.get("model_artifacts")!.push({
+            id: bindings[0],
+            model_id: bindings[1],
+            version_id: bindings[2],
+            kind: "weights",
+            r2_key: bindings[3],
+            sha256: bindings[4],
+            size_bytes: bindings[5],
+            content_type: "application/octet-stream",
+            created_at: bindings[6],
+          });
         }
         return { meta: { changes: 1 }, success: true } as never;
       },
@@ -264,5 +280,33 @@ describe("@gefi/marketplace registry", () => {
   it("resolveModelAnchor falls back to stub without polygon secrets", () => {
     const a = resolveModelAnchor({});
     expect(a).toBeInstanceOf(StubModelAnchor);
+  });
+
+  it("publishVersion writes a matching row to model_artifacts (R2/D1 reconciliation handle)", async () => {
+    const db = memDb();
+    const deps = { db, artifacts: memR2(), anchor: new StubModelAnchor() };
+    const m = await createModel(deps, {
+      developerTenantId: "t",
+      jurisdiction: "us",
+      slug: "art-test",
+      name: "Art",
+      summary: "",
+      category: "risk",
+      riskClass: "low",
+      monthlyPriceCents: 0,
+      federationEnabled: false,
+    });
+    const bytes = new TextEncoder().encode("the-bytes");
+    const v = await publishVersion(deps, { modelId: m.id, version: "0.1.0", artifact: bytes });
+    const arts = await listArtifacts(deps, v.id);
+    expect(arts).toHaveLength(1);
+    const [art] = arts;
+    expect(art!.modelId).toBe(m.id);
+    expect(art!.versionId).toBe(v.id);
+    expect(art!.kind).toBe("weights");
+    expect(art!.sha256).toBe(v.artifactSha256);
+    expect(art!.r2Key).toBe(v.artifactR2Key);
+    expect(art!.sizeBytes).toBe(bytes.byteLength);
+    expect(art!.contentType).toBe("application/octet-stream");
   });
 });
