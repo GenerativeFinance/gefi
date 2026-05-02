@@ -83,3 +83,49 @@ export function pickDefaultLawyer(
 ): LawyerSeed | undefined {
   return LAWYER_SEED.find((l) => l.jurisdiction === jurisdiction && l.role === role);
 }
+
+/**
+ * External-auditor seed. Distinct from `LAWYER_SEED` (which routes
+ * regulator-facing legal counsel) — auditors are independent SOC2 / ISO
+ * 27001 / AMS-style attestors who sign off on the audit chain itself.
+ *
+ * The `audit_anchor` action implicitly invokes an external auditor for
+ * every event; the routing service uses this seed to attach a default
+ * auditor to every audit event so the chain is verifiable from day one
+ * without per-tenant configuration.
+ */
+export interface AuditorSeed {
+  id: string;
+  jurisdiction: Jurisdiction;
+  region: Region;
+  /** Hard-coded to `external_auditor` so the directory query is uniform. */
+  role: "external_auditor";
+  displayName: string;
+  firm: string;
+  email: string;
+  pgpFingerprint?: string;
+  /** Number of business days the auditor has to counter-sign an anchor. */
+  slaSignDays: number;
+}
+
+export const AUDITOR_SEED: readonly AuditorSeed[] = [
+  // US data plane — SEC, FINRA, CCPA, MAS (APAC desk), AUSTRAC (APAC desk).
+  { id: "auditor-us-soc2", jurisdiction: "sec", region: "us", role: "external_auditor", displayName: "Default US auditor", firm: "GeFi External Audit", email: "auditor+us@gefi.io", slaSignDays: 5 },
+  { id: "auditor-finra-soc2", jurisdiction: "finra", region: "us", role: "external_auditor", displayName: "Default FINRA auditor", firm: "GeFi External Audit", email: "auditor+finra@gefi.io", slaSignDays: 5 },
+  { id: "auditor-ccpa-privacy", jurisdiction: "ccpa", region: "us", role: "external_auditor", displayName: "Default CCPA privacy auditor", firm: "GeFi External Audit", email: "auditor+ccpa@gefi.io", slaSignDays: 5 },
+  { id: "auditor-mas-soc2", jurisdiction: "mas", region: "us", role: "external_auditor", displayName: "Default MAS auditor", firm: "GeFi APAC Audit", email: "auditor+mas@gefi.io", slaSignDays: 5 },
+  { id: "auditor-austrac-soc2", jurisdiction: "austrac", region: "us", role: "external_auditor", displayName: "Default AUSTRAC auditor", firm: "GeFi APAC Audit", email: "auditor+austrac@gefi.io", slaSignDays: 5 },
+
+  // EU data plane — MiFID II, GDPR, FCA, FINMA, DFSA, SAMA.
+  { id: "auditor-mifid-soc2", jurisdiction: "mifid-ii", region: "eu", role: "external_auditor", displayName: "Default MiFID auditor", firm: "GeFi EU Audit", email: "auditor+mifid@gefi.io", slaSignDays: 5 },
+  { id: "auditor-gdpr-iso27701", jurisdiction: "gdpr", region: "eu", role: "external_auditor", displayName: "Default GDPR ISO-27701 auditor", firm: "GeFi EU Audit", email: "auditor+gdpr@gefi.io", slaSignDays: 5 },
+  { id: "auditor-fca-soc2", jurisdiction: "fca", region: "eu", role: "external_auditor", displayName: "Default FCA auditor", firm: "GeFi UK Audit", email: "auditor+fca@gefi.io", slaSignDays: 5 },
+  { id: "auditor-finma-soc2", jurisdiction: "finma", region: "eu", role: "external_auditor", displayName: "Default FINMA auditor", firm: "GeFi Swiss Audit", email: "auditor+finma@gefi.io", slaSignDays: 5 },
+  { id: "auditor-dfsa-soc2", jurisdiction: "dfsa", region: "eu", role: "external_auditor", displayName: "Default DFSA auditor", firm: "GeFi MENA Audit", email: "auditor+dfsa@gefi.io", slaSignDays: 5 },
+  { id: "auditor-sama-soc2", jurisdiction: "sama", region: "eu", role: "external_auditor", displayName: "Default SAMA auditor", firm: "GeFi MENA Audit", email: "auditor+sama@gefi.io", slaSignDays: 5 },
+];
+
+/** Pick the default auditor for the given jurisdiction. */
+export function pickDefaultAuditor(jurisdiction: Jurisdiction): AuditorSeed | undefined {
+  return AUDITOR_SEED.find((a) => a.jurisdiction === jurisdiction);
+}

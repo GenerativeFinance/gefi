@@ -17,3 +17,4 @@ export type {
 export { JURISDICTION_LABEL } from "./types.js";
 export { RULES } from "./rules/index.js";
 export { findRules, ruleMatches, severityRank } from "./match.js";
+export { rulesToYaml } from "./yaml.js";

@@ -14,12 +14,24 @@
 
 import { buildMerkle, resolveAnchor } from "@gefi/compliance-engine";
 import type { Region } from "@gefi/shared-types";
-import { listAuditEvents, seedLawyerDirectory } from "../lib/audit-store.js";
+import { listAuditEvents, seedAuditorDirectory, seedLawyerDirectory } from "../lib/audit-store.js";
 import type { Handler } from "../router.js";
 
 export const adminSeedDirectoryHandler: Handler = async ({ env }) => {
-  const result = await seedLawyerDirectory(env.DB);
-  return Response.json({ ok: true, ...result });
+  // Seed both directories. Lawyer directory routes regulator-facing
+  // counsel; auditor directory routes external attestors who counter-
+  // sign the audit chain itself. Both are idempotent.
+  const lawyer = await seedLawyerDirectory(env.DB);
+  const auditor = await seedAuditorDirectory(env.DB);
+  return Response.json({
+    ok: true,
+    lawyer,
+    auditor,
+    // Aggregated counts retained for API back-compat with the test
+    // harness, which asserts on `inserted`/`skipped`.
+    inserted: lawyer.inserted + auditor.inserted,
+    skipped: lawyer.skipped + auditor.skipped,
+  });
 };
 
 interface AnchorBody {

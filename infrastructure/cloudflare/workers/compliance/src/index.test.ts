@@ -89,6 +89,19 @@ interface LawyerRow {
   created_at: number;
 }
 
+interface AuditorRow {
+  id: string;
+  jurisdiction: string;
+  region: Region;
+  display_name: string;
+  firm: string;
+  email: string;
+  pgp_fingerprint: string | null;
+  sla_ack_hours: number;
+  active: number;
+  created_at: number;
+}
+
 interface AssignmentRow {
   tenant_id: string;
   jurisdiction: string;
@@ -113,6 +126,7 @@ class FakeDb {
   caseActions: CaseActionRow[] = [];
   anchors: AnchorRow[] = [];
   lawyers: LawyerRow[] = [];
+  auditors: AuditorRow[] = [];
   assignments: AssignmentRow[] = [];
   residency: ResidencyRow[] = [];
 }
@@ -368,6 +382,16 @@ function runQueryRun(db: FakeDb, sql: string, args: unknown[]): { changes: numbe
     ];
     if (db.lawyers.some((l) => l.id === id)) return { changes: 0 };
     db.lawyers.push({ id, jurisdiction, region, role, display_name, firm, email, pgp_fingerprint, sla_ack_hours, active: 1, created_at });
+    return { changes: 1 };
+  }
+  // INSERT OR IGNORE auditor_directory (no `role` column — auditors are
+  // always `external_auditor`, so the schema omits it).
+  if (sql.startsWith("INSERT OR IGNORE INTO auditor_directory")) {
+    const [id, jurisdiction, region, display_name, firm, email, pgp_fingerprint, sla_ack_hours, , created_at] = args as [
+      string, string, Region, string, string, string, string | null, number, number, number,
+    ];
+    if (db.auditors.some((a) => a.id === id)) return { changes: 0 };
+    db.auditors.push({ id, jurisdiction, region, display_name, firm, email, pgp_fingerprint, sla_ack_hours, active: 1, created_at });
     return { changes: 1 };
   }
   // UPDATE compliance_cases (DO mirror)
@@ -673,22 +697,37 @@ describe("gefi-compliance worker", () => {
     expect(body.attestation.regulators).toContain("sec");
   });
 
-  it("seeds the lawyer directory idempotently", async () => {
+  it("seeds the lawyer + auditor directories idempotently", async () => {
     const first = await worker.fetch(
       new Request("https://compliance/admin/seed-directory", { method: "POST" }),
       env,
       ctx,
     );
     expect(first.status).toBe(200);
-    const firstBody = (await first.json()) as { inserted: number; skipped: number };
-    expect(firstBody.inserted).toBeGreaterThan(0);
+    const firstBody = (await first.json()) as {
+      inserted: number;
+      skipped: number;
+      lawyer: { inserted: number; skipped: number };
+      auditor: { inserted: number; skipped: number };
+    };
+    expect(firstBody.lawyer.inserted).toBeGreaterThan(0);
+    expect(firstBody.auditor.inserted).toBeGreaterThan(0);
+    expect(firstBody.inserted).toBe(firstBody.lawyer.inserted + firstBody.auditor.inserted);
+
     const second = await worker.fetch(
       new Request("https://compliance/admin/seed-directory", { method: "POST" }),
       env,
       ctx,
     );
-    const secondBody = (await second.json()) as { inserted: number; skipped: number };
+    const secondBody = (await second.json()) as {
+      inserted: number;
+      skipped: number;
+      lawyer: { inserted: number; skipped: number };
+      auditor: { inserted: number; skipped: number };
+    };
     expect(secondBody.inserted).toBe(0);
+    expect(secondBody.lawyer.skipped).toBe(firstBody.lawyer.inserted);
+    expect(secondBody.auditor.skipped).toBe(firstBody.auditor.inserted);
     expect(secondBody.skipped).toBe(firstBody.inserted);
   });
 });

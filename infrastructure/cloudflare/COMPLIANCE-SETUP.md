@@ -11,6 +11,13 @@ the api Worker's Service binding and on the same Wrangler account.
 - **`packages/compliance-rules`** — typed jurisdictional rule book
   covering 11 jurisdictions (SEC, FINRA, MiFID II, GDPR, CCPA, FCA,
   MAS, FINMA, DFSA, SAMA, AUSTRAC). Each rule cites its source statute.
+  Rules are also mirrored to a committed YAML file per jurisdiction
+  under `packages/compliance-rules/rules/` so non-engineering auditors
+  can read the rule book directly. A vitest drift test
+  (`src/yaml-sync.test.ts`) re-emits the YAML in-memory and fails the
+  build if the committed copy diverges from the TS source. To refresh
+  the YAML after a rule change, run
+  `pnpm --filter @gefi/compliance-rules sync-yaml`.
 - **`packages/compliance-engine`** — runtime: rule evaluator, Merkle
   hash-chain primitives, mailer / Polygon-anchor / DocuSign provider
   abstractions (each with a deterministic stub + a live HTTP impl
@@ -45,7 +52,7 @@ only reachable via the `COMPLIANCE` Service binding from `gefi-api`.
 | PATCH  | `/cases/:id`                  | Acknowledge / sign / close (delegated to the `ComplianceCase` DO).       |
 | GET    | `/residency/:tenant_id`       | Per-jurisdiction data-plane attestation for the tenant.                  |
 | POST   | `/admin/anchor`               | Close out the day's chain into a Merkle root + Polygon anchor.           |
-| POST   | `/admin/seed-directory`       | Seed `lawyer_directory` from the static directory in the engine package. |
+| POST   | `/admin/seed-directory`       | Seed both `lawyer_directory` (regulator counsel) and `auditor_directory` (external attestors) from the static seeds in the engine package. Idempotent: re-runs return `inserted: 0`. |
 
 ## Bootstrap (one-time, per environment)
 
@@ -146,13 +153,23 @@ transaction. An auditor verifies an event by:
 | `tenant_onboarded`    | KYC tier confirmation; logs to audit chain.                                 | `auth/onboard.ts`                   |
 | `kyc_declined`        | Warns + arms a 7-day customer-remediation window.                           | `kyc/webhook.ts`                    |
 | `sanction_hit`        | Fires SAR (US) / OFSI (UK) / FATF case + suspends tenant.                   | `kyc/webhook.ts`                    |
-| `model_listed`        | Securities-counsel review (SEC/FCA/MiFID-II) before listing goes live.      | (subsequent task, future emitter)   |
-| `subscription_created`| Audit-only.                                                                 | (future emitter)                    |
-| `data_breach`         | GDPR Art. 33 — 72-hour DPA notification, privacy-counsel sign-off.          | (future emitter)                    |
+| `model_listed`        | Securities-counsel review (SEC/FCA/MiFID-II) before listing goes live.      | Wired in **Task #5** (marketplace listing API). |
+| `subscription_created`| Audit-only; FINRA + MiFID II costs disclosure for institutional tiers.      | Wired in **Task #5** (subscription/checkout flow). |
+| `data_breach`         | GDPR Art. 33 — 72-hour DPA notification, privacy-counsel sign-off.          | Wired in **Task #7** (incident-response runbook). |
 | `dsar_received`       | GDPR Art. 15 (30 days) / CCPA §1798.130 (45 days) data-subject SLA.         | `legal/dsar.ts`                     |
-| `drift_exceeded`      | Model-risk review (institutional tenants only).                             | (future emitter)                    |
+| `drift_exceeded`      | Model-risk review (institutional tenants only).                             | Wired in **Task #6** (federated learning telemetry). |
 | `subpoena_received`   | 24-hour AUSTRAC / FINRA legal-hold case + admin-only filer gate.            | `legal/subpoena.ts`                 |
-| `cross_border`        | Logs cross-region data movement; required by GDPR + CCPA SCC tracking.     | (future emitter)                    |
+| `cross_border`        | Logs cross-region data movement; required by GDPR + CCPA SCC tracking.     | Wired in **Task #6** (cross-region inference router). |
+
+The full rule book — including jurisdictional matchers — is already
+shipping in this task. The deferred emitters above are wired in
+downstream tasks because the originating platform feature does not
+exist yet (e.g. there is no marketplace handler in Task #4 to emit
+`model_listed`). Once a downstream task adds the originating handler,
+emitting the event is a one-line `emitComplianceEvent(env, { kind:
+"model_listed", … })` call — the rule + routing + audit pipeline are
+already in place and tested via fixture events in
+`packages/compliance-engine/src/evaluate.test.ts`.
 
 ## Local development
 
@@ -175,12 +192,49 @@ account.
 
 ## Out of scope for Task #4 (deliberate)
 
-- Real Polygon TX signing inside the Worker (kept on a separate relay
-  Worker per the operator's air-gapped key requirement).
-- Real DocuSign JWT-grant exchange (same — kept on a relay Worker).
-- Daily anchoring cron — operator can call `POST /admin/anchor`
-  manually or wire a Cloudflare Cron Trigger; the endpoint itself is
+- **Polygon signing inside the Worker.** `PolygonAnchor` records an
+  anchoring *intent* and returns a synthetic `0xpending…` tx hash;
+  the actual `eth_sendRawTransaction` is performed by an air-gapped
+  relay (`scripts/anchor-once.ts`) so the signing key never lives in
+  a long-lived Worker secret. This is a deliberate security trade-off
+  — the alternative (storing a hot wallet key in `wrangler secret`)
+  was rejected. The relay reconciles confirmed receipts back into
+  `audit_anchors.polygon_tx_hash` + `polygon_block` + `status =
+  'anchored'`. From the auditor's point of view the anchor is
+  verifiable as soon as the relay posts.
+- **DocuSign JWT-grant exchange.** Same model: `RealDocuSign` records
+  the envelope intent and returns a synthetic envelope id; the JWT
+  exchange + envelope create call run from an operator script with
+  the RSA private key held off-platform.
+- **PGP / S/MIME outbound mail.** Current `MailChannelsMailer` uses
+  DKIM-signed plain text. PGP encryption + S/MIME signing for
+  reviewer-facing mail is queued as a follow-up — the email body is
+  already non-sensitive (case ID + dashboard link only; no PII), so
+  DKIM is sufficient for v1. Adding PGP requires a per-reviewer key
+  rollout that the operator hasn't completed yet.
+- **Daily anchoring cron.** Operator can call `POST /admin/anchor`
+  manually or wire a Cloudflare Cron Trigger; the endpoint is
   idempotent.
-- A second, EU-pinned compliance Worker — current shape stores all
+- **A second, EU-pinned compliance Worker.** Current shape stores all
   audit rows in a single D1; a follow-up task can shard the DB by
   region without touching the rule book.
+
+## Why some emitters are wired in later tasks
+
+The rule book + engine + audit pipeline are complete in Task #4. The
+emitters that haven't been wired yet (`model_listed`,
+`subscription_created`, `data_breach`, `drift_exceeded`,
+`cross_border`) all need an *originating* feature that doesn't exist
+yet:
+
+- `model_listed` + `subscription_created` need the marketplace +
+  checkout flows from Task #5.
+- `drift_exceeded` + `cross_border` need the federated-learning
+  telemetry + cross-region inference router from Task #6.
+- `data_breach` needs the incident-response runbook from Task #7.
+
+When those tasks land, wiring the emitter is a one-line call to
+`emitComplianceEvent(env, …)`; the rule + routing + audit chain is
+already proven by the engine's fixture tests
+(`packages/compliance-engine/src/evaluate.test.ts`), which assert the
+correct case/action set is produced for each of those event kinds.

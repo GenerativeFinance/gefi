@@ -13,13 +13,14 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit",
     "test": "vitest run",
-    "sync-yaml": "tsx scripts/sync-yaml.ts"
+    "sync-yaml": "UPDATE_YAML=1 vitest run src/yaml-sync.test.ts --reporter=basic"
   },
   "dependencies": {
     "@gefi/shared-types": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240620.0",
+    "@types/node": "^25.6.0",
     "typescript": "^5.5.3",
     "vitest": "^1.6.0"
   }

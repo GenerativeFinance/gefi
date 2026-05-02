@@ -8,7 +8,7 @@
 
 import { canonicalJson } from "@gefi/compliance-engine";
 import type { CaseActionInsert, CaseInsert, RoutingDb, LawyerSeed } from "@gefi/compliance-engine";
-import { LAWYER_SEED, pickDefaultLawyer } from "@gefi/compliance-engine";
+import { AUDITOR_SEED, LAWYER_SEED, pickDefaultLawyer } from "@gefi/compliance-engine";
 import type { Jurisdiction, ReviewerRole } from "@gefi/compliance-rules";
 import type { ComplianceEventKind, ComplianceSeverity, Region } from "@gefi/shared-types";
 
@@ -166,6 +166,43 @@ export function d1RoutingDb(db: D1Database): RoutingDb {
       return pickDefaultLawyer(jurisdiction, role) ?? null;
     },
   };
+}
+
+/**
+ * Idempotent seed of `auditor_directory` from the static `AUDITOR_SEED`.
+ * Behaviour mirrors `seedLawyerDirectory`.
+ */
+export async function seedAuditorDirectory(db: D1Database): Promise<{ inserted: number; skipped: number }> {
+  let inserted = 0;
+  let skipped = 0;
+  const now = Math.floor(Date.now() / 1000);
+  for (const a of AUDITOR_SEED) {
+    // The schema only stores `sla_ack_hours` for auditors (the
+    // counter-sign window doubles as the auditor's ack SLA). Convert
+    // `slaSignDays * 24` so the on-disk units match the lawyer table.
+    const res = await db
+      .prepare(
+        `INSERT OR IGNORE INTO auditor_directory
+          (id, jurisdiction, region, display_name, firm, email, pgp_fingerprint, sla_ack_hours, active, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+      )
+      .bind(
+        a.id,
+        a.jurisdiction,
+        a.region,
+        a.displayName,
+        a.firm,
+        a.email,
+        a.pgpFingerprint ?? null,
+        a.slaSignDays * 24,
+        now,
+      )
+      .run();
+    const changes = (res.meta as { changes?: number } | undefined)?.changes ?? 0;
+    if (changes > 0) inserted += 1;
+    else skipped += 1;
+  }
+  return { inserted, skipped };
 }
 
 /**
