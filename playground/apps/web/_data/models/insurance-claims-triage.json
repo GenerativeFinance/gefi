@@ -1,0 +1,21 @@
+{
+  "slug": "insurance-claims-triage",
+  "name": "Insurance Claims Triage",
+  "summary": "Severity and fraud-risk co-model routing claims to the right adjuster queue.",
+  "category": "insurance-underwriting",
+  "subcategory": "p-and-c",
+  "developer": "GeFi Labs",
+  "riskLevel": "medium",
+  "maturity": "staging",
+  "price": 11900,
+  "rating": 4.5,
+  "ratingCount": 73,
+  "federated": true,
+  "thumbnailUrl": null,
+  "href": "/models/insurance-claims-triage/",
+  "description": null,
+  "versions": [],
+  "metrics": null,
+  "audits": [],
+  "favoritedByMe": false
+}

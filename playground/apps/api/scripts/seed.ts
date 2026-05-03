@@ -15,6 +15,8 @@
 import { CATEGORIES } from "../src/data/categories.js";
 import { FEATURED_MODELS } from "../src/data/featured-models.js";
 import { SUBCATEGORIES } from "../src/data/subcategories.js";
+import { AUDITS } from "../src/data/audits.js";
+import { METRICS } from "../src/data/metrics.js";
 
 interface MinimalD1 {
   prepare(query: string): {
@@ -79,10 +81,51 @@ export async function seed(
       .run();
   }
 
+  for (const m of METRICS) {
+    await db
+      .prepare(
+        `INSERT OR IGNORE INTO model_versions
+         (id, model_slug, version, version_label, artifact_key, sha256, metrics, created_at)
+         VALUES (?, ?, ?, ?, NULL, ?, ?, ?)`,
+      )
+      .bind(
+        `mv_${m.model_slug}_${m.version}`,
+        m.model_slug,
+        m.version,
+        m.version_label,
+        `sha256-stub-${m.model_slug}`,
+        JSON.stringify(m.metrics),
+        now,
+      )
+      .run();
+  }
+
+  for (const a of AUDITS) {
+    await db
+      .prepare(
+        `INSERT OR IGNORE INTO model_audits
+         (id, model_slug, auditor, standard, audited_at, passed, hash, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        a.id,
+        a.model_slug,
+        a.auditor,
+        a.standard,
+        a.audited_at,
+        a.passed ? 1 : 0,
+        a.hash,
+        now,
+      )
+      .run();
+  }
+
   return {
     categories: CATEGORIES.length,
     subcategories: SUBCATEGORIES.length,
     models: FEATURED_MODELS.length,
+    audits: AUDITS.length,
+    metrics: METRICS.length,
   };
 }
 
@@ -111,6 +154,18 @@ export function emitSeedSql(now = Math.floor(Date.now() / 1000)): string {
   for (const m of FEATURED_MODELS) {
     lines.push(
       `INSERT OR IGNORE INTO models (slug, name, summary, category_slug, subcategory_slug, developer, status, featured, risk_tier, maturity, price_cents, rating_avg, rating_count, trending_score, federated, thumbnail_url, created_at, updated_at) VALUES (${sqlValue(m.slug)}, ${sqlValue(m.name)}, ${sqlValue(m.summary)}, ${sqlValue(m.category_slug)}, ${sqlValue(m.subcategory_slug ?? null)}, ${sqlValue(m.developer)}, 'draft', 1, ${sqlValue(m.risk_tier)}, ${sqlValue(m.maturity)}, ${m.price_cents}, ${m.rating_avg}, ${m.rating_count}, ${m.trending_score}, ${m.federated ? 1 : 0}, ${sqlValue(m.thumbnail_url ?? null)}, ${now}, ${now});`,
+    );
+  }
+
+  for (const m of METRICS) {
+    lines.push(
+      `INSERT OR IGNORE INTO model_versions (id, model_slug, version, version_label, artifact_key, sha256, metrics, created_at) VALUES (${sqlValue("mv_" + m.model_slug + "_" + m.version)}, ${sqlValue(m.model_slug)}, ${sqlValue(m.version)}, ${sqlValue(m.version_label)}, NULL, ${sqlValue("sha256-stub-" + m.model_slug)}, ${sqlValue(JSON.stringify(m.metrics))}, ${now});`,
+    );
+  }
+
+  for (const a of AUDITS) {
+    lines.push(
+      `INSERT OR IGNORE INTO model_audits (id, model_slug, auditor, standard, audited_at, passed, hash, created_at) VALUES (${sqlValue(a.id)}, ${sqlValue(a.model_slug)}, ${sqlValue(a.auditor)}, ${sqlValue(a.standard)}, ${a.audited_at}, ${a.passed ? 1 : 0}, ${sqlValue(a.hash)}, ${now});`,
     );
   }
 

@@ -40,6 +40,8 @@ export const VALID_MATURITIES: ReadonlySet<Maturity> = new Set([
 ]);
 
 export const PAGE_SIZE = 24;
+/** Cap for `?all=1` build-time queries. Hard ceiling so a runaway client can't pull forever. */
+export const ALL_PAGE_SIZE = 1000;
 
 export interface ModelRow {
   slug: string;
@@ -197,9 +199,13 @@ export function parseListQuery(searchParams: URLSearchParams): ListModelsQuery {
       ? (maturityRaw as Maturity)
       : undefined;
 
+  const all = searchParams.get("all") === "1";
   const limitRaw = Number(searchParams.get("limit"));
-  const limit =
-    Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, PAGE_SIZE) : PAGE_SIZE;
+  const limit = all
+    ? ALL_PAGE_SIZE
+    : Number.isFinite(limitRaw) && limitRaw > 0
+      ? Math.min(limitRaw, PAGE_SIZE)
+      : PAGE_SIZE;
 
   const featuredRaw = searchParams.get("featured");
   const featured =

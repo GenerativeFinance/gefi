@@ -1,0 +1,11 @@
+---
+layout: default
+---
+<section class="not-found" aria-labelledby="nf-title">
+  <h1 id="nf-title">404 — that page is in another vault</h1>
+  <p>We couldn't find what you were looking for. Try searching the catalog instead.</p>
+  {%- include search.html id_prefix="nf-" modifier_class="global-search--hero" placeholder="Search models…" -%}
+  <p>
+    <a class="btn btn--secondary" href="{{ '/' | relative_url }}">Back to the home page</a>
+  </p>
+</section>

@@ -1,0 +1,21 @@
+{
+  "slug": "esg-news-classifier",
+  "name": "ESG News Classifier",
+  "summary": "Multi-label tagger linking news articles to issuer-level ESG controversies.",
+  "category": "esg-scoring",
+  "subcategory": "controversies",
+  "developer": "GeFi Labs",
+  "riskLevel": "low",
+  "maturity": "beta",
+  "price": 5900,
+  "rating": 4.2,
+  "ratingCount": 39,
+  "federated": false,
+  "thumbnailUrl": null,
+  "href": "/models/esg-news-classifier/",
+  "description": null,
+  "versions": [],
+  "metrics": null,
+  "audits": [],
+  "favoritedByMe": false
+}

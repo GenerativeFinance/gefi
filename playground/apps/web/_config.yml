@@ -12,6 +12,9 @@ collections:
   categories:
     output: true
     permalink: /categories/:path/
+  models:
+    output: true
+    permalink: /models/:path/
 
 defaults:
   - scope:
@@ -19,6 +22,11 @@ defaults:
       type: categories
     values:
       layout: category
+  - scope:
+      path: ""
+      type: models
+    values:
+      layout: model
 
 plugins:
   - jekyll-feed

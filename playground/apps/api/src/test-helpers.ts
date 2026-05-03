@@ -14,6 +14,12 @@ import {
   sortValueOf,
   sortDirection,
 } from "./lib/models-repo.js";
+import type {
+  AuditRow,
+  DetailRepository,
+  ModelVersionRow,
+  ReviewRow,
+} from "./lib/detail-repo.js";
 
 export class StubKV implements Pick<KVNamespace, "get" | "put" | "delete"> {
   store = new Map<string, string>();
@@ -86,6 +92,8 @@ export class StubD1 {
   categories: Record<string, { slug: string; name: string; description: string; icon: string; sort_order: number }> = {};
   subcategories: Record<string, { slug: string; category_slug: string; name: string; sort_order: number }> = {};
   models: Record<string, { slug: string; name: string; summary: string; category_slug: string; subcategory_slug: string | null; developer: string; status: string; featured: number; risk_tier: string; maturity: string; price_cents: number; rating_avg: number; rating_count: number; trending_score: number; federated: number; thumbnail_url: string | null; created_at: number; updated_at: number }> = {};
+  model_versions: Record<string, { id: string; model_slug: string; version: string; version_label: string | null; sha256: string | null; metrics: string | null; created_at: number }> = {};
+  model_audits: Record<string, { id: string; model_slug: string; auditor: string; standard: string; audited_at: number; passed: number; hash: string; created_at: number }> = {};
 
   prepare(query: string) {
     const q = query.replace(/\s+/g, " ").trim();
@@ -209,6 +217,39 @@ export class StubD1 {
             }
             return { success: true };
           }
+          if (q.startsWith("INSERT OR IGNORE INTO model_versions")) {
+            const [id, model_slug, version, version_label, sha256, metrics, created_at] =
+              vals as [string, string, string, string | null, string | null, string | null, number];
+            if (!this.model_versions[id]) {
+              this.model_versions[id] = {
+                id,
+                model_slug,
+                version,
+                version_label,
+                sha256,
+                metrics,
+                created_at,
+              };
+            }
+            return { success: true };
+          }
+          if (q.startsWith("INSERT OR IGNORE INTO model_audits")) {
+            const [id, model_slug, auditor, standard, audited_at, passed, hash, created_at] =
+              vals as [string, string, string, string, number, number, string, number];
+            if (!this.model_audits[id]) {
+              this.model_audits[id] = {
+                id,
+                model_slug,
+                auditor,
+                standard,
+                audited_at,
+                passed,
+                hash,
+                created_at,
+              };
+            }
+            return { success: true };
+          }
           throw new Error(`StubD1: unsupported run() query: ${q}`);
         },
       }),
@@ -316,6 +357,106 @@ export class InMemoryModelsRepository implements ModelsRepository {
     }
 
     return filtered.slice(0, query.limit + 1);
+  }
+}
+
+/**
+ * In-memory `DetailRepository` for the model-detail / favorites / reviews
+ * route tests. Keeps the same orchestration semantics as `D1DetailRepository`
+ * so the route layer is exercised identically.
+ */
+export class InMemoryDetailRepository implements DetailRepository {
+  models: ModelRow[] = [];
+  descriptions = new Map<string, string>();
+  versions: ModelVersionRow[] = [];
+  audits: AuditRow[] = [];
+  reviews: ReviewRow[] = [];
+  favorites = new Set<string>(); // `${userId}|${slug}`
+
+  constructor(seed?: { models?: ModelRow[]; versions?: ModelVersionRow[]; audits?: AuditRow[] }) {
+    if (seed?.models) this.models = seed.models;
+    if (seed?.versions) this.versions = seed.versions;
+    if (seed?.audits) this.audits = seed.audits;
+  }
+
+  async getModelRow(slug: string): Promise<ModelRow | null> {
+    return this.models.find((m) => m.slug === slug) ?? null;
+  }
+  async getModelDescription(slug: string): Promise<string | null> {
+    return this.descriptions.get(slug) ?? null;
+  }
+  async listVersions(slug: string): Promise<ModelVersionRow[]> {
+    return this.versions
+      .filter((v) => v.model_slug === slug)
+      .slice()
+      .sort((a, b) => b.created_at - a.created_at);
+  }
+  async listAudits(slug: string): Promise<AuditRow[]> {
+    return this.audits
+      .filter((a) => a.model_slug === slug)
+      .slice()
+      .sort((a, b) => b.audited_at - a.audited_at);
+  }
+  async listReviews(slug: string, cursor: number | null, limit: number): Promise<ReviewRow[]> {
+    let list = this.reviews
+      .filter((r) => r.model_slug === slug)
+      .slice()
+      .sort((a, b) => b.created_at - a.created_at || (b.id < a.id ? -1 : b.id > a.id ? 1 : 0));
+    if (cursor !== null) list = list.filter((r) => r.created_at < cursor);
+    return list.slice(0, limit);
+  }
+  async upsertReview(args: {
+    slug: string;
+    userId: string;
+    stars: number;
+    comment: string;
+    now: number;
+    newId: () => string;
+  }): Promise<{ review: ReviewRow; ratingAvg: number; ratingCount: number }> {
+    const existing = this.reviews.find(
+      (r) => r.model_slug === args.slug && r.user_id === args.userId,
+    );
+    let review: ReviewRow;
+    if (existing) {
+      existing.stars = args.stars;
+      existing.comment = args.comment;
+      existing.updated_at = args.now;
+      review = existing;
+    } else {
+      review = {
+        id: args.newId(),
+        model_slug: args.slug,
+        user_id: args.userId,
+        stars: args.stars,
+        comment: args.comment,
+        created_at: args.now,
+        updated_at: args.now,
+      };
+      this.reviews.push(review);
+    }
+    const all = this.reviews.filter((r) => r.model_slug === args.slug);
+    const ratingCount = all.length;
+    const avg = ratingCount === 0 ? 0 : all.reduce((s, r) => s + r.stars, 0) / ratingCount;
+    const ratingAvg = Math.round((avg + Number.EPSILON) * 10) / 10;
+    const m = this.models.find((mm) => mm.slug === args.slug);
+    if (m) {
+      m.rating_avg = ratingAvg;
+      m.rating_count = ratingCount;
+      m.updated_at = args.now;
+    }
+    return { review, ratingAvg, ratingCount };
+  }
+  async isFavorited(userId: string, slug: string): Promise<boolean> {
+    return this.favorites.has(`${userId}|${slug}`);
+  }
+  async toggleFavorite(userId: string, slug: string, _now: number): Promise<boolean> {
+    const key = `${userId}|${slug}`;
+    if (this.favorites.has(key)) {
+      this.favorites.delete(key);
+      return false;
+    }
+    this.favorites.add(key);
+    return true;
   }
 }
 

@@ -1,0 +1,21 @@
+{
+  "slug": "earnings-surprise-predictor",
+  "name": "Earnings Surprise Predictor",
+  "summary": "Pre-print estimate of EPS surprise direction from filings + alt-data.",
+  "category": "time-series",
+  "subcategory": "multivariate",
+  "developer": "GeFi Labs",
+  "riskLevel": "medium",
+  "maturity": "experimental",
+  "price": 0,
+  "rating": 4,
+  "ratingCount": 18,
+  "federated": false,
+  "thumbnailUrl": null,
+  "href": "/models/earnings-surprise-predictor/",
+  "description": null,
+  "versions": [],
+  "metrics": null,
+  "audits": [],
+  "favoritedByMe": false
+}

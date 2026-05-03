@@ -10,6 +10,7 @@ import type { Env, HonoVariables } from "./types.js";
 import { authRoutes } from "./routes/auth.js";
 import { healthHandler } from "./routes/health.js";
 import { modelsRoutes } from "./routes/models.js";
+import { detailRoutes, favoritesRoutes } from "./routes/detail.js";
 import { scheduled } from "./scheduled.js";
 import { Round } from "./durable-objects/Round.js";
 
@@ -34,9 +35,18 @@ app.use("/api/models", corsHeaders);
 app.use("/api/models/*", corsHeaders);
 app.options("/api/models", (c) => c.body(null, 204));
 app.options("/api/models/*", (c) => c.body(null, 204));
+// /api/favorites/* is hit cross-origin from the Jekyll site too — same
+// CORS contract as catalog/detail so the watchlist heart works in browsers.
+app.use("/api/favorites/*", corsHeaders);
+app.options("/api/favorites/*", (c) => c.body(null, 204));
 
 app.route("/api/auth", authRoutes());
+// IMPORTANT: detail must mount BEFORE the catalog browse route — Hono walks
+// routes in registration order, and we want `/api/models/:slug` to win over
+// the wildcard catalog handler at the same prefix.
+app.route("/api/models", detailRoutes());
 app.route("/api/models", modelsRoutes());
+app.route("/api/favorites", favoritesRoutes());
 
 app.post("/api/subscribe", async (c) => {
   const body = await c.req.parseBody();

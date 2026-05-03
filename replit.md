@@ -570,3 +570,58 @@ Brand tokens (different palette from the marketing site — dark surface):
 `playground/packages/ui/src/tokens.ts` then run `pnpm -C playground build:tokens`
 to regenerate `apps/web/assets/css/tokens.css` and
 `apps/api/src/generated/tokens.css.ts` (changes one token → both apps repaint).
+
+## Phase 3 — Model detail page (T#12)
+
+Per-model deep page wired end-to-end across the API + Jekyll site:
+
+- **Schema** (`migrations/0003_detail.sql`): extends `model_versions` with
+  `version`/`version_label`/`metrics` JSON; new `model_audits`, `reviews`
+  (UNIQUE per `user_id+model_slug`, `stars` 1–5, `comment` ≤ 200 chars), and
+  `favorites` (composite PK). Idempotent — re-runs are no-ops.
+- **Seed**: `data/audits.ts` (10 audits, one intentional FX-vol fail to
+  exercise the failure UI) + `data/metrics.ts` (deterministic equity/accuracy
+  curves + p50/p95 latency per featured model). `seed.ts` and `emitSeedSql`
+  insert versions, audits, and the existing models in one batch; `StubD1`
+  understands the new INSERT statements so the seed test stays unit-pure.
+- **API** (`routes/detail.ts`, `lib/detail-repo.ts`):
+  - `GET /api/models/:slug` returns the full DTO (model + versions + latest
+    metrics + audits + `favoritedByMe`). Mounted **before** the catalog
+    route at the same `/api/models` prefix so `:slug` wins.
+  - `GET /api/models?all=1` lifts the page cap (new `ALL_PAGE_SIZE` 1000)
+    so the Jekyll generator can fetch every featured model at build time.
+  - `POST /api/models/:slug/verify` returns `{verified:true,method:"sha256-stub"}`
+    or `{verified:false,reason:"…"}` when `?tampered=1`.
+  - `POST /api/models/:slug/reviews` (auth) upserts one row per
+    `(user, slug)` and recomputes `rating_avg`/`rating_count` in the same
+    transaction. `GET …/reviews` is cursor-paginated (newest first, page 20).
+  - `POST /api/favorites/toggle` (auth) flips the heart state.
+  - `D1DetailRepository` + `InMemoryDetailRepository` keep the route layer
+    swappable; 13 new vitest cases cover validation, auth gating, upsert,
+    pagination, tampered-verify, and optimistic favorite flow.
+- **Jekyll**: new `models` collection (`/models/:path/`), `_layouts/model.html`
+  with 6 ARIA-1.2 tabs (Overview / Demo / Performance / Pricing / Compliance
+  / Reviews), sticky right rail (price + Try in Playground + Subscribe stub +
+  Share + watchlist heart), embedded hydration JSON (`<script id="model-data">`),
+  and `_layouts/404.html` + `404.html` (search input + "back home" CTA).
+  `generate-data.ts` now also emits `_models/<slug>.md` + `_data/models/<slug>.json`
+  for every featured model, so the page renders SSR-first and JS hydrates.
+- **Client JS** (loaded only when `page.layout == "model"`):
+  - `model-tabs.js` — ARIA roving-tab keyboard navigation (←/→/Home/End),
+    URL hash routing (`#tab=…`), fires `model:tab-shown` for lazy panels.
+  - `model-actions.js` — Web Share API w/ clipboard fallback; subscribe
+    `<dialog>` stub; **optimistic** favorite toggle with rollback on
+    non-2xx (auth-required surfaces a "Sign in to save" hint).
+  - `model-perf.js` — uPlot ~40 KB lazy-loaded from CDN the first time
+    the Performance tab opens; renders equity + accuracy line charts and
+    p50/p95 latency cards; empty-state for missing series.
+  - `model-compliance.js` — renders audits list + Verify-ZKP button with
+    a "Simulate tampered hash" checkbox that flips the demo to failure.
+  - `model-reviews.js` — star input as roving radio group, 200-char live
+    counter, optimistic submit that patches the rail's rating + count and
+    prepends the new review row.
+
+Test status: **53 API vitests** green (was 40 — +13 detail/favorites/verify/
+reviews), root `pnpm -r typecheck` clean, ESLint clean, `pnpm -C apps/api run
+build` (wrangler dry-run) clean, `pnpm -C apps/web run build` (Jekyll) emits
+10 `/models/<slug>/index.html` pages + `/404.html`.

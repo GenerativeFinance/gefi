@@ -10,11 +10,21 @@ describe("seed", () => {
     const counts = await seed(db);
     expect(counts.categories).toBe(14);
     expect(counts.models).toBe(10);
+    expect(counts.audits).toBe(10);
+    expect(counts.metrics).toBe(10);
     expect(Object.keys(db.categories)).toHaveLength(14);
     expect(Object.keys(db.models)).toHaveLength(10);
+    expect(Object.keys(db.model_versions)).toHaveLength(10);
+    expect(Object.keys(db.model_audits)).toHaveLength(10);
     expect(db.categories["sentiment-analysis"]?.name).toBe("Sentiment Analysis");
     expect(db.models["sentiment-from-filings"]?.featured).toBe(1);
     expect(db.models["sentiment-from-filings"]?.status).toBe("draft");
+    // Versions carry a JSON-encoded metrics blob.
+    const v = Object.values(db.model_versions).find(
+      (vv) => vv.model_slug === "sentiment-from-filings",
+    );
+    expect(v).toBeDefined();
+    expect(v!.metrics).toMatch(/equityCurve/);
   });
 
   it("is idempotent — re-running does not duplicate", async () => {
@@ -39,6 +49,8 @@ describe("seed", () => {
     expect(sql).toContain("BEGIN;");
     expect(sql).toContain("INSERT OR IGNORE INTO categories");
     expect(sql).toContain("INSERT OR IGNORE INTO models");
+    expect(sql).toContain("INSERT OR IGNORE INTO model_versions");
+    expect(sql).toContain("INSERT OR IGNORE INTO model_audits");
     expect(sql).toContain("'sentiment-from-filings'");
     expect(sql).toContain("COMMIT;");
   });
