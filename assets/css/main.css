@@ -1090,6 +1090,22 @@ p  { margin: 0 0 var(--space-4); }
   font-size: 0.9375rem;
 }
 .auth-providers { display: flex; flex-direction: column; gap: 10px; }
+.auth-prelaunch {
+  display: flex; flex-direction: column; gap: var(--space-4);
+  margin: var(--space-2) 0 var(--space-3);
+}
+.auth-prelaunch__note {
+  margin: 0;
+  padding: var(--space-4);
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+.auth-prelaunch .auth-btn { text-decoration: none; }
+.auth-prelaunch .auth-btn:hover { text-decoration: none; }
 .auth-btn {
   display: inline-flex; align-items: center; justify-content: center;
   gap: 10px;

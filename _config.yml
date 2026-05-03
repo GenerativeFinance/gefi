@@ -48,7 +48,15 @@ app:
   signup_url: "/register/"
   dashboard_url: "https://app.gefi.io/"
   auth_api_base: "https://auth.gefi.io"
-  fallback_url: "/contact/?topic=sales"
+  fallback_url: "/contact/?topic=early-access"
+  # Flip to `true` once the gefi-auth Cloudflare Worker (D1 + KV +
+  # WebAuthn + GitHub/Google OAuth) is deployed at `auth.gefi.io`.
+  # While `false`, /login/ and /register/ render an early-access state
+  # that routes visitors to `fallback_url` instead of attempting a
+  # WebAuthn/OAuth handshake against an endpoint that doesn't exist yet.
+  auth_ready: false
+  early_access_note: "Sign-in opens soon. Join the early-access list and we'll email you the moment passkeys + GitHub/Google sign-in go live."
+  early_access_cta: "Join the early-access list"
 
 nav:
   - { title: "Models",     url: "/models/" }

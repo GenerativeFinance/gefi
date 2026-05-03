@@ -16,6 +16,9 @@
         <p class="auth-sub">{{ page.subheading }}</p>
       {%- endif -%}
 
+      {%- assign auth_ready = site.app.auth_ready -%}
+
+      {%- if auth_ready -%}
       <div class="auth-providers" data-auth-mode="{{ page.mode }}">
         <button type="button" class="auth-btn auth-btn--primary" data-provider="passkey">
           <svg class="auth-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -45,6 +48,19 @@
       </div>
 
       <p class="auth-status" data-auth-status role="status" aria-live="polite"></p>
+      {%- else -%}
+      <div class="auth-prelaunch" role="group" aria-labelledby="auth-prelaunch-note">
+        <p id="auth-prelaunch-note" class="auth-prelaunch__note">
+          {{ site.app.early_access_note }}
+        </p>
+        <a class="auth-btn auth-btn--primary" href="{{ site.app.fallback_url | relative_url }}">
+          <svg class="auth-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5Zm2 .4v.2l7 4.4 7-4.4v-.2H5Zm14 2.6-6.47 4.07a1 1 0 0 1-1.06 0L5 8v11h14V8Z"/>
+          </svg>
+          <span>{{ site.app.early_access_cta }}</span>
+        </a>
+      </div>
+      {%- endif -%}
 
       <p class="auth-switch">
         {%- if page.mode == 'register' -%}

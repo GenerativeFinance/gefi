@@ -30,7 +30,7 @@
 
   function startOAuth(provider) {
     if (!apiBase) {
-      setStatus("Sign-in service is being deployed. Please try again shortly.", "error");
+      setStatus("Sign-in opens soon. Join the early-access list to be notified.", "info");
       return;
     }
     var url = apiBase + "/auth/" + provider + "/start"
@@ -91,7 +91,7 @@
   function startPasskey(btn) {
     if (!checkPasskeySupport()) return;
     if (!apiBase) {
-      setStatus("Sign-in service is being deployed. Please try again shortly.", "error");
+      setStatus("Sign-in opens soon. Join the early-access list to be notified.", "info");
       return;
     }
     setBusy(btn, true);
@@ -125,7 +125,7 @@
       .catch(function (err) {
         var msg = err && err.name === "NotAllowedError"
           ? "Passkey prompt was dismissed."
-          : "Sign-in service is being deployed. Please try again shortly.";
+          : "Couldn't reach the sign-in service. Please try again in a moment.";
         setStatus(msg, "error");
         setBusy(btn, false);
       });
