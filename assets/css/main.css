@@ -740,6 +740,18 @@ p  { margin: 0 0 var(--space-4); }
   font-size: 0.875rem;
 }
 .model-card.is-hidden { display: none; }
+.post-card.is-hidden { display: none; }
+
+.tag-filter { margin: 0 0 var(--space-5); }
+.tag-filter__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+.tag-filter__count { margin: 0 0 var(--space-4); }
+.tag-filter__empty { margin: var(--space-5) 0; }
 
 /* Models filter bar */
 .model-filter {

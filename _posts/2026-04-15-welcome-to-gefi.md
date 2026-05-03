@@ -2,6 +2,7 @@
 title: "Welcome to GeFi"
 date: 2026-04-15
 author: The GeFi team
+tags: [Company, Launch]
 lead: Why we're building a marketplace for AI financial models — and what's live, what's next, and what we're still arguing about.
 ---
 
