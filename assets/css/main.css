@@ -107,9 +107,16 @@ p  { margin: 0 0 var(--space-4); }
 /* Header */
 .site-header {
   position: sticky; top: 0; z-index: 50;
-  background: rgba(250, 251, 255, 0.85);
-  backdrop-filter: saturate(160%) blur(8px);
-  border-bottom: 1px solid var(--color-border);
+  background: rgba(250, 251, 255, 0.72);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+.site-header.scrolled {
+  background: rgba(250, 251, 255, 0.92);
+  border-bottom-color: var(--color-border);
+  box-shadow: 0 1px 0 rgba(11, 14, 26, 0.04), 0 6px 18px rgba(11, 14, 26, 0.04);
 }
 .site-header__inner {
   display: flex; align-items: center; justify-content: space-between;
@@ -128,7 +135,13 @@ p  { margin: 0 0 var(--space-4); }
 
 .nav-toggle {
   display: none; background: none; border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm); padding: 6px 10px; font-size: 1.125rem; cursor: pointer;
+  border-radius: var(--radius-sm); padding: 8px 10px; cursor: pointer;
+  align-items: center; justify-content: center;
+}
+.nav-toggle__bars { display: inline-flex; flex-direction: column; gap: 4px; width: 20px; }
+.nav-toggle__bars span {
+  display: block; height: 2px; background: var(--color-text); border-radius: 2px;
+  transition: transform 160ms ease, opacity 120ms ease;
 }
 /* If JS is unavailable we never want a hidden, un-toggleable menu. */
 .no-js .nav-toggle { display: none !important; }
@@ -137,14 +150,26 @@ p  { margin: 0 0 var(--space-4); }
   /* JS path: show the toggle, hide the nav until .is-open */
   .js .nav-toggle { display: inline-flex; }
   .js .site-nav {
-    display: none; position: absolute; top: 100%; left: 0; right: 0;
-    flex-direction: column; align-items: stretch; gap: var(--space-3);
-    background: var(--color-surface); border-bottom: 1px solid var(--color-border);
-    padding: var(--space-4) var(--space-5);
+    display: flex; position: fixed; top: 0; right: 0; bottom: 0;
+    width: 100%; max-width: 100%;
+    flex-direction: column; align-items: stretch; gap: var(--space-5);
+    background: var(--color-surface);
+    padding: calc(var(--space-7) + var(--space-3)) var(--space-5) var(--space-7);
+    transform: translateX(100%);
+    transition: transform 220ms ease;
+    z-index: 60;
+    overflow-y: auto;
+    box-shadow: -16px 0 40px rgba(11, 14, 26, 0.12);
   }
-  .js .site-nav.is-open { display: flex; }
-  .js .site-nav ul { flex-direction: column; gap: var(--space-3); }
-  .js .site-nav__cta { flex-direction: column; }
+  .js .site-nav.is-open { transform: translateX(0); }
+  .js .site-nav ul { flex-direction: column; gap: var(--space-4); }
+  .js .site-nav a { font-size: 1.125rem; }
+  .js .site-nav__cta { flex-direction: column; gap: var(--space-3); margin-top: auto; }
+  .js .site-nav__cta .btn { width: 100%; }
+  .js .nav-toggle[aria-expanded="true"] { position: relative; z-index: 70; }
+  .js .nav-toggle[aria-expanded="true"] .nav-toggle__bars span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .js .nav-toggle[aria-expanded="true"] .nav-toggle__bars span:nth-child(2) { opacity: 0; }
+  .js .nav-toggle[aria-expanded="true"] .nav-toggle__bars span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 
   /* No-JS fallback: nav stacks under the brand and is always visible. */
   .no-js .site-header__inner { flex-wrap: wrap; }
@@ -483,20 +508,57 @@ p  { margin: 0 0 var(--space-4); }
 .site-footer { background: var(--color-surface); border-top: 1px solid var(--color-border); padding: var(--space-8) 0 var(--space-5); }
 .site-footer__grid {
   display: grid; gap: var(--space-7);
-  grid-template-columns: 1.5fr repeat(3, 1fr);
+  grid-template-columns: 1.6fr repeat(4, 1fr);
 }
 .site-footer h2 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-muted); margin: 0 0 var(--space-3); }
+.site-footer__subhead { margin-top: var(--space-5); }
 .site-footer ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .site-footer a { color: var(--color-text); }
+.site-footer__brand .badge-row { margin-top: var(--space-3); }
+
+.site-footer__contacts li {
+  display: flex; flex-direction: column; gap: 0;
+}
+.site-footer__contact-label {
+  font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--color-muted); font-weight: 600;
+}
+.site-footer__contacts a { font-size: 0.9375rem; }
+
+.site-footer__social a {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  color: var(--color-text); text-decoration: none;
+  padding: 4px 0;
+}
+.site-footer__social a:hover { color: var(--color-brand-strong); text-decoration: none; }
+.site-footer__icon {
+  flex: 0 0 20px;
+  color: var(--color-muted);
+  transition: color 120ms ease;
+}
+.site-footer__social a:hover .site-footer__icon { color: var(--color-brand-strong); }
+
 .site-footer__legal {
-  display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: space-between;
+  display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); align-items: center;
+  justify-content: space-between;
   margin-top: var(--space-7); padding-top: var(--space-4);
   border-top: 1px solid var(--color-border); color: var(--color-muted);
 }
-@media (max-width: 880px) {
-  .site-footer__grid { grid-template-columns: 1fr 1fr; }
+.site-footer__legal-links {
+  display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); list-style: none; padding: 0; margin: 0;
 }
-@media (max-width: 540px) {
+.site-footer__legal-links a { color: var(--color-muted); font-size: 0.875rem; }
+.site-footer__legal-links a:hover { color: var(--color-text); }
+
+@media (max-width: 1024px) {
+  .site-footer__grid { grid-template-columns: 1fr 1fr 1fr; }
+  .site-footer__brand { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .site-footer__grid { grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+  .site-footer__brand { grid-column: 1 / -1; }
+}
+@media (max-width: 420px) {
   .site-footer__grid { grid-template-columns: 1fr; }
 }
 

@@ -4,16 +4,18 @@
   {%- assign signin_url = site.app.fallback_url | default: '/contact/' -%}
   {%- assign signup_url = site.app.fallback_url | default: '/contact/' -%}
 {%- endunless -%}
-<header class="site-header" role="banner">
+<header class="site-header" role="banner" data-site-header>
   <div class="container site-header__inner">
     <a class="site-header__brand" href="/">
       <img src="{{ site.logo | relative_url }}" alt="" width="28" height="28" />
       <span>{{ site.title }}</span>
     </a>
 
-    <button class="nav-toggle" type="button" aria-controls="primary-nav" aria-expanded="false" data-nav-toggle>
+    <button class="nav-toggle" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="Toggle menu" data-nav-toggle>
       <span class="sr-only">Toggle menu</span>
-      <span aria-hidden="true">&#9776;</span>
+      <span class="nav-toggle__bars" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
     </button>
 
     <nav id="primary-nav" class="site-nav" aria-label="Primary">
@@ -34,3 +36,17 @@
     </nav>
   </div>
 </header>
+<script>
+  // Tiny inline script — toggles `.scrolled` on the sticky header so a
+  // bottom border / shadow only appears once the user has scrolled.
+  (function () {
+    var h = document.querySelector("[data-site-header]");
+    if (!h) return;
+    var update = function () {
+      if (window.scrollY > 4) h.classList.add("scrolled");
+      else h.classList.remove("scrolled");
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+  })();
+</script>

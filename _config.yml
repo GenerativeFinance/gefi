@@ -80,6 +80,28 @@ footer_nav:
     - { title: "Status",             url: "https://status.gefi.io" }
     - { title: "Privacy",            url: "/legal/privacy/" }
     - { title: "Terms",              url: "/legal/terms/" }
+    - { title: "Cookie Policy",      url: "/legal/cookies/" }
+    - { title: "DPA",                url: "/legal/dpa/" }
+  legal:
+    - { title: "Privacy",       url: "/legal/privacy/" }
+    - { title: "Terms",         url: "/legal/terms/" }
+    - { title: "Cookie Policy", url: "/legal/cookies/" }
+    - { title: "DPA",           url: "/legal/dpa/" }
+  contacts:
+    - { label: "General",  email: "hello@gefi.io" }
+    - { label: "Sales",    email: "sales@gefi.io" }
+    - { label: "Legal",    email: "legal@gefi.io" }
+    - { label: "Privacy",  email: "privacy@gefi.io" }
+    - { label: "Security", email: "security@gefi.io" }
+
+# Social / community channels surfaced in the footer "Connect" column.
+# Update the placeholder URLs (discord, linkedin) once the operator has
+# the real invite / company page links.
+social:
+  - { name: "X",        handle: "@GeeFiOfficial",   url: "https://x.com/GeeFiOfficial",  icon: "twitter" }
+  - { name: "GitHub",   handle: "gefi-io",          url: "https://github.com/gefi-io",   icon: "github" }
+  - { name: "Discord",  handle: "Join the server", url: "#discord",                      icon: "discord" }
+  - { name: "LinkedIn", handle: "GeFi",             url: "#linkedin",                    icon: "linkedin" }
 
 compliance_badges:
   - { label: "SOC 2 Type II (in progress)" }
