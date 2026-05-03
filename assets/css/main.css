@@ -882,6 +882,12 @@ p  { margin: 0 0 var(--space-4); }
 .site-footer h2 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-muted); margin: 0 0 var(--space-3); }
 .site-footer__subhead { margin-top: var(--space-5); }
 .site-footer ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.site-footer .badge-row,
+.site-footer ul.site-footer__social,
+.site-footer ul.site-footer__legal-links {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
 .site-footer a { color: var(--color-text); }
 .site-footer__brand .badge-row { margin-top: var(--space-3); }
 .site-footer__logo { display: block; height: auto; max-width: 100%; }
