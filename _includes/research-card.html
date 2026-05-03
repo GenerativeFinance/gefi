@@ -1,10 +1,27 @@
-<a class="research-card" href="{{ include.research.url }}">
-  <p class="eyebrow">{{ include.research.topic | default: "Research" }}</p>
-  <h3>{{ include.research.title }}</h3>
-  {%- if include.research.lead -%}
-    <p class="muted">{{ include.research.lead }}</p>
-  {%- endif -%}
-  <footer>
+{%- assign r = include.research -%}
+{%- if r.content -%}
+  {%- assign words = r.content | strip_html | number_of_words -%}
+  {%- assign read_time = words | divided_by: 200 -%}
+  {%- if read_time < 1 -%}{%- assign read_time = 1 -%}{%- endif -%}
+{%- else -%}
+  {%- assign read_time = 1 -%}
+{%- endif -%}
+{%- if r.lead -%}
+  {%- assign excerpt_text = r.lead -%}
+{%- else -%}
+  {%- assign excerpt_text = r.content | strip_html | strip_newlines | truncate: 160 -%}
+{%- endif -%}
+<a class="post-card" href="{{ r.url | relative_url }}">
+  <p class="eyebrow">
+    <span class="badge badge--compliance">Research</span>
+    {%- if r.date -%}
+      &middot; <time datetime="{{ r.date | date_to_xmlschema }}">{{ r.date | date: "%b %-d, %Y" }}</time>
+    {%- endif -%}
+  </p>
+  <h3>{{ r.title }}</h3>
+  <p class="muted">{{ excerpt_text }}</p>
+  <footer class="post-card__footer">
+    <span class="muted small">{{ read_time }} min read</span>
     <span class="muted small">Read &rarr;</span>
   </footer>
 </a>

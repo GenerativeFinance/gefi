@@ -1,15 +1,30 @@
-<ul class="blog-list" role="list">
-  {%- for post in include.posts -%}
-    <li class="blog-item">
+{%- assign sorted = include.posts | sort: "date" | reverse -%}
+<div class="card-grid card-grid--posts">
+  {%- for post in sorted -%}
+    {%- assign tag = include.tag | default: "" -%}
+    {%- if post.content -%}
+      {%- assign words = post.content | strip_html | number_of_words -%}
+      {%- assign read_time = words | divided_by: 200 -%}
+      {%- if read_time < 1 -%}{%- assign read_time = 1 -%}{%- endif -%}
+    {%- else -%}
+      {%- assign read_time = 1 -%}
+    {%- endif -%}
+    {%- if post.lead -%}
+      {%- assign excerpt_text = post.lead -%}
+    {%- else -%}
+      {%- assign excerpt_text = post.content | strip_html | strip_newlines | truncate: 160 -%}
+    {%- endif -%}
+    <a class="post-card" href="{{ post.url | relative_url }}">
       <p class="eyebrow">
+        {%- if tag != "" -%}{{ tag }} &middot; {% endif -%}
         <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %-d, %Y" }}</time>
       </p>
-      <h3><a href="{{ post.url }}">{{ post.title }}</a></h3>
-      {%- if post.lead -%}
-        <p class="muted">{{ post.lead }}</p>
-      {%- elsif post.excerpt -%}
-        <p class="muted">{{ post.excerpt | strip_html | truncate: 180 }}</p>
-      {%- endif -%}
-    </li>
+      <h3>{{ post.title }}</h3>
+      <p class="muted">{{ excerpt_text }}</p>
+      <footer class="post-card__footer">
+        <span class="muted small">{{ read_time }} min read</span>
+        <span class="muted small">Read &rarr;</span>
+      </footer>
+    </a>
   {%- endfor -%}
-</ul>
+</div>

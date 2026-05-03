@@ -1,19 +1,32 @@
 ---
 layout: default
 ---
-<article class="container narrow post">
+{%- assign words = content | strip_html | number_of_words -%}
+{%- assign read_time = words | divided_by: 200 -%}
+{%- if read_time < 1 -%}{%- assign read_time = 1 -%}{%- endif -%}
+{%- assign post_url = page.url | absolute_url -%}
+{%- assign share_text = page.title | uri_escape -%}
+{%- assign share_link = post_url | uri_escape -%}
+{%- assign byline = page.author | default: site.author.name -%}
+
+<div class="reading-progress" data-reading-progress aria-hidden="true">
+  <span class="reading-progress__bar" data-reading-progress-bar></span>
+</div>
+
+<article class="container narrow post" data-reading-progress-target>
   <p class="eyebrow">
     <a href="/blog/">Blog</a> &middot;
     <time datetime="{{ page.date | date_to_xmlschema }}">
       {{ page.date | date: "%B %-d, %Y" }}
     </time>
+    &middot; {{ read_time }} min read
   </p>
   <h1>{{ page.title }}</h1>
   {%- if page.lead -%}
     <p class="lead">{{ page.lead }}</p>
   {%- endif -%}
-  {%- if page.author -%}
-    <p class="byline">By {{ page.author }}</p>
+  {%- if byline -%}
+    <p class="byline">By {{ byline }}</p>
   {%- endif -%}
 
   <div class="prose">
@@ -21,7 +34,14 @@ layout: default
   </div>
 
   <hr />
-  <p>
+  <div class="post-share">
+    <a class="btn btn-ghost"
+       href="https://twitter.com/intent/tweet?text={{ share_text }}&url={{ share_link }}"
+       target="_blank" rel="noopener noreferrer">
+      Share on X
+    </a>
     <a class="btn btn-ghost" href="/blog/">&larr; Back to all posts</a>
-  </p>
+  </div>
 </article>
+
+<script src="{{ '/assets/js/reading-progress.js' | relative_url }}" defer></script>

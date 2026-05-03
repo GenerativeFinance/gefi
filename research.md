@@ -6,14 +6,14 @@ lead: Working notes on federated learning for finance, model evaluation, audit i
 permalink: /research/
 ---
 
-<div class="card-grid" style="margin-top: var(--space-6);">
-  {% assign research = site.research | sort: "date" | reverse %}
+{% if site.research.size > 0 %}
+{%- assign research = site.research | sort: "date" | reverse -%}
+<div class="card-grid card-grid--posts">
   {% for r in research %}
     {% include research-card.html research=r %}
   {% endfor %}
 </div>
-
-{% if site.research.size == 0 %}
+{% else %}
   <p class="muted">First research notes go live alongside the marketplace launch.</p>
 {% endif %}
 

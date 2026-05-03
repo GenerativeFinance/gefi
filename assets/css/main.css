@@ -538,6 +538,112 @@ p  { margin: 0 0 var(--space-4); }
 .blog-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: var(--space-5); }
 .blog-item h3 { margin: 0; }
 
+/* Post / research cards (listing pages) */
+.card-grid--posts { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.post-card {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: var(--space-5);
+  color: var(--color-text); text-decoration: none;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+.post-card:hover {
+  transform: translateY(-2px); box-shadow: var(--shadow-md);
+  border-color: var(--color-brand); text-decoration: none;
+}
+.post-card h3 { margin: 0; }
+.post-card .eyebrow { margin-bottom: var(--space-2); display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.post-card__footer {
+  margin-top: auto;
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: var(--space-3);
+}
+
+/* Model card extras */
+.badge-row--tight { margin: 0; gap: 4px; }
+.badge-row--tight .badge { padding: 2px 8px; font-size: 0.6875rem; }
+.model-card__metric {
+  margin: 0;
+  display: flex; align-items: baseline; gap: 6px;
+  font-size: 0.875rem;
+}
+.model-card__cta {
+  margin-top: var(--space-2);
+  font-weight: 600; color: var(--color-brand-strong);
+  font-size: 0.875rem;
+}
+.model-card.is-hidden { display: none; }
+
+/* Models filter bar */
+.model-filter {
+  display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5);
+  align-items: center;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: var(--space-4) var(--space-5);
+  margin: var(--space-6) 0 var(--space-5);
+}
+.model-filter__group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.model-filter__label {
+  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
+  font-weight: 600; color: var(--color-muted); margin-right: var(--space-2);
+}
+.filter-chip {
+  background: transparent; border: 1px solid var(--color-border);
+  border-radius: 999px; padding: 4px 12px;
+  font-size: 0.8125rem; font-weight: 500; color: var(--color-text);
+  cursor: pointer; font-family: inherit;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.filter-chip:hover { border-color: var(--color-brand); }
+.filter-chip.is-active {
+  background: var(--color-brand); color: #fff; border-color: var(--color-brand);
+}
+.model-filter__toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.875rem; font-weight: 500; cursor: pointer;
+}
+.model-filter__count {
+  margin: 0 0 0 auto; color: var(--color-muted); font-size: 0.8125rem;
+}
+.model-filter__empty { margin: var(--space-5) 0; }
+
+/* Model detail two-column body */
+.model-detail__body {
+  display: grid; grid-template-columns: 1fr 320px; gap: var(--space-7);
+  align-items: start;
+}
+.model-detail__intro .badge-row { margin-top: var(--space-4); }
+.model-detail__main > section { margin-bottom: var(--space-7); }
+.model-detail__facts { margin: 0 0 var(--space-3); display: flex; flex-direction: column; gap: var(--space-3); }
+.model-detail__facts > div { display: flex; flex-direction: column; gap: 2px; }
+.model-detail__facts dt {
+  font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--color-muted); font-weight: 600;
+}
+.model-detail__facts dd { margin: 0; font-weight: 600; font-size: 0.9375rem; }
+.metric-grid--four { grid-template-columns: repeat(4, 1fr); }
+
+@media (max-width: 880px) {
+  .model-detail__body { grid-template-columns: 1fr; }
+  .metric-grid--four { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Reading progress bar */
+.reading-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px;
+  background: transparent; z-index: 100; pointer-events: none;
+}
+.reading-progress__bar {
+  display: block; height: 100%; width: 100%;
+  background: var(--color-brand);
+  transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform 80ms linear;
+}
+
+/* Post share row */
+.post-share { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.byline { color: var(--color-muted); font-size: 0.9375rem; margin-top: -8px; }
+
 /* CTA band ------------------------------------------------------------ */
 .cta-band {
   position: relative;

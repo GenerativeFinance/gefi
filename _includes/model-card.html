@@ -1,20 +1,45 @@
-<a class="model-card" href="{{ include.model.url }}">
+{%- assign m = include.model -%}
+{%- assign cat_lower = m.category | downcase -%}
+{%- assign risk_class = m.risk | default: "" | downcase -%}
+{%- if m.federated -%}{%- assign fed_attr = "true" -%}{%- else -%}{%- assign fed_attr = "false" -%}{%- endif -%}
+<a class="model-card"
+   href="{{ m.url | relative_url }}"
+   data-model-card
+   data-category="{{ cat_lower }}"
+   data-risk="{{ risk_class }}"
+   data-federated="{{ fed_attr }}">
   <header class="model-card__header">
-    <p class="eyebrow">{{ include.model.category }}</p>
-    {%- if include.model.federated -%}
+    <p class="eyebrow">{{ m.category }}</p>
+    {%- if m.federated -%}
       <span class="badge badge--federated" title="Trained via federated learning">Federated</span>
     {%- endif -%}
   </header>
-  <h3>{{ include.model.title }}</h3>
-  {%- if include.model.lead -%}
-    <p class="muted">{{ include.model.lead }}</p>
+  <h3>{{ m.title }}</h3>
+  {%- if m.lead -%}
+    <p class="muted">{{ m.lead }}</p>
+  {%- endif -%}
+  {%- if m.jurisdictions -%}
+    <ul class="badge-row badge-row--tight" aria-label="Jurisdictions">
+      {%- for j in m.jurisdictions -%}
+        <li><span class="badge badge--jurisdiction">{{ j }}</span></li>
+      {%- endfor -%}
+    </ul>
+  {%- endif -%}
+  {%- if m.metrics and m.metrics.first -%}
+    <p class="model-card__metric">
+      <span class="muted small">{{ m.metrics[0].label }}:</span>
+      <span class="num">{{ m.metrics[0].value }}</span>
+    </p>
   {%- endif -%}
   <footer class="model-card__footer">
-    {%- if include.model.risk -%}
-      <span class="badge badge--risk-{{ include.model.risk }}">Risk: {{ include.model.risk }}</span>
-    {%- endif -%}
-    {%- if include.model.price -%}
-      <span class="price-inline">${{ include.model.price }}<span class="price-period">/mo</span></span>
+    <div class="model-card__badges">
+      {%- if m.risk -%}
+        <span class="badge badge--risk-{{ risk_class }}">Risk: {{ m.risk }}</span>
+      {%- endif -%}
+    </div>
+    {%- if m.price -%}
+      <span class="price-inline">From ${{ m.price }}<span class="price-period">/mo</span></span>
     {%- endif -%}
   </footer>
+  <span class="model-card__cta" aria-hidden="true">View model &rarr;</span>
 </a>
