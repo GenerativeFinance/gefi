@@ -502,6 +502,15 @@ a { color: inherit; }
   border-bottom: 1px solid color-mix(in srgb, var(--color-muted) 30%, transparent);
   margin-bottom: var(--space-md);
 }
+@media (max-width: 599px) {
+  /* Switch from wrapping rows to a single horizontally-scrollable strip on
+   * narrow viewports so the active tab indicator stays visible. */
+  .playground-tabs {
+    flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
+    scrollbar-width: thin; -webkit-overflow-scrolling: touch;
+  }
+  .playground-tabs__tab { white-space: nowrap; flex: 0 0 auto; }
+}
 .playground-tabs__tab {
   background: transparent; border: 0; padding: 10px 14px; cursor: pointer;
   color: var(--color-muted); font: inherit; font-weight: 500;
