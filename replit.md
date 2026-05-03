@@ -20,34 +20,38 @@ referenced — never deployed.
 
 ## Hosting model (do not get this wrong)
 
-- **Production hosting:** **Cloudflare Pages** at the apex domain `gefi.io`.
-  Pages serves the pre-built `_site/` directory as static assets.
-- **Cloudflare config:** `wrangler.jsonc` at the repo root declares
-  `name: gefi` and `pages_build_output_dir: "./_site"`. The repo's
-  `npm run deploy` script runs `bundle exec jekyll build` and then
-  `wrangler pages deploy _site --project-name=gefi --branch=main`.
-  **Do not** switch this back to Workers Static Assets (`assets.directory`
-  + `wrangler deploy`): wrangler 4.87+ auto-config detects Jekyll and
-  re-runs the build via `npx bundle exec jekyll build`, which fails because
-  `bundle` is a Ruby gem, not an npm package. Pages mode skips that trap.
-- **Cloudflare dashboard settings (the Workers Builds project at `gefi`):**
-  - Build command: `npm run build` (which runs `bundle exec jekyll build`)
-  - Build output directory: `_site`
-  - Deploy command: `npx wrangler@4.87.0 pages deploy _site --project-name=gefi --branch=main`
-    — **must be `pages deploy`, not `deploy`**. Plain `wrangler deploy` on a
-    Jekyll repo triggers wrangler 4.87+ auto-config which rewrites the build
-    to `npx bundle exec jekyll build` (fails — `bundle` isn't on npm).
-  - Environment variable: `JEKYLL_ENV=production`
-  - Root directory: repo root (not a subdir)
-  - The repo's `package.json` `npm run deploy` script mirrors this command
-    so local deploys work the same way (needs `CLOUDFLARE_API_TOKEN`).
-- **GitHub Pages:** not used. The only Actions workflow is
-  `.github/workflows/deploy-cloudflare.yml`, which deploys the Workers
-  backend under `infrastructure/cloudflare/` — not the marketing site.
-- **Replit hosting:** **none.** The Replit workflow is a local-preview
-  developer convenience only — it runs `bundle exec jekyll serve` on port 5000.
-- **No Replit `[deployment]` in `.replit`.** Do not add one. Do not suggest
-  "deploy via Replit". The user deploys to Cloudflare Pages.
+- **Production hosting:** **GitHub Pages** at the apex domain `gefi.io`.
+  DNS A records on the apex point at the four GitHub Pages IPs (see
+  `docs/dns-setup.md`). The `CNAME` file at the repo root pins the
+  custom domain.
+- **How the site reaches Pages:** `.github/workflows/deploy-pages.yml`
+  runs on every push to `main`. It builds the site with Bundler-pinned
+  Jekyll 4.4.1 (matching `Gemfile.lock` exactly), runs `htmlproofer`
+  against the build, and publishes `_site/` via `actions/deploy-pages`.
+  The `.nojekyll` file at the repo root tells GitHub Pages NOT to
+  re-process the artifact — Pages serves the uploaded `_site/` verbatim.
+- **One-time GitHub setting:** Repo Settings → Pages → Build and deployment
+  → Source must be set to **"GitHub Actions"** (not "Deploy from a branch").
+  If this is left on the branch-source default, GH Pages falls back to its
+  built-in Jekyll 3.10.x processor — which honours `.nojekyll` and serves
+  raw `*.md` source as plain text. That's the "wall of text" symptom that
+  bit the live site before this workflow existed. **Do not delete `.nojekyll`**
+  as a workaround — that will switch GH Pages back to its built-in Jekyll
+  3.x processor and break Jekyll 4-only features (`_config.yml` keys,
+  newer Liquid filters, etc.).
+- **Cloudflare Pages:** **not used in production.** The repo still carries
+  `wrangler.jsonc` and a `package.json` `npm run deploy` script (`wrangler
+  pages deploy _site --project-name=gefi --branch=main`) so an operator can
+  cut over to Cloudflare Pages later without rewriting the deploy plumbing.
+  If you do migrate, switch DNS off the GH Pages IPs and either delete
+  `.github/workflows/deploy-pages.yml` or gate it on a branch other than
+  `main` so the two hosts don't fight.
+- **Cloudflare backend:** the Workers under `infrastructure/cloudflare/`
+  ARE in production (api.gefi.io). They are deployed by
+  `.github/workflows/deploy-cloudflare.yml` — separate from the Pages site.
+- **Replit hosting:** **none.** The Replit workflow runs
+  `bundle exec jekyll serve` on port 5000 for local preview only.
+- **No Replit `[deployment]` in `.replit`.** Do not add one.
 
 ## Tech stack
 
@@ -67,8 +71,9 @@ referenced — never deployed.
 | `_config.yml`                 | Site config: title, URL, nav, API endpoints, collections, exclusions |
 | `Gemfile`                     | Ruby gems                                          |
 | `CNAME`                       | `gefi.io`                                          |
-| `.nojekyll`                   | Suppresses GitHub's classic Pages Jekyll processor — harmless under Cloudflare Pages |
-| `package.json` / `wrangler.jsonc` | Cloudflare Pages deploy plumbing (`npm run deploy` → `wrangler pages deploy _site`) |
+| `.nojekyll`                   | Tells GitHub Pages NOT to re-process the artifact uploaded by `deploy-pages.yml` — required, do not delete |
+| `.github/workflows/deploy-pages.yml` | Builds Jekyll 4.4.1 with Bundler and publishes `_site/` to GitHub Pages on every push to `main` |
+| `package.json` / `wrangler.jsonc` | Optional Cloudflare Pages deploy plumbing — not currently used (production is GH Pages) |
 | `index.html`                  | Home                                               |
 | `features.md` / `pricing.md` / `models.md` / `research.md` / `docs.md` / `blog.md` / `about.md` / `compliance.md` / `contact.md` | Top-level marketing pages |
 | `legal/privacy.md`, `legal/terms.md` | Placeholder legal pages                     |
