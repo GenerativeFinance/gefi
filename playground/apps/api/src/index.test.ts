@@ -47,4 +47,19 @@ describe("playground api router", () => {
     const res = await app.request("/nope", {}, env);
     expect(res.status).toBe(404);
   });
+
+  it("OPTIONS /api/models responds with permissive CORS headers", async () => {
+    const { env } = await buildStubEnv();
+    const res = await app.request("/api/models", { method: "OPTIONS" }, env);
+    expect(res.status).toBe(204);
+    expect(res.headers.get("access-control-allow-origin")).toBe("*");
+    expect(res.headers.get("access-control-allow-methods")).toContain("GET");
+  });
+
+  it("OPTIONS /api/models/anything (subpath) also CORS-enabled", async () => {
+    const { env } = await buildStubEnv();
+    const res = await app.request("/api/models/foo", { method: "OPTIONS" }, env);
+    expect(res.status).toBe(204);
+    expect(res.headers.get("access-control-allow-origin")).toBe("*");
+  });
 });

@@ -11,17 +11,27 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- ── 1. Rename risk-modelling → risk-assessment ──────────────────────────────
--- Update child rows first to keep the FK constraint happy under any future
--- enforcement; the NOT EXISTS guard makes this a no-op on re-run.
+-- FK-safe rename: parent row references must stay valid at every step. We:
+--   a) INSERT the new "risk-assessment" parent row (idempotent).
+--   b) UPDATE child models to repoint at the new parent — at this moment both
+--      the old and new parents exist, so any FK enforcement is satisfied.
+--   c) DELETE the old "risk-modelling" parent row, now unreferenced.
+-- All three steps are idempotent and safe to re-run.
+
+INSERT OR IGNORE INTO categories (slug, name, description, icon, sort_order)
+SELECT 'risk-assessment',
+       'Risk Assessment',
+       'VaR, stress tests, volatility, and tail-risk for portfolios and books.',
+       icon,
+       sort_order
+  FROM categories
+ WHERE slug = 'risk-modelling';
+
 UPDATE models
    SET category_slug = 'risk-assessment'
  WHERE category_slug = 'risk-modelling';
 
-UPDATE categories
-   SET slug = 'risk-assessment',
-       name = 'Risk Assessment',
-       description = 'VaR, stress tests, volatility, and tail-risk for portfolios and books.'
- WHERE slug = 'risk-modelling';
+DELETE FROM categories WHERE slug = 'risk-modelling';
 
 -- ── 2. Filter / sort columns on models ──────────────────────────────────────
 ALTER TABLE models ADD COLUMN risk_tier        TEXT    NOT NULL DEFAULT 'medium';

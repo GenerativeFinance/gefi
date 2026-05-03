@@ -19,19 +19,24 @@ app.get("/", (c) => c.html(renderHome()));
 
 app.get("/api/health", healthHandler);
 
-app.route("/api/auth", authRoutes());
-app.route("/api/models", modelsRoutes());
-
 // Permissive CORS for the public catalog so the Jekyll frontend (different
-// origin in dev/prod) can hit /api/models from the browser. Auth routes
-// remain same-origin via the cookie attributes.
+// origin in dev/prod — :4000 vs :8787) can hit /api/models from the browser.
+// Mounted BEFORE the route so the middleware wraps the handler regardless of
+// Hono's internal matching order. Auth routes remain same-origin via the
+// cookie attributes and intentionally skip CORS.
 const corsHeaders = async (c: { res: Response }, next: () => Promise<void>) => {
   await next();
   c.res.headers.set("access-control-allow-origin", "*");
   c.res.headers.set("access-control-allow-methods", "GET, OPTIONS");
+  c.res.headers.set("vary", "Origin");
 };
 app.use("/api/models", corsHeaders);
 app.use("/api/models/*", corsHeaders);
+app.options("/api/models", (c) => c.body(null, 204));
+app.options("/api/models/*", (c) => c.body(null, 204));
+
+app.route("/api/auth", authRoutes());
+app.route("/api/models", modelsRoutes());
 
 app.post("/api/subscribe", async (c) => {
   const body = await c.req.parseBody();
