@@ -1,88 +1,61 @@
 {%- comment -%}
   Pricing CTAs route to the app when it's live (site.app.enabled = true).
   Otherwise they fall back to the contact form so we don't ship dead links.
+  Plan data is read from `_config.yml` under the `plans:` key (Task #3).
 {%- endcomment -%}
-{%- if site.app.enabled -%}
-  {%- assign cta_free = site.app.signup_url -%}
-  {%- assign cta_starter = site.app.signup_url | append: '?tier=starter' -%}
-  {%- assign cta_pro = site.app.signup_url | append: '?tier=pro' -%}
-  {%- assign cta_inst = site.app.signup_url | append: '?tier=institutional' -%}
-{%- else -%}
-  {%- assign cta_free = '/contact/?topic=sales&tier=free' -%}
-  {%- assign cta_starter = '/contact/?topic=sales&tier=starter' -%}
-  {%- assign cta_pro = '/contact/?topic=sales&tier=pro' -%}
-  {%- assign cta_inst = '/contact/?topic=enterprise&tier=institutional' -%}
-{%- endif -%}
-<section class="section">
+<section class="section pricing">
   <div class="container">
     <ul class="pricing-grid" role="list">
-      <li class="pricing-card">
-        <h3>Free</h3>
-        <p class="pricing-card__price"><span class="price">$0</span><span class="price-period">/ month</span></p>
-        <p class="muted">For evaluation, research, and tinkering.</p>
-        <ul class="checklist">
-          <li>Browse the full model catalogue</li>
-          <li>100 inference calls / day</li>
-          <li>Paper trading sandbox</li>
-          <li>Community support</li>
-        </ul>
-        <a class="btn btn-ghost btn-block" href="{{ cta_free }}">{% if site.app.enabled %}Start free{% else %}Join the waitlist{% endif %}</a>
-      </li>
+      {%- for plan in site.plans -%}
+        {%- if site.app.enabled -%}
+          {%- if plan.cta_tier == 'enterprise' -%}
+            {%- assign cta_url = '/contact/?topic=enterprise&tier=enterprise' -%}
+          {%- else -%}
+            {%- assign cta_url = site.app.signup_url | append: '?tier=' | append: plan.cta_tier -%}
+          {%- endif -%}
+        {%- else -%}
+          {%- if plan.cta_tier == 'enterprise' -%}
+            {%- assign cta_url = '/contact/?topic=enterprise&tier=enterprise' -%}
+          {%- else -%}
+            {%- assign cta_url = '/contact/?topic=sales&tier=' | append: plan.cta_tier -%}
+          {%- endif -%}
+        {%- endif -%}
 
-      <li class="pricing-card">
-        <h3>Starter</h3>
-        <p class="pricing-card__price"><span class="price">$99</span><span class="price-period">/ month</span></p>
-        <p class="muted">For independent investors and analysts.</p>
-        <ul class="checklist">
-          <li>10,000 inference calls / month</li>
-          <li>Live execution on subscribed models</li>
-          <li>Standard KYC tier</li>
-          <li>Email support</li>
-        </ul>
-        <a class="btn btn-ghost btn-block" href="{{ cta_starter }}">{% if site.app.enabled %}Choose Starter{% else %}Talk to us{% endif %}</a>
-      </li>
+        {%- if plan.id == 'pro' -%}
+          {%- if site.pricing.show_pro_price -%}
+            {%- assign price_display = site.pricing.pro_price -%}
+          {%- else -%}
+            {%- assign price_display = site.pricing.pro_price_contact -%}
+          {%- endif -%}
+        {%- else -%}
+          {%- assign price_display = plan.price -%}
+        {%- endif -%}
 
-      <li class="pricing-card pricing-card--featured">
-        <p class="eyebrow">Most popular</p>
-        <h3>Pro</h3>
-        <p class="pricing-card__price"><span class="price">$499</span><span class="price-period">/ month</span></p>
-        <p class="muted">For teams running production strategies.</p>
-        <ul class="checklist">
-          <li>250,000 inference calls / month</li>
-          <li>Multi-seat workspace</li>
-          <li>Federated participation</li>
-          <li>Priority support &amp; SLAs</li>
-          <li>MFA enforced (TOTP / passkeys)</li>
-        </ul>
-        <a class="btn btn-primary btn-block" href="{{ cta_pro }}">{% if site.app.enabled %}Choose Pro{% else %}Talk to us{% endif %}</a>
-      </li>
-
-      <li class="pricing-card">
-        <h3>Institutional</h3>
-        <p class="pricing-card__price"><span class="price">$2,499</span><span class="price-period">/ month</span></p>
-        <p class="muted">For asset managers, banks, and exchanges.</p>
-        <ul class="checklist">
-          <li>Custom inference quota</li>
-          <li>Dedicated regional data plane</li>
-          <li>Enhanced KYB &amp; sanctions screening</li>
-          <li>Compliance routing to your counsel</li>
-          <li>SOC 2 evidence pack on request</li>
-        </ul>
-        <a class="btn btn-ghost btn-block" href="{{ cta_inst }}">Talk to sales</a>
-      </li>
-
-      <li class="pricing-card">
-        <h3>Enterprise</h3>
-        <p class="pricing-card__price"><span class="price">Custom</span></p>
-        <p class="muted">For sovereign tenants &amp; regulators.</p>
-        <ul class="checklist">
-          <li>Sovereign-tenant deployment (OVH SecNumCloud, Infomaniak, AWS Bahrain)</li>
-          <li>Per-jurisdiction lawyer / auditor directory</li>
-          <li>Custom data residency &amp; retention</li>
-          <li>Direct line to the platform team</li>
-        </ul>
-        <a class="btn btn-ghost btn-block" href="/contact/?topic=enterprise">Talk to sales</a>
-      </li>
+        <li class="pricing-card{% if plan.highlighted %} pricing-card--featured{% endif %}"
+            {% if plan.highlighted %}aria-label="{{ plan.name }} plan, most popular"{% endif %}>
+          {%- if plan.highlighted and plan.badge -%}
+            <p class="eyebrow pricing-card__badge">{{ plan.badge }}</p>
+          {%- endif -%}
+          <h3>{{ plan.name }}</h3>
+          <p class="pricing-card__price">
+            <span class="price">{{ price_display }}</span>
+            {%- if plan.price_note and plan.price_note != "" -%}
+              <span class="price-period">{{ plan.price_note }}</span>
+            {%- endif -%}
+          </p>
+          {%- if plan.summary -%}<p class="muted">{{ plan.summary }}</p>{%- endif -%}
+          <ul class="checklist">
+            {%- for feature in plan.features -%}
+              <li>{{ feature }}</li>
+            {%- endfor -%}
+          </ul>
+          <a class="btn {% if plan.highlighted %}btn-primary{% else %}btn-ghost{% endif %} btn-block"
+             href="{{ cta_url | relative_url }}">{{ plan.cta_label }}</a>
+        </li>
+      {%- endfor -%}
     </ul>
+    {%- if site.pricing.tax_note -%}
+      <p class="pricing-note muted small">{{ site.pricing.tax_note }}</p>
+    {%- endif -%}
   </div>
 </section>

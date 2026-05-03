@@ -349,8 +349,11 @@ p  { margin: 0 0 var(--space-4); }
 /* Pricing */
 .pricing-grid {
   list-style: none; padding: 0; margin: 0;
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: var(--space-4); align-items: stretch;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5); align-items: stretch;
+}
+@media (max-width: 880px) {
+  .pricing-grid { grid-template-columns: 1fr; }
 }
 .pricing-card {
   display: flex; flex-direction: column;
@@ -358,10 +361,72 @@ p  { margin: 0 0 var(--space-4); }
   border-radius: var(--radius-md); padding: var(--space-6);
 }
 .pricing-card--featured {
-  border-color: var(--color-brand);
+  border: 2px solid var(--color-brand);
   box-shadow: 0 0 0 4px rgba(109, 91, 255, 0.12), var(--shadow-md);
   transform: translateY(-4px);
+  position: relative;
 }
+.pricing-card__badge {
+  position: absolute; top: -12px; left: var(--space-5);
+  background: var(--color-brand); color: #fff;
+  padding: 4px 10px; border-radius: 999px;
+  margin: 0;
+}
+.pricing-note {
+  margin: var(--space-5) 0 0;
+  text-align: center;
+}
+.payment-methods-note {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-brand);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4) var(--space-5);
+  margin: 0 0 var(--space-5);
+  color: var(--color-text);
+}
+
+/* FAQ accordion */
+.faq { display: flex; flex-direction: column; gap: var(--space-3); margin: var(--space-4) 0; }
+.faq-item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0;
+  overflow: hidden;
+}
+.faq-item > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: var(--space-4) var(--space-5);
+  font-weight: 600;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.faq-item > summary::-webkit-details-marker { display: none; }
+.faq-item > summary::after {
+  content: "+";
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  color: var(--color-brand-strong);
+  flex: 0 0 auto;
+  line-height: 1;
+  transition: transform 160ms ease;
+}
+.faq-item[open] > summary::after { content: "−"; }
+.faq-item[open] > summary { border-bottom: 1px solid var(--color-border); }
+.faq-item > summary:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: -2px;
+}
+.faq-item > *:not(summary) {
+  padding: 0 var(--space-5);
+}
+.faq-item > *:not(summary):first-of-type { padding-top: var(--space-4); }
+.faq-item > *:not(summary):last-child { padding-bottom: var(--space-4); }
 .pricing-card__price { display: flex; align-items: baseline; gap: 4px; margin: var(--space-2) 0; }
 .price { font-size: 2rem; font-weight: 700; font-family: var(--font-mono); font-variant-numeric: tabular-nums slashed-zero; }
 .price-period { color: var(--color-muted); font-size: 0.875rem; }
