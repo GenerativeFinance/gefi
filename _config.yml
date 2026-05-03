@@ -90,12 +90,6 @@ footer_nav:
     - { title: "Terms",         url: "/legal/terms/" }
     - { title: "Cookie Policy", url: "/cookie-policy/" }
     - { title: "DPA",           url: "/dpa/" }
-  contacts:
-    - { label: "General",  email: "hello@gefi.io" }
-    - { label: "Sales",    email: "sales@gefi.io" }
-    - { label: "Legal",    email: "legal@gefi.io" }
-    - { label: "Privacy",  email: "privacy@gefi.io" }
-    - { label: "Security", email: "security@gefi.io" }
 
 # Social / community channels surfaced in the footer "Connect" column.
 social:
