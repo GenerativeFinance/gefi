@@ -1,23 +1,192 @@
 name = "gefi-playground-api"
 main = "src/index.ts"
-compatibility_date = "2024-12-15"
+compatibility_date = "2025-05-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Bindings declared but commented out — Phase 1 will wire these up
-# against real Cloudflare resources.
+# ─────────────────────────────────────────────────────────────────────────────
+# Local dev (`wrangler dev`) — uses miniflare emulation for everything below.
+# Real bindings only get applied via `--env staging` or `--env production`.
+# ─────────────────────────────────────────────────────────────────────────────
 
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "gefi-playground"
-# database_id = "TODO"
+[vars]
+ENVIRONMENT = "dev"
+APP_BASE_URL = "http://localhost:8787"
+EMAIL_FROM = "GeFi Playground <noreply@localhost>"
 
-# [[kv_namespaces]]
-# binding = "CACHE"
-# id = "TODO"
+# Durable Object class is declared once at the top level; environments only
+# need to reference the binding name.
+[[durable_objects.bindings]]
+name = "ROUND"
+class_name = "Round"
 
-# [[r2_buckets]]
-# binding = "ARTIFACTS"
-# bucket_name = "gefi-playground-artifacts"
+[[migrations]]
+tag = "v1"
+new_classes = ["Round"]
 
-# [vars]
-# ENVIRONMENT = "dev"
+[triggers]
+crons = ["0 4 * * *"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Required secrets (set with `wrangler secret put <NAME> --env <staging|production>`):
+#   JWT_SK         JSON-stringified Ed25519 private JWK
+#   JWT_PK         JSON-stringified Ed25519 public JWK
+#   STRIPE_SK      Stripe secret key (sk_live_… / sk_test_…)
+#   RESEND_API_KEY Resend API key for transactional email
+# Generate the JWK pair with:  pnpm --filter @gefi-playground/api run keygen
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ============================================================================
+# STAGING
+# ============================================================================
+[env.staging]
+name = "gefi-playground-api-staging"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+APP_BASE_URL = "https://staging.gefi.io"
+EMAIL_FROM = "GeFi Playground <noreply@staging.gefi.io>"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "gefi"
+database_id = "REPLACE_WITH_STAGING_D1_ID"
+migrations_dir = "migrations"
+
+[[env.staging.r2_buckets]]
+binding = "MODELS"
+bucket_name = "gefi-models-staging"
+
+[[env.staging.r2_buckets]]
+binding = "DATASETS_PUBLIC"
+bucket_name = "gefi-datasets-public-staging"
+
+[[env.staging.r2_buckets]]
+binding = "DATASETS_LICENSED"
+bucket_name = "gefi-datasets-licensed-staging"
+
+[[env.staging.r2_buckets]]
+binding = "FED_UPDATES"
+bucket_name = "gefi-fed-updates-staging"
+
+[[env.staging.r2_buckets]]
+binding = "AUDIT"
+bucket_name = "gefi-audit-staging"
+
+[[env.staging.kv_namespaces]]
+binding = "SESSIONS"
+id = "REPLACE_WITH_STAGING_SESSIONS_KV_ID"
+
+[[env.staging.kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "REPLACE_WITH_STAGING_RATE_LIMITS_KV_ID"
+
+[[env.staging.vectorize]]
+binding = "SEARCH"
+index_name = "gefi-search-staging"
+
+[[env.staging.queues.producers]]
+binding = "JOBS"
+queue = "gefi-jobs-staging"
+
+[[env.staging.queues.consumers]]
+queue = "gefi-jobs-staging"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "gefi-jobs-dlq-staging"
+
+[[env.staging.analytics_engine_datasets]]
+binding = "EVENTS"
+dataset = "gefi_events_staging"
+
+[[env.staging.durable_objects.bindings]]
+name = "ROUND"
+class_name = "Round"
+
+[env.staging.ai]
+binding = "AI"
+
+[[env.staging.migrations]]
+tag = "v1"
+new_classes = ["Round"]
+
+[env.staging.triggers]
+crons = ["0 4 * * *"]
+
+# ============================================================================
+# PRODUCTION
+# ============================================================================
+[env.production]
+name = "gefi-playground-api-production"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+APP_BASE_URL = "https://gefi.io"
+EMAIL_FROM = "GeFi Playground <noreply@gefi.io>"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "gefi"
+database_id = "REPLACE_WITH_PRODUCTION_D1_ID"
+migrations_dir = "migrations"
+
+[[env.production.r2_buckets]]
+binding = "MODELS"
+bucket_name = "gefi-models"
+
+[[env.production.r2_buckets]]
+binding = "DATASETS_PUBLIC"
+bucket_name = "gefi-datasets-public"
+
+[[env.production.r2_buckets]]
+binding = "DATASETS_LICENSED"
+bucket_name = "gefi-datasets-licensed"
+
+[[env.production.r2_buckets]]
+binding = "FED_UPDATES"
+bucket_name = "gefi-fed-updates"
+
+[[env.production.r2_buckets]]
+binding = "AUDIT"
+bucket_name = "gefi-audit"
+
+[[env.production.kv_namespaces]]
+binding = "SESSIONS"
+id = "REPLACE_WITH_PRODUCTION_SESSIONS_KV_ID"
+
+[[env.production.kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "REPLACE_WITH_PRODUCTION_RATE_LIMITS_KV_ID"
+
+[[env.production.vectorize]]
+binding = "SEARCH"
+index_name = "gefi-search"
+
+[[env.production.queues.producers]]
+binding = "JOBS"
+queue = "gefi-jobs"
+
+[[env.production.queues.consumers]]
+queue = "gefi-jobs"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "gefi-jobs-dlq"
+
+[[env.production.analytics_engine_datasets]]
+binding = "EVENTS"
+dataset = "gefi_events"
+
+[[env.production.durable_objects.bindings]]
+name = "ROUND"
+class_name = "Round"
+
+[env.production.ai]
+binding = "AI"
+
+[[env.production.migrations]]
+tag = "v1"
+new_classes = ["Round"]
+
+[env.production.triggers]
+crons = ["0 4 * * *"]

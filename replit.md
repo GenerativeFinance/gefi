@@ -483,7 +483,7 @@ Or just hit "Run" — the configured workflow does the same thing.
 
 ## Playground monorepo (`playground/`)
 
-Phase 0 of the GeFi Playground (Task #9) lives at `playground/` — a **separate
+The GeFi Playground (Tasks #9–#17) lives at `playground/` — a **separate
 pnpm monorepo** that does not share dependencies with the marketing site root.
 The marketing-site rule "no `package.json` at the root" still holds — `playground/`
 has its own.
@@ -492,22 +492,38 @@ has its own.
 playground/
 ├── apps/
 │   ├── web/      Jekyll 4.3 (Ruby 3.2) — placeholder homepage on :4000
-│   └── api/      Cloudflare Worker (Hono + TS) — :8787, stubbed POST /api/subscribe
+│   └── api/      Cloudflare Worker (Hono + TS) — :8787
+│       ├── migrations/         D1 SQL migrations (0001_init.sql)
+│       ├── scripts/            provision.sh, seed.ts, keygen.ts
+│       └── src/
+│           ├── routes/         health.ts, auth.ts (magic-link)
+│           ├── middleware/     requireAuth (Ed25519 JWT cookie)
+│           ├── lib/            jwt, rate-limit, email (Resend), cookie, random
+│           ├── data/           categories.ts (14), featured-models.ts (10)
+│           └── durable-objects/Round.ts (federated round stub)
 ├── packages/
 │   ├── ui/       Brand tokens (single source of truth) → tokens.css consumed by both apps
-│   └── schemas/  Shared TS types (placeholder for Phase 1)
+│   └── schemas/  Shared TS types (placeholder for later phases)
 └── .husky/       Conventional Commits + lint-staged (opt-in via core.hooksPath)
 ```
+
+**Phase 1 (Task #10)** wired the Worker to the full Cloudflare resource set:
+1 D1 (`gefi`), 5 R2 buckets (models, datasets-public, datasets-licensed,
+fed-updates, audit), 2 KV (SESSIONS, RATE_LIMITS), 1 Vectorize (gefi-search,
+768 dim, cosine), 1 Queue + DLQ (gefi-jobs / gefi-jobs-dlq), 1 Analytics
+Engine dataset (gefi_events), 1 Durable Object class (`Round`, migration
+tag v1), Workers AI binding, daily cron `0 4 * * * UTC`. Operator runbook
+in `playground/apps/api/README.md`; `scripts/provision.sh staging|production`
+prints the numbered `wrangler` commands.
 
 CI: `.github/workflows/playground-ci.yml` runs lint → typecheck → test → build
 on every PR / push that touches `playground/**`.
 
 Replit workflows:
 - **Start application** — unchanged; serves the marketing Jekyll site on :5000.
-- **Playground** — console-mode workflow that runs `pnpm install && pnpm run dev`
+- **Playground (manual start)** — console-mode workflow that runs `pnpm install && pnpm run dev`
   inside `playground/`, booting Jekyll on :4000 and Wrangler on :8787 via
-  `concurrently`. Not auto-started (would take ~20s on a cold install); start
-  manually when developing the playground.
+  `concurrently`. Not auto-started; start manually when developing the playground.
 
 Brand tokens (different palette from the marketing site — dark surface):
 `bg #0B0E1A`, `surface #141826`, `brand #6D5BFF`, `accent #22D3EE`,
