@@ -1,0 +1,21 @@
+title: "AI Financial Model Library"
+description: "Federated. Audited. Accountable."
+url: "https://playground.gefi.io"
+permalink: pretty
+
+api:
+  base_url: "http://localhost:8787"
+  subscribe_endpoint: "/api/subscribe"
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor/
+  - node_modules/
+  - package.json
+  - README.md

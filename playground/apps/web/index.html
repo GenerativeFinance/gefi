@@ -1,0 +1,44 @@
+---
+layout: default
+title: "AI Financial Model Library"
+description: "Federated. Audited. Accountable."
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <a class="brand" href="/" aria-label="GeFi Playground home">
+    <img src="{{ '/assets/img/logo.svg' | relative_url }}" alt="" width="48" height="48" />
+    <span class="brand__wordmark">GeFi Playground</span>
+  </a>
+
+  <h1 id="hero-title" class="hero__title">AI Financial Model Library</h1>
+  <p class="hero__subtitle">Federated. Audited. Accountable.</p>
+
+  <form
+    id="subscribe-form"
+    class="subscribe"
+    method="post"
+    action="{{ site.api.base_url }}{{ site.api.subscribe_endpoint }}"
+    novalidate
+  >
+    <label class="subscribe__label" for="email">Get early access</label>
+    <div class="subscribe__row">
+      <input
+        id="email"
+        name="email"
+        type="email"
+        autocomplete="email"
+        inputmode="email"
+        placeholder="you@firm.com"
+        required
+        aria-required="true"
+      />
+      <button class="btn btn--primary" type="submit">Subscribe</button>
+    </div>
+    <p class="subscribe__status" id="subscribe-status" role="status" aria-live="polite"></p>
+    <noscript>
+      <p class="subscribe__noscript">
+        JavaScript disabled — email <a href="mailto:hello@gefi.io">hello@gefi.io</a> to be added.
+      </p>
+    </noscript>
+  </form>
+</section>

@@ -1,0 +1,25 @@
+{
+  "name": "@gefi-playground/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "pnpm --filter @gefi-playground/ui run build:tokens",
+    "dev": "wrangler dev --port 8787 --ip 0.0.0.0",
+    "prebuild": "pnpm --filter @gefi-playground/ui run build:tokens",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gefi-playground/schemas": "workspace:*",
+    "@gefi-playground/ui": "workspace:*",
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.99.0"
+  }
+}

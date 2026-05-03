@@ -1,0 +1,10 @@
+node_modules/
+dist/
+build/
+_site/
+.wrangler/
+pnpm-lock.yaml
+apps/web/assets/css/tokens.css
+apps/web/vendor/
+apps/web/.jekyll-cache/
+packages/ui/dist/

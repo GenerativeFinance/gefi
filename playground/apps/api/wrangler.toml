@@ -1,0 +1,23 @@
+name = "gefi-playground-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-15"
+compatibility_flags = ["nodejs_compat"]
+
+# Bindings declared but commented out — Phase 1 will wire these up
+# against real Cloudflare resources.
+
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "gefi-playground"
+# database_id = "TODO"
+
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "TODO"
+
+# [[r2_buckets]]
+# binding = "ARTIFACTS"
+# bucket_name = "gefi-playground-artifacts"
+
+# [vars]
+# ENVIRONMENT = "dev"
