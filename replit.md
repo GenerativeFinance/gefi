@@ -83,7 +83,7 @@ referenced — never deployed.
 | `_posts/*.md`                 | Blog posts                                         |
 | `.github/workflows/deploy-cloudflare.yml` | Cloudflare Workers backend deploy (not the marketing site) |
 | `docs/dns-setup.md`           | DNS + Pages one-time setup                         |
-| `infrastructure/cloudflare/`  | Cloudflare backend monorepo (Task #2). pnpm + Turborepo. Three Workers (`gefi-web`, `gefi-api`, `gefi-compliance`) + shared packages. Self-contained — own `package.json`, `pnpm-lock.yaml`, `tsconfig.base.json`. **Never** hoist node_modules from here to the repo root. |
+| `infrastructure/cloudflare/`  | Cloudflare backend monorepo (Task #2). pnpm + Turborepo. Three Workers (`gefi-web`, `gefi-api`, `gefi-compliance`) + shared packages. Self-contained — own `package.json`, `pnpm-lock.yaml`, `tsconfig.base.json`. **Never** hoist node_modules from here to the repo root. **All secrets** live in `wrangler secret put` (Workers) or GitHub Environment secrets (CI). The full inventory + exact `wrangler secret put` commands are in `infrastructure/cloudflare/SECRETS.md` — keep it in sync with `packages/shared-types/src/env.ts`. **Never** commit a real secret value to this repo. |
 | `legacy/`                     | Archived React/Express prototype + its `README.md` |
 
 ## Branding tokens (used throughout the site)
