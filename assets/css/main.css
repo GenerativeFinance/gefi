@@ -427,10 +427,69 @@ p  { margin: 0 0 var(--space-4); }
 }
 .faq-item > *:not(summary):first-of-type { padding-top: var(--space-4); }
 .faq-item > *:not(summary):last-child { padding-bottom: var(--space-4); }
-.pricing-card__price { display: flex; align-items: baseline; gap: 4px; margin: var(--space-2) 0; }
+.pricing-card__price { display: flex; align-items: baseline; gap: 4px; margin: var(--space-2) 0; flex-wrap: wrap; }
 .price { font-size: 2rem; font-weight: 700; font-family: var(--font-mono); font-variant-numeric: tabular-nums slashed-zero; }
 .price-period { color: var(--color-muted); font-size: 0.875rem; }
 .price-inline { font-family: var(--font-mono); font-variant-numeric: tabular-nums slashed-zero; font-weight: 600; }
+
+/* Billing toggle (Task #7).
+   Both monthly + yearly variants are rendered; we hide the inactive one
+   based on the section's data-billing attribute. The "fallback" yearly
+   variant (for plans without a distinct yearly price) reuses the monthly
+   markup so cards like Free / Enterprise stay readable when toggled. */
+.pricing-card__price-variant { display: inline-flex; align-items: baseline; gap: 4px; }
+.pricing[data-billing="monthly"] .pricing-card__price-variant[data-billing-variant="yearly"],
+.pricing[data-billing="yearly"] .pricing-card__price-variant[data-billing-variant="monthly"] {
+  display: none;
+}
+/* If JS is unavailable the toggle buttons do nothing, so always show monthly. */
+.no-js .pricing-card__price-variant[data-billing-variant="yearly"] { display: none; }
+.no-js .billing-toggle { display: none; }
+
+.billing-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 4px;
+  padding: 4px;
+  margin: 0 0 var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.billing-toggle__btn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--color-muted);
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: calc(var(--radius-md) - 4px);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.2;
+}
+.billing-toggle__btn:hover { color: var(--color-text); }
+.billing-toggle__btn[aria-pressed="true"] {
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+.billing-toggle__btn:focus-visible {
+  outline: 2px solid var(--color-accent, currentColor);
+  outline-offset: 2px;
+}
+.billing-toggle__discount {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-profit);
+  background: rgba(0,0,0,0.04);
+  padding: 2px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
 
 .checklist { list-style: none; padding: 0; margin: var(--space-4) 0; }
 .checklist li {

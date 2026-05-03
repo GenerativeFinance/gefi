@@ -112,7 +112,17 @@ social:
 pricing:
   show_pro_price: true
   pro_price: "From $499/mo"
+  pro_price_yearly: "From $4,990/yr"
+  pro_price_note_yearly: "/ year"
   pro_price_contact: "Contact us"
+  # Billing toggle (Task #7).
+  # `billing_default` controls which option is selected on first visit
+  # (sessionStorage overrides per visitor after that).
+  show_billing_toggle: true
+  billing_default: "monthly"
+  billing_monthly_label: "Monthly"
+  billing_yearly_label: "Yearly"
+  yearly_discount_label: "Save ~17% (2 months free)"
   payment_methods_note: >-
     Subscriptions can be paid by card, ACH, or wallet (USDC on Base, Arbitrum,
     and Optimism). Developer payouts can be in fiat or USDC.

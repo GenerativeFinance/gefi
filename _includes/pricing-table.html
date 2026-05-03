@@ -2,9 +2,36 @@
   Pricing CTAs route to the app when it's live (site.app.enabled = true).
   Otherwise they fall back to the contact form so we don't ship dead links.
   Plan data is read from `_config.yml` under the `plans:` key (Task #3).
+
+  Billing toggle (Task #7): if `site.pricing.show_billing_toggle` is true
+  the section gets a Monthly/Yearly switch. Cards render BOTH prices in
+  the markup; CSS hides the inactive one based on `data-billing` on the
+  section. JS (`assets/js/pricing-toggle.js`) flips the attribute and
+  remembers the choice for the visit via sessionStorage.
 {%- endcomment -%}
-<section class="section pricing">
+{%- assign billing_default = site.pricing.billing_default | default: 'monthly' -%}
+<section class="section pricing" data-billing="{{ billing_default }}">
   <div class="container">
+    {%- if site.pricing.show_billing_toggle -%}
+      <div class="billing-toggle" role="group" aria-label="Billing period">
+        <button type="button"
+                class="billing-toggle__btn"
+                data-billing-option="monthly"
+                aria-pressed="{% if billing_default == 'monthly' %}true{% else %}false{% endif %}">
+          {{ site.pricing.billing_monthly_label | default: 'Monthly' }}
+        </button>
+        <button type="button"
+                class="billing-toggle__btn"
+                data-billing-option="yearly"
+                aria-pressed="{% if billing_default == 'yearly' %}true{% else %}false{% endif %}">
+          {{ site.pricing.billing_yearly_label | default: 'Yearly' }}
+          {%- if site.pricing.yearly_discount_label and site.pricing.yearly_discount_label != "" -%}
+            <span class="billing-toggle__discount">{{ site.pricing.yearly_discount_label }}</span>
+          {%- endif -%}
+        </button>
+      </div>
+    {%- endif -%}
+
     <ul class="pricing-grid" role="list">
       {%- for plan in site.plans -%}
         {%- if site.app.enabled -%}
@@ -21,27 +48,49 @@
           {%- endif -%}
         {%- endif -%}
 
+        {%- comment -%} Resolve monthly + yearly prices for this plan. {%- endcomment -%}
         {%- if plan.id == 'pro' -%}
           {%- if site.pricing.show_pro_price -%}
-            {%- assign price_display = site.pricing.pro_price -%}
+            {%- assign price_monthly = site.pricing.pro_price -%}
+            {%- assign price_yearly = site.pricing.pro_price_yearly -%}
+            {%- assign note_yearly = site.pricing.pro_price_note_yearly | default: plan.price_note -%}
           {%- else -%}
-            {%- assign price_display = site.pricing.pro_price_contact -%}
+            {%- assign price_monthly = site.pricing.pro_price_contact -%}
+            {%- assign price_yearly = site.pricing.pro_price_contact -%}
+            {%- assign note_yearly = plan.price_note -%}
           {%- endif -%}
         {%- else -%}
-          {%- assign price_display = plan.price -%}
+          {%- assign price_monthly = plan.price -%}
+          {%- assign price_yearly = plan.price_yearly | default: plan.price -%}
+          {%- assign note_yearly = plan.price_note_yearly | default: plan.price_note -%}
+        {%- endif -%}
+        {%- assign note_monthly = plan.price_note -%}
+        {%- if price_yearly == price_monthly -%}
+          {%- assign has_yearly = false -%}
+        {%- else -%}
+          {%- assign has_yearly = true -%}
         {%- endif -%}
 
         <li class="pricing-card{% if plan.highlighted %} pricing-card--featured{% endif %}"
+            data-has-yearly="{{ has_yearly }}"
             {% if plan.highlighted %}aria-label="{{ plan.name }} plan, most popular"{% endif %}>
           {%- if plan.highlighted and plan.badge -%}
             <p class="eyebrow pricing-card__badge">{{ plan.badge }}</p>
           {%- endif -%}
           <h3>{{ plan.name }}</h3>
           <p class="pricing-card__price">
-            <span class="price">{{ price_display }}</span>
-            {%- if plan.price_note and plan.price_note != "" -%}
-              <span class="price-period">{{ plan.price_note }}</span>
-            {%- endif -%}
+            <span class="pricing-card__price-variant" data-billing-variant="monthly">
+              <span class="price">{{ price_monthly }}</span>
+              {%- if note_monthly and note_monthly != "" -%}
+                <span class="price-period">{{ note_monthly }}</span>
+              {%- endif -%}
+            </span>
+            <span class="pricing-card__price-variant" data-billing-variant="yearly" {% unless has_yearly %}data-billing-fallback="true"{% endunless %}>
+              <span class="price">{{ price_yearly }}</span>
+              {%- if note_yearly and note_yearly != "" -%}
+                <span class="price-period">{{ note_yearly }}</span>
+              {%- endif -%}
+            </span>
           </p>
           {%- if plan.summary -%}<p class="muted">{{ plan.summary }}</p>{%- endif -%}
           <ul class="checklist">
