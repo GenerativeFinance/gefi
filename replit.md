@@ -417,13 +417,29 @@ cannot reach Base testnet, run Foundry, or stand up SGX/Nitro nodes.
   under `federation/rounds/<id>/updates/<participant>.f64`.
 
 **Tests / build**
-- 385 / 385 passing (was 320 + 65 new). Includes a 3-node consortium
-  integration test (`packages/federation/src/integration.test.ts`) that
-  runs FedAvg with Bonawitz masking, verifies masked aggregate equals
-  plaintext FedAvg to ~1e-9, scores TMC-Shapley, splits a 1 ETH pool,
-  and asserts `StubRewardDistributor` recorded the right calls.
-- `pnpm -r typecheck` green. `pnpm --filter @gefi/worker-api run build`
-  (wrangler dry-run) green.
+- **546 tests passing** across all suites:
+  - Root workspace (31 test files): **393 tests**
+  - `apps/dashboard`: **34 tests** (34/34 — all passing incl. Onboarding,
+    InvestorDashboard, DeveloperPortal)
+  - `packages/ui`: **41 tests**
+  - `packages/federation`: **31 tests** (incl. 1-test integration suite)
+  - `packages/onchain-federation`: **15 tests**
+  - `packages/node-agent`: **19 tests**
+  - `packages/feature-store`: **13 tests**
+- Integration test (`packages/federation/src/integration.test.ts`): 3-node
+  consortium FedAvg with Bonawitz masking, verifies masked aggregate equals
+  plaintext FedAvg to ~1e-9, scores TMC-Shapley, splits a 1 ETH pool, and
+  asserts `StubRewardDistributor` recorded the right calls.
+- `pnpm -r typecheck` green across all 21 packages. Fixes included:
+  - `Button`: add `target`/`rel` props; cast anchor spread via `as any`.
+  - `Card`: `Omit<HTMLAttributes, "title">` to avoid `ReactNode` vs `string` conflict.
+  - `ModelQueue`: explicit `QueueStatus` union incl. `"violation"`.
+  - Dashboard `tsconfig.json`: added `"vite/client"` types + `"@gefi/ui/*"` path alias.
+  - Dashboard `vite.config.ts`: anchored-regex aliases (no prefix collisions);
+    `.js`-stripping wildcard so Vite resolves `@gefi/ui/Button.js` → `Button.tsx`.
+  - All dashboard source files: relative `../../../../packages/ui/src/` imports
+    converted to `@gefi/ui/` workspace-alias imports.
+- `pnpm --filter @gefi/worker-api run build` (wrangler dry-run) green.
 
 **Docs**
 - `infrastructure/cloudflare/FEDERATION-SETUP.md` — operator runbook

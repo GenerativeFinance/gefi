@@ -6,6 +6,11 @@ export default defineConfig({
       "packages/**/src/**/*.test.ts",
       "workers/**/src/**/*.test.ts",
     ],
+    exclude: [
+      "packages/ui/**",
+      "apps/**",
+      "**/node_modules/**",
+    ],
     environment: "node",
     coverage: {
       provider: "v8",
