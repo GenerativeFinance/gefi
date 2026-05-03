@@ -104,10 +104,5 @@
   <div class="container site-footer__legal">
     <small>&copy; {{ "now" | date: "%Y" }} {{ site.title }}. All rights reserved.</small>
     <span class="badge badge--compliance site-footer__legal-badge">CCPA</span>
-    <ul class="site-footer__legal-links" aria-label="Legal">
-      {%- for item in site.footer_nav.legal -%}
-        <li><a href="{{ item.url }}">{{ item.title }}</a></li>
-      {%- endfor -%}
-    </ul>
   </div>
 </footer>
