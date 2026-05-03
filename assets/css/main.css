@@ -501,6 +501,114 @@ p  { margin: 0 0 var(--space-4); }
 
 .pricing-card .btn { margin-top: auto; }
 
+/* Pricing comparison table (Task #8).
+   Renders below the pricing cards. The wrapper scrolls horizontally on
+   narrow screens and the first column (`th[scope="row"]`) is sticky so
+   row labels stay visible while the user scrolls across plan columns. */
+.pricing-comparison-section { padding-top: var(--space-7); }
+.pricing-comparison-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.pricing-comparison-scroll:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+.pricing-comparison {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.95rem;
+}
+.pricing-comparison th,
+.pricing-comparison td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-border);
+}
+.pricing-comparison thead th {
+  font-weight: 700;
+  font-size: 1rem;
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  white-space: nowrap;
+}
+.pricing-comparison thead th.pricing-comparison__col--featured {
+  color: var(--color-brand-strong);
+}
+.pricing-comparison__badge {
+  display: inline-block;
+  margin-left: var(--space-2);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--color-brand);
+  padding: 2px 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+.pricing-comparison__group th {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--color-brand-strong);
+  background: var(--color-bg);
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+.pricing-comparison tbody tr:last-child th,
+.pricing-comparison tbody tr:last-child td { border-bottom: 0; }
+.pricing-comparison__rowhead {
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-surface);
+  min-width: 200px;
+}
+.pricing-comparison td.pricing-comparison__col--featured {
+  background: rgba(109, 91, 255, 0.04);
+}
+.pricing-comparison__none { color: var(--color-muted); }
+
+/* Sticky first column on every row so labels remain visible when the
+   table scrolls horizontally on small viewports. */
+.pricing-comparison th.pricing-comparison__rowhead {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  border-right: 1px solid var(--color-border);
+}
+.pricing-comparison thead th.pricing-comparison__rowhead {
+  z-index: 3;
+}
+.pricing-comparison__group th {
+  position: sticky;
+  left: 0;
+}
+
+@media (max-width: 720px) {
+  .pricing-comparison { font-size: 0.875rem; }
+  .pricing-comparison th,
+  .pricing-comparison td {
+    padding: var(--space-3);
+  }
+  .pricing-comparison__rowhead { min-width: 160px; }
+  .pricing-comparison thead th:not(.pricing-comparison__rowhead) {
+    min-width: 140px;
+  }
+}
+
 /* Cards */
 .model-card, .research-card {
   display: flex; flex-direction: column; gap: var(--space-2);

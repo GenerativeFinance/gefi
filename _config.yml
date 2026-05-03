@@ -177,6 +177,49 @@ plans:
     cta_label: "Talk to us"
     cta_tier: "enterprise"
 
+# Detailed plan comparison matrix rendered beneath the pricing cards
+# (Task #8). Editable here so marketing can tweak the matrix without
+# touching HTML. `plan_ids` controls column order and must reference
+# entries in the `plans:` list above (we look up the display name from
+# there). Values are plain strings — use "—" for "not included".
+plan_comparison:
+  plan_ids: [free, pro, enterprise]
+  groups:
+    - title: "Limits"
+      rows:
+        - { label: "Inference calls",          values: ["100 / day",      "Unlimited (metered)", "Unlimited (metered)"] }
+        - { label: "API keys",                 values: ["1",              "10",                  "Unlimited"] }
+        - { label: "Concurrent requests",      values: ["2",              "50",                  "Custom"] }
+        - { label: "Bulk / streaming mode",    values: ["—",              "Included",            "Included"] }
+        - { label: "Federated participation",  values: ["—",              "Included",            "Included"] }
+    - title: "Support"
+      rows:
+        - { label: "Channel",                  values: ["Community",      "Email + chat",        "Named CSM + Slack Connect"] }
+        - { label: "First-response SLA",       values: ["Best effort",    "Next business day",   "1 hour (24×7, P1)"] }
+        - { label: "Uptime SLA",               values: ["—",              "99.9%",               "99.95% (custom available)"] }
+        - { label: "Onboarding",               values: ["Self-serve",     "Guided checklist",    "White-glove migration"] }
+    - title: "Compliance"
+      rows:
+        - { label: "Sovereign data plane",     values: ["—",              "EU multi-tenant",     "OVH SecNumCloud, Infomaniak, AWS Bahrain, AWS GovCloud"] }
+        - { label: "Data residency choice",    values: ["EU default",     "EU / US",             "Per-jurisdiction pinning"] }
+        - { label: "Audit evidence packs",     values: ["—",              "Quarterly",           "On demand + per-request"] }
+        - { label: "Per-jurisdiction counsel", values: ["—",              "—",                   "Included directory"] }
+        - { label: "DPA + sub-processor list", values: ["Standard DPA",   "Standard DPA",        "Negotiated DPA"] }
+    - title: "Payments"
+      rows:
+        - { label: "Card / ACH (Stripe)",      values: ["—",              "Included",            "Included"] }
+        - { label: "Onchain pay-in (USDC)",    values: ["—",              "Base, Arbitrum, Optimism", "Base, Arbitrum, Optimism"] }
+        - { label: "Developer payouts",        values: ["—",              "Fiat",                "Fiat or onchain (USDC)"] }
+        - { label: "Stripe Tax / VAT invoices",values: ["—",              "Included",            "Included"] }
+        - { label: "Custom invoicing & PO",    values: ["—",              "—",                   "Included"] }
+    - title: "Security"
+      rows:
+        - { label: "MFA",                      values: ["Optional",       "Enforced",            "Enforced + SSO/SAML"] }
+        - { label: "SSO / SCIM",               values: ["—",              "Google, Microsoft",   "SAML, OIDC, SCIM provisioning"] }
+        - { label: "Role-based access",        values: ["Owner only",     "Roles + scoped keys", "Custom roles + tenant isolation"] }
+        - { label: "Audit log retention",      values: ["30 days",        "1 year",              "Per jurisdiction (5–7 years)"] }
+        - { label: "Penetration test reports", values: ["—",              "Annual summary",      "Full report under NDA"] }
+
 compliance_badges:
   - { label: "SOC 2 Type II (in progress)" }
   - { label: "ISO 27001 (in progress)" }
