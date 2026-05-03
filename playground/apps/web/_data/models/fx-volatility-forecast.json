@@ -12,7 +12,61 @@
   "ratingCount": 47,
   "federated": false,
   "thumbnailUrl": null,
+  "trainingEnabled": false,
   "href": "/models/fx-volatility-forecast/",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "pair",
+      "horizon_days"
+    ],
+    "properties": {
+      "pair": {
+        "type": "string",
+        "enum": [
+          "EURUSD",
+          "USDJPY",
+          "GBPUSD",
+          "USDCHF",
+          "AUDUSD"
+        ]
+      },
+      "horizon_days": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 90,
+        "default": 10
+      },
+      "as_of": {
+        "type": "string",
+        "format": "date"
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "forecast_vol": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      "confidence_lo": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      "confidence_hi": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      }
+    }
+  },
   "description": null,
   "versions": [
     {
@@ -233,5 +287,10 @@
       "hash": "6c3905c16c3905c16c3905c16c3905c16c3905c16c3905c16c3905c16c3905c1"
     }
   ],
-  "favoritedByMe": false
+  "favoritedByMe": false,
+  "defaultInput": {
+    "pair": "EURUSD",
+    "horizon_days": 10,
+    "as_of": "2026-04-01"
+  }
 }

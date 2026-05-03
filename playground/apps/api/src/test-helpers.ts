@@ -91,8 +91,8 @@ export class StubD1 {
   users: Record<string, { id: string; email: string; created_at: number; updated_at: number; last_login_at: number | null }> = {};
   categories: Record<string, { slug: string; name: string; description: string; icon: string; sort_order: number }> = {};
   subcategories: Record<string, { slug: string; category_slug: string; name: string; sort_order: number }> = {};
-  models: Record<string, { slug: string; name: string; summary: string; category_slug: string; subcategory_slug: string | null; developer: string; status: string; featured: number; risk_tier: string; maturity: string; price_cents: number; rating_avg: number; rating_count: number; trending_score: number; federated: number; thumbnail_url: string | null; created_at: number; updated_at: number }> = {};
-  model_versions: Record<string, { id: string; model_slug: string; version: string; version_label: string | null; sha256: string | null; metrics: string | null; created_at: number }> = {};
+  models: Record<string, { slug: string; name: string; summary: string; category_slug: string; subcategory_slug: string | null; developer: string; status: string; featured: number; risk_tier: string; maturity: string; price_cents: number; rating_avg: number; rating_count: number; trending_score: number; federated: number; thumbnail_url: string | null; training_enabled?: number; created_at: number; updated_at: number }> = {};
+  model_versions: Record<string, { id: string; model_slug: string; version: string; version_label: string | null; sha256: string | null; metrics: string | null; input_schema?: string | null; output_schema?: string | null; created_at: number }> = {};
   model_audits: Record<string, { id: string; model_slug: string; auditor: string; standard: string; audited_at: number; passed: number; hash: string; created_at: number }> = {};
 
   prepare(query: string) {
@@ -230,6 +230,25 @@ export class StubD1 {
                 metrics,
                 created_at,
               };
+            }
+            return { success: true };
+          }
+          if (q.startsWith("UPDATE models SET training_enabled")) {
+            const [training_enabled, updated_at, slug] = vals as [number, number, string];
+            const m = this.models[slug];
+            if (m) {
+              m.training_enabled = training_enabled;
+              m.updated_at = updated_at;
+            }
+            return { success: true };
+          }
+          if (q.startsWith("UPDATE model_versions SET input_schema")) {
+            const [input_schema, output_schema, model_slug] = vals as [string, string, string];
+            for (const v of Object.values(this.model_versions)) {
+              if (v.model_slug === model_slug) {
+                v.input_schema = input_schema;
+                v.output_schema = output_schema;
+              }
             }
             return { success: true };
           }
@@ -457,6 +476,41 @@ export class InMemoryDetailRepository implements DetailRepository {
     }
     this.favorites.add(key);
     return true;
+  }
+}
+
+/**
+ * In-memory `PlaygroundRepository` for the playground run-endpoint tests.
+ * Mirrors `D1PlaygroundRepository` semantics: returns latest version by
+ * `created_at` and appends inference rows in insertion order.
+ */
+import type {
+  InferenceCallInsert,
+  PlaygroundRepository,
+  PlaygroundVersionRow,
+} from "./lib/playground-repo.js";
+
+export class InMemoryPlaygroundRepository implements PlaygroundRepository {
+  models: ModelRow[] = [];
+  versions: PlaygroundVersionRow[] = [];
+  inferenceCalls: InferenceCallInsert[] = [];
+
+  constructor(seed?: { models?: ModelRow[]; versions?: PlaygroundVersionRow[] }) {
+    if (seed?.models) this.models = seed.models;
+    if (seed?.versions) this.versions = seed.versions;
+  }
+  async getModel(slug: string): Promise<ModelRow | null> {
+    return this.models.find((m) => m.slug === slug) ?? null;
+  }
+  async getLatestVersion(slug: string): Promise<PlaygroundVersionRow | null> {
+    const list = this.versions
+      .filter((v) => v.model_slug === slug)
+      .slice()
+      .sort((a, b) => b.created_at - a.created_at);
+    return list[0] ?? null;
+  }
+  async insertInferenceCall(row: InferenceCallInsert): Promise<void> {
+    this.inferenceCalls.push(row);
   }
 }
 

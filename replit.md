@@ -625,3 +625,44 @@ Test status: **53 API vitests** green (was 40 — +13 detail/favorites/verify/
 reviews), root `pnpm -r typecheck` clean, ESLint clean, `pnpm -C apps/api run
 build` (wrangler dry-run) clean, `pnpm -C apps/web run build` (Jekyll) emits
 10 `/models/<slug>/index.html` pages + `/404.html`.
+
+## Phase 4 — Generic Playground Shell at `/playground/{slug}/` (T#13)
+
+Done. The playground reuses one Jekyll layout for all 10 featured models — the
+input/output schema lives in `apps/api/src/data/playground-mocks.ts` and is
+seeded into `model_versions.input_schema` / `model_versions.output_schema`.
+
+- **Migration `0004_playground.sql`** adds `input_schema` / `output_schema`
+  to `model_versions`, `training_enabled` to `models`, and a new
+  `inference_calls` audit table.
+- **`POST /api/playground/{slug}/run`** validates against the latest
+  version's `input_schema` (handwritten subset validator in
+  `apps/api/src/lib/schema-validate.ts` — number/integer/enum/date format/
+  boolean/array/object), dispatches a canned mock per slug, writes an
+  `inference_calls` row (sha-256 input hash, `mock=true`, `is_playground=true`),
+  and rate-limits via KV at 20/day per IP / 200/day per authed user.
+- **Generic shell** (`_layouts/playground.html` + `assets/js/playground-shell.js`):
+  4 tabs (Try / Train / Simulate / Backtest), header with risk badge + back
+  link + "Open detail page", sticky right rail with Run + Idle/Running/Done/
+  Error status pill, mobile-collapsed bottom action bar.
+- **SchemaForm** (`assets/js/schema-form.js`): vanilla-JS auto-generator with
+  blur validation that mirrors the server validator byte-for-byte (including
+  calendar-validity for `format: "date"`).
+- **Result panel**: recursive renderer with sparklines for numeric arrays
+  and Copy as JSON / Copy as cURL.
+- **Train tab** is shown only when `model.trainingEnabled` is true (gated
+  on `models.training_enabled`); otherwise an empty-state explains why.
+- **Simulate / Backtest** tabs ship as category-aware scaffolds (different
+  copy + tab labels for risk / trading / portfolio / fraud / compliance /
+  credit / esg).
+
+Notable deviation: the spec called for a React SchemaForm; the rest of the
+Jekyll site is plain JS, so the SchemaForm + playground shell are vanilla
+modules to match the existing convention. The handwritten JSON Schema
+validator (server + client) keeps both halves in lock-step without pulling
+in ajv or a bundler.
+
+Build wiring: `scripts/generate-data.ts` now emits `_playground/<slug>.md`
+for any model whose detail JSON has an `inputSchema`, and enriches
+`_data/models/<slug>.json` with `defaultInput` + `trainingEnabled` so the
+shell hydrates without a second round-trip.

@@ -17,6 +17,7 @@ import { FEATURED_MODELS } from "../src/data/featured-models.js";
 import { SUBCATEGORIES } from "../src/data/subcategories.js";
 import { AUDITS } from "../src/data/audits.js";
 import { METRICS } from "../src/data/metrics.js";
+import { PLAYGROUND_MOCKS_BY_SLUG } from "../src/data/playground-mocks.js";
 
 interface MinimalD1 {
   prepare(query: string): {
@@ -120,12 +121,30 @@ export async function seed(
       .run();
   }
 
+  // ── Phase 4: write playground input/output schemas + training flag ──────
+  // Re-runnable: UPDATEs are idempotent. We update *all* versions for a
+  // slug, but each seed writes exactly one version per model so this is a
+  // 1:1 update in practice.
+  for (const m of PLAYGROUND_MOCKS_BY_SLUG.values()) {
+    await db
+      .prepare(`UPDATE models SET training_enabled = ?, updated_at = ? WHERE slug = ?`)
+      .bind(m.trainingEnabled ? 1 : 0, now, m.slug)
+      .run();
+    await db
+      .prepare(
+        `UPDATE model_versions SET input_schema = ?, output_schema = ? WHERE model_slug = ?`,
+      )
+      .bind(JSON.stringify(m.inputSchema), JSON.stringify(m.outputSchema), m.slug)
+      .run();
+  }
+
   return {
     categories: CATEGORIES.length,
     subcategories: SUBCATEGORIES.length,
     models: FEATURED_MODELS.length,
     audits: AUDITS.length,
     metrics: METRICS.length,
+    playgroundMocks: PLAYGROUND_MOCKS_BY_SLUG.size,
   };
 }
 
@@ -166,6 +185,16 @@ export function emitSeedSql(now = Math.floor(Date.now() / 1000)): string {
   for (const a of AUDITS) {
     lines.push(
       `INSERT OR IGNORE INTO model_audits (id, model_slug, auditor, standard, audited_at, passed, hash, created_at) VALUES (${sqlValue(a.id)}, ${sqlValue(a.model_slug)}, ${sqlValue(a.auditor)}, ${sqlValue(a.standard)}, ${a.audited_at}, ${a.passed ? 1 : 0}, ${sqlValue(a.hash)}, ${now});`,
+    );
+  }
+
+  // Phase 4: training-enabled flag + per-version JSON schemas.
+  for (const m of PLAYGROUND_MOCKS_BY_SLUG.values()) {
+    lines.push(
+      `UPDATE models SET training_enabled = ${m.trainingEnabled ? 1 : 0}, updated_at = ${now} WHERE slug = ${sqlValue(m.slug)};`,
+    );
+    lines.push(
+      `UPDATE model_versions SET input_schema = ${sqlValue(JSON.stringify(m.inputSchema))}, output_schema = ${sqlValue(JSON.stringify(m.outputSchema))} WHERE model_slug = ${sqlValue(m.slug)};`,
     );
   }
 

@@ -12,7 +12,50 @@
   "ratingCount": 62,
   "federated": false,
   "thumbnailUrl": null,
+  "trainingEnabled": false,
   "href": "/models/yield-curve-predictor/",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "curve",
+      "horizon_months"
+    ],
+    "properties": {
+      "curve": {
+        "type": "string",
+        "enum": [
+          "UST",
+          "BUND",
+          "GILT",
+          "JGB"
+        ]
+      },
+      "horizon_months": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 60,
+        "default": 12
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "tenors_years": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      "yields_pct": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      }
+    }
+  },
   "description": null,
   "versions": [
     {
@@ -233,5 +276,9 @@
       "hash": "86dd971586dd971586dd971586dd971586dd971586dd971586dd971586dd9715"
     }
   ],
-  "favoritedByMe": false
+  "favoritedByMe": false,
+  "defaultInput": {
+    "curve": "UST",
+    "horizon_months": 12
+  }
 }

@@ -60,6 +60,8 @@ export interface ModelRow {
   trending_score: number;
   federated: number;
   thumbnail_url: string | null;
+  /** 0/1 — drives the Train tab in the playground (Phase 4). */
+  training_enabled?: number;
   created_at: number;
   updated_at: number;
 }
@@ -78,6 +80,7 @@ export interface ModelDTO {
   ratingCount: number;
   federated: boolean;
   thumbnailUrl: string | null;
+  trainingEnabled: boolean;
   href: string;
 }
 
@@ -96,6 +99,7 @@ export function rowToDto(row: ModelRow): ModelDTO {
     ratingCount: row.rating_count,
     federated: row.federated === 1,
     thumbnailUrl: row.thumbnail_url,
+    trainingEnabled: row.training_enabled === 1,
     href: `/models/${row.slug}/`,
   };
 }

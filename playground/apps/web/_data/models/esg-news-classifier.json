@@ -12,7 +12,44 @@
   "ratingCount": 39,
   "federated": false,
   "thumbnailUrl": null,
+  "trainingEnabled": false,
   "href": "/models/esg-news-classifier/",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "headline"
+    ],
+    "properties": {
+      "headline": {
+        "type": "string",
+        "maxLength": 300
+      },
+      "body": {
+        "type": "string",
+        "maxLength": 2000
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "labels": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "severity": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ]
+      }
+    }
+  },
   "description": null,
   "versions": [
     {
@@ -233,5 +270,9 @@
       "hash": "fd4ac578fd4ac578fd4ac578fd4ac578fd4ac578fd4ac578fd4ac578fd4ac578"
     }
   ],
-  "favoritedByMe": false
+  "favoritedByMe": false,
+  "defaultInput": {
+    "headline": "Regulator fines bank for AML breaches",
+    "body": "The supervisor cited weak transaction monitoring and missed sanctions hits."
+  }
 }

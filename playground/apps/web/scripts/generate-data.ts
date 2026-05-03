@@ -35,6 +35,7 @@ import { detailRoutes } from "../../api/src/routes/detail.ts";
 
 import { AUDITS } from "../../api/src/data/audits.ts";
 import { METRICS } from "../../api/src/data/metrics.ts";
+import { PLAYGROUND_MOCKS_BY_SLUG } from "../../api/src/data/playground-mocks.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const webRoot = resolve(here, "..");
@@ -42,9 +43,11 @@ const dataDir = join(webRoot, "_data");
 const collectionDir = join(webRoot, "_categories");
 const modelsCollectionDir = join(webRoot, "_models");
 const modelsDataDir = join(dataDir, "models");
+const playgroundCollectionDir = join(webRoot, "_playground");
 
 function toRow(m: (typeof FEATURED_MODELS)[number]): ModelRow {
   const now = Math.floor(Date.now() / 1000);
+  const pg = PLAYGROUND_MOCKS_BY_SLUG.get(m.slug);
   return {
     slug: m.slug,
     name: m.name,
@@ -62,6 +65,7 @@ function toRow(m: (typeof FEATURED_MODELS)[number]): ModelRow {
     trending_score: m.trending_score,
     federated: m.federated ? 1 : 0,
     thumbnail_url: m.thumbnail_url ?? null,
+    training_enabled: pg?.trainingEnabled ? 1 : 0,
     created_at: now,
     updated_at: now,
   };
@@ -72,6 +76,7 @@ async function main(): Promise<void> {
   await mkdir(collectionDir, { recursive: true });
   await mkdir(modelsCollectionDir, { recursive: true });
   await mkdir(modelsDataDir, { recursive: true });
+  await mkdir(playgroundCollectionDir, { recursive: true });
 
   const categories = CATEGORIES.map((c, i) => ({
     slug: c.slug,
@@ -101,13 +106,20 @@ async function main(): Promise<void> {
   const modelsRepo = new InMemoryModelsRepository(rows);
   const detailRepo = new InMemoryDetailRepository({
     models: rows,
-    versions: METRICS.map((m) => ({
-      model_slug: m.model_slug,
-      version: m.version,
-      version_label: m.version_label,
-      metrics: JSON.stringify(m.metrics),
-      created_at: 1730_000_000,
-    })),
+    versions: METRICS.map((m) => {
+      const pg = PLAYGROUND_MOCKS_BY_SLUG.get(m.model_slug);
+      return {
+        id: `mv_${m.model_slug}_${m.version}`,
+        model_slug: m.model_slug,
+        version: m.version,
+        version_label: m.version_label,
+        metrics: JSON.stringify(m.metrics),
+        sha256: null,
+        input_schema: pg ? JSON.stringify(pg.inputSchema) : null,
+        output_schema: pg ? JSON.stringify(pg.outputSchema) : null,
+        created_at: 1730_000_000,
+      };
+    }),
     audits: AUDITS.map((a) => ({
       id: a.id,
       model_slug: a.model_slug,
@@ -193,6 +205,35 @@ async function main(): Promise<void> {
       "",
     ].join("\n");
     await writeFile(join(modelsCollectionDir, `${m.slug}.md`), md);
+
+    // ── Playground page (Phase 4 generic shell) ────────────────────────
+    // Only emit a page for models that actually have a playground mock /
+    // schema in the API. The model.json file already carries inputSchema +
+    // outputSchema + trainingEnabled, so the layout hydrates from it.
+    const detailRecord = detail as { inputSchema?: unknown };
+    if (detailRecord.inputSchema != null && PLAYGROUND_MOCKS_BY_SLUG.has(m.slug)) {
+      // Inject defaultInput so the SchemaForm can hydrate without a second
+      // round-trip — same source of truth the API mock dispatcher uses.
+      const pg = PLAYGROUND_MOCKS_BY_SLUG.get(m.slug)!;
+      const enriched = { ...detail, defaultInput: pg.defaultInput, trainingEnabled: pg.trainingEnabled };
+      await writeFile(
+        join(modelsDataDir, `${m.slug}.json`),
+        JSON.stringify(enriched, null, 2) + "\n",
+      );
+      const pgMd = [
+        "---",
+        `slug: ${m.slug}`,
+        `name: ${JSON.stringify(m.name)}`,
+        `summary: ${JSON.stringify(m.summary)}`,
+        `category: ${m.category}`,
+        `risk_level: ${m.riskLevel}`,
+        `permalink: /playground/${m.slug}/`,
+        `layout: playground`,
+        "---",
+        "",
+      ].join("\n");
+      await writeFile(join(playgroundCollectionDir, `${m.slug}.md`), pgMd);
+    }
   }
 
   process.stdout.write(

@@ -12,7 +12,59 @@
   "ratingCount": 73,
   "federated": true,
   "thumbnailUrl": null,
+  "trainingEnabled": true,
   "href": "/models/insurance-claims-triage/",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "claim_amount",
+      "loss_type"
+    ],
+    "properties": {
+      "claim_amount": {
+        "type": "number",
+        "minimum": 0
+      },
+      "loss_type": {
+        "type": "string",
+        "enum": [
+          "auto",
+          "property",
+          "liability",
+          "workers-comp"
+        ]
+      },
+      "prior_claims": {
+        "type": "integer",
+        "minimum": 0,
+        "default": 0
+      },
+      "date_of_loss": {
+        "type": "string",
+        "format": "date"
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "severity": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "fraud_risk": {
+        "type": "number"
+      },
+      "queue": {
+        "type": "string"
+      }
+    }
+  },
   "description": null,
   "versions": [
     {
@@ -233,5 +285,11 @@
       "hash": "b1921d42b1921d42b1921d42b1921d42b1921d42b1921d42b1921d42b1921d42"
     }
   ],
-  "favoritedByMe": false
+  "favoritedByMe": false,
+  "defaultInput": {
+    "claim_amount": 4500,
+    "loss_type": "auto",
+    "prior_claims": 1,
+    "date_of_loss": "2026-04-15"
+  }
 }

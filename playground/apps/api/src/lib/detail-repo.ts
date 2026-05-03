@@ -28,6 +28,9 @@ export interface ModelVersionRow {
   version_label: string | null;
   metrics: string | null; // JSON-encoded MetricsBlob
   sha256: string | null;
+  /** JSON-encoded JSON Schema (Phase 4). Null until seeded. */
+  input_schema?: string | null;
+  output_schema?: string | null;
   created_at: number;
 }
 
@@ -79,6 +82,9 @@ export interface ModelDetailDTO extends ModelDTO {
     hash: string;
   }[];
   favoritedByMe: boolean;
+  /** Latest version's input/output JSON Schemas — null if none stored yet. */
+  inputSchema: unknown | null;
+  outputSchema: unknown | null;
 }
 
 export const REVIEWS_PAGE_SIZE = 20;
@@ -150,8 +156,14 @@ export async function buildModelDetail(
       metrics = null;
     }
   }
+  const safeParse = (s: string | null | undefined): unknown | null => {
+    if (!s) return null;
+    try { return JSON.parse(s); } catch { return null; }
+  };
   return {
     ...rowToDto(row),
+    inputSchema: safeParse(latest?.input_schema),
+    outputSchema: safeParse(latest?.output_schema),
     description,
     versions: sorted.map((v) => ({
       version: v.version,
@@ -197,7 +209,8 @@ export class D1DetailRepository implements DetailRepository {
       .prepare(
         `SELECT slug, name, summary, category_slug, subcategory_slug, developer, status,
                 featured, risk_tier, maturity, price_cents, rating_avg, rating_count,
-                trending_score, federated, thumbnail_url, created_at, updated_at
+                trending_score, federated, thumbnail_url, training_enabled,
+                created_at, updated_at
            FROM models WHERE slug = ?`,
       )
       .bind(slug)
@@ -216,7 +229,8 @@ export class D1DetailRepository implements DetailRepository {
   async listVersions(slug: string): Promise<ModelVersionRow[]> {
     const r = await this.db
       .prepare(
-        `SELECT id, model_slug, version, version_label, metrics, sha256, created_at
+        `SELECT id, model_slug, version, version_label, metrics, sha256,
+              input_schema, output_schema, created_at
            FROM model_versions WHERE model_slug = ? ORDER BY created_at DESC`,
       )
       .bind(slug)

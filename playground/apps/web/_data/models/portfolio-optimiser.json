@@ -12,7 +12,57 @@
   "ratingCount": 84,
   "federated": true,
   "thumbnailUrl": null,
+  "trainingEnabled": true,
   "href": "/models/portfolio-optimiser/",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "tickers",
+      "risk_aversion"
+    ],
+    "properties": {
+      "tickers": {
+        "type": "array",
+        "title": "Tickers",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 2,
+        "maxItems": 20
+      },
+      "risk_aversion": {
+        "type": "number",
+        "title": "Risk aversion (λ)",
+        "minimum": 0.1,
+        "maximum": 10,
+        "multipleOf": 0.1,
+        "default": 2.5
+      },
+      "long_only": {
+        "type": "boolean",
+        "title": "Long only",
+        "default": true
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "weights": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      "expected_return": {
+        "type": "number"
+      },
+      "expected_vol": {
+        "type": "number"
+      }
+    }
+  },
   "description": null,
   "versions": [
     {
@@ -233,5 +283,15 @@
       "hash": "82ec1a5a82ec1a5a82ec1a5a82ec1a5a82ec1a5a82ec1a5a82ec1a5a82ec1a5a"
     }
   ],
-  "favoritedByMe": false
+  "favoritedByMe": false,
+  "defaultInput": {
+    "tickers": [
+      "AAPL",
+      "MSFT",
+      "NVDA",
+      "GOOGL"
+    ],
+    "risk_aversion": 2.5,
+    "long_only": true
+  }
 }

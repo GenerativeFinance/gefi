@@ -12,7 +12,37 @@
   "ratingCount": 304,
   "federated": false,
   "thumbnailUrl": null,
+  "trainingEnabled": false,
   "href": "/models/compliance-redaction-llm/",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "text"
+    ],
+    "properties": {
+      "text": {
+        "type": "string",
+        "title": "Transcript",
+        "maxLength": 4000
+      },
+      "redact_counterparties": {
+        "type": "boolean",
+        "default": true
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "redacted_text": {
+        "type": "string"
+      },
+      "spans_redacted": {
+        "type": "integer"
+      }
+    }
+  },
   "description": null,
   "versions": [
     {
@@ -233,5 +263,9 @@
       "hash": "032575bc032575bc032575bc032575bc032575bc032575bc032575bc032575bc"
     }
   ],
-  "favoritedByMe": false
+  "favoritedByMe": false,
+  "defaultInput": {
+    "text": "Spoke with John Smith at Acme Corp about the Q4 trade; SSN 123-45-6789.",
+    "redact_counterparties": true
+  }
 }

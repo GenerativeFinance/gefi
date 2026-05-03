@@ -12,7 +12,56 @@
   "ratingCount": 128,
   "federated": false,
   "thumbnailUrl": null,
+  "trainingEnabled": false,
   "href": "/models/sentiment-from-filings/",
+  "inputSchema": {
+    "type": "object",
+    "title": "Filing snippet",
+    "additionalProperties": false,
+    "required": [
+      "text"
+    ],
+    "properties": {
+      "text": {
+        "type": "string",
+        "title": "Filing text",
+        "maxLength": 4000
+      },
+      "section": {
+        "type": "string",
+        "title": "Section",
+        "enum": [
+          "MD&A",
+          "Risk Factors",
+          "Liquidity",
+          "Other"
+        ],
+        "default": "MD&A"
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "sentiment": {
+        "type": "string",
+        "enum": [
+          "positive",
+          "neutral",
+          "negative"
+        ]
+      },
+      "confidence": {
+        "type": "number"
+      },
+      "topics": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
   "description": null,
   "versions": [
     {
@@ -233,5 +282,9 @@
       "hash": "7db0b4c67db0b4c67db0b4c67db0b4c67db0b4c67db0b4c67db0b4c67db0b4c6"
     }
   ],
-  "favoritedByMe": false
+  "favoritedByMe": false,
+  "defaultInput": {
+    "text": "Our liquidity position remains strong with $2.3B in cash and revolving facilities…",
+    "section": "Liquidity"
+  }
 }

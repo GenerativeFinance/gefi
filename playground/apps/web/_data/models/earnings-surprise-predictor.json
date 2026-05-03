@@ -12,7 +12,49 @@
   "ratingCount": 18,
   "federated": false,
   "thumbnailUrl": null,
+  "trainingEnabled": false,
   "href": "/models/earnings-surprise-predictor/",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "ticker",
+      "consensus_eps"
+    ],
+    "properties": {
+      "ticker": {
+        "type": "string"
+      },
+      "consensus_eps": {
+        "type": "number"
+      },
+      "revisions_30d": {
+        "type": "integer",
+        "minimum": -50,
+        "maximum": 50,
+        "default": 0
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "surprise_direction": {
+        "type": "string",
+        "enum": [
+          "beat",
+          "inline",
+          "miss"
+        ]
+      },
+      "surprise_pct": {
+        "type": "number"
+      },
+      "confidence": {
+        "type": "number"
+      }
+    }
+  },
   "description": null,
   "versions": [
     {
@@ -233,5 +275,10 @@
       "hash": "9894f17b9894f17b9894f17b9894f17b9894f17b9894f17b9894f17b9894f17b"
     }
   ],
-  "favoritedByMe": false
+  "favoritedByMe": false,
+  "defaultInput": {
+    "ticker": "AAPL",
+    "consensus_eps": 2.1,
+    "revisions_30d": 3
+  }
 }

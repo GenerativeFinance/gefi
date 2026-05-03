@@ -13,6 +13,7 @@
     "ratingCount": 211,
     "federated": true,
     "thumbnailUrl": null,
+    "trainingEnabled": true,
     "href": "/models/credit-default-classifier/"
   },
   {
@@ -29,6 +30,7 @@
     "ratingCount": 304,
     "federated": false,
     "thumbnailUrl": null,
+    "trainingEnabled": false,
     "href": "/models/compliance-redaction-llm/"
   },
   {
@@ -45,6 +47,7 @@
     "ratingCount": 128,
     "federated": false,
     "thumbnailUrl": null,
+    "trainingEnabled": false,
     "href": "/models/sentiment-from-filings/"
   },
   {
@@ -61,6 +64,7 @@
     "ratingCount": 84,
     "federated": true,
     "thumbnailUrl": null,
+    "trainingEnabled": true,
     "href": "/models/portfolio-optimiser/"
   },
   {
@@ -77,6 +81,7 @@
     "ratingCount": 156,
     "federated": true,
     "thumbnailUrl": null,
+    "trainingEnabled": false,
     "href": "/models/fraud-anomaly-detector/"
   },
   {
@@ -93,6 +98,7 @@
     "ratingCount": 73,
     "federated": true,
     "thumbnailUrl": null,
+    "trainingEnabled": true,
     "href": "/models/insurance-claims-triage/"
   },
   {
@@ -109,6 +115,7 @@
     "ratingCount": 47,
     "federated": false,
     "thumbnailUrl": null,
+    "trainingEnabled": false,
     "href": "/models/fx-volatility-forecast/"
   },
   {
@@ -125,6 +132,7 @@
     "ratingCount": 62,
     "federated": false,
     "thumbnailUrl": null,
+    "trainingEnabled": false,
     "href": "/models/yield-curve-predictor/"
   },
   {
@@ -141,6 +149,7 @@
     "ratingCount": 39,
     "federated": false,
     "thumbnailUrl": null,
+    "trainingEnabled": false,
     "href": "/models/esg-news-classifier/"
   },
   {
@@ -157,6 +166,7 @@
     "ratingCount": 18,
     "federated": false,
     "thumbnailUrl": null,
+    "trainingEnabled": false,
     "href": "/models/earnings-surprise-predictor/"
   }
 ]

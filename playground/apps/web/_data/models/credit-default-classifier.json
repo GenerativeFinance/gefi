@@ -12,7 +12,63 @@
   "ratingCount": 211,
   "federated": true,
   "thumbnailUrl": null,
+  "trainingEnabled": true,
   "href": "/models/credit-default-classifier/",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "revenue",
+      "debt_to_equity",
+      "industry"
+    ],
+    "properties": {
+      "revenue": {
+        "type": "number",
+        "title": "Revenue (USD)",
+        "minimum": 0
+      },
+      "debt_to_equity": {
+        "type": "number",
+        "title": "Debt/Equity",
+        "minimum": 0,
+        "maximum": 20
+      },
+      "industry": {
+        "type": "string",
+        "enum": [
+          "retail",
+          "manufacturing",
+          "tech",
+          "healthcare",
+          "energy"
+        ]
+      },
+      "years_in_business": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 200,
+        "default": 5
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "pd_12m": {
+        "type": "number"
+      },
+      "rating": {
+        "type": "string"
+      },
+      "drivers": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
   "description": null,
   "versions": [
     {
@@ -233,5 +289,11 @@
       "hash": "67d172be67d172be67d172be67d172be67d172be67d172be67d172be67d172be"
     }
   ],
-  "favoritedByMe": false
+  "favoritedByMe": false,
+  "defaultInput": {
+    "revenue": 5000000,
+    "debt_to_equity": 1.4,
+    "industry": "manufacturing",
+    "years_in_business": 8
+  }
 }
