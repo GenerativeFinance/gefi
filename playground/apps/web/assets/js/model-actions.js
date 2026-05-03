@@ -60,6 +60,27 @@
   var current = !!(data && data.favoritedByMe);
   paintFav(current);
 
+  // Build-time JSON has `favoritedByMe: false` (no user context at jekyll
+  // build). Re-fetch the detail with credentials so the heart reflects the
+  // *signed-in* user's state right after hydration — that's the "visible
+  // diff after refresh" requirement. Silent failure on network/auth errors
+  // keeps the page usable for anonymous visitors.
+  if (apiBase) {
+    fetch(apiBase + "/api/models/" + encodeURIComponent(slug), {
+      credentials: "include",
+      headers: { accept: "application/json" },
+    })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (fresh) {
+        if (!fresh || typeof fresh.favoritedByMe !== "boolean") return;
+        if (fresh.favoritedByMe !== current) {
+          current = fresh.favoritedByMe;
+          paintFav(current);
+        }
+      })
+      .catch(function () { /* anonymous or offline — ignore */ });
+  }
+
   function paintFav(on) {
     favBtn.setAttribute("aria-pressed", on ? "true" : "false");
     favBtn.classList.toggle("is-favorited", on);

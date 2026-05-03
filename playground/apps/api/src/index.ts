@@ -20,23 +20,44 @@ app.get("/", (c) => c.html(renderHome()));
 
 app.get("/api/health", healthHandler);
 
-// Permissive CORS for the public catalog so the Jekyll frontend (different
-// origin in dev/prod — :4000 vs :8787) can hit /api/models from the browser.
-// Mounted BEFORE the route so the middleware wraps the handler regardless of
-// Hono's internal matching order. Auth routes remain same-origin via the
-// cookie attributes and intentionally skip CORS.
-const corsHeaders = async (c: { res: Response }, next: () => Promise<void>) => {
+// CORS for the public catalog + detail + favorites surface. The Jekyll site
+// runs on a different origin (`:4000` in dev, the docs domain in prod) than
+// the Worker (`:8787` / api.gefi.io), so the browser is in cross-origin
+// mode for every fetch from a model page. Two things matter:
+//
+//   1. credentialed POSTs (favorites toggle, review submit, verify) need
+//      `access-control-allow-credentials: true` AND a non-wildcard
+//      `access-control-allow-origin` echoing the caller's Origin header.
+//   2. preflight (OPTIONS) must list the verbs we actually use, plus the
+//      `content-type` request header for JSON bodies.
+//
+// We intentionally echo the request Origin rather than maintain an env-
+// configured allowlist for now — Phase 5 hardening can switch to an
+// explicit list once the prod web origin is locked in.
+const corsHeaders = async (
+  c: { req: { header: (n: string) => string | undefined }; res: Response },
+  next: () => Promise<void>,
+) => {
   await next();
-  c.res.headers.set("access-control-allow-origin", "*");
-  c.res.headers.set("access-control-allow-methods", "GET, OPTIONS");
+  const origin = c.req.header("origin");
+  if (origin) {
+    c.res.headers.set("access-control-allow-origin", origin);
+    c.res.headers.set("access-control-allow-credentials", "true");
+  } else {
+    // Same-origin or non-browser caller — wildcard is safe (no credentials).
+    c.res.headers.set("access-control-allow-origin", "*");
+  }
+  c.res.headers.set("access-control-allow-methods", "GET, POST, OPTIONS");
+  c.res.headers.set("access-control-allow-headers", "content-type");
+  c.res.headers.set("access-control-max-age", "600");
   c.res.headers.set("vary", "Origin");
 };
 app.use("/api/models", corsHeaders);
 app.use("/api/models/*", corsHeaders);
 app.options("/api/models", (c) => c.body(null, 204));
 app.options("/api/models/*", (c) => c.body(null, 204));
-// /api/favorites/* is hit cross-origin from the Jekyll site too — same
-// CORS contract as catalog/detail so the watchlist heart works in browsers.
+// /api/favorites/* is hit cross-origin from the Jekyll site with credentials,
+// so it goes through the same handler.
 app.use("/api/favorites/*", corsHeaders);
 app.options("/api/favorites/*", (c) => c.body(null, 204));
 

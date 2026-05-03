@@ -21,15 +21,17 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
+import { Hono } from "hono";
 import { CATEGORIES } from "../../api/src/data/categories.ts";
 import { SUBCATEGORIES } from "../../api/src/data/subcategories.ts";
 import { FEATURED_MODELS } from "../../api/src/data/featured-models.ts";
+import { type ModelRow } from "../../api/src/lib/models-repo.ts";
 import {
-  listModels,
-  parseListQuery,
-  type ModelRow,
-} from "../../api/src/lib/models-repo.ts";
-import { InMemoryModelsRepository } from "../../api/src/test-helpers.ts";
+  InMemoryModelsRepository,
+  InMemoryDetailRepository,
+} from "../../api/src/test-helpers.ts";
+import { modelsRoutes } from "../../api/src/routes/models.ts";
+import { detailRoutes } from "../../api/src/routes/detail.ts";
 
 import { AUDITS } from "../../api/src/data/audits.ts";
 import { METRICS } from "../../api/src/data/metrics.ts";
@@ -90,13 +92,49 @@ async function main(): Promise<void> {
     name: s.name,
   }));
 
-  // Build the featured rail through the same listModels orchestration the
-  // API uses at runtime — same DTO shape, same default sort (trending).
-  const repo = new InMemoryModelsRepository(FEATURED_MODELS.map(toRow));
-  const featuredResp = await listModels(
-    repo,
-    parseListQuery(new URLSearchParams("featured=1&limit=10")),
+  // Stand up an in-process copy of the Worker so the generator consumes the
+  // exact `/api/models?…` endpoints the browser hits at runtime. Routes are
+  // registered in the same order as `apps/api/src/index.ts` (detail before
+  // catalog) so `/api/models/:slug` resolves to the detail handler. Using
+  // `app.request(...)` exercises Hono's full middleware + routing stack.
+  const rows = FEATURED_MODELS.map(toRow);
+  const modelsRepo = new InMemoryModelsRepository(rows);
+  const detailRepo = new InMemoryDetailRepository({
+    models: rows,
+    versions: METRICS.map((m) => ({
+      model_slug: m.model_slug,
+      version: m.version,
+      version_label: m.version_label,
+      metrics: JSON.stringify(m.metrics),
+      created_at: 1730_000_000,
+    })),
+    audits: AUDITS.map((a) => ({
+      id: a.id,
+      model_slug: a.model_slug,
+      auditor: a.auditor,
+      standard: a.standard,
+      audited_at: a.audited_at,
+      passed: a.passed ? 1 : 0,
+      hash: a.hash,
+    })),
+  });
+  const app = new Hono();
+  app.route(
+    "/api/models",
+    detailRoutes({ repository: detailRepo, resolveUserId: () => null }),
   );
+  app.route("/api/models", modelsRoutes({ repository: modelsRepo }));
+
+  async function apiJson<T>(path: string): Promise<T> {
+    const res = await app.request(path);
+    if (!res.ok) throw new Error(`api ${path} → ${res.status}`);
+    return (await res.json()) as T;
+  }
+
+  // Featured rail (same call the home page makes at runtime).
+  const featuredResp = await apiJson<{
+    items: { slug: string; name: string; category: string }[];
+  }>("/api/models?featured=1&limit=10");
   const featured = featuredResp.items;
 
   await writeFile(join(dataDir, "categories.json"), JSON.stringify(categories, null, 2) + "\n");
@@ -124,44 +162,20 @@ async function main(): Promise<void> {
     await writeFile(join(collectionDir, `${c.slug}.md`), md);
   }
 
-  // Per-model detail data + collection stub. Mirrors the GET /api/models/:slug
-  // payload so the detail page can render server-side and JS can hydrate from
-  // the embedded <script id="model-data">. Built from the SAME repo-mapped
-  // ModelDTO + the audits/metrics seed so the catalog and detail stay 1:1.
-  const auditsBySlug = new Map<string, typeof AUDITS[number][]>();
-  for (const a of AUDITS) {
-    const arr = auditsBySlug.get(a.model_slug) ?? [];
-    arr.push(a);
-    auditsBySlug.set(a.model_slug, arr);
-  }
-  const metricsBySlug = new Map<string, typeof METRICS[number]>();
-  for (const m of METRICS) metricsBySlug.set(m.model_slug, m);
-
-  // Re-list with no filter so we get every model as a DTO.
-  const allRepo = new InMemoryModelsRepository(FEATURED_MODELS.map(toRow));
-  const allResp = await listModels(
-    allRepo,
-    parseListQuery(new URLSearchParams("all=1")),
-  );
+  // Per-model detail data + collection stub. Sourced from the live
+  // `GET /api/models?all=1` + `GET /api/models/:slug` endpoints so the
+  // catalog, detail JSON, and runtime API responses stay byte-identical.
+  // `favoritedByMe` is necessarily `false` here (no auth at build time);
+  // model-actions.js re-fetches /api/models/:slug with credentials on load
+  // to rehydrate the watchlist heart for signed-in users.
+  const allResp = await apiJson<{
+    items: { slug: string; name: string; summary: string; category: string; riskLevel: string }[];
+  }>("/api/models?all=1");
 
   for (const m of allResp.items) {
-    const aud = (auditsBySlug.get(m.slug) ?? []).map((a) => ({
-      id: a.id,
-      auditor: a.auditor,
-      standard: a.standard,
-      auditedAt: a.audited_at,
-      passed: a.passed,
-      hash: a.hash,
-    }));
-    const metric = metricsBySlug.get(m.slug);
-    const detail = {
-      ...m,
-      description: null as string | null,
-      versions: metric ? [{ version: metric.version, label: metric.version_label, createdAt: 1730_000_000 }] : [],
-      metrics: metric?.metrics ?? null,
-      audits: aud,
-      favoritedByMe: false,
-    };
+    const detail = await apiJson<Record<string, unknown>>(
+      `/api/models/${encodeURIComponent(m.slug)}`,
+    );
     await writeFile(
       join(modelsDataDir, `${m.slug}.json`),
       JSON.stringify(detail, null, 2) + "\n",
@@ -182,7 +196,7 @@ async function main(): Promise<void> {
   }
 
   process.stdout.write(
-    `[generate-data] wrote ${categories.length} categories, ${subcategories.length} subcategories, ${featured.length} featured models, ${allResp.items.length} model detail pages\n`,
+    `[generate-data] wrote ${categories.length} categories, ${subcategories.length} subcategories, ${featured.length} featured models, ${allResp.items.length} model detail pages (sourced via in-process /api/models)\n`,
   );
 }
 
