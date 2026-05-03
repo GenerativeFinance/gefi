@@ -8,10 +8,14 @@
  *   _categories/<slug>.md    — one Markdown stub per category for the
  *                              `/categories/<slug>/` Jekyll collection page
  *
- * The Jekyll build runs this first via the `predev`/`prebuild` npm hooks so
- * data + collection files are always in sync with the API seed. Anything
- * existing in `_categories/` is overwritten on every run (frontmatter is
- * the source of truth; the body is intentionally empty).
+ * The featured list is built from the same `/api/models?featured=1` code
+ * path the Worker serves at runtime — we point `listModels(...)` at an
+ * `InMemoryModelsRepository` seeded with `FEATURED_MODELS`, so the carousel
+ * shape and ordering match the API byte-for-byte.
+ *
+ * Runs first via the `predev`/`prebuild` npm hooks so data + collection
+ * files are always in sync with the API. Existing `_categories/` files are
+ * overwritten on every run (frontmatter is the source of truth).
  */
 import { mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -20,11 +24,41 @@ import { dirname, join, resolve } from "node:path";
 import { CATEGORIES } from "../../api/src/data/categories.ts";
 import { SUBCATEGORIES } from "../../api/src/data/subcategories.ts";
 import { FEATURED_MODELS } from "../../api/src/data/featured-models.ts";
+import {
+  listModels,
+  parseListQuery,
+  type ModelRow,
+} from "../../api/src/lib/models-repo.ts";
+import { InMemoryModelsRepository } from "../../api/src/test-helpers.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const webRoot = resolve(here, "..");
 const dataDir = join(webRoot, "_data");
 const collectionDir = join(webRoot, "_categories");
+
+function toRow(m: (typeof FEATURED_MODELS)[number]): ModelRow {
+  const now = Math.floor(Date.now() / 1000);
+  return {
+    slug: m.slug,
+    name: m.name,
+    summary: m.summary,
+    category_slug: m.category_slug,
+    subcategory_slug: m.subcategory_slug ?? null,
+    developer: m.developer,
+    status: "approved",
+    featured: 1,
+    risk_tier: m.risk_tier,
+    maturity: m.maturity,
+    price_cents: m.price_cents,
+    rating_avg: m.rating_avg,
+    rating_count: m.rating_count,
+    trending_score: m.trending_score,
+    federated: m.federated ? 1 : 0,
+    thumbnail_url: m.thumbnail_url ?? null,
+    created_at: now,
+    updated_at: now,
+  };
+}
 
 async function main(): Promise<void> {
   await mkdir(dataDir, { recursive: true });
@@ -49,22 +83,14 @@ async function main(): Promise<void> {
     name: s.name,
   }));
 
-  const featured = FEATURED_MODELS.map((m) => ({
-    slug: m.slug,
-    name: m.name,
-    summary: m.summary,
-    category: m.category_slug,
-    subcategory: m.subcategory_slug ?? null,
-    developer: m.developer,
-    riskLevel: m.risk_tier,
-    maturity: m.maturity,
-    price: m.price_cents,
-    rating: m.rating_avg,
-    ratingCount: m.rating_count,
-    federated: m.federated,
-    thumbnailUrl: m.thumbnail_url ?? null,
-    href: `/models/${m.slug}/`,
-  }));
+  // Build the featured rail through the same listModels orchestration the
+  // API uses at runtime — same DTO shape, same default sort (trending).
+  const repo = new InMemoryModelsRepository(FEATURED_MODELS.map(toRow));
+  const featuredResp = await listModels(
+    repo,
+    parseListQuery(new URLSearchParams("featured=1&limit=10")),
+  );
+  const featured = featuredResp.items;
 
   await writeFile(join(dataDir, "categories.json"), JSON.stringify(categories, null, 2) + "\n");
   await writeFile(

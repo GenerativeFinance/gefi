@@ -1,29 +1,35 @@
 {%- comment -%}
-  Global header search — ARIA 1.2 combobox pattern.
+  Global search — ARIA 1.2 combobox pattern.
+  Used twice on the home page (header + hero); supports an `id_prefix`
+  parameter so the input/listbox IDs stay unique. `search.js` binds to
+  every `.global-search__input` independently.
   - Input owns the listbox via aria-controls.
   - aria-expanded toggles when results render.
   - aria-activedescendant moves with arrow-key focus (handled by search.js).
   - Falls back to a real form submit (?q=…) when JS is disabled.
 {%- endcomment -%}
-<form class="global-search" role="search" action="{{ '/' | relative_url }}" method="get">
+{%- assign p = include.id_prefix | default: "" -%}
+{%- assign placeholder = include.placeholder | default: "Search models, categories…" -%}
+{%- assign cls = include.modifier_class | default: "" -%}
+<form class="global-search {{ cls }}" role="search" action="{{ '/' | relative_url }}" method="get">
   <div class="global-search__combobox"
        role="combobox"
        aria-haspopup="listbox"
-       aria-owns="search-listbox"
+       aria-owns="{{ p }}search-listbox"
        aria-expanded="false">
-    <label class="visually-hidden" for="global-search-input">Search models</label>
+    <label class="visually-hidden" for="{{ p }}global-search-input">Search models</label>
     <input
-      id="global-search-input"
+      id="{{ p }}global-search-input"
       class="global-search__input"
       type="search"
       name="q"
-      placeholder="Search models, categories…"
+      placeholder="{{ placeholder }}"
       autocomplete="off"
       spellcheck="false"
-      aria-controls="search-listbox"
+      aria-controls="{{ p }}search-listbox"
       aria-autocomplete="list"
     />
-    <ul id="search-listbox"
+    <ul id="{{ p }}search-listbox"
         class="global-search__listbox"
         role="listbox"
         aria-label="Search results"

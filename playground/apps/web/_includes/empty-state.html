@@ -1,26 +1,49 @@
 {%- comment -%}
-  Three-variant empty-state include. `variant` selects the SVG and copy.
+  Three-variant empty-state include with heading + body + CTA.
   Variants:
-    - search    : nothing matched the search query
-    - filter    : filters yielded zero results
-    - category  : a category landing page has no models yet
+    - search    : nothing matched the search query   (CTA: clear search)
+    - filter    : filters yielded zero results       (CTA: clear filters)
+    - category  : a category landing page is empty   (CTA: browse all categories)
+  Optional override params: `title`, `body`, `cta_label`, `cta_href`,
+  `cta_action` (data-action hook for client JS).
 {%- endcomment -%}
 {%- assign variant = include.variant | default: "search" -%}
 {%- if variant == "search" -%}
-  {%- assign img = "/assets/img/empty-search.svg" -%}
-  {%- assign title = "No models match your search" -%}
-  {%- assign body = "Try a different keyword or browse the category grid below." -%}
+  {%- assign img        = "/assets/img/empty-search.svg" -%}
+  {%- assign d_title    = "No models match your search" -%}
+  {%- assign d_body     = "No models match — try clearing filters." -%}
+  {%- assign d_cta      = "Clear search" -%}
+  {%- assign d_action   = "clear-search" -%}
+  {%- assign d_href     = "/" -%}
 {%- elsif variant == "filter" -%}
-  {%- assign img = "/assets/img/empty-filter.svg" -%}
-  {%- assign title = "No models match those filters" -%}
-  {%- assign body = "Loosen a filter or clear all to see the full catalog." -%}
+  {%- assign img        = "/assets/img/empty-filter.svg" -%}
+  {%- assign d_title    = "No models match those filters" -%}
+  {%- assign d_body     = "No models match — try clearing filters." -%}
+  {%- assign d_cta      = "Clear filters" -%}
+  {%- assign d_action   = "clear-filters" -%}
+  {%- assign d_href     = "" -%}
 {%- else -%}
-  {%- assign img = "/assets/img/empty-category.svg" -%}
-  {%- assign title = "Nothing here yet" -%}
-  {%- assign body = "We're curating the first models for this category. Check back soon." -%}
+  {%- assign img        = "/assets/img/empty-category.svg" -%}
+  {%- assign d_title    = "Nothing here yet" -%}
+  {%- assign d_body     = "We're curating the first models for this category. Browse the rest of the catalog while we build it out." -%}
+  {%- assign d_cta      = "Browse all categories" -%}
+  {%- assign d_action   = "browse-categories" -%}
+  {%- assign d_href     = "/" -%}
 {%- endif -%}
-<div class="empty-state" role="status">
-  <img src="{{ img | relative_url }}" alt="" width="120" height="120" />
+{%- assign title      = include.title      | default: d_title -%}
+{%- assign body       = include.body       | default: d_body -%}
+{%- assign cta_label  = include.cta_label  | default: d_cta -%}
+{%- assign cta_href   = include.cta_href   | default: d_href -%}
+{%- assign cta_action = include.cta_action | default: d_action -%}
+<div class="empty-state empty-state--{{ variant }}" role="status" data-empty-variant="{{ variant }}">
+  <img class="empty-state__img" src="{{ img | relative_url }}" alt="" width="120" height="120" />
   <h2 class="empty-state__title">{{ title }}</h2>
   <p class="empty-state__body">{{ body }}</p>
+  {%- if cta_label and cta_label != "" -%}
+    {%- if cta_href and cta_href != "" -%}
+      <a class="btn btn--secondary empty-state__cta" href="{{ cta_href | relative_url }}" data-action="{{ cta_action }}">{{ cta_label }}</a>
+    {%- else -%}
+      <button type="button" class="btn btn--secondary empty-state__cta" data-action="{{ cta_action }}">{{ cta_label }}</button>
+    {%- endif -%}
+  {%- endif -%}
 </div>

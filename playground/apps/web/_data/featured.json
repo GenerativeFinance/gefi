@@ -1,5 +1,37 @@
 [
   {
+    "slug": "credit-default-classifier",
+    "name": "Privacy-First Federated Credit Oracle",
+    "summary": "Gradient-boosted PD model with alt-data feature pack for SME books.",
+    "category": "credit-scoring",
+    "subcategory": "sme",
+    "developer": "GeFi Labs",
+    "riskLevel": "high",
+    "maturity": "production",
+    "price": 14900,
+    "rating": 4.8,
+    "ratingCount": 211,
+    "federated": true,
+    "thumbnailUrl": null,
+    "href": "/models/credit-default-classifier/"
+  },
+  {
+    "slug": "compliance-redaction-llm",
+    "name": "Compliance Redaction LLM",
+    "summary": "PII and counterparty-name redaction tuned for chat and call transcripts.",
+    "category": "compliance-aml",
+    "subcategory": "transaction-monitoring",
+    "developer": "GeFi Labs",
+    "riskLevel": "low",
+    "maturity": "production",
+    "price": 7900,
+    "rating": 4.9,
+    "ratingCount": 304,
+    "federated": false,
+    "thumbnailUrl": null,
+    "href": "/models/compliance-redaction-llm/"
+  },
+  {
     "slug": "sentiment-from-filings",
     "name": "Sentiment from Filings",
     "summary": "FinBERT-style classifier scoring 10-K and 10-Q narrative sections.",
@@ -32,22 +64,6 @@
     "href": "/models/portfolio-optimiser/"
   },
   {
-    "slug": "credit-default-classifier",
-    "name": "Privacy-First Federated Credit Oracle",
-    "summary": "Gradient-boosted PD model with alt-data feature pack for SME books.",
-    "category": "credit-scoring",
-    "subcategory": "sme",
-    "developer": "GeFi Labs",
-    "riskLevel": "high",
-    "maturity": "production",
-    "price": 14900,
-    "rating": 4.8,
-    "ratingCount": 211,
-    "federated": true,
-    "thumbnailUrl": null,
-    "href": "/models/credit-default-classifier/"
-  },
-  {
     "slug": "fraud-anomaly-detector",
     "name": "Fraud Anomaly Detector",
     "summary": "Graph autoencoder flagging coordinated fraud rings on payment networks.",
@@ -62,6 +78,22 @@
     "federated": true,
     "thumbnailUrl": null,
     "href": "/models/fraud-anomaly-detector/"
+  },
+  {
+    "slug": "insurance-claims-triage",
+    "name": "Insurance Claims Triage",
+    "summary": "Severity and fraud-risk co-model routing claims to the right adjuster queue.",
+    "category": "insurance-underwriting",
+    "subcategory": "p-and-c",
+    "developer": "GeFi Labs",
+    "riskLevel": "medium",
+    "maturity": "staging",
+    "price": 11900,
+    "rating": 4.5,
+    "ratingCount": 73,
+    "federated": true,
+    "thumbnailUrl": null,
+    "href": "/models/insurance-claims-triage/"
   },
   {
     "slug": "fx-volatility-forecast",
@@ -96,38 +128,6 @@
     "href": "/models/yield-curve-predictor/"
   },
   {
-    "slug": "compliance-redaction-llm",
-    "name": "Compliance Redaction LLM",
-    "summary": "PII and counterparty-name redaction tuned for chat and call transcripts.",
-    "category": "compliance-aml",
-    "subcategory": "transaction-monitoring",
-    "developer": "GeFi Labs",
-    "riskLevel": "low",
-    "maturity": "production",
-    "price": 7900,
-    "rating": 4.9,
-    "ratingCount": 304,
-    "federated": false,
-    "thumbnailUrl": null,
-    "href": "/models/compliance-redaction-llm/"
-  },
-  {
-    "slug": "earnings-surprise-predictor",
-    "name": "Earnings Surprise Predictor",
-    "summary": "Pre-print estimate of EPS surprise direction from filings + alt-data.",
-    "category": "time-series",
-    "subcategory": "multivariate",
-    "developer": "GeFi Labs",
-    "riskLevel": "medium",
-    "maturity": "experimental",
-    "price": 0,
-    "rating": 4,
-    "ratingCount": 18,
-    "federated": false,
-    "thumbnailUrl": null,
-    "href": "/models/earnings-surprise-predictor/"
-  },
-  {
     "slug": "esg-news-classifier",
     "name": "ESG News Classifier",
     "summary": "Multi-label tagger linking news articles to issuer-level ESG controversies.",
@@ -144,19 +144,19 @@
     "href": "/models/esg-news-classifier/"
   },
   {
-    "slug": "insurance-claims-triage",
-    "name": "Insurance Claims Triage",
-    "summary": "Severity and fraud-risk co-model routing claims to the right adjuster queue.",
-    "category": "insurance-underwriting",
-    "subcategory": "p-and-c",
+    "slug": "earnings-surprise-predictor",
+    "name": "Earnings Surprise Predictor",
+    "summary": "Pre-print estimate of EPS surprise direction from filings + alt-data.",
+    "category": "time-series",
+    "subcategory": "multivariate",
     "developer": "GeFi Labs",
     "riskLevel": "medium",
-    "maturity": "staging",
-    "price": 11900,
-    "rating": 4.5,
-    "ratingCount": 73,
-    "federated": true,
+    "maturity": "experimental",
+    "price": 0,
+    "rating": 4,
+    "ratingCount": 18,
+    "federated": false,
     "thumbnailUrl": null,
-    "href": "/models/insurance-claims-triage/"
+    "href": "/models/earnings-surprise-predictor/"
   }
 ]

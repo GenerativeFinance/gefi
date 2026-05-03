@@ -8,7 +8,12 @@ layout: default
       <span aria-hidden="true">/</span>
       <span>{{ page.name }}</span>
     </p>
-    <h1 class="category-page__title">{{ page.name }}</h1>
+    <div class="category-page__heading">
+      <span class="category-page__icon" data-icon="{{ page.icon }}" aria-hidden="true"></span>
+      <h1 class="category-page__title">{{ page.name }}</h1>
+      <span class="category-page__risk model-card__badge model-card__badge--risk-{{ page.risk_tier }}"
+            title="Default risk tier for this category">{{ page.risk_tier | capitalize }} risk</span>
+    </div>
     <p class="category-page__description">{{ page.description }}</p>
   </header>
 
@@ -57,8 +62,11 @@ layout: default
     <p class="category-loading">Loading models…</p>
   </div>
 
-  <div class="category-empty" id="category-empty" hidden>
+  <div class="category-empty" id="category-empty-filter" hidden>
     {%- include empty-state.html variant="filter" -%}
+  </div>
+  <div class="category-empty" id="category-empty-category" hidden>
+    {%- include empty-state.html variant="category" -%}
   </div>
 
   <button type="button" class="btn btn--secondary category-load-more" id="category-load-more" hidden>

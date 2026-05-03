@@ -1,12 +1,20 @@
 /* Category landing page — chip + filter + sort + cursor pagination against
- * GET /api/models. Lives in the page itself; one instance per /categories/X/. */
+ * GET /api/models. Lives in the page itself; one instance per /categories/X/.
+ *
+ * Two distinct empty states:
+ *   - #category-empty-category — shown when the category itself returned zero
+ *     items with NO user filters/subcategory active (genuinely empty bucket).
+ *   - #category-empty-filter   — shown when filters/subcategory narrowed the
+ *     result to zero. The "Clear filters" CTA resets to the bare category.
+ */
 (function () {
   "use strict";
   var page = document.querySelector(".category-page");
   if (!page) return;
   var category = page.dataset.category;
   var grid = document.getElementById("category-results");
-  var emptyEl = document.getElementById("category-empty");
+  var emptyFilter = document.getElementById("category-empty-filter");
+  var emptyCategory = document.getElementById("category-empty-category");
   var loadMore = document.getElementById("category-load-more");
   if (!grid) return;
 
@@ -61,6 +69,10 @@
     );
   }
 
+  function hasActiveFilters() {
+    return !!(subcategory || filters.risk || filters.maturity);
+  }
+
   function buildUrl() {
     var qs = ["category=" + encodeURIComponent(category)];
     if (subcategory) qs.push("subcategory=" + encodeURIComponent(subcategory));
@@ -73,6 +85,11 @@
 
   function reset() { cursor = null; grid.innerHTML = ""; }
 
+  function setEmpty(none) {
+    if (emptyFilter) emptyFilter.hidden = !(none && hasActiveFilters());
+    if (emptyCategory) emptyCategory.hidden = !(none && !hasActiveFilters());
+  }
+
   function load(append) {
     grid.setAttribute("aria-busy", "true");
     fetch(buildUrl())
@@ -82,11 +99,25 @@
         var items = (data && data.items) || [];
         items.forEach(function (m) { grid.insertAdjacentHTML("beforeend", cardHtml(m)); });
         cursor = data && data.next_cursor;
-        loadMore.hidden = !cursor;
+        if (loadMore) loadMore.hidden = !cursor;
         var anyResults = grid.querySelector(".model-card") !== null;
-        if (emptyEl) emptyEl.hidden = anyResults;
+        setEmpty(!anyResults);
         grid.setAttribute("aria-busy", "false");
       });
+  }
+
+  function clearAllFilters() {
+    subcategory = "";
+    filters.risk = "";
+    filters.maturity = "";
+    page.querySelectorAll(".chip").forEach(function (b, i) {
+      b.classList.toggle("chip--active", i === 0);
+    });
+    page.querySelectorAll('[data-filter="risk"], [data-filter="maturity"]').forEach(function (sel) {
+      sel.value = "";
+    });
+    reset();
+    load(false);
   }
 
   page.querySelectorAll(".chip").forEach(function (btn) {
@@ -105,7 +136,16 @@
     });
   });
 
-  loadMore.addEventListener("click", function () { load(true); });
+  if (loadMore) loadMore.addEventListener("click", function () { load(true); });
+
+  if (emptyFilter) {
+    emptyFilter.addEventListener("click", function (e) {
+      var btn = e.target.closest('[data-action="clear-filters"]');
+      if (!btn) return;
+      e.preventDefault();
+      clearAllFilters();
+    });
+  }
 
   load(false);
 })();

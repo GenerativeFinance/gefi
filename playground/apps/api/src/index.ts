@@ -25,11 +25,13 @@ app.route("/api/models", modelsRoutes());
 // Permissive CORS for the public catalog so the Jekyll frontend (different
 // origin in dev/prod) can hit /api/models from the browser. Auth routes
 // remain same-origin via the cookie attributes.
-app.use("/api/models/*", async (c, next) => {
+const corsHeaders = async (c: { res: Response }, next: () => Promise<void>) => {
   await next();
   c.res.headers.set("access-control-allow-origin", "*");
   c.res.headers.set("access-control-allow-methods", "GET, OPTIONS");
-});
+};
+app.use("/api/models", corsHeaders);
+app.use("/api/models/*", corsHeaders);
 
 app.post("/api/subscribe", async (c) => {
   const body = await c.req.parseBody();
