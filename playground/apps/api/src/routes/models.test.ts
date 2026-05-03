@@ -161,6 +161,19 @@ describe("GET /api/models", () => {
     expect(body.items.map((m) => m.slug)).toEqual(["b", "a"]);
   });
 
+  it("?all=1 returns the full catalog without a page cap", async () => {
+    // 30 rows > the default limit of 24; ?all=1 should return all of them in
+    // a single response with null next_cursor so the Jekyll generator never
+    // needs to paginate.
+    const rows = Array.from({ length: 30 }, (_, i) =>
+      row({ slug: `m${String(i).padStart(2, "0")}`, trending_score: 1 - i * 0.01 }),
+    );
+    const app = makeApp(rows);
+    const body = await fetchJson(app, "/api/models?all=1");
+    expect(body.items).toHaveLength(30);
+    expect(body.next_cursor).toBeNull();
+  });
+
   it("DTO maps DB columns to camelCase + boolean federated + href", async () => {
     const app = makeApp([
       row({
