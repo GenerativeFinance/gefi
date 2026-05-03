@@ -20,21 +20,27 @@ referenced — never deployed.
 
 ## Hosting model (do not get this wrong)
 
-- **Production hosting:** Cloudflare Workers (Workers Static Assets) — and
-  optionally GitHub Pages on the custom domain `gefi.io`.
+- **Production hosting:** **Cloudflare Pages** at the apex domain `gefi.io`.
+  Pages serves the pre-built `_site/` directory as static assets.
 - **Cloudflare config:** `wrangler.jsonc` at the repo root declares
-  `name: gefi`, `assets.directory: ./_site`, and `nodejs_compat`. Cloudflare
-  Workers Builds runs `npm run build` (which is `bundle exec jekyll build`)
-  and then `npx wrangler deploy`, uploading `_site/` as static assets.
-  **Keep `wrangler.jsonc` checked in** — without it, Wrangler auto-config
-  rewrites the build command to `npx bundle exec jekyll build`, which fails
-  because `bundle` is a Ruby gem, not an npm package.
-- **GitHub Pages CI (optional):** `.github/workflows/deploy-pages.yml`
-  (Ruby 3.2 + Bundler + Jekyll 4.3).
+  `name: gefi` and `pages_build_output_dir: "./_site"`. The repo's
+  `npm run deploy` script runs `bundle exec jekyll build` and then
+  `wrangler pages deploy _site --project-name=gefi --branch=main`.
+  **Do not** switch this back to Workers Static Assets (`assets.directory`
+  + `wrangler deploy`): wrangler 4.87+ auto-config detects Jekyll and
+  re-runs the build via `npx bundle exec jekyll build`, which fails because
+  `bundle` is a Ruby gem, not an npm package. Pages mode skips that trap.
+- **Cloudflare Pages dashboard settings:** Build command
+  `bundle exec jekyll build`, build output `_site`, env `JEKYLL_ENV=production`.
+  Do not set the deploy command in the dashboard — `npm run deploy` /
+  `wrangler pages deploy _site` handles it.
+- **GitHub Pages:** not used. The only Actions workflow is
+  `.github/workflows/deploy-cloudflare.yml`, which deploys the Workers
+  backend under `infrastructure/cloudflare/` — not the marketing site.
 - **Replit hosting:** **none.** The Replit workflow is a local-preview
   developer convenience only — it runs `bundle exec jekyll serve` on port 5000.
 - **No Replit `[deployment]` in `.replit`.** Do not add one. Do not suggest
-  "deploy via Replit". The user deploys to Cloudflare / GitHub Pages.
+  "deploy via Replit". The user deploys to Cloudflare Pages.
 
 ## Tech stack
 
@@ -54,7 +60,8 @@ referenced — never deployed.
 | `_config.yml`                 | Site config: title, URL, nav, API endpoints, collections, exclusions |
 | `Gemfile`                     | Ruby gems                                          |
 | `CNAME`                       | `gefi.io`                                          |
-| `.nojekyll`                   | Tells Pages we're using Actions, not classic build |
+| `.nojekyll`                   | Suppresses GitHub's classic Pages Jekyll processor — harmless under Cloudflare Pages |
+| `package.json` / `wrangler.jsonc` | Cloudflare Pages deploy plumbing (`npm run deploy` → `wrangler pages deploy _site`) |
 | `index.html`                  | Home                                               |
 | `features.md` / `pricing.md` / `models.md` / `research.md` / `docs.md` / `blog.md` / `about.md` / `compliance.md` / `contact.md` | Top-level marketing pages |
 | `legal/privacy.md`, `legal/terms.md` | Placeholder legal pages                     |
@@ -67,7 +74,7 @@ referenced — never deployed.
 | `_models/*.md`                | Marketplace catalogue entries (collection)         |
 | `_research/*.md`              | Research notes (collection)                        |
 | `_posts/*.md`                 | Blog posts                                         |
-| `.github/workflows/deploy-pages.yml` | GitHub Actions Pages deploy                 |
+| `.github/workflows/deploy-cloudflare.yml` | Cloudflare Workers backend deploy (not the marketing site) |
 | `docs/dns-setup.md`           | DNS + Pages one-time setup                         |
 | `infrastructure/cloudflare/`  | Cloudflare backend monorepo (Task #2). pnpm + Turborepo. Three Workers (`gefi-web`, `gefi-api`, `gefi-compliance`) + shared packages. Self-contained — own `package.json`, `pnpm-lock.yaml`, `tsconfig.base.json`. **Never** hoist node_modules from here to the repo root. |
 | `legacy/`                     | Archived React/Express prototype + its `README.md` |
