@@ -60,11 +60,12 @@
       activeIndex = -1;
       if (items.length === 0) {
         listbox.innerHTML =
-          '<li class="global-search__miss" role="presentation">' +
-          '<span class="global-search__miss-text">No models match' +
+          '<li class="global-search__miss empty-state empty-state--search" role="presentation" data-empty-variant="search">' +
+          '<img class="empty-state__img global-search__miss-img" src="/assets/img/empty-search.svg" alt="" width="72" height="72" />' +
+          '<span class="global-search__miss-text empty-state__body">No models match' +
           (q ? ' &ldquo;' + escapeHtml(q) + '&rdquo;' : '') +
           ' &mdash; try clearing filters.</span>' +
-          '<button type="button" class="global-search__miss-action" data-action="clear">Clear search</button>' +
+          '<button type="button" class="global-search__miss-action btn btn--secondary empty-state__cta" data-action="clear">Clear search</button>' +
           '</li>';
         setExpanded(true);
         return;
