@@ -6,6 +6,19 @@ lead: How GeFi handles your data, your audits, and your regulators.
 permalink: /compliance/
 ---
 
+<ul class="card-grid" style="margin-bottom: var(--space-5); list-style: none; padding: 0;">
+  <li style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-5);">
+    <p class="eyebrow">Live evidence</p>
+    <h3 style="margin: var(--space-1) 0;"><a href="https://trust.gefi.io" rel="noopener" target="_blank">trust.gefi.io &rarr;</a></h3>
+    <p class="muted" style="margin: 0;">Certifications, audit reports, security policies, and on-demand evidence packs for customers and prospects.</p>
+  </li>
+  <li style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-5);">
+    <p class="eyebrow">Uptime &amp; incidents</p>
+    <h3 style="margin: var(--space-1) 0;"><a href="https://status.gefi.io" rel="noopener" target="_blank">status.gefi.io &rarr;</a></h3>
+    <p class="muted" style="margin: 0;">Real-time platform status, scheduled maintenance, and historical incident post-mortems.</p>
+  </li>
+</ul>
+
 ## Compliance posture
 
 <ul class="badge-row" style="margin-bottom: var(--space-5);">

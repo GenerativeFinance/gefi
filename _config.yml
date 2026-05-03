@@ -81,13 +81,13 @@ footer_nav:
     - { title: "Status",             url: "https://status.gefi.io" }
     - { title: "Privacy",            url: "/legal/privacy/" }
     - { title: "Terms",              url: "/legal/terms/" }
-    - { title: "Cookie Policy",      url: "/legal/cookies/" }
-    - { title: "DPA",                url: "/legal/dpa/" }
+    - { title: "Cookie Policy",      url: "/cookie-policy/" }
+    - { title: "DPA",                url: "/dpa/" }
   legal:
     - { title: "Privacy",       url: "/legal/privacy/" }
     - { title: "Terms",         url: "/legal/terms/" }
-    - { title: "Cookie Policy", url: "/legal/cookies/" }
-    - { title: "DPA",           url: "/legal/dpa/" }
+    - { title: "Cookie Policy", url: "/cookie-policy/" }
+    - { title: "DPA",           url: "/dpa/" }
   contacts:
     - { label: "General",  email: "hello@gefi.io" }
     - { label: "Sales",    email: "sales@gefi.io" }
