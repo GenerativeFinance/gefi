@@ -78,6 +78,7 @@ footer_nav:
     - { title: "Contact",      url: "/contact/" }
   trust:
     - { title: "Compliance & Trust", url: "/compliance/" }
+    - { title: "Security",           url: "/security/" }
     - { title: "Status",             url: "https://status.gefi.io" }
     - { title: "Privacy",            url: "/legal/privacy/" }
     - { title: "Terms",              url: "/legal/terms/" }
