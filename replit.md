@@ -30,10 +30,17 @@ referenced — never deployed.
   + `wrangler deploy`): wrangler 4.87+ auto-config detects Jekyll and
   re-runs the build via `npx bundle exec jekyll build`, which fails because
   `bundle` is a Ruby gem, not an npm package. Pages mode skips that trap.
-- **Cloudflare Pages dashboard settings:** Build command
-  `bundle exec jekyll build`, build output `_site`, env `JEKYLL_ENV=production`.
-  Do not set the deploy command in the dashboard — `npm run deploy` /
-  `wrangler pages deploy _site` handles it.
+- **Cloudflare dashboard settings (the Workers Builds project at `gefi`):**
+  - Build command: `npm run build` (which runs `bundle exec jekyll build`)
+  - Build output directory: `_site`
+  - Deploy command: `npx wrangler@4.87.0 pages deploy _site --project-name=gefi --branch=main`
+    — **must be `pages deploy`, not `deploy`**. Plain `wrangler deploy` on a
+    Jekyll repo triggers wrangler 4.87+ auto-config which rewrites the build
+    to `npx bundle exec jekyll build` (fails — `bundle` isn't on npm).
+  - Environment variable: `JEKYLL_ENV=production`
+  - Root directory: repo root (not a subdir)
+  - The repo's `package.json` `npm run deploy` script mirrors this command
+    so local deploys work the same way (needs `CLOUDFLARE_API_TOKEN`).
 - **GitHub Pages:** not used. The only Actions workflow is
   `.github/workflows/deploy-cloudflare.yml`, which deploys the Workers
   backend under `infrastructure/cloudflare/` — not the marketing site.
