@@ -129,8 +129,8 @@ p  { margin: 0 0 var(--space-4); }
 }
 .site-nav { display: flex; align-items: center; gap: var(--space-6); }
 .site-nav ul { list-style: none; padding: 0; margin: 0; display: flex; gap: var(--space-5); }
-.site-nav a { color: var(--color-text); font-weight: 500; }
-.site-nav a[aria-current="page"] { color: var(--color-brand-strong); }
+.site-nav a:not(.btn) { color: var(--color-text); font-weight: 500; }
+.site-nav a[aria-current="page"]:not(.btn) { color: var(--color-brand-strong); }
 .site-nav__cta { display: flex; gap: var(--space-2); }
 
 .nav-toggle {
