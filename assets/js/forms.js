@@ -101,4 +101,20 @@
   document.querySelectorAll("form[data-form]").forEach(function (form) {
     form.addEventListener("submit", function (ev) { submit(form, ev); });
   });
+
+  /* --- Pre-select form fields from querystring (e.g. ?topic=partnerships) --- */
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var topic = params.get("topic");
+    if (topic) {
+      document.querySelectorAll("select[data-topic-select], select[name='topic']").forEach(function (sel) {
+        var match = Array.prototype.find.call(sel.options, function (opt) {
+          return opt.value === topic;
+        });
+        if (match) sel.value = topic;
+      });
+    }
+  } catch (e) {
+    /* URLSearchParams unavailable — skip silently. */
+  }
 })();
