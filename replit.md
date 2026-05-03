@@ -20,12 +20,21 @@ referenced — never deployed.
 
 ## Hosting model (do not get this wrong)
 
-- **Production hosting:** GitHub Pages, custom domain `gefi.io`.
-- **CI:** `.github/workflows/deploy-pages.yml` (Ruby 3.2 + Bundler + Jekyll 4.3).
+- **Production hosting:** Cloudflare Workers (Workers Static Assets) — and
+  optionally GitHub Pages on the custom domain `gefi.io`.
+- **Cloudflare config:** `wrangler.jsonc` at the repo root declares
+  `name: gefi`, `assets.directory: ./_site`, and `nodejs_compat`. Cloudflare
+  Workers Builds runs `npm run build` (which is `bundle exec jekyll build`)
+  and then `npx wrangler deploy`, uploading `_site/` as static assets.
+  **Keep `wrangler.jsonc` checked in** — without it, Wrangler auto-config
+  rewrites the build command to `npx bundle exec jekyll build`, which fails
+  because `bundle` is a Ruby gem, not an npm package.
+- **GitHub Pages CI (optional):** `.github/workflows/deploy-pages.yml`
+  (Ruby 3.2 + Bundler + Jekyll 4.3).
 - **Replit hosting:** **none.** The Replit workflow is a local-preview
   developer convenience only — it runs `bundle exec jekyll serve` on port 5000.
 - **No Replit `[deployment]` in `.replit`.** Do not add one. Do not suggest
-  "deploy via Replit". The user has explicitly excluded it.
+  "deploy via Replit". The user deploys to Cloudflare / GitHub Pages.
 
 ## Tech stack
 

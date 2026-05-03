@@ -148,6 +148,9 @@ exclude:
   - .local/
   - .replit
   - .DS_Store
+  - wrangler.jsonc
+  - wrangler.toml
+  - .wrangler/
   - admin-fix-status.md
   - BUG_FIXES_COMPLETED.md
   - IMPLEMENTATION_SUMMARY.md

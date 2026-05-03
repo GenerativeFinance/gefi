@@ -28,6 +28,10 @@ Thumbs.db
 
 # Legacy Node/React app (kept under legacy/ for reference, but never installed)
 legacy/node_modules/
+
+# Wrangler / Cloudflare Workers
+.wrangler/
+node_modules/
 legacy/dist/
 legacy/.next/
 legacy/build/

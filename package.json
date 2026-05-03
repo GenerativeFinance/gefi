@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "bundle exec jekyll build"
+    "build": "bundle exec jekyll build",
+    "deploy": "bundle exec jekyll build && wrangler deploy",
+    "preview": "bundle exec jekyll build && wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.87.0"
   }
 }
