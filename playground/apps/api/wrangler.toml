@@ -81,6 +81,7 @@ binding = "AI"
 tag = "v1"
 new_classes = ["Round"]
 
+# Cloudflare cron expressions are always evaluated in UTC. "0 4 * * *" = daily at 04:00 UTC.
 [triggers]
 crons = ["0 4 * * *"]
 

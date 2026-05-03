@@ -30,6 +30,12 @@ WRANGLER="${WRANGLER:-pnpm exec wrangler}"
 step() { echo; echo "── $* ──"; }
 
 step "1/9 D1 database: gefi"
+# NOTE: D1 is deliberately a single shared database name ("gefi") across both
+# environments — Cloudflare scopes D1 instances per-account and we want one
+# logical "gefi" DB that staging and production point at via different
+# database_id values in wrangler.toml. Run this script once per environment
+# (against the appropriate Cloudflare account); the IDs differ even though
+# the human-readable name does not.
 $WRANGLER d1 create "gefi" || true
 
 step "2/9 R2 buckets (5)"
