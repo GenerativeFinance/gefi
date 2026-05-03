@@ -33,6 +33,8 @@ reference while the new platform is built.
 ├── robots.txt               # Crawler directives + sitemap pointer
 ├── package.json             # Wrangler-CLI fallback: `npm run deploy`
 ├── wrangler.jsonc           # Pages config for the wrangler-CLI fallback
+│                            # (Default deploy path is the Cloudflare Pages
+│                            #  GitHub App — push to main → auto-build.)
 │
 ├── index.html               # Home page
 ├── features.md              # /features/
@@ -103,7 +105,29 @@ workflow signals "Server running".
 Production lives on **Cloudflare Pages** (project name `gefi`,
 subdomain `gefi-1ns.pages.dev`, custom domains `gefi.io` + `www.gefi.io`).
 
-**Default path: Direct Upload via wrangler.** Build locally and push:
+**Default path: Git auto-deploy via the Cloudflare Pages GitHub App.**
+The `gefi` Pages project is connected to `AxalNetwork/gefi` (production
+branch = `main`), so **every push to `main` automatically builds and
+deploys** to `gefi.io`, and every PR gets its own `*.pages.dev` preview
+URL. No local command, no token in your shell — just:
+
+```bash
+git push origin main   # → green build in ~3 min → live on gefi.io
+```
+
+Cloudflare-side build settings (configured once in dash → Workers &
+Pages → `gefi` → Settings → Builds & deployments):
+
+- **Build command:** `bundle install && bundle exec jekyll build`
+- **Output dir:** `_site`
+- **Env vars:** `RUBY_VERSION=3.2.2`, `JEKYLL_ENV=production`,
+  `BUNDLE_WITHOUT=development:test`
+
+Watch builds at dash → Workers & Pages → `gefi` → Deployments.
+
+**Fallback path: Direct Upload via wrangler.** Kept for emergency
+out-of-band pushes (Git App outage, hotfix from a non-`main` branch,
+etc.):
 
 ```bash
 bundle install && bundle exec jekyll build
@@ -114,20 +138,12 @@ CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… npm run deploy
 `npm run deploy` runs `wrangler pages deploy _site --project-name=gefi
 --branch=main`. The token needs `Account → Cloudflare Pages: Edit`,
 `Account → Account Settings: Read`, and (for first-time DNS work)
-`Zone → DNS: Edit` on the `gefi.io` zone.
-
-**Optional: Git auto-deploy.** dash.cloudflare.com → Workers & Pages →
-`gefi` → Settings → Builds & deployments → "Connect to Git" → authorise
-the Cloudflare Pages GitHub App on `AxalNetwork/gefi`. Build command:
-`bundle install && bundle exec jekyll build`. Output dir: `_site`. Env
-vars: `RUBY_VERSION=3.2.2`, `JEKYLL_ENV=production`,
-`BUNDLE_WITHOUT=development:test`. Once connected, every push to `main`
-builds + deploys, and PRs get their own `*.pages.dev` preview URL.
+`Zone → DNS: Edit` on the `gefi.io` zone. Prefer the Git path above
+unless you have a specific reason not to use it.
 
 `bundle exec htmlproofer ./_site --disable-external --allow-hash-href`
-is the recommended pre-deploy link/image audit but is not run by the
-default deploy script — invoke it manually before `npm run deploy` if
-you want a build-time check.
+is the recommended pre-push link/image audit; run it locally against
+`_site/` before pushing to `main` if you want a build-time check.
 
 For the DNS + Pages configuration reference, see
 [`docs/dns-setup.md`](./docs/dns-setup.md).

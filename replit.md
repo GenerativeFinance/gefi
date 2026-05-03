@@ -7,9 +7,10 @@ Keep it short, opinionated, and current.
 
 A **static Jekyll site** for GeFi's public marketing and content surface.
 It is hosted on **Cloudflare Pages** at the apex domain **`gefi.io`**.
-Deploys are pushed via the **wrangler CLI** (Direct Upload) by default;
-a Cloudflare Pages GitHub App can optionally be wired up to auto-deploy
-on push to `main` (see `docs/dns-setup.md`).
+Deploys happen automatically on every push to `main` via the
+**Cloudflare Pages GitHub App** connected to `AxalNetwork/gefi`; the
+**wrangler CLI** (Direct Upload, `npm run deploy`) is kept as an
+out-of-band fallback for emergencies (see `docs/dns-setup.md`).
 
 It is **not** the GeFi platform itself. The platform (APIs, dashboards,
 auth, inference, federated training, audit log, compliance routing) is a
@@ -27,18 +28,24 @@ referenced — never deployed.
   + `joan.ns.cloudflare.com`); the Pages project named `gefi` owns the
   apex + `www` custom domains. DNS is managed inside the same Cloudflare
   account (see `docs/dns-setup.md`).
-- **How the site reaches Pages (current, default):** **Direct Upload via
-  the wrangler CLI.** Build locally (or in Replit) with
-  `bundle install && bundle exec jekyll build`, then push `_site/` with
-  `npm run deploy` (`wrangler pages deploy _site --project-name=gefi
-  --branch=main`). Requires `CLOUDFLARE_API_TOKEN` (with `Pages:Edit` +
-  `Account:Read`) and `CLOUDFLARE_ACCOUNT_ID` in the env. The Pages
-  project subdomain is `gefi-1ns.pages.dev`.
-- **Optional: Git auto-deploy.** Connecting the Cloudflare Pages GitHub
-  App to `AxalNetwork/gefi` (dash → Workers & Pages → `gefi` → Settings
-  → Builds & deployments → Connect to Git) makes pushes to `main`
-  trigger Cloudflare-side builds with the same env vars and PR previews.
-  Not required — the Direct Upload path above already serves production.
+- **How the site reaches Pages (current, default): Git auto-deploy via
+  the Cloudflare Pages GitHub App.** The `gefi` Pages project is
+  connected to `AxalNetwork/gefi` (dash → Workers & Pages → `gefi` →
+  Settings → Builds & deployments), production branch = `main`. Every
+  push to `main` triggers a Cloudflare-side build (`bundle install &&
+  bundle exec jekyll build`, output `_site/`, env
+  `RUBY_VERSION=3.2.2`, `JEKYLL_ENV=production`,
+  `BUNDLE_WITHOUT=development:test`) and PRs get their own
+  `*.pages.dev` preview URL. No local tokens, no manual `npm run
+  deploy`. The Pages project subdomain is `gefi-1ns.pages.dev`.
+- **Fallback: Direct Upload via the wrangler CLI.** Kept for emergency
+  out-of-band pushes (Pages GitHub App outage, hotfix from a non-`main`
+  branch, etc.). Build locally with `bundle install && bundle exec
+  jekyll build`, then push `_site/` with `npm run deploy` (`wrangler
+  pages deploy _site --project-name=gefi --branch=main`). Requires
+  `CLOUDFLARE_API_TOKEN` (with `Pages:Edit` + `Account:Read`) and
+  `CLOUDFLARE_ACCOUNT_ID` in the env. Prefer the Git path above unless
+  you have a specific reason not to use it.
 - **GitHub Pages: not used.** The repo no longer carries `.nojekyll`,
   `CNAME`, or `.github/workflows/deploy-pages.yml`. The apex DNS no
   longer points at the four `185.199.10[8-9].153` / `185.199.11[0-1].153`
@@ -68,7 +75,7 @@ referenced — never deployed.
 | `_config.yml`                 | Site config: title, URL, nav, API endpoints, collections, exclusions |
 | `Gemfile`                     | Ruby gems                                          |
 | `.ruby-version`               | Pins Ruby `3.2.2` for Cloudflare Pages + local Bundler |
-| `package.json` / `wrangler.jsonc` | Production deploy command (`npm run deploy` → `wrangler pages deploy _site --project-name=gefi --branch=main`). The only `package.json` allowed at the repo root — exists solely to host this script and the `wrangler` devDep. |
+| `package.json` / `wrangler.jsonc` | Fallback deploy command (`npm run deploy` → `wrangler pages deploy _site --project-name=gefi --branch=main`) for emergency out-of-band pushes. The default deploy path is the Cloudflare Pages GitHub App on `AxalNetwork/gefi` — push to `main` → auto-build. The only `package.json` allowed at the repo root — exists solely to host this fallback script and the `wrangler` devDep. |
 | `index.html`                  | Home                                               |
 | `features.md` / `pricing.md` / `models.md` / `research.md` / `docs.md` / `blog.md` / `about.md` / `compliance.md` / `contact.md` | Top-level marketing pages |
 | `legal/privacy.md`, `legal/terms.md` | Placeholder legal pages                     |

@@ -6,13 +6,15 @@ This site is deployed to the Cloudflare Pages project named `gefi`
 
 Two deploy paths exist:
 
-1. **Direct Upload via wrangler (default, in use today).** `npm run
-   deploy` runs `wrangler pages deploy _site --project-name=gefi
-   --branch=main`. No GitHub integration required.
-2. **Cloudflare Pages GitHub App (optional).** Connecting the App to
-   `AxalNetwork/gefi` makes pushes to `main` build + deploy
-   automatically with PR previews. See `replit.md` "Hosting model" for
-   the connect steps.
+1. **Cloudflare Pages GitHub App (default, in use today).** The Pages
+   project is connected to `AxalNetwork/gefi`, production branch =
+   `main`. Every push to `main` triggers a Cloudflare-side build and
+   deploy; every PR gets its own `*.pages.dev` preview URL. No local
+   command, no token in your shell. Build settings are in section 2.
+2. **Direct Upload via wrangler (fallback).** `npm run deploy` runs
+   `wrangler pages deploy _site --project-name=gefi --branch=main`. Use
+   only for emergency out-of-band pushes (Pages GitHub App outage,
+   hotfix from a non-`main` branch).
 
 The `gefi.io` zone is on Cloudflare nameservers
 (`carter.ns.cloudflare.com` + `joan.ns.cloudflare.com`), so all DNS
@@ -141,13 +143,15 @@ not Let's Encrypt via GitHub.
 
 ### A push to `main` did NOT trigger a new build
 
-- Default setup is **Direct Upload via wrangler** — pushes to `main` do
-  *not* trigger a deploy by themselves. Run `npm run deploy` after
-  `bundle exec jekyll build`.
-- If you connected the Cloudflare Pages GitHub App and pushes still
-  don't trigger builds, the App lost authorisation for the repo. Go to
-  github.com → Settings → Applications → **Cloudflare Pages** →
-  re-grant access to `AxalNetwork/gefi`.
+- The Cloudflare Pages GitHub App lost authorisation for the repo. Go
+  to github.com → Settings → Applications → **Cloudflare Pages** →
+  re-grant access to `AxalNetwork/gefi`. Then dash → Workers & Pages →
+  `gefi` → Settings → Builds & deployments → confirm the Git source
+  still shows `AxalNetwork/gefi` (production branch = `main`).
+- Verify the build wasn't skipped by a `[skip ci]` / `[skip-deploy]`
+  marker in the commit message.
+- As an out-of-band fallback while you fix the App, run `bundle exec
+  jekyll build && npm run deploy` to push manually.
 
 ### `npm run deploy` fails with "Authentication error [code: 10000]"
 
