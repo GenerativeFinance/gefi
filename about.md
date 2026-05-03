@@ -42,5 +42,47 @@ GeFi is built on the assumption that all three of these are permanent.
 
 ## Team
 
-We're a small, distributed team across the EU, UK, and UAE. We're hiring —
-[careers@gefi.io](mailto:careers@gefi.io) for an introduction.
+We're a small, distributed team across the EU, UK, and UAE. Every role below
+is open — write to [careers@gefi.io](mailto:careers@gefi.io) for an
+introduction.
+
+<ul class="team-grid" role="list">
+  <li class="team-card">
+    <span class="badge badge--federated team-card__badge">Hiring</span>
+    <h3>Founding engineer — Edge platform</h3>
+    <p class="muted">Cloudflare Workers, Durable Objects, D1. Owns the inference router and audit pipeline.</p>
+    <a href="mailto:careers@gefi.io?subject=Founding%20engineer%20%E2%80%94%20Edge%20platform">careers@gefi.io</a>
+  </li>
+  <li class="team-card">
+    <span class="badge badge--federated team-card__badge">Hiring</span>
+    <h3>Founding engineer — ML &amp; federated</h3>
+    <p class="muted">Federated training, differential privacy, model evaluation. Owns the contributor SDK.</p>
+    <a href="mailto:careers@gefi.io?subject=Founding%20engineer%20%E2%80%94%20ML%20%26%20federated">careers@gefi.io</a>
+  </li>
+  <li class="team-card">
+    <span class="badge badge--federated team-card__badge">Hiring</span>
+    <h3>Compliance &amp; counsel lead</h3>
+    <p class="muted">EU AI Act, SEC, FCA, MAS, ADGM. Owns the per-jurisdiction counsel directory.</p>
+    <a href="mailto:careers@gefi.io?subject=Compliance%20%26%20counsel%20lead">careers@gefi.io</a>
+  </li>
+  <li class="team-card">
+    <span class="badge badge--federated team-card__badge">Hiring</span>
+    <h3>Developer relations</h3>
+    <p class="muted">Docs, sample apps, the model-author programme, and Discord office hours.</p>
+    <a href="mailto:careers@gefi.io?subject=Developer%20relations">careers@gefi.io</a>
+  </li>
+  <li class="team-card">
+    <span class="badge badge--federated team-card__badge">Hiring</span>
+    <h3>Enterprise account executive</h3>
+    <p class="muted">Banks, exchanges, asset managers. Sovereign-tenant deals across EMEA and MENA.</p>
+    <a href="mailto:careers@gefi.io?subject=Enterprise%20account%20executive">careers@gefi.io</a>
+  </li>
+  <li class="team-card">
+    <span class="badge badge--federated team-card__badge">Hiring</span>
+    <h3>Design engineer</h3>
+    <p class="muted">Marketing site, dashboard, and the live risk surface. Hand-rolled CSS, no frameworks.</p>
+    <a href="mailto:careers@gefi.io?subject=Design%20engineer">careers@gefi.io</a>
+  </li>
+</ul>
+
+[→ See partnerships](/partnerships/)

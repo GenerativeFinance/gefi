@@ -72,9 +72,10 @@ footer_nav:
     - { title: "Docs",       url: "/docs/" }
     - { title: "Request demo", url: "/demo/" }
   company:
-    - { title: "About",      url: "/about/" }
-    - { title: "Blog",       url: "/blog/" }
-    - { title: "Contact",    url: "/contact/" }
+    - { title: "About",        url: "/about/" }
+    - { title: "Partnerships", url: "/partnerships/" }
+    - { title: "Blog",         url: "/blog/" }
+    - { title: "Contact",      url: "/contact/" }
   trust:
     - { title: "Compliance & Trust", url: "/compliance/" }
     - { title: "Status",             url: "https://status.gefi.io" }
