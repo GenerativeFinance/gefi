@@ -11,8 +11,11 @@ end
 
 gem "webrick", "~> 1.8"
 
-# Build-time link, markup and broken-image audit. Run by Cloudflare
-# Pages after `jekyll build` as part of the production build command:
+# Optional pre-deploy link / markup / broken-image audit. NOT run
+# automatically by `npm run deploy` (the default Direct-Upload path).
+# Invoke manually before deploy if you want a build-time check, or
+# add it to the Cloudflare Pages "Build command" if/when the Pages
+# GitHub App is connected (see docs/dns-setup.md):
 #   bundle exec htmlproofer ./_site --disable-external --allow-hash-href
 gem "html-proofer", "~> 5.0"
 
