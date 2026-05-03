@@ -8,10 +8,11 @@ Cloudflare Worker (Hono + TypeScript) for the GeFi Playground.
 pnpm --filter @gefi-playground/api run dev   # wrangler dev on :8787
 ```
 
-`wrangler dev` uses miniflare to emulate every binding declared in
-`wrangler.toml`, so you can hit `/api/health` locally without provisioning
-anything in Cloudflare. The endpoint will report `ok` when miniflare's
-in-memory implementations satisfy each probe.
+The `dev` script runs `wrangler dev --env staging --local`, which uses
+miniflare to emulate every binding declared under `[env.staging]` (the
+resource IDs in `wrangler.toml` are ignored — miniflare creates fresh
+local D1, R2, KV, etc. on disk). You can hit `/api/health` immediately
+without provisioning anything in Cloudflare.
 
 ## Provisioning Cloudflare resources (one-time, per environment)
 
