@@ -11,9 +11,9 @@ end
 
 gem "webrick", "~> 1.8"
 
-# Build-time link, markup and broken-image audit. Used by
-# .github/workflows/deploy-pages.yml after `jekyll build` and before
-# `actions/upload-pages-artifact`.
+# Build-time link, markup and broken-image audit. Run by Cloudflare
+# Pages after `jekyll build` as part of the production build command:
+#   bundle exec htmlproofer ./_site --disable-external --allow-hash-href
 gem "html-proofer", "~> 5.0"
 
 platforms :mingw, :x64_mingw, :mswin, :jruby do

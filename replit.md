@@ -6,8 +6,8 @@ Keep it short, opinionated, and current.
 ## What this repo is
 
 A **static Jekyll site** for GeFi's public marketing and content surface.
-It is hosted on **GitHub Pages** at the apex domain **`gefi.io`** and built
-by `.github/workflows/deploy-pages.yml` on every push to `main`.
+It is hosted on **Cloudflare Pages** at the apex domain **`gefi.io`** and
+built by Cloudflare's Pages GitHub App on every push to `main`.
 
 It is **not** the GeFi platform itself. The platform (APIs, dashboards,
 auth, inference, federated training, audit log, compliance routing) is a
@@ -20,32 +20,27 @@ referenced — never deployed.
 
 ## Hosting model (do not get this wrong)
 
-- **Production hosting:** **GitHub Pages** at the apex domain `gefi.io`.
-  DNS A records on the apex point at the four GitHub Pages IPs (see
-  `docs/dns-setup.md`). The `CNAME` file at the repo root pins the
-  custom domain.
-- **How the site reaches Pages:** `.github/workflows/deploy-pages.yml`
-  runs on every push to `main`. It builds the site with Bundler-pinned
-  Jekyll 4.4.1 (matching `Gemfile.lock` exactly), runs `htmlproofer`
-  against the build, and publishes `_site/` via `actions/deploy-pages`.
-  The `.nojekyll` file at the repo root tells GitHub Pages NOT to
-  re-process the artifact — Pages serves the uploaded `_site/` verbatim.
-- **One-time GitHub setting:** Repo Settings → Pages → Build and deployment
-  → Source must be set to **"GitHub Actions"** (not "Deploy from a branch").
-  If this is left on the branch-source default, GH Pages falls back to its
-  built-in Jekyll 3.10.x processor — which honours `.nojekyll` and serves
-  raw `*.md` source as plain text. That's the "wall of text" symptom that
-  bit the live site before this workflow existed. **Do not delete `.nojekyll`**
-  as a workaround — that will switch GH Pages back to its built-in Jekyll
-  3.x processor and break Jekyll 4-only features (`_config.yml` keys,
-  newer Liquid filters, etc.).
-- **Cloudflare Pages:** **not used in production.** The repo still carries
-  `wrangler.jsonc` and a `package.json` `npm run deploy` script (`wrangler
-  pages deploy _site --project-name=gefi --branch=main`) so an operator can
-  cut over to Cloudflare Pages later without rewriting the deploy plumbing.
-  If you do migrate, switch DNS off the GH Pages IPs and either delete
-  `.github/workflows/deploy-pages.yml` or gate it on a branch other than
-  `main` so the two hosts don't fight.
+- **Production hosting:** **Cloudflare Pages** at the apex domain `gefi.io`.
+  The `gefi.io` zone is on Cloudflare nameservers (`carter.ns.cloudflare.com`
+  + `joan.ns.cloudflare.com`); the Pages project named `gefi` owns the
+  apex + `www` custom domains. DNS is managed inside the same Cloudflare
+  account (see `docs/dns-setup.md`).
+- **How the site reaches Pages:** Cloudflare's Pages GitHub App watches
+  `AxalNetwork/gefi`. On every push to `main` it runs:
+  `bundle install && bundle exec jekyll build && bundle exec htmlproofer
+  ./_site --disable-external --allow-hash-href` with `RUBY_VERSION=3.2.2`,
+  `JEKYLL_ENV=production`, and `BUNDLE_WITHOUT=development:test`. It
+  publishes `_site/` to Cloudflare's edge. PRs get their own preview
+  deployment URL.
+- **Wrangler-CLI fallback:** `package.json` carries `npm run deploy`
+  (`bundle exec jekyll build && wrangler pages deploy _site
+  --project-name=gefi --branch=main`) for one-off deploys from a laptop
+  when the Git integration is unavailable. Requires `CLOUDFLARE_API_TOKEN`
+  + `CLOUDFLARE_ACCOUNT_ID` in the env.
+- **GitHub Pages: not used.** The repo no longer carries `.nojekyll`,
+  `CNAME`, or `.github/workflows/deploy-pages.yml`. The apex DNS no
+  longer points at the four `185.199.10[8-9].153` / `185.199.11[0-1].153`
+  GH Pages IPs.
 - **Cloudflare backend:** the Workers under `infrastructure/cloudflare/`
   ARE in production (api.gefi.io). They are deployed by
   `.github/workflows/deploy-cloudflare.yml` — separate from the Pages site.
@@ -70,10 +65,8 @@ referenced — never deployed.
 |-------------------------------|----------------------------------------------------|
 | `_config.yml`                 | Site config: title, URL, nav, API endpoints, collections, exclusions |
 | `Gemfile`                     | Ruby gems                                          |
-| `CNAME`                       | `gefi.io`                                          |
-| `.nojekyll`                   | Tells GitHub Pages NOT to re-process the artifact uploaded by `deploy-pages.yml` — required, do not delete |
-| `.github/workflows/deploy-pages.yml` | Builds Jekyll 4.4.1 with Bundler and publishes `_site/` to GitHub Pages on every push to `main` |
-| `package.json` / `wrangler.jsonc` | Optional Cloudflare Pages deploy plumbing — not currently used (production is GH Pages) |
+| `.ruby-version`               | Pins Ruby `3.2.2` for Cloudflare Pages + local Bundler |
+| `package.json` / `wrangler.jsonc` | Wrangler-CLI fallback for `npm run deploy` (one-off `wrangler pages deploy _site` when the Git integration is unavailable) |
 | `index.html`                  | Home                                               |
 | `features.md` / `pricing.md` / `models.md` / `research.md` / `docs.md` / `blog.md` / `about.md` / `compliance.md` / `contact.md` | Top-level marketing pages |
 | `legal/privacy.md`, `legal/terms.md` | Placeholder legal pages                     |
@@ -178,7 +171,7 @@ backend / dashboards exist, without any dead links or console errors.
 
 | #  | Title                                                              | State          |
 |----|--------------------------------------------------------------------|----------------|
-| 1  | Static Jekyll site on GitHub Pages                                 | **In progress (this task).** |
+| 1  | Static Jekyll site on Cloudflare Pages                             | **In progress (this task).** |
 | 2  | Cloudflare backend foundation (Workers + D1 + R2 + KV + Vectorize) | **In progress (this task).** |
 | 3  | Auth (Auth0 + JWT) + tenancy                                       | Pending        |
 | 4  | Compliance routing + audit log + trust portal                      | **Done.**      |
