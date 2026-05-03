@@ -42,11 +42,21 @@ GeFi is built on the assumption that all three of these are permanent.
 
 ## Team
 
-We're a small, distributed team across the EU, UK, and UAE. Every role below
-is open — write to [careers@gefi.io](mailto:careers@gefi.io) for an
+We're a small, distributed team across the EU, UK, and UAE. Every other role
+below is open — write to [careers@gefi.io](mailto:careers@gefi.io) for an
 introduction.
 
 <ul class="team-grid" role="list">
+  <li class="team-card team-card--member">
+    <picture>
+      <source srcset="{{ '/assets/img/team/guillaume-lauzier.webp' | relative_url }}" type="image/webp">
+      <img class="team-card__avatar" src="{{ '/assets/img/team/guillaume-lauzier.jpg' | relative_url }}" alt="Portrait of Guillaume Lauzier" width="64" height="64" loading="lazy">
+    </picture>
+    <h3>Guillaume Lauzier</h3>
+    <p class="team-card__title">Founder</p>
+    <p class="muted">Operator and venture partner working across digital infrastructure, cybersecurity, blockchain, and AI. Building GeFi as the audit-grade inference layer between foundation models and regulated finance.</p>
+    <a href="https://www.linkedin.com/in/guillaumelauzier/" rel="noopener">linkedin.com/in/guillaumelauzier</a>
+  </li>
   <li class="team-card">
     <span class="badge badge--federated team-card__badge">Hiring</span>
     <h3>Founding engineer — Edge platform</h3>

@@ -954,6 +954,22 @@ p  { margin: 0 0 var(--space-4); }
   font-family: var(--font-mono);
   font-size: 0.875rem;
   font-weight: 600;
+  word-break: break-all;
+}
+.team-card--member { padding-top: var(--space-4); }
+.team-card__avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  object-fit: cover; display: block;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt, #f4f4f5);
+}
+.team-card__title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+  margin: 0;
 }
 
 /* Focus visibility */
