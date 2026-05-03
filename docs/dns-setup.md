@@ -1,8 +1,18 @@
 # DNS setup for Cloudflare Pages on `gefi.io`
 
-This site is built and deployed by the **Cloudflare Pages GitHub App**
-to the `gefi` Pages project, served from the apex custom domain `gefi.io`
-and from `www.gefi.io`.
+This site is deployed to the Cloudflare Pages project named `gefi`
+(subdomain `gefi-1ns.pages.dev`) and served from the apex custom domain
+`gefi.io` and from `www.gefi.io`.
+
+Two deploy paths exist:
+
+1. **Direct Upload via wrangler (default, in use today).** `npm run
+   deploy` runs `wrangler pages deploy _site --project-name=gefi
+   --branch=main`. No GitHub integration required.
+2. **Cloudflare Pages GitHub App (optional).** Connecting the App to
+   `AxalNetwork/gefi` makes pushes to `main` build + deploy
+   automatically with PR previews. See `replit.md` "Hosting model" for
+   the connect steps.
 
 The `gefi.io` zone is on Cloudflare nameservers
 (`carter.ns.cloudflare.com` + `joan.ns.cloudflare.com`), so all DNS
@@ -15,10 +25,15 @@ When you add a custom domain to a Pages project on a zone in the same
 Cloudflare account, Cloudflare creates the records for you. Verify in
 dash → **DNS → Records**:
 
-| Type   | Name | Value             | Proxied | Notes                                            |
-|--------|------|-------------------|---------|--------------------------------------------------|
-| CNAME  | @    | `gefi.pages.dev`  | Yes     | CNAME-flattened to apex (Cloudflare-only feature)|
-| CNAME  | www  | `gefi.pages.dev`  | Yes     | Standard CNAME                                   |
+| Type   | Name | Value                  | Proxied | Notes                                            |
+|--------|------|------------------------|---------|--------------------------------------------------|
+| CNAME  | @    | `gefi-1ns.pages.dev`   | Yes     | CNAME-flattened to apex (Cloudflare-only feature)|
+| CNAME  | www  | `gefi-1ns.pages.dev`   | Yes     | Standard CNAME                                   |
+
+> The Pages subdomain is **`gefi-1ns.pages.dev`** (not `gefi.pages.dev`
+> — that name was already taken when the project was created). If you
+> recreate the project under a different name, substitute
+> `<project-subdomain>.pages.dev` here.
 
 Keep them **proxied** (orange cloud) so Cloudflare's CDN + WAF sit in
 front of the Pages origin.
@@ -45,7 +60,7 @@ without guessing:
 | Project name           | `gefi` |
 | Production branch      | `main` |
 | Framework preset       | None |
-| Build command          | `bundle install && bundle exec jekyll build && bundle exec htmlproofer ./_site --disable-external --allow-hash-href` |
+| Build command (Git path) | `bundle install && bundle exec jekyll build` |
 | Build output directory | `_site` |
 | Root directory         | `/` |
 | Env: `RUBY_VERSION`    | `3.2.2` |
@@ -78,10 +93,10 @@ After DNS propagates (usually under 60 seconds when DNS is on the same
 Cloudflare account):
 
 ```bash
-dig +short gefi.io                # NOT 185.199.x.153
-dig +short www.gefi.io            # gefi.pages.dev (or a Cloudflare anycast IP)
+dig +short gefi.io                # Cloudflare anycast IP (NOT 185.199.x.153)
+dig +short www.gefi.io            # gefi-1ns.pages.dev (or a Cloudflare anycast IP)
 curl -I https://gefi.io           # 200, server: cloudflare
-curl -I https://www.gefi.io       # 200 or 301 to apex
+curl -I https://www.gefi.io       # 200, server: cloudflare
 ```
 
 The TLS cert is issued automatically by Cloudflare (Universal SSL),
@@ -126,6 +141,18 @@ not Let's Encrypt via GitHub.
 
 ### A push to `main` did NOT trigger a new build
 
-- Cloudflare Pages GitHub App lost authorisation for the repo. Go to
+- Default setup is **Direct Upload via wrangler** — pushes to `main` do
+  *not* trigger a deploy by themselves. Run `npm run deploy` after
+  `bundle exec jekyll build`.
+- If you connected the Cloudflare Pages GitHub App and pushes still
+  don't trigger builds, the App lost authorisation for the repo. Go to
   github.com → Settings → Applications → **Cloudflare Pages** →
   re-grant access to `AxalNetwork/gefi`.
+
+### `npm run deploy` fails with "Authentication error [code: 10000]"
+
+- The `CLOUDFLARE_API_TOKEN` is missing the `Account → Cloudflare Pages
+  → Edit` permission, or `CLOUDFLARE_ACCOUNT_ID` isn't set (wrangler
+  falls back to `/memberships`, which most scoped tokens can't read).
+  Set both env vars and ensure the token's permission set includes
+  Pages:Edit + Account:Read.

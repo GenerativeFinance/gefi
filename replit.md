@@ -6,8 +6,10 @@ Keep it short, opinionated, and current.
 ## What this repo is
 
 A **static Jekyll site** for GeFi's public marketing and content surface.
-It is hosted on **Cloudflare Pages** at the apex domain **`gefi.io`** and
-built by Cloudflare's Pages GitHub App on every push to `main`.
+It is hosted on **Cloudflare Pages** at the apex domain **`gefi.io`**.
+Deploys are pushed via the **wrangler CLI** (Direct Upload) by default;
+a Cloudflare Pages GitHub App can optionally be wired up to auto-deploy
+on push to `main` (see `docs/dns-setup.md`).
 
 It is **not** the GeFi platform itself. The platform (APIs, dashboards,
 auth, inference, federated training, audit log, compliance routing) is a
@@ -25,18 +27,18 @@ referenced — never deployed.
   + `joan.ns.cloudflare.com`); the Pages project named `gefi` owns the
   apex + `www` custom domains. DNS is managed inside the same Cloudflare
   account (see `docs/dns-setup.md`).
-- **How the site reaches Pages:** Cloudflare's Pages GitHub App watches
-  `AxalNetwork/gefi`. On every push to `main` it runs:
-  `bundle install && bundle exec jekyll build && bundle exec htmlproofer
-  ./_site --disable-external --allow-hash-href` with `RUBY_VERSION=3.2.2`,
-  `JEKYLL_ENV=production`, and `BUNDLE_WITHOUT=development:test`. It
-  publishes `_site/` to Cloudflare's edge. PRs get their own preview
-  deployment URL.
-- **Wrangler-CLI fallback:** `package.json` carries `npm run deploy`
-  (`bundle exec jekyll build && wrangler pages deploy _site
-  --project-name=gefi --branch=main`) for one-off deploys from a laptop
-  when the Git integration is unavailable. Requires `CLOUDFLARE_API_TOKEN`
-  + `CLOUDFLARE_ACCOUNT_ID` in the env.
+- **How the site reaches Pages (current, default):** **Direct Upload via
+  the wrangler CLI.** Build locally (or in Replit) with
+  `bundle install && bundle exec jekyll build`, then push `_site/` with
+  `npm run deploy` (`wrangler pages deploy _site --project-name=gefi
+  --branch=main`). Requires `CLOUDFLARE_API_TOKEN` (with `Pages:Edit` +
+  `Account:Read`) and `CLOUDFLARE_ACCOUNT_ID` in the env. The Pages
+  project subdomain is `gefi-1ns.pages.dev`.
+- **Optional: Git auto-deploy.** Connecting the Cloudflare Pages GitHub
+  App to `AxalNetwork/gefi` (dash → Workers & Pages → `gefi` → Settings
+  → Builds & deployments → Connect to Git) makes pushes to `main`
+  trigger Cloudflare-side builds with the same env vars and PR previews.
+  Not required — the Direct Upload path above already serves production.
 - **GitHub Pages: not used.** The repo no longer carries `.nojekyll`,
   `CNAME`, or `.github/workflows/deploy-pages.yml`. The apex DNS no
   longer points at the four `185.199.10[8-9].153` / `185.199.11[0-1].153`
@@ -66,7 +68,7 @@ referenced — never deployed.
 | `_config.yml`                 | Site config: title, URL, nav, API endpoints, collections, exclusions |
 | `Gemfile`                     | Ruby gems                                          |
 | `.ruby-version`               | Pins Ruby `3.2.2` for Cloudflare Pages + local Bundler |
-| `package.json` / `wrangler.jsonc` | Wrangler-CLI fallback for `npm run deploy` (one-off `wrangler pages deploy _site` when the Git integration is unavailable) |
+| `package.json` / `wrangler.jsonc` | Production deploy command (`npm run deploy` → `wrangler pages deploy _site --project-name=gefi --branch=main`). The only `package.json` allowed at the repo root — exists solely to host this script and the `wrangler` devDep. |
 | `index.html`                  | Home                                               |
 | `features.md` / `pricing.md` / `models.md` / `research.md` / `docs.md` / `blog.md` / `about.md` / `compliance.md` / `contact.md` | Top-level marketing pages |
 | `legal/privacy.md`, `legal/terms.md` | Placeholder legal pages                     |
@@ -140,16 +142,20 @@ backend / dashboards exist, without any dead links or console errors.
 
 ## Working on this repo
 
-- **Never** add `package.json` or run `npm install` at the root. Node was
-  intentionally removed from this surface. The Cloudflare backend lives
-  under `infrastructure/cloudflare/` and has its own `package.json` /
-  `pnpm-lock.yaml` / `node_modules` — keep it that way.
+- **Never** add a *second* `package.json` at the root and never use it
+  for application code. The root `package.json` exists **only** to host
+  the `wrangler` devDep + the `npm run deploy` script (Direct Upload to
+  Cloudflare Pages). No app code, no React, no bundler. The Cloudflare
+  Workers backend lives under `infrastructure/cloudflare/` with its own
+  `package.json` / `pnpm-lock.yaml` / `node_modules` — keep it that way.
 - **Never** install Tailwind, SCSS, or any JS bundler at the root. Hand-write
   CSS in `assets/css/main.css`.
 - **Never** add a Replit `[deployment]` block to `.replit`.
 - **Never** un-commit `Gemfile.lock` *or* `infrastructure/cloudflare/pnpm-lock.yaml`.
   Deterministic builds are non-negotiable for both the Pages and Workers CI.
-- **Always** keep `CNAME` set to `gefi.io`.
+- **Never** re-add the root `CNAME` file. It's a GitHub-Pages-only
+  signal; on Cloudflare Pages it does nothing and confuses operators.
+  Custom domains live in dash → Pages → `gefi` → Custom domains.
 - **Always** put new pages with a permalink (`permalink: /thing/`) so URLs
   stay clean.
 - **Always** route any new app/auth CTA through `site.app.enabled` — see

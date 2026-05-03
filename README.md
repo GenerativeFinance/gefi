@@ -100,22 +100,34 @@ workflow signals "Server running".
 
 ## Deployment
 
-Pushing to `main` triggers a build by **Cloudflare's Pages GitHub App**,
-which:
+Production lives on **Cloudflare Pages** (project name `gefi`,
+subdomain `gefi-1ns.pages.dev`, custom domains `gefi.io` + `www.gefi.io`).
 
-1. Installs Ruby `3.2.2` (pinned via `.ruby-version` + the Pages
-   `RUBY_VERSION` env var) with Bundler-cached gem install.
-2. Runs `bundle install && bundle exec jekyll build` with
-   `JEKYLL_ENV=production` and `BUNDLE_WITHOUT=development:test`.
-3. Runs `bundle exec htmlproofer ./_site --disable-external
-   --allow-hash-href` as a build-time link / image audit.
-4. Publishes `_site/` to the Cloudflare edge, served on
-   `https://gefi.io` and `https://www.gefi.io`.
+**Default path: Direct Upload via wrangler.** Build locally and push:
 
-PRs get their own `*.pages.dev` preview deployment URL.
+```bash
+bundle install && bundle exec jekyll build
+npm install --no-save wrangler@4   # one-time, if not already
+CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… npm run deploy
+```
 
-For one-off deploys without going through GitHub, run `npm run deploy`
-(needs `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` in the env).
+`npm run deploy` runs `wrangler pages deploy _site --project-name=gefi
+--branch=main`. The token needs `Account → Cloudflare Pages: Edit`,
+`Account → Account Settings: Read`, and (for first-time DNS work)
+`Zone → DNS: Edit` on the `gefi.io` zone.
+
+**Optional: Git auto-deploy.** dash.cloudflare.com → Workers & Pages →
+`gefi` → Settings → Builds & deployments → "Connect to Git" → authorise
+the Cloudflare Pages GitHub App on `AxalNetwork/gefi`. Build command:
+`bundle install && bundle exec jekyll build`. Output dir: `_site`. Env
+vars: `RUBY_VERSION=3.2.2`, `JEKYLL_ENV=production`,
+`BUNDLE_WITHOUT=development:test`. Once connected, every push to `main`
+builds + deploys, and PRs get their own `*.pages.dev` preview URL.
+
+`bundle exec htmlproofer ./_site --disable-external --allow-hash-href`
+is the recommended pre-deploy link/image audit but is not run by the
+default deploy script — invoke it manually before `npm run deploy` if
+you want a build-time check.
 
 For the DNS + Pages configuration reference, see
 [`docs/dns-setup.md`](./docs/dns-setup.md).
