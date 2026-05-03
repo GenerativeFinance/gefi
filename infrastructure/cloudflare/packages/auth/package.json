@@ -7,11 +7,9 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./jwks": "./src/jwks.ts",
     "./verify": "./src/verify.ts",
     "./rbac": "./src/rbac.ts",
     "./kyc-tiers": "./src/kyc-tiers.ts",
-    "./management": "./src/management.ts",
     "./types": "./src/types.ts"
   },
   "scripts": {

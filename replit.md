@@ -232,19 +232,25 @@ pnpm typecheck     # turbo run typecheck across the graph
 pnpm --filter @gefi/worker-api run dev    # wrangler dev with local D1/R2/KV emulation
 ```
 
-## Task #3 — Auth, multi-tenancy & jurisdiction routing (DONE)
+## Task #3 — Auth, multi-tenancy & jurisdiction routing (PIVOTING)
 
-Auth runs on Auth0 with RS256 tokens. The operator runbook is
-`infrastructure/cloudflare/AUTH0-SETUP.md`. Required env vars:
-`AUTH0_DOMAIN`, `AUTH0_AUDIENCE` (in `wrangler.jsonc`) and the secret
-`AUTH0_M2M_CLIENT_SECRET` (via `wrangler secret put`).
+> **Auth provider pivot (May 2026).** GeFi removed Auth0. Token
+> verification is now the responsibility of an upcoming `gefi-auth`
+> Cloudflare Worker (D1 + KV + Workers crypto + GitHub OAuth +
+> WebAuthn). Until that Worker ships, the `gefi-api` middleware
+> returns `503 auth_unavailable` for any request bearing a token.
+> The Jekyll onboarding flow (`onboarding/*.html`,
+> `_layouts/onboarding.html`, `assets/js/onboarding.js`,
+> `assets/js/role-gate.js`) was deleted along with the Auth0-specific
+> pieces of `@gefi/auth` (`jwks.ts`, `verify.ts` RS256 path,
+> `management.ts`). What survives in `@gefi/auth` is reusable: the
+> claim vocabulary, the RBAC matrix, the subscription→KYC tier map,
+> and the header / payload-peek helpers.
 
 New packages:
-- `packages/auth` — JWKS cache (`jwks.ts`), RS256 verifier (`verify.ts`
-  with both strict and `verifyAuth0TokenLoose` variants), 7-persona
-  RBAC matrix (`rbac.ts`), subscription→KYC tier map (`kyc-tiers.ts`),
-  Auth0 Management M2M client (`management.ts`) for writing
-  `app_metadata.gefi` after onboarding.
+- `packages/auth` — claim vocabulary + 7-persona RBAC matrix
+  (`rbac.ts`) + subscription→KYC tier map (`kyc-tiers.ts`) + bearer
+  header / jurisdiction-peek helpers (`verify.ts`).
 - `packages/integrations` — `KycProvider` + `SanctionsProvider`
   interfaces, with `StubKycProvider`, `OnfidoKycProvider` (HMAC-SHA256
   `X-SHA2-Signature`), `SumsubKycProvider` (HMAC-SHA256
@@ -255,12 +261,10 @@ New packages:
   `SanctionsProviderNotConfiguredError` rather than falling back to
   the stub, and the handlers translate the throw to 503. Dev /
   staging keep the stub fallback for local iteration and tests.
-- `assets/js/role-gate.js` — client-side RBAC primitive. Exports
-  `canPerform()` and a `<role-gate action subject>` web component
-  for plain Jekyll pages; the Task #7 React dashboards will import
-  the same module. A vitest sync test
-  (`packages/auth/src/role-gate-sync.test.ts`) fails the build if
-  this client mirror drifts from the server-side `rbac.ts`.
+- *(removed)* `assets/js/role-gate.js` — Jekyll-side RBAC primitive
+  was deleted in the Auth0 pivot; the Task #7 React dashboards will
+  import the canonical `canPerform()` directly from
+  `@gefi/auth/rbac`.
 
 D1: `workers/api/migrations/0001_init_auth.sql` creates `tenants`,
 `users`, `memberships`, `api_keys`, `kyc_evidence`, `sanction_hits`,
@@ -276,10 +280,10 @@ Cross-region rejection: regional siblings drop traffic whose JWT
 `jurisdiction` claim doesn't match `WORKER_REGION`. The public edge
 forwards based on the JWT's `jurisdiction` (else `cf.country`).
 
-Jekyll onboarding: `onboarding/index.html` (jurisdiction) →
-`/onboarding/entity/` → `/onboarding/identity/` → `/onboarding/security/`,
-gated on `site.app.enabled`. `assets/js/onboarding.js` posts to
-`/v1/auth/onboard` then `/v1/kyc/start`.
+Jekyll onboarding flow (`onboarding/*.html`, `_layouts/onboarding.html`,
+`assets/js/onboarding.js`) was REMOVED in the Auth0 pivot. The
+new sign-up + onboarding UX will live on the React dashboard at
+`app.gefi.io` once the `gefi-auth` Worker + dashboard ship.
 
 Tests: 100/100 (`packages/auth` 34, `packages/integrations` 18,
 `workers/api` 18 incl. integration, `workers/web` 2, `shared-router`

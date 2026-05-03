@@ -1,26 +1,32 @@
 /**
  * POST /v1/auth/onboard — first-time tenant + membership creation.
  *
- * Called once per user, immediately after they sign up via Auth0. The
- * Auth0 JWT issued at signup contains only the standard claims; the
- * client posts the user's chosen `jurisdiction`, `entity_type`,
- * `display_name` and `subscription_tier` here, and we:
+ * Called once per user, immediately after they sign up. The signup JWT
+ * carries only standard claims; the client posts the user's chosen
+ * `jurisdiction`, `entity_type`, `display_name` and `subscription_tier`
+ * here, and we:
  *
  *   1. Create a `tenants` row with status="pending_kyc".
- *   2. Create the matching `users` row keyed by `auth0_sub`.
+ *   2. Create the matching `users` row keyed on the principal `sub`
+ *      (the `users.auth0_sub` column name is preserved for schema
+ *      continuity; it now holds whatever subject id the forthcoming
+ *      `gefi-auth` Worker mints).
  *   3. Create a `memberships` row promoting the user to `admin` of the
  *      new tenant.
- *   4. Tell the caller the tenant id + slug. The caller must then ask
- *      Auth0 to refresh the user's tokens — the next JWT will include
- *      the new tenant_id / jurisdiction / entity_type claims (set by the
- *      Auth0 Action documented in AUTH0-SETUP.md).
+ *   4. Tell the caller the tenant id + slug. The caller must then
+ *      refresh their token so subsequent requests carry the new
+ *      `tenant_id` / `jurisdiction` / `entity_type` claims.
  *
- * This endpoint is idempotent on the (auth0_sub, jurisdiction) pair:
- * calling it twice with the same Auth0 user returns the existing tenant.
+ * Claim hydration onto the identity provider used to happen here via
+ * the Auth0 Management M2M client; that path was removed when GeFi
+ * pivoted off Auth0. The new `gefi-auth` Worker (TBD) will own claim
+ * propagation directly from D1 — no out-of-band metadata write needed.
+ *
+ * This endpoint is idempotent on the (subject, jurisdiction) pair:
+ * calling it twice with the same user returns the existing tenant.
  */
 
 import { requireLooseAuth } from "../../middleware/auth.js";
-import { Auth0Management, type GefiAppMetadata } from "@gefi/auth/management";
 import { subscriptionToKycTier } from "@gefi/auth/kyc-tiers";
 import { emitComplianceEvent } from "../../lib/compliance-client.js";
 import type { Handler } from "../../router.js";
@@ -130,49 +136,15 @@ export const onboardHandler: Handler = async (rc) => {
     return Response.json({ ok: false, error: "storage_failed" }, { status: 502 });
   }
 
-  // Write the GeFi claims onto Auth0 `app_metadata.gefi` via the
-  // Management API. The post-login Action (see AUTH0-SETUP.md §5)
-  // copies app_metadata.gefi onto every subsequent token, so the
-  // user's NEXT access token will carry the claims that
-  // `requireAuth` expects (`tenant_id`, `jurisdiction`, etc.). Their
-  // CURRENT token is unchanged, which is why the response below
+  // Claim hydration onto the identity provider used to happen here
+  // (PATCH `app_metadata.gefi` on the Auth0 user via the M2M
+  // Management API). That path was removed when GeFi pivoted off
+  // Auth0. The new `gefi-auth` Worker will read these claims directly
+  // from D1 (`tenants` + `memberships`) when minting the next access
+  // token, so no out-of-band write is required. The response still
   // sets `requires_token_refresh: true` — the client must refresh
-  // before calling `/v1/kyc/start`.
-  //
-  // M2M secrets are optional: in dev/staging without them we just
-  // log + continue (the post-login Action will still hydrate claims
-  // on next login from D1 fall-back), but in prod the operator
-  // should configure them. Failures here are NEVER fatal to onboard
-  // (D1 is the source of truth) — the user can re-attempt the
-  // refresh path until the claims propagate.
-  const gefiClaims: GefiAppMetadata = {
-    tenant_id: tenantId,
-    jurisdiction: body.jurisdiction,
-    entity_type: body.entity_type,
-    subscription_tier: subTier,
-    kyc_tier: "none",
-    roles: ["admin"],
-  };
-  let appMetadataWritten = false;
-  if (rc.env.AUTH0_M2M_CLIENT_ID && rc.env.AUTH0_M2M_CLIENT_SECRET) {
-    try {
-      const mgmt = new Auth0Management(
-        rc.env.AUTH0_DOMAIN,
-        rc.env.AUTH0_M2M_CLIENT_ID,
-        rc.env.AUTH0_M2M_CLIENT_SECRET,
-        rc.env.CACHE,
-      );
-      await mgmt.updateAppMetadata(principal.sub, gefiClaims);
-      appMetadataWritten = true;
-    } catch (err) {
-      console.error("[gefi-api] auth0 app_metadata write failed", err);
-    }
-  } else if (rc.env.ENVIRONMENT === "prod") {
-    // Loud warning: in prod we want the M2M wired up so claim
-    // propagation is immediate. The user can still complete
-    // onboarding at next login, but it's a misconfiguration.
-    console.warn("[gefi-api] AUTH0_M2M_CLIENT_ID/SECRET missing in prod; relying on post-login Action only");
-  }
+  // before calling `/v1/kyc/start` so the new token carries the
+  // freshly-created tenant claims.
 
   // Emit `tenant_onboarded` to the compliance Worker. Best-effort: a
   // transient binding failure must not block onboarding (the tenant
@@ -197,10 +169,6 @@ export const onboardHandler: Handler = async (rc) => {
     {
       ok: true,
       tenant: { id: tenantId, slug },
-      // True iff the backend wrote `app_metadata.gefi` directly. When
-      // false, the Auth0 post-login Action will pick the claims up
-      // from D1 on next login; the user just needs to refresh.
-      app_metadata_written: appMetadataWritten,
       // Always true — the user's CURRENT token was issued before the
       // tenant existed, so it has no GeFi claims. The frontend MUST
       // fetch a fresh token (silent refresh / interactive login)

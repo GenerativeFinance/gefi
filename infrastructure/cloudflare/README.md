@@ -236,10 +236,19 @@ Required repo Secrets:
 
 ## Auth, multi-tenancy & jurisdiction routing (Task #3)
 
-Auth runs on Auth0 with RS256 access tokens. The `gefi-api` Worker
-fetches the JWKS lazily (KV-cached for 1h), verifies every bearer
-token at the edge, and rejects cross-region traffic at the regional
-sibling. The full operator runbook is in [`AUTH0-SETUP.md`](./AUTH0-SETUP.md).
+> **Auth provider migration in flight.** GeFi pivoted off Auth0 in
+> May 2026. Token verification is moving to a dedicated `gefi-auth`
+> Cloudflare Worker (D1 + KV + Workers crypto + GitHub OAuth +
+> WebAuthn) that has not shipped yet. Until it lands, the `gefi-api`
+> auth middleware returns `503 auth_unavailable` for any request that
+> presents a Bearer token; unauthenticated routes (health checks,
+> public marketplace browse) continue to work. See
+> [`SECRETS.md`](./SECRETS.md) for the secret inventory and the
+> `gefi-auth` Worker section for what will be wired up next.
+
+The `gefi-api` Worker still owns multi-tenancy, jurisdiction routing,
+and the cross-region rejection at the regional sibling — only the
+"validate this user JWT" step is delegated to `gefi-auth`.
 
 Surface area:
 
@@ -257,8 +266,11 @@ Surface area:
 
 Packages:
 
-- [`packages/auth`](./packages/auth) — JWKS fetcher, RS256 verifier,
-  CASL-style RBAC matrix (`canPerform()`), subscription→KYC tier map.
+- [`packages/auth`](./packages/auth) — claim vocabulary
+  (`GefiAuthClaims`, action / resource enums), CASL-style RBAC matrix
+  (`canPerform()`), subscription→KYC tier map, plus header /
+  payload-peek helpers (`extractBearer`, `peekJurisdiction`). Token
+  verification moved to the upcoming `gefi-auth` Worker.
 - [`packages/integrations`](./packages/integrations) — KYC + sanctions
   provider interfaces with stubs and real Onfido / OpenSanctions
   implementations. The factories fall back to stubs that **fail

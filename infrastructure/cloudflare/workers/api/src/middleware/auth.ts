@@ -1,35 +1,30 @@
 /**
- * Auth middleware for `gefi-api`.
+ * Auth middleware for `gefi-api` — STUB pending the `gefi-auth` Worker.
  *
- * Two phases:
+ * GeFi pivoted off Auth0 in May 2026. The RS256 / JWKS verifier that
+ * used to live in `@gefi/auth` was removed; token verification is now
+ * the responsibility of a dedicated `gefi-auth` Cloudflare Worker
+ * (D1 + KV + Workers crypto + GitHub OAuth + WebAuthn) which has not
+ * shipped yet.
  *
- *   1. **`tryAuthenticate(request, env)`** — runs once per request from
- *      `index.ts`. If `Authorization: Bearer …` is present:
- *        a. Verify the RS256 signature against the Auth0 JWKS (KV-cached).
- *        b. Validate `iss` / `aud` / `exp`.
- *        c. Flatten the namespaced GeFi custom claims.
- *      Returns either `{auth}` (with a `GefiAuthClaims` if the user has
- *      onboarded, or a `LooseAuthClaims` if not) or `{response}` (a 401
- *      with a stable error code) on any verification failure.
- *      No header → `{auth: null}` and the handler decides whether it
- *      cares.
+ * Until that lands, `tryAuthenticate` answers in three ways:
  *
- *   2. **`requireAuth(rc, ...permissions)`** — handler-level gate.
- *      Returns the verified claims or a 401/403 Response. Verifies:
- *        - `rc.auth` is fully hydrated (GeFi custom claims present).
- *        - The user has every requested permission.
- *      The cross-region rejection is enforced separately in `index.ts`
- *      *before* a handler runs, so by the time this is called the
- *      jurisdiction has already been confirmed.
+ *   - No `Authorization` header        → `{auth: null}` (handlers
+ *                                         that don't require auth
+ *                                         continue, gated handlers
+ *                                         return 401 via `requireAuth`).
+ *   - `Authorization: Bearer …` set    → 503 `auth_unavailable`
+ *                                         (no verifier wired up).
  *
- * `enforceCrossRegion(rc)` is the cross-region rejection. It returns a
- * 403 Response if the request reached a regional sibling on the wrong
- * side of the boundary, or `null` to continue.
+ * `requireAuth`, `requireLooseAuth`, and `enforceCrossRegion` keep
+ * their original shape so the dozens of call-sites compile unchanged.
+ * Once `gefi-auth` ships, swap `tryAuthenticate` to call its verifier
+ * via a Service binding — the rest of the file is untouched.
  */
 
 import type { Action, GefiAuthClaims, Resource } from "@gefi/auth/types";
 import { canPerform } from "@gefi/auth/rbac";
-import { extractBearer, verifyAuth0TokenLoose, type LooseAuthClaims } from "@gefi/auth/verify";
+import { extractBearer, type LooseAuthClaims } from "@gefi/auth/verify";
 import type { ApiEnv } from "@gefi/shared-types";
 import type { RouteContext } from "../router.js";
 
@@ -45,39 +40,20 @@ export type AuthResult =
   | { auth?: undefined; response: Response };
 
 /**
- * Verify the bearer token if present; never reject for missing tokens
- * (handlers decide whether they care). Returns `{response}` on a present-
- * but-invalid token so the API never accepts a partially-authenticated
- * caller into a handler.
+ * Returns `{auth: null}` if no bearer token is present (the request
+ * proceeds; gated handlers will 401). Returns a 503 `auth_unavailable`
+ * Response if a token IS present, because the verifier is not wired up
+ * yet (see file header).
  */
-export async function tryAuthenticate(request: Request, env: ApiEnv): Promise<AuthResult> {
+export async function tryAuthenticate(request: Request, _env: ApiEnv): Promise<AuthResult> {
   const token = extractBearer(request.headers.get("Authorization"));
   if (!token) return { auth: null };
-  if (!env.AUTH0_DOMAIN || !env.AUTH0_AUDIENCE) {
-    console.error("[gefi-api] auth0 env vars missing — refusing to verify");
-    return {
-      response: Response.json(
-        { ok: false, error: "auth_misconfigured" },
-        { status: 500 },
-      ),
-    };
-  }
-  try {
-    const claims = await verifyAuth0TokenLoose(token, {
-      auth0Domain: env.AUTH0_DOMAIN,
-      audience: env.AUTH0_AUDIENCE,
-      cache: env.CACHE,
-    });
-    return { auth: claims };
-  } catch (err) {
-    const code = err instanceof Error ? err.message : "auth_token_invalid";
-    return {
-      response: Response.json(
-        { ok: false, error: code },
-        { status: 401 },
-      ),
-    };
-  }
+  return {
+    response: Response.json(
+      { ok: false, error: "auth_unavailable", detail: "gefi-auth Worker not yet deployed" },
+      { status: 503 },
+    ),
+  };
 }
 
 /**

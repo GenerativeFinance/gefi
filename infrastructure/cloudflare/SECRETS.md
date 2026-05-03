@@ -40,8 +40,6 @@ In `dev` / `staging` the resolver substitutes a deterministic stub.
 | Secret | Purpose | Required envs |
 |---|---|---|
 | `INTERNAL_SIGNING_KEY` | HS256 signing for the edge → regional JWT. **Must be the same value across `prod`, `eu`, and `us`.** | prod, eu, us, staging |
-| `AUTH0_M2M_CLIENT_ID` | Auth0 Management API client id (writes `app_metadata.gefi`) | staging, prod, eu, us |
-| `AUTH0_M2M_CLIENT_SECRET` | Paired secret for the M2M client | staging, prod, eu, us |
 | `STRIPE_SECRET_KEY` | Stripe REST API key for subscriptions + Connect | staging, prod |
 | `STRIPE_WEBHOOK_SECRET` | Verifies `Stripe-Signature` on `/v1/billing/webhook` | staging, prod |
 | `STRIPE_PRICE_STARTER` | Price id for the Starter tier | staging, prod |
@@ -127,21 +125,24 @@ echo "$TOK" | pnpm --filter @gefi/worker-compliance exec wrangler secret put COM
 unset TOK
 ```
 
-### Auth0 — staging
+### `gefi-auth` Worker (NOT YET DEPLOYED)
 
-```bash
-pnpm --filter @gefi/worker-api exec wrangler secret put AUTH0_M2M_CLIENT_ID     --env staging
-pnpm --filter @gefi/worker-api exec wrangler secret put AUTH0_M2M_CLIENT_SECRET --env staging
-```
+GeFi pivoted off Auth0 in May 2026. Token verification will move to a
+dedicated `gefi-auth` Cloudflare Worker (D1 + KV + Workers crypto +
+GitHub OAuth + WebAuthn) which has not shipped yet. When it ships, its
+secret inventory will land here. Anticipated bindings (subject to
+change at implementation time):
 
-### Auth0 — prod (edge + both regional siblings)
+| Secret | Purpose | Required envs |
+|---|---|---|
+| `GITHUB_OAUTH_CLIENT_ID` | GitHub OAuth app for developer sign-in | staging, prod |
+| `GITHUB_OAUTH_CLIENT_SECRET` | Paired secret for the OAuth app | staging, prod |
+| `WEBAUTHN_RP_ID` + `WEBAUTHN_RP_NAME` | WebAuthn relying-party config (`gefi.io` / "GeFi") | staging, prod |
+| `AUTH_TOKEN_SIGNING_KEY` | HS256 / EdDSA key the Worker uses to sign access tokens issued to clients (rotated independently of `INTERNAL_SIGNING_KEY`) | staging, prod |
 
-```bash
-for E in prod eu us; do
-  pnpm --filter @gefi/worker-api exec wrangler secret put AUTH0_M2M_CLIENT_ID     --env "$E"
-  pnpm --filter @gefi/worker-api exec wrangler secret put AUTH0_M2M_CLIENT_SECRET --env "$E"
-done
-```
+Until the Worker ships, the `gefi-api` middleware returns
+`503 auth_unavailable` for any request bearing a token; unauthenticated
+routes (health checks, public marketplace browse) continue to work.
 
 ### Stripe — staging (test-mode keys)
 
@@ -343,17 +344,17 @@ Methodology — exhaustive ripgrep sweep across every committed file
 | `.github/workflows/deploy-cloudflare.yml` | `${{ secrets.CLOUDFLARE_API_TOKEN }}`, `${{ secrets.CLOUDFLARE_ACCOUNT_ID }}` | ✅ GitHub Environment secrets — no values committed |
 | `_config.yml` (Jekyll site config) | `"1 API key"`, `"10 API keys"` (marketing copy on the pricing page) | ✅ false positive — these are plan-feature strings, not credentials |
 | `_includes/config-script.html` (window.GEFI_CONFIG) | `apiBaseUrl`, three endpoint URLs | ✅ public values only |
-| `assets/js/onboarding.js` | Reads access token from `sessionStorage["gefi:auth:access_token"]` (set by Auth0 SDK at login) | ✅ no hardcoded value |
-| `assets/js/role-gate.js` | `"api_key"` appears as an Auth0 RBAC permission/resource string | ✅ false positive — RBAC vocabulary, not a credential |
 | `legacy/server/**/*.ts` (archived Express prototype, not deployed) | All credential reads via `process.env.X`; no hardcoded fallback values | ✅ correct, and the directory is excluded from the Jekyll build (`_config.yml` `exclude: [legacy/, infrastructure/, …]`) and not deployed anywhere |
 | `legacy/package-lock.json` | npm package `integrity` hashes that look like `sha512-…` | ✅ false positive — these are subresource integrity hashes, not secrets |
 | `legacy/server/web3Service.ts:251` | `0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063` | ✅ public DAI contract address on Ethereum mainnet, not a secret |
 
 **Frontend exposure: clean.** No API keys, no tokens, no JWTs, no
-webhook secrets are emitted into any `_site/` HTML, JS, or JSON. The only
-runtime credential the browser ever holds is the user's Auth0 access
-token, which is set by the Auth0 hosted login redirect and stored in
-`sessionStorage` — not in source.
+webhook secrets are emitted into any `_site/` HTML, JS, or JSON. The
+Jekyll-side Auth0 onboarding flow that previously held an access token
+in `sessionStorage` was deleted in the May 2026 auth pivot; the browser
+currently holds zero runtime credentials. The forthcoming `gefi-auth`
+Worker will issue access tokens via httpOnly cookies + WebAuthn, never
+plaintext storage.
 
 **Logs: clean.** Worker code never `console.log`s `env`, `env.X` for any
 secret-typed binding, or `JSON.stringify(env)`.
