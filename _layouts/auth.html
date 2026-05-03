@@ -78,6 +78,7 @@
     </div>
   </main>
 
+  {%- if auth_ready -%}
   <script>
     window.GEFI_AUTH = {
       apiBase: "{{ site.app.auth_api_base }}",
@@ -86,5 +87,6 @@
     };
   </script>
   <script src="{{ '/assets/js/auth.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
+  {%- endif -%}
 </body>
 </html>

@@ -1,6 +1,14 @@
+{%- comment -%}
+  Until the `gefi-auth` Worker (`auth.gefi.io`) and the dashboards
+  (`app.gefi.io`) are deployed, every header CTA points at the
+  early-access fallback so a click can never escape to a not-yet-live
+  subdomain (which would surface a "DNS_PROBE_FINISHED_NXDOMAIN" /
+  "server IP address could not be found" error in the browser).
+  Flip `app.auth_ready: true` in `_config.yml` once both ship.
+{%- endcomment -%}
 {%- assign signin_url  = site.app.signin_url  -%}
 {%- assign signup_url  = site.app.signup_url  -%}
-{%- unless site.app.enabled -%}
+{%- unless site.app.enabled and site.app.auth_ready -%}
   {%- assign signin_url = site.app.fallback_url | default: '/contact/' -%}
   {%- assign signup_url = site.app.fallback_url | default: '/contact/' -%}
 {%- endunless -%}

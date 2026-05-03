@@ -11,7 +11,7 @@ description: GeFi is the marketplace for AI financial models. Discover, subscrib
   CTA never points at a not-yet-live URL.
 {%- endcomment -%}
 {%- assign hero_primary_url = site.app.signup_url -%}
-{%- unless site.app.enabled -%}
+{%- unless site.app.enabled and site.app.auth_ready -%}
   {%- assign hero_primary_url = site.app.fallback_url | default: '/contact/?topic=sales' -%}
 {%- endunless -%}
 

@@ -1,5 +1,5 @@
 {%- assign cta_default = site.app.signup_url -%}
-{%- unless site.app.enabled -%}
+{%- unless site.app.enabled and site.app.auth_ready -%}
   {%- assign cta_default = site.app.fallback_url | default: '/contact/' -%}
 {%- endunless -%}
 <section class="section cta-band">
