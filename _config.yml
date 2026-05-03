@@ -33,27 +33,22 @@ api:
 
 # App surface (app.gefi.io).
 #
-# `enabled: false` routes every "Sign in" / "Get started" / "Subscribe" CTA
-# to the contact page so we don't ship dead links. Flip to `true` once Task #7
-# (the dashboards) is live.
-app:
-  enabled: false
-  signin_url: "https://app.gefi.io/sign-in"
-  signup_url: "https://app.gefi.io/sign-up"
-  fallback_url: "/contact/?topic=sales"
-
-# Auth0 wiring for the onboarding flow + dashboard sign-in.
+# Sign-in / sign-up routes.
 #
-# Filled in for prod by the operator following AUTH0-SETUP.md (see
-# infrastructure/cloudflare/AUTH0-SETUP.md). The values below are the
-# *staging* defaults; production is set via Jekyll's --config override
-# on deploy.
-auth0:
-  domain: "https://gefi-staging.eu.auth0.com/"
-  client_id: ""             # SPA client id from Auth0
-  audience: "https://staging-api.gefi.io"
-  callback_path: "/auth/callback"
-  scope: "openid profile email offline_access"
+# Auth lives on gefi.io itself (`/login/` and `/register/`). After a
+# successful auth, the user is redirected to the dashboard at
+# `app.gefi.io` (built in a later phase).
+#
+# Auth backend: Cloudflare Worker at `auth.gefi.io` with D1 (users +
+# WebAuthn credentials) and KV (sessions). Providers: Passkeys
+# (WebAuthn), GitHub OAuth, Google Sign-In. No passwords by design.
+app:
+  enabled: true
+  signin_url: "/login/"
+  signup_url: "/register/"
+  dashboard_url: "https://app.gefi.io/"
+  auth_api_base: "https://auth.gefi.io"
+  fallback_url: "/contact/?topic=sales"
 
 nav:
   - { title: "Models",     url: "/models/" }
@@ -229,7 +224,6 @@ subprocessors:
   - { name: "Cloudflare",   purpose: "Edge compute, DNS, WAF, R2/D1/KV" }
   - { name: "Stripe",       purpose: "Subscriptions and developer payouts" }
   - { name: "Resend",       purpose: "Transactional email" }
-  - { name: "Auth0",        purpose: "Authentication and MFA" }
   - { name: "Sumsub",       purpose: "KYC / KYB verification" }
 
 collections:
