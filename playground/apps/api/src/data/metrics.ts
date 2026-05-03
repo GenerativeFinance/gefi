@@ -53,10 +53,10 @@ const SLUGS = [
   "fraud-anomaly-detector",
   "fx-volatility-forecast",
   "yield-curve-predictor",
-  "esg-scorer",
-  "trade-execution-rl",
-  "lstm-price-predictor",
   "compliance-redaction-llm",
+  "earnings-surprise-predictor",
+  "esg-news-classifier",
+  "insurance-claims-triage",
 ];
 
 export const METRICS: ReadonlyArray<MetricsSeed> = SLUGS.map((slug, i) => ({

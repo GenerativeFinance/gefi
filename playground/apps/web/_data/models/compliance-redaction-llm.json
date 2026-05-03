@@ -219,16 +219,16 @@
       ]
     ],
     "latency": {
-      "p50_ms": 45,
-      "p95_ms": 198
+      "p50_ms": 36,
+      "p95_ms": 162
     }
   },
   "audits": [
     {
       "id": "audit_compliance-redaction-llm",
-      "auditor": "OpenZeppelin",
-      "standard": "SOC 2 Type II",
-      "auditedAt": 1724556800,
+      "auditor": "Trail of Bits",
+      "standard": "NIST AI RMF",
+      "auditedAt": 1726371200,
       "passed": true,
       "hash": "032575bc032575bc032575bc032575bc032575bc032575bc032575bc032575bc"
     }

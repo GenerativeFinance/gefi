@@ -35,10 +35,10 @@ export const AUDITS: ReadonlyArray<AuditSeed> = [
   "fraud-anomaly-detector",
   "fx-volatility-forecast",
   "yield-curve-predictor",
-  "esg-scorer",
-  "trade-execution-rl",
-  "lstm-price-predictor",
   "compliance-redaction-llm",
+  "earnings-surprise-predictor",
+  "esg-news-classifier",
+  "insurance-claims-triage",
 ].map((slug, i) => ({
   id: `audit_${slug}`,
   model_slug: slug,
