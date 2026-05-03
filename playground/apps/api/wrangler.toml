@@ -13,11 +13,69 @@ ENVIRONMENT = "dev"
 APP_BASE_URL = "http://localhost:8787"
 EMAIL_FROM = "GeFi Playground <noreply@localhost>"
 
-# Durable Object class is declared once at the top level; environments only
-# need to reference the binding name.
+# ── Top-level bindings (used by `wrangler dev` for local miniflare emulation).
+# Real production resource IDs ONLY live under [env.staging] / [env.production].
+# Local IDs below are placeholders — miniflare creates fresh on-disk emulators
+# rather than calling Cloudflare's APIs.
+[[d1_databases]]
+binding = "DB"
+database_name = "gefi"
+database_id = "local-dev-placeholder"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "MODELS"
+bucket_name = "gefi-models-local"
+
+[[r2_buckets]]
+binding = "DATASETS_PUBLIC"
+bucket_name = "gefi-datasets-public-local"
+
+[[r2_buckets]]
+binding = "DATASETS_LICENSED"
+bucket_name = "gefi-datasets-licensed-local"
+
+[[r2_buckets]]
+binding = "FED_UPDATES"
+bucket_name = "gefi-fed-updates-local"
+
+[[r2_buckets]]
+binding = "AUDIT"
+bucket_name = "gefi-audit-local"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "local-dev-placeholder"
+
+[[kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "local-dev-placeholder"
+
+[[vectorize]]
+binding = "SEARCH"
+index_name = "gefi-search-local"
+
+[[queues.producers]]
+binding = "JOBS"
+queue = "gefi-jobs-local"
+
+[[queues.consumers]]
+queue = "gefi-jobs-local"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "gefi-jobs-dlq-local"
+
+[[analytics_engine_datasets]]
+binding = "EVENTS"
+dataset = "gefi_events_local"
+
 [[durable_objects.bindings]]
 name = "ROUND"
 class_name = "Round"
+
+[ai]
+binding = "AI"
 
 [[migrations]]
 tag = "v1"

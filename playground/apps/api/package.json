@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "predev": "pnpm --filter @gefi-playground/ui run build:tokens",
-    "dev": "wrangler dev --config ./wrangler.toml --env staging --port 8787 --ip 0.0.0.0",
+    "dev": "wrangler dev --config ./wrangler.toml --port 8787 --ip 0.0.0.0",
     "prebuild": "pnpm --filter @gefi-playground/ui run build:tokens",
     "build": "wrangler deploy --dry-run --config ./wrangler.toml --outdir dist",
     "build:staging": "wrangler deploy --dry-run --config ./wrangler.toml --env staging --outdir dist",
@@ -15,12 +15,12 @@
     "typecheck": "tsc --noEmit",
     "keygen": "tsx scripts/keygen.ts",
     "db:seed:emit": "tsx scripts/seed.ts",
-    "db:migrate:local": "wrangler d1 migrations apply gefi --config ./wrangler.toml --env staging --local",
+    "db:migrate:local": "wrangler d1 migrations apply gefi --config ./wrangler.toml --local",
     "db:migrate:staging": "wrangler d1 migrations apply gefi --config ./wrangler.toml --env staging --remote",
     "db:migrate:prod": "wrangler d1 migrations apply gefi --config ./wrangler.toml --env production --remote",
-    "db:seed:local": "tsx scripts/seed.ts | wrangler d1 execute gefi --config ./wrangler.toml --env staging --local --file=/dev/stdin",
+    "db:seed:local": "tsx scripts/seed.ts | wrangler d1 execute gefi --config ./wrangler.toml --local --file=/dev/stdin",
     "db:seed:staging": "tsx scripts/seed.ts | wrangler d1 execute gefi --config ./wrangler.toml --env staging --remote --file=/dev/stdin",
-    "db:reset:local": "wrangler d1 execute gefi --config ./wrangler.toml --env staging --local --command=\"DROP TABLE IF EXISTS model_versions; DROP TABLE IF EXISTS models; DROP TABLE IF EXISTS categories; DROP TABLE IF EXISTS users; DROP TABLE IF EXISTS _migrations;\" && pnpm run db:migrate:local",
+    "db:reset:local": "wrangler d1 execute gefi --config ./wrangler.toml --local --command=\"DROP TABLE IF EXISTS model_versions; DROP TABLE IF EXISTS models; DROP TABLE IF EXISTS categories; DROP TABLE IF EXISTS users; DROP TABLE IF EXISTS _migrations; DROP TABLE IF EXISTS d1_migrations;\" && pnpm run db:migrate:local",
     "db:reset": "pnpm run db:reset:local"
   },
   "dependencies": {
