@@ -27,8 +27,14 @@ pnpm dev                  # boots Jekyll :4000 + Wrangler :8787 concurrently
 
 ## In Replit
 
-A second workflow named **"Playground"** is registered in `.replit`. The default
-workflow ("Start application") still serves the marketing Jekyll site on :5000.
+A second workflow named **"Playground (manual start)"** is registered in `.replit`
+(autoStart=false, console mode). The default Run button still serves the marketing
+Jekyll site on :5000 via the "Start application" workflow. Start the playground
+manually from the Workflows panel when you want to develop against it.
+
+> **Toolchain note:** this monorepo runs on pnpm **10** (the version available in
+> the Replit Nix environment) rather than pnpm 9 from the original spec. The
+> workspace layout and `pnpm-workspace.yaml` are forward-compatible.
 
 ## Brand tokens
 
