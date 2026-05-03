@@ -98,13 +98,15 @@ footer_nav:
     - { label: "Security", email: "security@gefi.io" }
 
 # Social / community channels surfaced in the footer "Connect" column.
-# Update the placeholder URLs (discord, linkedin) once the operator has
-# the real invite / company page links.
 social:
-  - { name: "X",        handle: "@GeeFiOfficial",   url: "https://x.com/GeeFiOfficial",  icon: "twitter" }
-  - { name: "GitHub",   handle: "gefi-io",          url: "https://github.com/gefi-io",   icon: "github" }
-  - { name: "Discord",  handle: "Join the server", url: "#discord",                      icon: "discord" }
-  - { name: "LinkedIn", handle: "GeFi",             url: "#linkedin",                    icon: "linkedin" }
+  - { name: "Facebook", handle: "generativefinance",  url: "https://www.facebook.com/generativefinance",        icon: "facebook" }
+  - { name: "LinkedIn", handle: "generativefinance",  url: "https://www.linkedin.com/company/generativefinance", icon: "linkedin" }
+  - { name: "X",        handle: "@generativefi",      url: "https://twitter.com/generativefi",                  icon: "twitter" }
+  - { name: "Instagram",handle: "@generativefinance", url: "https://www.instagram.com/generativefinance",       icon: "instagram" }
+  - { name: "YouTube",  handle: "@generativefinance", url: "https://www.youtube.com/@generativefinance",        icon: "youtube" }
+  - { name: "TikTok",   handle: "@generativefinance", url: "https://www.tiktok.com/@generativefinance",         icon: "tiktok" }
+  - { name: "Telegram", handle: "generativefinance",  url: "https://t.me/generativefinance",                    icon: "telegram" }
+  - { name: "Medium",   handle: "generativefinance",  url: "https://medium.com/generativefinance",              icon: "medium" }
 
 # Pricing page (Task #3).
 #
