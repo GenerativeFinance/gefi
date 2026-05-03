@@ -267,50 +267,52 @@ export class D1DetailRepository implements DetailRepository {
     newId: () => string;
   }): Promise<{ review: ReviewRow; ratingAvg: number; ratingCount: number }> {
     const { slug, userId, stars, comment, now, newId } = args;
-    // Try update first; if no row matched, insert.
+    // We need the existing id (if any) so we can keep the original
+    // `created_at` and return a stable id to the caller. The read happens
+    // outside the transaction; the *write* — review upsert + aggregate
+    // recompute on the model row — is a single atomic `db.batch()` so the
+    // model row's `rating_avg/rating_count` cannot drift away from the
+    // actual rows under concurrent writers.
     const existing = await this.db
       .prepare("SELECT id, created_at FROM reviews WHERE model_slug = ? AND user_id = ?")
       .bind(slug, userId)
       .first<{ id: string; created_at: number }>();
 
-    let id: string;
-    let createdAt: number;
-    if (existing) {
-      id = existing.id;
-      createdAt = existing.created_at;
-      await this.db
-        .prepare("UPDATE reviews SET stars = ?, comment = ?, updated_at = ? WHERE id = ?")
-        .bind(stars, comment, now, id)
-        .run();
-    } else {
-      id = newId();
-      createdAt = now;
-      await this.db
-        .prepare(
-          `INSERT INTO reviews (id, model_slug, user_id, stars, comment, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        )
-        .bind(id, slug, userId, stars, comment, now, now)
-        .run();
-    }
+    const id = existing?.id ?? newId();
+    const createdAt = existing?.created_at ?? now;
 
-    // Recompute aggregates in the same statement so the read-back is consistent.
+    const upsertStmt = existing
+      ? this.db
+          .prepare("UPDATE reviews SET stars = ?, comment = ?, updated_at = ? WHERE id = ?")
+          .bind(stars, comment, now, id)
+      : this.db
+          .prepare(
+            `INSERT INTO reviews (id, model_slug, user_id, stars, comment, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          )
+          .bind(id, slug, userId, stars, comment, now, now);
+
+    // Aggregate recompute embedded as scalar subqueries so it sees the row
+    // we just wrote — D1 batches execute serially inside one txn.
+    const recomputeStmt = this.db
+      .prepare(
+        `UPDATE models
+            SET rating_count = (SELECT COUNT(*)            FROM reviews WHERE model_slug = ?),
+                rating_avg   = (SELECT COALESCE(ROUND(AVG(stars), 1), 0) FROM reviews WHERE model_slug = ?),
+                updated_at   = ?
+          WHERE slug = ?`,
+      )
+      .bind(slug, slug, now, slug);
+
+    await this.db.batch([upsertStmt, recomputeStmt]);
+
+    // Read the post-batch aggregate back so we can return it to the caller.
     const agg = await this.db
-      .prepare(
-        `SELECT COUNT(*) AS n, COALESCE(AVG(stars), 0) AS avg
-           FROM reviews WHERE model_slug = ?`,
-      )
+      .prepare("SELECT rating_avg AS avg, rating_count AS n FROM models WHERE slug = ?")
       .bind(slug)
-      .first<{ n: number; avg: number }>();
+      .first<{ avg: number; n: number }>();
     const ratingCount = agg?.n ?? 0;
-    const ratingAvg = Math.round(((agg?.avg ?? 0) + Number.EPSILON) * 10) / 10;
-
-    await this.db
-      .prepare(
-        "UPDATE models SET rating_avg = ?, rating_count = ?, updated_at = ? WHERE slug = ?",
-      )
-      .bind(ratingAvg, ratingCount, now, slug)
-      .run();
+    const ratingAvg = agg?.avg ?? 0;
 
     return {
       review: { id, model_slug: slug, user_id: userId, stars, comment, created_at: createdAt, updated_at: now },

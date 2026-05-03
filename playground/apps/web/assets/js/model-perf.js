@@ -76,11 +76,16 @@
       } else if (key === "accuracy" && host) {
         lineChart(host, metrics.accuracy, "Accuracy", "#9bb1ff");
       } else if (key === "latency") {
+        // Seed shape is `{ p50_ms, p95_ms }`; accept the unsuffixed variants
+        // as a forwards-compatibility fallback so future producers don't
+        // silently render em-dashes if they drop the unit suffix.
         var lat = metrics.latency || {};
         var p50 = el.querySelector("[data-p50]");
         var p95 = el.querySelector("[data-p95]");
-        if (p50) p50.textContent = lat.p50 != null ? String(lat.p50) : "—";
-        if (p95) p95.textContent = lat.p95 != null ? String(lat.p95) : "—";
+        var v50 = lat.p50_ms != null ? lat.p50_ms : lat.p50;
+        var v95 = lat.p95_ms != null ? lat.p95_ms : lat.p95;
+        if (p50) p50.textContent = v50 != null ? String(v50) : "—";
+        if (p95) p95.textContent = v95 != null ? String(v95) : "—";
       }
     });
   }

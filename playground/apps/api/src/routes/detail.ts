@@ -15,9 +15,12 @@ import { Hono } from "hono";
 import type { Env, HonoVariables } from "../types.js";
 import { requireAuth } from "../middleware/auth.js";
 import { uuid } from "../lib/random.js";
+import { verifyJwt } from "../lib/jwt.js";
+import { SESSION_COOKIE, readCookie } from "../lib/cookie.js";
 import {
   buildModelDetail,
   listReviewsPage,
+  reviewerHandle,
   type DetailRepository,
 } from "../lib/detail-repo.js";
 import { D1DetailRepository } from "../lib/detail-repo.js";
@@ -40,11 +43,27 @@ export function detailRoutes(opts: DetailRoutesOptions = {}) {
   const newId = opts.newId ?? uuid;
   const repoOf = (env: Env): DetailRepository => opts.repository ?? new D1DetailRepository(env.DB);
 
+  // Default cookie-based resolver for production: verifies the session JWT
+  // and returns the user id, or null for anonymous. Tests inject their own
+  // resolveUserId so they can simulate a logged-in user without minting JWTs.
+  async function defaultResolveUserId(c: {
+    req: { header: (name: string) => string | undefined };
+    env: Env;
+  }): Promise<string | null> {
+    const token = readCookie(c.req.header("cookie"), SESSION_COOKIE);
+    if (!token) return null;
+    const payload = await verifyJwt(token, c.env.JWT_PK);
+    return payload?.sub ?? null;
+  }
+
   router.get("/:slug", async (c) => {
     const slug = c.req.param("slug");
     const repo = repoOf(c.env);
-    // Detail uses the optional cookie user (no 401 on anonymous).
-    const userId = opts.resolveUserId?.(c.req.raw) ?? null;
+    // Detail uses the optional cookie user (no 401 on anonymous) so that
+    // hydrated `favoritedByMe` survives a refresh for signed-in users.
+    const userId = opts.resolveUserId
+      ? opts.resolveUserId(c.req.raw)
+      : await defaultResolveUserId(c);
     const dto = await buildModelDetail(repo, slug, userId);
     if (!dto) return c.json({ error: "not_found" }, 404);
     return c.json(dto, 200, {
@@ -110,6 +129,9 @@ export function detailRoutes(opts: DetailRoutesOptions = {}) {
       {
         review: {
           id: result.review.id,
+          // Match the GET /reviews ReviewDTO shape exactly so the client can
+          // render the row from either response without branching.
+          reviewer: reviewerHandle(result.review.user_id),
           stars: result.review.stars,
           comment: result.review.comment,
           createdAt: result.review.created_at,

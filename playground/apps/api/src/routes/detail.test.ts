@@ -241,13 +241,22 @@ describe("Reviews", () => {
 
     const r1 = await post(5, "great");
     expect(r1.status).toBe(200);
-    let body = (await r1.json()) as { rating_avg: number; rating_count: number };
+    let body = (await r1.json()) as {
+      rating_avg: number;
+      rating_count: number;
+      review: { reviewer: string; createdAt: number; stars: number };
+    };
     expect(body.rating_count).toBe(1);
     expect(body.rating_avg).toBe(5);
+    // Response carries the GET /reviews-shaped review back so the client
+    // can render the row without a follow-up fetch.
+    expect(body.review.reviewer).toMatch(/^user-/);
+    expect(body.review.stars).toBe(5);
+    expect(body.review.createdAt).toBeGreaterThan(0);
 
     // Upsert: same user resubmits — must still be one row.
     const r2 = await post(3, "changed mind");
-    body = (await r2.json()) as { rating_avg: number; rating_count: number };
+    body = (await r2.json()) as typeof body;
     expect(body.rating_count).toBe(1);
     expect(body.rating_avg).toBe(3);
     expect(repo.reviews.filter((r) => r.user_id === userId)).toHaveLength(1);

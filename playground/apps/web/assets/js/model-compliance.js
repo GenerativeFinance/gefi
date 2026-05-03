@@ -26,16 +26,37 @@
         var badge = a.passed
           ? '<span class="audit-badge audit-badge--ok">Passed</span>'
           : '<span class="audit-badge audit-badge--fail">Failed</span>';
+        var hash = a.hash || "";
         return '<li class="audit-item">' +
           badge +
           '<div class="audit-item__body">' +
             '<p class="audit-item__top"><strong>' + esc(a.auditor) + '</strong> · ' + esc(a.standard) + '</p>' +
             '<p class="audit-item__meta">Audited ' + when + ' — ' + pass + '</p>' +
-            '<code class="audit-item__hash" title="SHA-256 of audit report">' + esc((a.hash || "").slice(0, 16)) + '…</code>' +
+            '<div class="audit-item__hashrow">' +
+              '<code class="audit-item__hash" title="SHA-256 of audit report">' + esc(hash.slice(0, 16)) + '…</code>' +
+              '<button type="button" class="audit-item__copy" data-copy-hash="' + esc(hash) + '" aria-label="Copy full hash">Copy</button>' +
+            '</div>' +
           '</div>' +
         '</li>';
       }).join("");
     }
+
+    // Per-row copy button. Falls back to a textarea+execCommand path if the
+    // async clipboard API isn't available (older browsers / insecure ctx).
+    listRoot.addEventListener("click", function (ev) {
+      var b = ev.target.closest("[data-copy-hash]");
+      if (!b) return;
+      var v = b.getAttribute("data-copy-hash") || "";
+      var prev = b.textContent;
+      var done = function (msg) {
+        b.textContent = msg;
+        setTimeout(function () { b.textContent = prev; }, 1500);
+      };
+      var p = navigator.clipboard && navigator.clipboard.writeText
+        ? navigator.clipboard.writeText(v)
+        : Promise.reject(new Error("no clipboard"));
+      p.then(function () { done("Copied"); }).catch(function () { done("Copy failed"); });
+    });
   }
 
   var btn = document.querySelector("[data-verify-btn]");

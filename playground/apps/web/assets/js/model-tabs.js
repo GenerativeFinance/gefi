@@ -32,7 +32,7 @@
     });
     if (opts.focus) tabs[idx].focus();
     if (opts.updateHash !== false) {
-      var newHash = "#tab=" + tabs[idx].dataset.tab;
+      var newHash = "#" + tabs[idx].dataset.tab;
       if (location.hash !== newHash) {
         history.replaceState(null, "", newHash);
       }
@@ -43,8 +43,13 @@
   }
 
   function tabFromHash() {
-    var m = /(?:^#|&)tab=([a-z]+)/.exec(location.hash || "");
-    return m ? m[1] : "overview";
+    // Bare-fragment contract — `#performance`, `#compliance`, etc. so deep
+    // links match the URL convention used everywhere else on the site.
+    var raw = (location.hash || "").replace(/^#/, "").toLowerCase();
+    for (var i = 0; i < tabs.length; i++) {
+      if (tabs[i].dataset.tab === raw) return raw;
+    }
+    return "overview";
   }
 
   nav.addEventListener("click", function (ev) {
