@@ -666,3 +666,68 @@ Build wiring: `scripts/generate-data.ts` now emits `_playground/<slug>.md`
 for any model whose detail JSON has an `inputSchema`, and enriches
 `_data/models/<slug>.json` with `defaultInput` + `trainingEnabled` so the
 shell hydrates without a second round-trip.
+
+## Playground Phase 5 — per-model UI for the 10 featured models (Task #14)
+
+Each of the 10 launch-featured models now has a tailored Demo-tab widget
+on its detail page and a tailored result panel on the Playground Try tab,
+on top of the generic SchemaForm + result tree shipped in Phase 4.
+
+- **Demo widget registry** (`assets/js/model-widgets.js`): vanilla-JS
+  module that lazy-mounts on the first `model:tab-shown` event with
+  `tab === "demo"`. One self-contained widget per slug — canned data,
+  pure SVG/HTML, optional re-roll button or scripted animation. If no
+  widget is registered for a slug the empty-state `<div data-model-demo>`
+  CTA already in `_layouts/model.html` stays visible.
+- **Result widget registry** (`assets/js/playground-result-widgets.js`):
+  exposes `window.PG_RESULT_WIDGETS[slug] = (container, output) => …`.
+  `playground-shell.js#renderResult` consults the registry first and
+  falls back to the recursive key/value tree if no widget is registered
+  or it throws.
+- **Per-slug widgets** (Demo + Try, all in vanilla JS / SVG):
+  1. `sentiment-from-filings` — cycling filing snippets, sentiment chip,
+     confidence bar, topic tags
+  2. `portfolio-optimiser` — P5/P50/P95 fan chart over 24 months with
+     re-roll seed; Try widget renders weight bars + return/vol stats
+  3. `credit-default-classifier` — 300–850 score dial that animates from
+     300 to 720 + 3 reason cards + ZKP badge
+  4. `fraud-anomaly-detector` — 8-row tx table with flagged rows pulsing
+     red + anomaly score bar
+  5. `fx-volatility-forecast` — forecast curve with confidence band +
+     worst-case % chip; Try widget reuses the same chart
+  6. `yield-curve-predictor` — yield curve with Steepening / Flattening /
+     Inverted scenario pills
+  7. `compliance-redaction-llm` — 5-row checklist that self-ticks one
+     row every ~700ms ending in a proof-hash code
+  8. `earnings-surprise-predictor` — beat / in-line / miss probability
+     bars with cycling tickers
+  9. `esg-news-classifier` — cycling headlines with multi-label tag chips
+     and severity chip
+ 10. `insurance-claims-triage` — severity gauge + fraud-risk gauge +
+     queue-routing strong tag
+
+- **Layout wiring**: `_layouts/default.html` loads `model-widgets.js` on
+  `page.layout == "model"` and `playground-result-widgets.js` on
+  `page.layout == "playground"`. `_layouts/model.html` Demo panel now
+  hosts `<div data-model-demo>` + an empty-state CTA (works without JS).
+- **CSS**: ~120 lines appended to `assets/css/app.css` covering
+  demo-card, demo-chip, demo-bar, demo-table, demo-pills, demo-checklist,
+  demo-bars, demo-claims, pg-result. All colours use the existing token
+  palette (slate / indigo / emerald / amber / red).
+
+Scope deviations from Task #14:
+- The 10 existing seeded slugs were kept (renaming would have rippled
+  through audits/metrics seed, generated `_models/`, and the 67 vitest
+  cases). Each existing slug is mapped to the closest spec entry from
+  the task brief; widget concepts (fan chart, dial, checklist, gauge,
+  cycling sample) cover the spec's intent.
+- The Try-tab **input form** stays schema-driven via the existing
+  SchemaForm — input schemas will be revised in Phase 6 alongside the
+  real backends to avoid a double rewrite. Phase 5 changes the **output**
+  rendering only (the user-visible result panel).
+
+Validation: 67/67 vitests still green; `pnpm run generate:data` clean;
+`bundle exec jekyll build` emits 10 model + 10 playground pages with no
+errors; both new JS files pass `new Function()` syntax-check; the
+playground server confirms `/models/<slug>/` HTML contains the new
+`data-model-demo` host and the script tag.

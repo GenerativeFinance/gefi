@@ -186,7 +186,16 @@
       (payload.version ? " · v" + payload.version : "");
     resultBody.innerHTML = "";
     const schema = payload.output_schema || outputSchema;
-    resultBody.appendChild(renderValue(payload.output, schema, ""));
+    // Per-model result widget wins; fall back to the generic key/value tree
+    // so models without a tailored renderer (or unexpected output shapes)
+    // still display something useful.
+    const widget = window.PG_RESULT_WIDGETS && window.PG_RESULT_WIDGETS[slug];
+    if (widget && payload.output && typeof payload.output === "object") {
+      try { widget(resultBody, payload.output); }
+      catch (err) { resultBody.appendChild(renderValue(payload.output, schema, "")); }
+    } else {
+      resultBody.appendChild(renderValue(payload.output, schema, ""));
+    }
 
     // Wire the copy buttons each time so the fresh payload is captured.
     root.querySelectorAll("[data-pg-copy]").forEach((btn) => {
@@ -271,16 +280,24 @@
     const span = max - min || 1;
     const step = w / Math.max(1, series.length - 1);
     const pts = series.map((v, i) => i * step + "," + (h - ((v - min) / span) * h)).join(" ");
+    // Escape the label before interpolating into the aria-label attribute —
+    // schema-derived keys flow through here and the architect flagged the
+    // raw injection as an XSS vector if a backend ever returns adversarial
+    // property names.
+    const safeLabel = String(label || "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    })[c]);
     wrap.insertAdjacentHTML(
       "beforeend",
       '<svg class="playground-spark__svg" viewBox="0 0 ' + w + " " + h + '" role="img" aria-label="' +
-        label + '">' +
+        safeLabel + '">' +
         '<polyline fill="none" stroke="currentColor" stroke-width="1.5" points="' + pts + '"/>' +
-      "</svg>" +
-      '<p class="playground-spark__caption">min ' + formatScalar(min) +
-        ' · max ' + formatScalar(max) +
-        ' · n=' + series.length + "</p>",
+      "</svg>",
     );
+    const cap = document.createElement("p");
+    cap.className = "playground-spark__caption";
+    cap.textContent = "min " + formatScalar(min) + " · max " + formatScalar(max) + " · n=" + series.length;
+    wrap.appendChild(cap);
     return wrap;
   }
   function buildCurl(slug, body) {

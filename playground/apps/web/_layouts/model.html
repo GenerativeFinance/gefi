@@ -56,8 +56,15 @@ layout: default
 
       <section role="tabpanel" id="panel-demo" aria-labelledby="tab-demo" class="model-panel" hidden>
         <h2 class="visually-hidden">Demo</h2>
-        <p>Try this model's demo widget — full UI lands in Phase 5.</p>
-        <a class="btn btn--primary" href="{{ '/playground/' | append: page.slug | append: '/' | relative_url }}">Try in Playground</a>
+        <div class="model-demo" data-model-demo>
+          <div class="demo-card demo-card--empty">
+            <p>This model doesn't have a tailored demo widget yet.</p>
+            <a class="btn btn--primary" href="{{ '/playground/' | append: page.slug | append: '/' | relative_url }}">Try it in the Playground →</a>
+          </div>
+        </div>
+        <noscript>
+          <p>The Demo widget needs JavaScript. <a href="{{ '/playground/' | append: page.slug | append: '/' | relative_url }}">Open the Playground</a> instead.</p>
+        </noscript>
       </section>
 
       <section role="tabpanel" id="panel-performance" aria-labelledby="tab-performance" class="model-panel" hidden>
