@@ -12,7 +12,7 @@ author:
   email: hello@gefi.io
   twitter: gefi_io
 
-logo: /assets/img/logo.svg
+logo: /assets/img/logo.png
 og_image: /assets/img/og-default.png
 twitter_handle: "@gefi_io"
 
@@ -75,11 +75,7 @@ footer_nav:
     - { title: "Compliance & Trust", url: "/compliance/" }
     - { title: "Security",           url: "/security/" }
     - { title: "Status",             url: "https://status.gefi.io" }
-    - { title: "Privacy",            url: "/legal/privacy/" }
-    - { title: "Terms",              url: "/legal/terms/" }
     - { title: "Acceptable Use",     url: "/legal/acceptable-use/" }
-    - { title: "Cookie Policy",      url: "/cookie-policy/" }
-    - { title: "DPA",                url: "/dpa/" }
   legal:
     - { title: "Privacy",       url: "/legal/privacy/" }
     - { title: "Terms",         url: "/legal/terms/" }
@@ -218,7 +214,6 @@ compliance_badges:
   - { label: "ISO 27001 (in progress)" }
   - { label: "ISO 42001 (in progress)" }
   - { label: "GDPR" }
-  - { label: "CCPA" }
 
 subprocessors:
   - { name: "Cloudflare",   purpose: "Edge compute, DNS, WAF, R2/D1/KV" }

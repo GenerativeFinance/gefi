@@ -35,14 +35,28 @@
   <div class="container site-footer__grid">
     <div class="site-footer__brand">
       <a href="/" class="site-header__brand">
-        <img src="{{ site.logo | relative_url }}" alt="" width="28" height="28" />
-        <span>{{ site.title }}</span>
+        <img src="{{ site.logo | relative_url }}" alt="" width="88" height="34" class="site-footer__logo" />
+        <span class="sr-only">{{ site.title }}</span>
       </a>
       <p class="muted">{{ site.tagline }}</p>
 
       <ul class="badge-row" aria-label="Compliance posture">
         {%- for badge in site.compliance_badges -%}
           <li><span class="badge badge--compliance">{{ badge.label }}</span></li>
+        {%- endfor -%}
+      </ul>
+
+      <ul class="site-footer__social" aria-label="Social channels">
+        {%- for s in site.social -%}
+          <li>
+            <a href="{{ s.url }}" rel="noopener me"
+               {% if s.url contains '://' %}target="_blank"{% endif %}
+               aria-label="{{ s.name }} — {{ s.handle }}">
+              <svg class="site-footer__icon" width="20" height="20" aria-hidden="true" focusable="false">
+                <use href="#icon-{{ s.icon }}"></use>
+              </svg>
+            </a>
+          </li>
         {%- endfor -%}
       </ul>
     </div>
@@ -85,27 +99,11 @@
       {%- endif -%}
     </nav>
 
-    <nav aria-label="Connect" class="site-footer__connect">
-      <h2>Connect</h2>
-      <ul class="site-footer__social">
-        {%- for s in site.social -%}
-          <li>
-            <a href="{{ s.url }}" rel="noopener me"
-               {% if s.url contains '://' %}target="_blank"{% endif %}
-               aria-label="{{ s.name }} — {{ s.handle }}">
-              <svg class="site-footer__icon" width="20" height="20" aria-hidden="true" focusable="false">
-                <use href="#icon-{{ s.icon }}"></use>
-              </svg>
-              <span>{{ s.handle }}</span>
-            </a>
-          </li>
-        {%- endfor -%}
-      </ul>
-    </nav>
   </div>
 
   <div class="container site-footer__legal">
     <small>&copy; {{ "now" | date: "%Y" }} {{ site.title }}. All rights reserved.</small>
+    <span class="badge badge--compliance site-footer__legal-badge">CCPA</span>
     <ul class="site-footer__legal-links" aria-label="Legal">
       {%- for item in site.footer_nav.legal -%}
         <li><a href="{{ item.url }}">{{ item.title }}</a></li>
