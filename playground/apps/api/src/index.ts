@@ -12,6 +12,7 @@ import { healthHandler } from "./routes/health.js";
 import { modelsRoutes } from "./routes/models.js";
 import { detailRoutes, favoritesRoutes } from "./routes/detail.js";
 import { playgroundRoutes } from "./routes/playground.js";
+import { v1Routes } from "./routes/v1.js";
 import { scheduled } from "./scheduled.js";
 import { Round } from "./durable-objects/Round.js";
 
@@ -64,6 +65,10 @@ app.options("/api/favorites/*", (c) => c.body(null, 204));
 // /api/playground/* same — Jekyll page POSTs cross-origin from the web origin.
 app.use("/api/playground/*", corsHeaders);
 app.options("/api/playground/*", (c) => c.body(null, 204));
+// /v1/* is hit by external SDK / curl callers (Bearer API key); CORS still
+// matters because browser fetches may originate from third-party docs apps.
+app.use("/v1/*", corsHeaders);
+app.options("/v1/*", (c) => c.body(null, 204));
 
 app.route("/api/auth", authRoutes());
 // IMPORTANT: detail must mount BEFORE the catalog browse route — Hono walks
@@ -73,6 +78,7 @@ app.route("/api/models", detailRoutes());
 app.route("/api/models", modelsRoutes());
 app.route("/api/favorites", favoritesRoutes());
 app.route("/api/playground", playgroundRoutes());
+app.route("/v1", v1Routes());
 
 app.post("/api/subscribe", async (c) => {
   const body = await c.req.parseBody();

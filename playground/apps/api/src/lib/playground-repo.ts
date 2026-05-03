@@ -1,9 +1,13 @@
 /**
- * Repository abstraction for the Phase-4 playground run endpoint.
+ * Repository for the playground / v1 model-prediction routes.
  *
- * Reads the latest `model_versions` row for a given slug (so the route can
- * pull the input/output schema and version label) and writes one
- * `inference_calls` row per `POST /run`.
+ *   - `getModel(slug)`           — model row, used for status / risk_tier checks.
+ *   - `getLatestVersion(slug)`   — pulls the version row including
+ *                                   `input_schema`, `output_schema`, and the
+ *                                   Phase 6 `runtime` column.
+ *   - `insertInferenceCall(row)` — billing/telemetry row (Phase 4 surface).
+ *   - `insertAuditLog(row)`      — immutable audit row with input + output
+ *                                   hashes (Phase 6 surface).
  *
  * `D1PlaygroundRepository` talks to D1 in production; the tests inject an
  * `InMemoryPlaygroundRepository` from `test-helpers.ts`.
@@ -16,6 +20,8 @@ export interface PlaygroundVersionRow {
   version_label: string | null;
   input_schema: string | null;  // JSON text
   output_schema: string | null; // JSON text
+  /** Phase 6: runtime selector — synthetic | simulator | onnx-edge | … */
+  runtime: string | null;
   created_at: number;
 }
 
@@ -30,10 +36,22 @@ export interface InferenceCallInsert {
   now: number;
 }
 
+export interface AuditLogInsert {
+  id: string;
+  model_slug: string;
+  model_version: string | null;
+  user_id: string | null;
+  input_hash: string;
+  output_hash: string;
+  runtime: string;
+  now: number;
+}
+
 export interface PlaygroundRepository {
   getModel(slug: string): Promise<ModelRow | null>;
   getLatestVersion(slug: string): Promise<PlaygroundVersionRow | null>;
   insertInferenceCall(row: InferenceCallInsert): Promise<void>;
+  insertAuditLog(row: AuditLogInsert): Promise<void>;
 }
 
 export class D1PlaygroundRepository implements PlaygroundRepository {
@@ -50,7 +68,7 @@ export class D1PlaygroundRepository implements PlaygroundRepository {
   async getLatestVersion(slug: string): Promise<PlaygroundVersionRow | null> {
     const r = await this.db
       .prepare(
-        `SELECT model_slug, version, version_label, input_schema, output_schema, created_at
+        `SELECT model_slug, version, version_label, input_schema, output_schema, runtime, created_at
            FROM model_versions
           WHERE model_slug = ?
           ORDER BY created_at DESC
@@ -76,6 +94,26 @@ export class D1PlaygroundRepository implements PlaygroundRepository {
         row.latency_ms,
         row.is_playground ? 1 : 0,
         row.mock ? 1 : 0,
+        row.now,
+      )
+      .run();
+  }
+
+  async insertAuditLog(row: AuditLogInsert): Promise<void> {
+    await this.db
+      .prepare(
+        `INSERT INTO audit_log
+           (id, model_slug, model_version, user_id, input_hash, output_hash, runtime, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        row.id,
+        row.model_slug,
+        row.model_version,
+        row.user_id,
+        row.input_hash,
+        row.output_hash,
+        row.runtime,
         row.now,
       )
       .run();
