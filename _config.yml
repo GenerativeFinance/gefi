@@ -81,6 +81,7 @@ footer_nav:
     - { title: "Status",             url: "https://status.gefi.io" }
     - { title: "Privacy",            url: "/legal/privacy/" }
     - { title: "Terms",              url: "/legal/terms/" }
+    - { title: "Acceptable Use",     url: "/legal/acceptable-use/" }
     - { title: "Cookie Policy",      url: "/cookie-policy/" }
     - { title: "DPA",                url: "/dpa/" }
   legal:
