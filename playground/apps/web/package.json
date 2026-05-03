@@ -4,11 +4,15 @@
   "private": true,
   "description": "Jekyll site for the GeFi Playground (placeholder homepage in Phase 0).",
   "scripts": {
-    "predev": "pnpm --filter @gefi-playground/ui run build:tokens",
+    "predev": "pnpm --filter @gefi-playground/ui run build:tokens && pnpm run generate:data",
     "dev": "bundle config set --local path 'vendor/bundle' >/dev/null && bundle install --quiet && bundle exec jekyll serve --host 0.0.0.0 --port 4000 --livereload --livereload-port 35731",
-    "prebuild": "pnpm --filter @gefi-playground/ui run build:tokens",
+    "prebuild": "pnpm --filter @gefi-playground/ui run build:tokens && pnpm run generate:data",
+    "generate:data": "tsx scripts/generate-data.ts",
     "build": "bundle config set --local path 'vendor/bundle' >/dev/null && bundle install --quiet && bundle exec jekyll build",
     "test": "echo \"(web) no JS test suite — Jekyll build is the contract\" && exit 0",
     "typecheck": "echo \"(web) no TS — skipping typecheck\" && exit 0"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0"
   }
 }

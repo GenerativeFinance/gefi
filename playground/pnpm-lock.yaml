@@ -73,7 +73,11 @@ importers:
         specifier: ^3.99.0
         version: 3.114.17(@cloudflare/workers-types@4.20260503.1)
 
-  apps/web: {}
+  apps/web:
+    devDependencies:
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
 
   packages/schemas:
     devDependencies:

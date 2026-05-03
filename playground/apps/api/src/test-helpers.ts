@@ -7,6 +7,13 @@
  */
 import type { Env } from "./types.js";
 import { generateKeypair } from "./lib/jwt.js";
+import {
+  type ListModelsQuery,
+  type ModelRow,
+  type ModelsRepository,
+  sortValueOf,
+  sortDirection,
+} from "./lib/models-repo.js";
 
 export class StubKV implements Pick<KVNamespace, "get" | "put" | "delete"> {
   store = new Map<string, string>();
@@ -77,7 +84,8 @@ export class StubDO {
 export class StubD1 {
   users: Record<string, { id: string; email: string; created_at: number; updated_at: number; last_login_at: number | null }> = {};
   categories: Record<string, { slug: string; name: string; description: string; icon: string; sort_order: number }> = {};
-  models: Record<string, { slug: string; name: string; summary: string; category_slug: string; developer: string; status: string; featured: number; created_at: number; updated_at: number }> = {};
+  subcategories: Record<string, { slug: string; category_slug: string; name: string; sort_order: number }> = {};
+  models: Record<string, { slug: string; name: string; summary: string; category_slug: string; subcategory_slug: string | null; developer: string; status: string; featured: number; risk_tier: string; maturity: string; price_cents: number; rating_avg: number; rating_count: number; trending_score: number; federated: number; thumbnail_url: string | null; created_at: number; updated_at: number }> = {};
 
   prepare(query: string) {
     const q = query.replace(/\s+/g, " ").trim();
@@ -125,25 +133,76 @@ export class StubD1 {
             }
             return { success: true };
           }
-          if (q.startsWith("INSERT OR IGNORE INTO models")) {
-            const [slug, name, summary, category_slug, developer] = vals as [
+          if (q.startsWith("INSERT OR IGNORE INTO subcategories")) {
+            const [slug, category_slug, name, sort_order] = vals as [
               string,
               string,
               string,
-              string,
-              string,
+              number,
             ];
-            const created_at = vals[5] as number;
-            const updated_at = vals[6] as number;
+            if (!this.subcategories[slug]) {
+              this.subcategories[slug] = { slug, category_slug, name, sort_order };
+            }
+            return { success: true };
+          }
+          if (q.startsWith("INSERT OR IGNORE INTO models")) {
+            // Phase 2 column order: slug, name, summary, category_slug,
+            // subcategory_slug, developer, risk_tier, maturity, price_cents,
+            // rating_avg, rating_count, trending_score, federated,
+            // thumbnail_url, created_at, updated_at.
+            const [
+              slug,
+              name,
+              summary,
+              category_slug,
+              subcategory_slug,
+              developer,
+              risk_tier,
+              maturity,
+              price_cents,
+              rating_avg,
+              rating_count,
+              trending_score,
+              federated,
+              thumbnail_url,
+              created_at,
+              updated_at,
+            ] = vals as [
+              string,
+              string,
+              string,
+              string,
+              string | null,
+              string,
+              string,
+              string,
+              number,
+              number,
+              number,
+              number,
+              number,
+              string | null,
+              number,
+              number,
+            ];
             if (!this.models[slug]) {
               this.models[slug] = {
                 slug,
                 name,
                 summary,
                 category_slug,
+                subcategory_slug,
                 developer,
                 status: "draft",
                 featured: 1,
+                risk_tier,
+                maturity,
+                price_cents,
+                rating_avg,
+                rating_count,
+                trending_score,
+                federated,
+                thumbnail_url,
                 created_at,
                 updated_at,
               };
@@ -209,6 +268,55 @@ export async function buildStubEnv(opts: BuildEnvOptions = {}): Promise<{
     RESEND_API_KEY: opts.resendApiKey ?? "",
   } satisfies Env;
   return { env, bindings: { db, sessions, rateLimits, queue, analytics, keys } };
+}
+
+/**
+ * In-memory implementation of `ModelsRepository` used by the catalog tests.
+ *
+ * Mirrors the SQL behaviour of `D1ModelsRepository`: filter → sort → cursor
+ * → take limit+1. Keeping this in lock-step with the D1 SQL is the whole
+ * point of having a single `listModels(...)` orchestration upstream.
+ */
+export class InMemoryModelsRepository implements ModelsRepository {
+  constructor(public rows: ModelRow[] = []) {}
+
+  async list(query: ListModelsQuery): Promise<ModelRow[]> {
+    let filtered = this.rows.slice();
+    if (query.category) filtered = filtered.filter((r) => r.category_slug === query.category);
+    if (query.subcategory)
+      filtered = filtered.filter((r) => r.subcategory_slug === query.subcategory);
+    if (query.risk) filtered = filtered.filter((r) => r.risk_tier === query.risk);
+    if (query.maturity) filtered = filtered.filter((r) => r.maturity === query.maturity);
+    if (query.featured !== undefined) {
+      const want = query.featured ? 1 : 0;
+      filtered = filtered.filter((r) => r.featured === want);
+    }
+    if (query.q) {
+      const needle = query.q.toLowerCase();
+      filtered = filtered.filter(
+        (r) => r.name.toLowerCase().includes(needle) || r.summary.toLowerCase().includes(needle),
+      );
+    }
+
+    const dir = sortDirection(query.sort);
+    filtered.sort((a, b) => {
+      const av = sortValueOf(a, query.sort);
+      const bv = sortValueOf(b, query.sort);
+      if (av !== bv) return dir === "DESC" ? bv - av : av - bv;
+      return a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0;
+    });
+
+    if (query.cursor) {
+      const c = query.cursor;
+      filtered = filtered.filter((r) => {
+        const v = sortValueOf(r, query.sort);
+        if (dir === "DESC") return v < c.sortValue || (v === c.sortValue && r.slug > c.slug);
+        return v > c.sortValue || (v === c.sortValue && r.slug > c.slug);
+      });
+    }
+
+    return filtered.slice(0, query.limit + 1);
+  }
 }
 
 /** Captures emails sent during a test instead of calling Resend. */

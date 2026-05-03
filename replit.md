@@ -493,13 +493,13 @@ playground/
 ├── apps/
 │   ├── web/      Jekyll 4.3 (Ruby 3.2) — placeholder homepage on :4000
 │   └── api/      Cloudflare Worker (Hono + TS) — :8787
-│       ├── migrations/         D1 SQL migrations (0001_init.sql)
+│       ├── migrations/         D1 SQL migrations (0001_init.sql, 0002_catalog.sql)
 │       ├── scripts/            provision.sh, seed.ts, keygen.ts
 │       └── src/
-│           ├── routes/         health.ts, auth.ts (magic-link)
+│           ├── routes/         health.ts, auth.ts (magic-link), models.ts (catalog)
 │           ├── middleware/     requireAuth (Ed25519 JWT cookie)
-│           ├── lib/            jwt, rate-limit, email (Resend), cookie, random
-│           ├── data/           categories.ts (14), featured-models.ts (10)
+│           ├── lib/            jwt, rate-limit, email (Resend), cookie, random, models-repo
+│           ├── data/           categories.ts (14), featured-models.ts (10), subcategories.ts (~35)
 │           └── durable-objects/Round.ts (federated round stub)
 ├── packages/
 │   ├── ui/       Brand tokens (single source of truth) → tokens.css consumed by both apps
@@ -524,6 +524,45 @@ Replit workflows:
 - **Playground (manual start)** — console-mode workflow that runs `pnpm install && pnpm run dev`
   inside `playground/`, booting Jekyll on :4000 and Wrangler on :8787 via
   `concurrently`. Not auto-started; start manually when developing the playground.
+
+**Phase 2 (Task #11)** — Library catalog + search + category pages:
+- Migration `0002_catalog.sql` adds `risk_tier`, `maturity`, `price_cents`,
+  `rating_avg`, `rating_count`, `trending_score`, `subcategory_slug`,
+  `thumbnail_url`, `federated` to `models`; creates `subcategories` table
+  + indexes on every cursor-sortable column. **Renames `risk-modelling` →
+  `risk-assessment`** (spec mandate; chips are VaR / Stress-Test /
+  Volatility / Tail-Risk).
+- `GET /api/models` (Hono): filters `category`, `subcategory`, `q`, `risk`,
+  `maturity`, `featured`; sorts `trending` (default) / `newest` /
+  `price-asc` / `price-desc` / `rating`; opaque base64url cursor encoding
+  `{sortValue, slug}`; page size capped at 24; 60 s edge-cache header;
+  permissive CORS (tighten in Phase 8).
+- Repository abstraction: `ModelsRepository` interface with
+  `D1ModelsRepository` for prod and `InMemoryModelsRepository` (in
+  `test-helpers.ts`) for unit tests — keeps the route HTTP-only and the
+  filter/sort/cursor logic in one orchestration (`listModels(...)`).
+- Marketplace home: hero + `featured__rail` carousel (rendered server-side
+  from `_data/featured.json` then hydrated by `assets/js/featured.js`
+  with live ratings) + 14-tile `category-grid` linking to
+  `/categories/<slug>/`.
+- `_categories` Jekyll collection driven by `apps/web/scripts/generate-data.ts`
+  (run via `tsx`, hooked into `predev`/`prebuild`) which reads the API
+  source-of-truth data and emits `_data/{categories,subcategories,featured}.json`
+  + one `_categories/<slug>.md` per category. Per-category page uses
+  `_layouts/category.html` (chip row + risk/maturity/sort selects + cursor-paginated
+  results via `assets/js/category.js`).
+- Global ARIA-1.2 combobox header search (`_includes/search.html` +
+  `assets/js/search.js`) — debounced 200 ms, keyboard navigable (↑ ↓ Enter
+  Esc), falls back to `?q=` form submit when JS is off.
+- `packages/ui/src/ModelCard.ts`: framework-free HTML-string component
+  (escaped, mirrored 1:1 by `_includes/model-card.html`) shared between
+  Jekyll build, the Worker, and the client-side category JS.
+- Three two-tone empty-state SVGs (`empty-search`, `empty-filter`,
+  `empty-category`) keyed off CSS custom properties.
+- Tests: 38 API (11 new for `/api/models` covering filter combos, cursor
+  pagination, empty results, limit cap, sort fallback, DTO mapping) + 14
+  UI (8 token + 6 ModelCard inc. snapshot + XSS escape). Lint, typecheck,
+  Jekyll build, and `wrangler deploy --dry-run` all green.
 
 Brand tokens (different palette from the marketing site — dark surface):
 `bg #0B0E1A`, `surface #141826`, `brand #6D5BFF`, `accent #22D3EE`,

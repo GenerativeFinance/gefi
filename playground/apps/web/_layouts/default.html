@@ -5,8 +5,17 @@
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
+    {%- include site-header.html -%}
     <main id="main" role="main">{{ content }}</main>
     <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>window.GEFI_API_BASE = "{{ site.api.base_url }}";</script>
     <script src="{{ '/assets/js/subscribe.js' | relative_url }}" defer></script>
+    <script src="{{ '/assets/js/search.js' | relative_url }}" defer></script>
+    {%- if page.layout == "category" -%}
+      <script src="{{ '/assets/js/category.js' | relative_url }}" defer></script>
+    {%- endif -%}
+    {%- if page.url == "/" -%}
+      <script src="{{ '/assets/js/featured.js' | relative_url }}" defer></script>
+    {%- endif -%}
   </body>
 </html>

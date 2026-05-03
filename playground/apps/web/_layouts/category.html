@@ -1,0 +1,67 @@
+---
+layout: default
+---
+<section class="category-page" data-category="{{ page.slug }}">
+  <header class="category-page__header">
+    <p class="category-page__crumbs">
+      <a href="{{ '/' | relative_url }}">Home</a>
+      <span aria-hidden="true">/</span>
+      <span>{{ page.name }}</span>
+    </p>
+    <h1 class="category-page__title">{{ page.name }}</h1>
+    <p class="category-page__description">{{ page.description }}</p>
+  </header>
+
+  {%- if page.subcategories and page.subcategories.size > 0 -%}
+    <nav class="chip-row" aria-label="Subcategories">
+      <button type="button" class="chip chip--active" data-subcategory="">All</button>
+      {%- for s in page.subcategories -%}
+        <button type="button" class="chip" data-subcategory="{{ s.slug }}">{{ s.name }}</button>
+      {%- endfor -%}
+    </nav>
+  {%- endif -%}
+
+  <div class="category-toolbar">
+    <label class="category-toolbar__field">
+      <span class="visually-hidden">Risk</span>
+      <select data-filter="risk">
+        <option value="">Any risk</option>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+    </label>
+    <label class="category-toolbar__field">
+      <span class="visually-hidden">Maturity</span>
+      <select data-filter="maturity">
+        <option value="">Any maturity</option>
+        <option value="experimental">Experimental</option>
+        <option value="beta">Beta</option>
+        <option value="staging">Staging</option>
+        <option value="production">Production</option>
+      </select>
+    </label>
+    <label class="category-toolbar__field">
+      <span class="visually-hidden">Sort</span>
+      <select data-filter="sort">
+        <option value="trending">Trending</option>
+        <option value="newest">Newest</option>
+        <option value="rating">Top rated</option>
+        <option value="price-asc">Price: low to high</option>
+        <option value="price-desc">Price: high to low</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="category-grid-models" id="category-results" role="list" aria-busy="true">
+    <p class="category-loading">Loading models…</p>
+  </div>
+
+  <div class="category-empty" id="category-empty" hidden>
+    {%- include empty-state.html variant="filter" -%}
+  </div>
+
+  <button type="button" class="btn btn--secondary category-load-more" id="category-load-more" hidden>
+    Load more
+  </button>
+</section>

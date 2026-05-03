@@ -1,0 +1,45 @@
+{%- comment -%}
+  Liquid mirror of `packages/ui/src/ModelCard.ts`. The HTML must stay in sync
+  with that file — the worker uses the TS renderer; Jekyll uses this Liquid
+  one. Both consume the same shape (the ModelDTO from /api/models, plus a
+  build-time copy in _data/featured.json).
+
+  Required vars in `include`:  m  (the model object)
+{%- endcomment -%}
+{%- assign m = include.m -%}
+{%- if m.riskLevel == "low" -%}{% assign risk_label = "Low risk" %}{% endif -%}
+{%- if m.riskLevel == "medium" -%}{% assign risk_label = "Medium risk" %}{% endif -%}
+{%- if m.riskLevel == "high" -%}{% assign risk_label = "High risk" %}{% endif -%}
+{%- if m.price == 0 -%}
+  {%- assign price_label = "Free" -%}
+{%- else -%}
+  {%- assign dollars = m.price | divided_by: 100.0 -%}
+  {%- assign price_label = dollars | round | prepend: "$" -%}
+{%- endif -%}
+{%- assign rating_value = m.rating | round: 1 -%}
+<a class="model-card" href="{{ m.href | relative_url }}" data-slug="{{ m.slug }}">
+  {%- if m.thumbnailUrl -%}
+    <img class="model-card__thumb" src="{{ m.thumbnailUrl }}" alt="" loading="lazy" width="320" height="160" />
+  {%- else -%}
+    <div class="model-card__thumb model-card__thumb--placeholder" aria-hidden="true"></div>
+  {%- endif -%}
+  <div class="model-card__body">
+    <div class="model-card__meta">
+      <span class="model-card__category">{{ m.category }}</span>
+      <span class="model-card__badge model-card__badge--risk-{{ m.riskLevel }}">{{ risk_label }}</span>
+      {%- if m.federated -%}
+        <span class="model-card__badge model-card__badge--federated" title="Federated training">Federated</span>
+      {%- endif -%}
+    </div>
+    <h3 class="model-card__name">{{ m.name }}</h3>
+    <p class="model-card__description">{{ m.summary | default: m.description }}</p>
+    <div class="model-card__footer">
+      <span class="model-card__price">{{ price_label }}</span>
+      <span class="model-card__rating" aria-label="Rating {{ rating_value }} out of 5 from {{ m.ratingCount }} reviews">
+        <span aria-hidden="true">★</span>
+        <span class="model-card__rating-value" data-rating>{{ rating_value }}</span>
+        <span class="model-card__rating-count" data-rating-count>({{ m.ratingCount }})</span>
+      </span>
+    </div>
+  </div>
+</a>

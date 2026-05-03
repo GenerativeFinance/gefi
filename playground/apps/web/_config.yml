@@ -6,6 +6,19 @@ permalink: pretty
 api:
   base_url: "http://localhost:8787"
   subscribe_endpoint: "/api/subscribe"
+  models_endpoint: "/api/models"
+
+collections:
+  categories:
+    output: true
+    permalink: /categories/:path/
+
+defaults:
+  - scope:
+      path: ""
+      type: categories
+    values:
+      layout: category
 
 plugins:
   - jekyll-feed
@@ -19,3 +32,4 @@ exclude:
   - node_modules/
   - package.json
   - README.md
+  - scripts/

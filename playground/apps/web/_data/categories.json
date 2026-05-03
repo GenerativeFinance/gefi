@@ -1,0 +1,282 @@
+[
+  {
+    "slug": "sentiment-analysis",
+    "name": "Sentiment Analysis",
+    "description": "Extract market-moving sentiment from filings, news, and social signal.",
+    "icon": "mood",
+    "risk_tier": "medium",
+    "sort_order": 0,
+    "subcategories": [
+      {
+        "slug": "filings",
+        "name": "Filings"
+      },
+      {
+        "slug": "news",
+        "name": "News"
+      },
+      {
+        "slug": "social",
+        "name": "Social"
+      }
+    ]
+  },
+  {
+    "slug": "risk-assessment",
+    "name": "Risk Assessment",
+    "description": "VaR, stress tests, volatility, and tail-risk for portfolios and books.",
+    "icon": "shield",
+    "risk_tier": "high",
+    "sort_order": 1,
+    "subcategories": [
+      {
+        "slug": "var",
+        "name": "VaR"
+      },
+      {
+        "slug": "stress-test",
+        "name": "Stress-Test"
+      },
+      {
+        "slug": "volatility",
+        "name": "Volatility"
+      },
+      {
+        "slug": "tail-risk",
+        "name": "Tail-Risk"
+      }
+    ]
+  },
+  {
+    "slug": "fraud-detection",
+    "name": "Fraud Detection",
+    "description": "Anomaly detection on transactions, accounts, and behavioural graphs.",
+    "icon": "alert-triangle",
+    "risk_tier": "high",
+    "sort_order": 2,
+    "subcategories": [
+      {
+        "slug": "card",
+        "name": "Card"
+      },
+      {
+        "slug": "wire",
+        "name": "Wire"
+      },
+      {
+        "slug": "account-takeover",
+        "name": "Account Takeover"
+      }
+    ]
+  },
+  {
+    "slug": "portfolio-optimisation",
+    "name": "Portfolio Optimisation",
+    "description": "Mean-variance, Black-Litterman, and ML-driven allocation engines.",
+    "icon": "pie-chart",
+    "risk_tier": "medium",
+    "sort_order": 3,
+    "subcategories": [
+      {
+        "slug": "long-only",
+        "name": "Long-only"
+      },
+      {
+        "slug": "long-short",
+        "name": "Long/Short"
+      }
+    ]
+  },
+  {
+    "slug": "credit-scoring",
+    "name": "Credit Scoring",
+    "description": "PD/LGD models, alt-data underwriting, and cohort default forecasting.",
+    "icon": "credit-card",
+    "risk_tier": "high",
+    "sort_order": 4,
+    "subcategories": [
+      {
+        "slug": "consumer",
+        "name": "Consumer"
+      },
+      {
+        "slug": "sme",
+        "name": "SME"
+      },
+      {
+        "slug": "corporate",
+        "name": "Corporate"
+      }
+    ]
+  },
+  {
+    "slug": "algorithmic-trading",
+    "name": "Algorithmic Trading",
+    "description": "Signal generators, execution algos, and microstructure models.",
+    "icon": "activity",
+    "risk_tier": "high",
+    "sort_order": 5,
+    "subcategories": [
+      {
+        "slug": "execution",
+        "name": "Execution"
+      },
+      {
+        "slug": "signal",
+        "name": "Signal"
+      }
+    ]
+  },
+  {
+    "slug": "compliance-aml",
+    "name": "Compliance & AML",
+    "description": "KYC/KYB enrichment, sanctions screening, and transaction monitoring.",
+    "icon": "scale",
+    "risk_tier": "high",
+    "sort_order": 6,
+    "subcategories": [
+      {
+        "slug": "kyc",
+        "name": "KYC"
+      },
+      {
+        "slug": "sanctions",
+        "name": "Sanctions"
+      },
+      {
+        "slug": "transaction-monitoring",
+        "name": "Transaction Monitoring"
+      }
+    ]
+  },
+  {
+    "slug": "market-forecasting",
+    "name": "Market Forecasting",
+    "description": "Macro nowcasts, regime detection, and price-path projection models.",
+    "icon": "trending-up",
+    "risk_tier": "medium",
+    "sort_order": 7,
+    "subcategories": [
+      {
+        "slug": "fx",
+        "name": "FX"
+      },
+      {
+        "slug": "equities",
+        "name": "Equities"
+      },
+      {
+        "slug": "rates",
+        "name": "Rates"
+      }
+    ]
+  },
+  {
+    "slug": "insurance-underwriting",
+    "name": "Insurance Underwriting",
+    "description": "Pricing, claim severity, and triage models for P&C and life.",
+    "icon": "umbrella",
+    "risk_tier": "medium",
+    "sort_order": 8,
+    "subcategories": [
+      {
+        "slug": "p-and-c",
+        "name": "P&C"
+      },
+      {
+        "slug": "life",
+        "name": "Life"
+      }
+    ]
+  },
+  {
+    "slug": "financial-nlp",
+    "name": "Financial NLP",
+    "description": "Domain-tuned LLMs and retrievers for finance documents and chats.",
+    "icon": "file-text",
+    "risk_tier": "low",
+    "sort_order": 9,
+    "subcategories": [
+      {
+        "slug": "summarisation",
+        "name": "Summarisation"
+      },
+      {
+        "slug": "qa",
+        "name": "Q&A"
+      }
+    ]
+  },
+  {
+    "slug": "time-series",
+    "name": "Time-Series Prediction",
+    "description": "Foundation models and classical methods for forecasting series.",
+    "icon": "line-chart",
+    "risk_tier": "medium",
+    "sort_order": 10,
+    "subcategories": [
+      {
+        "slug": "univariate",
+        "name": "Univariate"
+      },
+      {
+        "slug": "multivariate",
+        "name": "Multivariate"
+      }
+    ]
+  },
+  {
+    "slug": "customer-analytics",
+    "name": "Customer Analytics",
+    "description": "Lifetime value, churn, propensity, and next-best-action models.",
+    "icon": "users",
+    "risk_tier": "low",
+    "sort_order": 11,
+    "subcategories": [
+      {
+        "slug": "churn",
+        "name": "Churn"
+      },
+      {
+        "slug": "ltv",
+        "name": "LTV"
+      }
+    ]
+  },
+  {
+    "slug": "fixed-income",
+    "name": "Fixed Income Analytics",
+    "description": "Curve building, OAS, and prepayment models for rates and credit.",
+    "icon": "bar-chart-3",
+    "risk_tier": "medium",
+    "sort_order": 12,
+    "subcategories": [
+      {
+        "slug": "curves",
+        "name": "Curves"
+      },
+      {
+        "slug": "prepayment",
+        "name": "Prepayment"
+      }
+    ]
+  },
+  {
+    "slug": "esg-scoring",
+    "name": "ESG Scoring",
+    "description": "Issuer scoring, controversy detection, and climate-risk overlays.",
+    "icon": "leaf",
+    "risk_tier": "low",
+    "sort_order": 13,
+    "subcategories": [
+      {
+        "slug": "controversies",
+        "name": "Controversies"
+      },
+      {
+        "slug": "climate",
+        "name": "Climate"
+      }
+    ]
+  }
+]

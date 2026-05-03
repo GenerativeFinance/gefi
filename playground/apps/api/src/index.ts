@@ -9,6 +9,7 @@ import { renderHome } from "./html.js";
 import type { Env, HonoVariables } from "./types.js";
 import { authRoutes } from "./routes/auth.js";
 import { healthHandler } from "./routes/health.js";
+import { modelsRoutes } from "./routes/models.js";
 import { scheduled } from "./scheduled.js";
 import { Round } from "./durable-objects/Round.js";
 
@@ -19,6 +20,16 @@ app.get("/", (c) => c.html(renderHome()));
 app.get("/api/health", healthHandler);
 
 app.route("/api/auth", authRoutes());
+app.route("/api/models", modelsRoutes());
+
+// Permissive CORS for the public catalog so the Jekyll frontend (different
+// origin in dev/prod) can hit /api/models from the browser. Auth routes
+// remain same-origin via the cookie attributes.
+app.use("/api/models/*", async (c, next) => {
+  await next();
+  c.res.headers.set("access-control-allow-origin", "*");
+  c.res.headers.set("access-control-allow-methods", "GET, OPTIONS");
+});
 
 app.post("/api/subscribe", async (c) => {
   const body = await c.req.parseBody();

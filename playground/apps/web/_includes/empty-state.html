@@ -1,0 +1,26 @@
+{%- comment -%}
+  Three-variant empty-state include. `variant` selects the SVG and copy.
+  Variants:
+    - search    : nothing matched the search query
+    - filter    : filters yielded zero results
+    - category  : a category landing page has no models yet
+{%- endcomment -%}
+{%- assign variant = include.variant | default: "search" -%}
+{%- if variant == "search" -%}
+  {%- assign img = "/assets/img/empty-search.svg" -%}
+  {%- assign title = "No models match your search" -%}
+  {%- assign body = "Try a different keyword or browse the category grid below." -%}
+{%- elsif variant == "filter" -%}
+  {%- assign img = "/assets/img/empty-filter.svg" -%}
+  {%- assign title = "No models match those filters" -%}
+  {%- assign body = "Loosen a filter or clear all to see the full catalog." -%}
+{%- else -%}
+  {%- assign img = "/assets/img/empty-category.svg" -%}
+  {%- assign title = "Nothing here yet" -%}
+  {%- assign body = "We're curating the first models for this category. Check back soon." -%}
+{%- endif -%}
+<div class="empty-state" role="status">
+  <img src="{{ img | relative_url }}" alt="" width="120" height="120" />
+  <h2 class="empty-state__title">{{ title }}</h2>
+  <p class="empty-state__body">{{ body }}</p>
+</div>

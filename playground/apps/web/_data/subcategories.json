@@ -1,0 +1,177 @@
+[
+  {
+    "slug": "var",
+    "category_slug": "risk-assessment",
+    "name": "VaR"
+  },
+  {
+    "slug": "stress-test",
+    "category_slug": "risk-assessment",
+    "name": "Stress-Test"
+  },
+  {
+    "slug": "volatility",
+    "category_slug": "risk-assessment",
+    "name": "Volatility"
+  },
+  {
+    "slug": "tail-risk",
+    "category_slug": "risk-assessment",
+    "name": "Tail-Risk"
+  },
+  {
+    "slug": "filings",
+    "category_slug": "sentiment-analysis",
+    "name": "Filings"
+  },
+  {
+    "slug": "news",
+    "category_slug": "sentiment-analysis",
+    "name": "News"
+  },
+  {
+    "slug": "social",
+    "category_slug": "sentiment-analysis",
+    "name": "Social"
+  },
+  {
+    "slug": "consumer",
+    "category_slug": "credit-scoring",
+    "name": "Consumer"
+  },
+  {
+    "slug": "sme",
+    "category_slug": "credit-scoring",
+    "name": "SME"
+  },
+  {
+    "slug": "corporate",
+    "category_slug": "credit-scoring",
+    "name": "Corporate"
+  },
+  {
+    "slug": "card",
+    "category_slug": "fraud-detection",
+    "name": "Card"
+  },
+  {
+    "slug": "wire",
+    "category_slug": "fraud-detection",
+    "name": "Wire"
+  },
+  {
+    "slug": "account-takeover",
+    "category_slug": "fraud-detection",
+    "name": "Account Takeover"
+  },
+  {
+    "slug": "fx",
+    "category_slug": "market-forecasting",
+    "name": "FX"
+  },
+  {
+    "slug": "equities",
+    "category_slug": "market-forecasting",
+    "name": "Equities"
+  },
+  {
+    "slug": "rates",
+    "category_slug": "market-forecasting",
+    "name": "Rates"
+  },
+  {
+    "slug": "long-only",
+    "category_slug": "portfolio-optimisation",
+    "name": "Long-only"
+  },
+  {
+    "slug": "long-short",
+    "category_slug": "portfolio-optimisation",
+    "name": "Long/Short"
+  },
+  {
+    "slug": "kyc",
+    "category_slug": "compliance-aml",
+    "name": "KYC"
+  },
+  {
+    "slug": "sanctions",
+    "category_slug": "compliance-aml",
+    "name": "Sanctions"
+  },
+  {
+    "slug": "transaction-monitoring",
+    "category_slug": "compliance-aml",
+    "name": "Transaction Monitoring"
+  },
+  {
+    "slug": "curves",
+    "category_slug": "fixed-income",
+    "name": "Curves"
+  },
+  {
+    "slug": "prepayment",
+    "category_slug": "fixed-income",
+    "name": "Prepayment"
+  },
+  {
+    "slug": "p-and-c",
+    "category_slug": "insurance-underwriting",
+    "name": "P&C"
+  },
+  {
+    "slug": "life",
+    "category_slug": "insurance-underwriting",
+    "name": "Life"
+  },
+  {
+    "slug": "controversies",
+    "category_slug": "esg-scoring",
+    "name": "Controversies"
+  },
+  {
+    "slug": "climate",
+    "category_slug": "esg-scoring",
+    "name": "Climate"
+  },
+  {
+    "slug": "summarisation",
+    "category_slug": "financial-nlp",
+    "name": "Summarisation"
+  },
+  {
+    "slug": "qa",
+    "category_slug": "financial-nlp",
+    "name": "Q&A"
+  },
+  {
+    "slug": "univariate",
+    "category_slug": "time-series",
+    "name": "Univariate"
+  },
+  {
+    "slug": "multivariate",
+    "category_slug": "time-series",
+    "name": "Multivariate"
+  },
+  {
+    "slug": "churn",
+    "category_slug": "customer-analytics",
+    "name": "Churn"
+  },
+  {
+    "slug": "ltv",
+    "category_slug": "customer-analytics",
+    "name": "LTV"
+  },
+  {
+    "slug": "execution",
+    "category_slug": "algorithmic-trading",
+    "name": "Execution"
+  },
+  {
+    "slug": "signal",
+    "category_slug": "algorithmic-trading",
+    "name": "Signal"
+  }
+]

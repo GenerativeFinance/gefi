@@ -1,0 +1,32 @@
+{%- comment -%}
+  Global header search — ARIA 1.2 combobox pattern.
+  - Input owns the listbox via aria-controls.
+  - aria-expanded toggles when results render.
+  - aria-activedescendant moves with arrow-key focus (handled by search.js).
+  - Falls back to a real form submit (?q=…) when JS is disabled.
+{%- endcomment -%}
+<form class="global-search" role="search" action="{{ '/' | relative_url }}" method="get">
+  <div class="global-search__combobox"
+       role="combobox"
+       aria-haspopup="listbox"
+       aria-owns="search-listbox"
+       aria-expanded="false">
+    <label class="visually-hidden" for="global-search-input">Search models</label>
+    <input
+      id="global-search-input"
+      class="global-search__input"
+      type="search"
+      name="q"
+      placeholder="Search models, categories…"
+      autocomplete="off"
+      spellcheck="false"
+      aria-controls="search-listbox"
+      aria-autocomplete="list"
+    />
+    <ul id="search-listbox"
+        class="global-search__listbox"
+        role="listbox"
+        aria-label="Search results"
+        hidden></ul>
+  </div>
+</form>
