@@ -769,6 +769,25 @@ p  { margin: 0 0 var(--space-4); }
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 0.875rem; font-weight: 500; cursor: pointer;
 }
+.model-filter__group--search { flex: 1 1 200px; min-width: 180px; }
+.model-filter__search {
+  width: 100%;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.model-filter__search::placeholder { color: var(--color-muted); }
+.model-filter__search:hover { border-color: var(--color-brand); }
+.model-filter__search:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(109, 91, 255, 0.18);
+}
 .model-filter__count {
   margin: 0 0 0 auto; color: var(--color-muted); font-size: 0.8125rem;
 }
