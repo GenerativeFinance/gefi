@@ -53,8 +53,6 @@ function regionalEnv(): ApiEnv {
     WORKER_REGION: "eu",
     API_PUBLIC_URL: "https://eu.api.gefi.io",
     SITE_PUBLIC_URL: "https://gefi.io",
-    AUTH0_DOMAIN: "https://gefi-test.auth0.com/",
-    AUTH0_AUDIENCE: "https://api.gefi.io",
     INTERNAL_SIGNING_KEY: SECRET,
     DB: { prepare: () => ({ first: async () => null }) } as unknown as D1Database,
     ARTIFACTS: { head: async () => null } as unknown as R2Bucket,

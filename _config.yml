@@ -43,27 +43,30 @@ api:
 
 # App surface (app.gefi.io).
 #
-# `enabled: false` routes every "Sign in" / "Get started" / "Subscribe" CTA
-# to the contact page so we don't ship dead links. Flip to `true` once Task #7
-# (the dashboards) is live.
-app:
-  enabled: false
-  signin_url: "https://app.gefi.io/sign-in"
-  signup_url: "https://app.gefi.io/sign-up"
-  fallback_url: "/contact/?topic=sales"
-
-# Auth0 wiring for the onboarding flow + dashboard sign-in.
+# Sign-in / sign-up routes.
 #
-# Filled in for prod by the operator following AUTH0-SETUP.md (see
-# infrastructure/cloudflare/AUTH0-SETUP.md). The values below are the
-# *staging* defaults; production is set via Jekyll's --config override
-# on deploy.
-auth0:
-  domain: "https://gefi-staging.eu.auth0.com/"
-  client_id: ""             # SPA client id from Auth0
-  audience: "https://staging-api.gefi.io"
-  callback_path: "/auth/callback"
-  scope: "openid profile email offline_access"
+# Auth lives on gefi.io itself (`/login/` and `/register/`). After a
+# successful auth, the user is redirected to the dashboard at
+# `app.gefi.io` (built in a later phase).
+#
+# Auth backend: Cloudflare Worker at `auth.gefi.io` with D1 (users +
+# WebAuthn credentials) and KV (sessions). Providers: Passkeys
+# (WebAuthn), GitHub OAuth, Google Sign-In. No passwords by design.
+app:
+  enabled: true
+  signin_url: "/login/"
+  signup_url: "/register/"
+  dashboard_url: "https://app.gefi.io/"
+  auth_api_base: "https://auth.gefi.io"
+  fallback_url: "/contact/?topic=early-access"
+  # Flip to `true` once the gefi-auth Cloudflare Worker (D1 + KV +
+  # WebAuthn + GitHub/Google OAuth) is deployed at `auth.gefi.io`.
+  # While `false`, /login/ and /register/ render an early-access state
+  # that routes visitors to `fallback_url` instead of attempting a
+  # WebAuthn/OAuth handshake against an endpoint that doesn't exist yet.
+  auth_ready: false
+  early_access_note: "Sign-in opens soon. Join the early-access list and we'll email you the moment passkeys + GitHub/Google sign-in go live."
+  early_access_cta: "Join the early-access list"
 
 nav:
   - { title: "Models",     url: "/models/" }
@@ -88,31 +91,25 @@ footer_nav:
     - { title: "Contact",      url: "/contact/" }
   trust:
     - { title: "Compliance & Trust", url: "/compliance/" }
+    - { title: "Security",           url: "/security/" }
     - { title: "Status",             url: "https://status.gefi.io" }
-    - { title: "Privacy",            url: "/legal/privacy/" }
-    - { title: "Terms",              url: "/legal/terms/" }
-    - { title: "Cookie Policy",      url: "/cookie-policy/" }
-    - { title: "DPA",                url: "/dpa/" }
+    - { title: "Acceptable Use",     url: "/legal/acceptable-use/" }
   legal:
     - { title: "Privacy",       url: "/legal/privacy/" }
     - { title: "Terms",         url: "/legal/terms/" }
     - { title: "Cookie Policy", url: "/cookie-policy/" }
     - { title: "DPA",           url: "/dpa/" }
-  contacts:
-    - { label: "General",  email: "hello@gefi.io" }
-    - { label: "Sales",    email: "sales@gefi.io" }
-    - { label: "Legal",    email: "legal@gefi.io" }
-    - { label: "Privacy",  email: "privacy@gefi.io" }
-    - { label: "Security", email: "security@gefi.io" }
 
 # Social / community channels surfaced in the footer "Connect" column.
-# Update the placeholder URLs (discord, linkedin) once the operator has
-# the real invite / company page links.
 social:
-  - { name: "X",        handle: "@GeeFiOfficial",   url: "https://x.com/GeeFiOfficial",  icon: "twitter" }
-  - { name: "GitHub",   handle: "gefi-io",          url: "https://github.com/gefi-io",   icon: "github" }
-  - { name: "Discord",  handle: "Join the server", url: "#discord",                      icon: "discord" }
-  - { name: "LinkedIn", handle: "GeFi",             url: "#linkedin",                    icon: "linkedin" }
+  - { name: "Facebook", handle: "generativefinance",  url: "https://www.facebook.com/generativefinance",        icon: "facebook" }
+  - { name: "LinkedIn", handle: "generativefinance",  url: "https://www.linkedin.com/company/generativefinance", icon: "linkedin" }
+  - { name: "X",        handle: "@generativefi",      url: "https://twitter.com/generativefi",                  icon: "twitter" }
+  - { name: "Instagram",handle: "@generativefinance", url: "https://www.instagram.com/generativefinance",       icon: "instagram" }
+  - { name: "YouTube",  handle: "@generativefinance", url: "https://www.youtube.com/@generativefinance",        icon: "youtube" }
+  - { name: "TikTok",   handle: "@generativefinance", url: "https://www.tiktok.com/@generativefinance",         icon: "tiktok" }
+  - { name: "Telegram", handle: "generativefinance",  url: "https://t.me/generativefinance",                    icon: "telegram" }
+  - { name: "Medium",   handle: "generativefinance",  url: "https://medium.com/generativefinance",              icon: "medium" }
 
 # Pricing page (Task #3).
 #
@@ -187,18 +184,59 @@ plans:
     cta_label: "Talk to us"
     cta_tier: "enterprise"
 
+# Detailed plan comparison matrix rendered beneath the pricing cards
+# (Task #8). Editable here so marketing can tweak the matrix without
+# touching HTML. `plan_ids` controls column order and must reference
+# entries in the `plans:` list above (we look up the display name from
+# there). Values are plain strings — use "—" for "not included".
+plan_comparison:
+  plan_ids: [free, pro, enterprise]
+  groups:
+    - title: "Limits"
+      rows:
+        - { label: "Inference calls",          values: ["100 / day",      "Unlimited (metered)", "Unlimited (metered)"] }
+        - { label: "API keys",                 values: ["1",              "10",                  "Unlimited"] }
+        - { label: "Concurrent requests",      values: ["2",              "50",                  "Custom"] }
+        - { label: "Bulk / streaming mode",    values: ["—",              "Included",            "Included"] }
+        - { label: "Federated participation",  values: ["—",              "Included",            "Included"] }
+    - title: "Support"
+      rows:
+        - { label: "Channel",                  values: ["Community",      "Email + chat",        "Named CSM + Slack Connect"] }
+        - { label: "First-response SLA",       values: ["Best effort",    "Next business day",   "1 hour (24×7, P1)"] }
+        - { label: "Uptime SLA",               values: ["—",              "99.9%",               "99.95% (custom available)"] }
+        - { label: "Onboarding",               values: ["Self-serve",     "Guided checklist",    "White-glove migration"] }
+    - title: "Compliance"
+      rows:
+        - { label: "Sovereign data plane",     values: ["—",              "EU multi-tenant",     "OVH SecNumCloud, Infomaniak, AWS Bahrain, AWS GovCloud"] }
+        - { label: "Data residency choice",    values: ["EU default",     "EU / US",             "Per-jurisdiction pinning"] }
+        - { label: "Audit evidence packs",     values: ["—",              "Quarterly",           "On demand + per-request"] }
+        - { label: "Per-jurisdiction counsel", values: ["—",              "—",                   "Included directory"] }
+        - { label: "DPA + sub-processor list", values: ["Standard DPA",   "Standard DPA",        "Negotiated DPA"] }
+    - title: "Payments"
+      rows:
+        - { label: "Card / ACH (Stripe)",      values: ["—",              "Included",            "Included"] }
+        - { label: "Onchain pay-in (USDC)",    values: ["—",              "Base, Arbitrum, Optimism", "Base, Arbitrum, Optimism"] }
+        - { label: "Developer payouts",        values: ["—",              "Fiat",                "Fiat or onchain (USDC)"] }
+        - { label: "Stripe Tax / VAT invoices",values: ["—",              "Included",            "Included"] }
+        - { label: "Custom invoicing & PO",    values: ["—",              "—",                   "Included"] }
+    - title: "Security"
+      rows:
+        - { label: "MFA",                      values: ["Optional",       "Enforced",            "Enforced + SSO/SAML"] }
+        - { label: "SSO / SCIM",               values: ["—",              "Google, Microsoft",   "SAML, OIDC, SCIM provisioning"] }
+        - { label: "Role-based access",        values: ["Owner only",     "Roles + scoped keys", "Custom roles + tenant isolation"] }
+        - { label: "Audit log retention",      values: ["30 days",        "1 year",              "Per jurisdiction (5–7 years)"] }
+        - { label: "Penetration test reports", values: ["—",              "Annual summary",      "Full report under NDA"] }
+
 compliance_badges:
   - { label: "SOC 2 Type II (in progress)" }
   - { label: "ISO 27001 (in progress)" }
   - { label: "ISO 42001 (in progress)" }
   - { label: "GDPR" }
-  - { label: "CCPA" }
 
 subprocessors:
   - { name: "Cloudflare",   purpose: "Edge compute, DNS, WAF, R2/D1/KV" }
   - { name: "Stripe",       purpose: "Subscriptions and developer payouts" }
   - { name: "Resend",       purpose: "Transactional email" }
-  - { name: "Auth0",        purpose: "Authentication and MFA" }
   - { name: "Sumsub",       purpose: "KYC / KYB verification" }
 
 collections:

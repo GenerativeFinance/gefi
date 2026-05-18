@@ -34,7 +34,7 @@
 
     <ul class="pricing-grid" role="list">
       {%- for plan in site.plans -%}
-        {%- if site.app.enabled -%}
+        {%- if site.app.enabled and site.app.auth_ready -%}
           {%- if plan.cta_tier == 'enterprise' -%}
             {%- assign cta_url = '/contact/?topic=enterprise&tier=enterprise' -%}
           {%- else -%}
@@ -44,7 +44,7 @@
           {%- if plan.cta_tier == 'enterprise' -%}
             {%- assign cta_url = '/contact/?topic=enterprise&tier=enterprise' -%}
           {%- else -%}
-            {%- assign cta_url = '/contact/?topic=sales&tier=' | append: plan.cta_tier -%}
+            {%- assign cta_url = '/contact/?topic=early-access&tier=' | append: plan.cta_tier -%}
           {%- endif -%}
         {%- endif -%}
 

@@ -1,8 +1,6 @@
 export type {
   AnchorSecrets,
   ApiEnv,
-  Auth0M2MSecrets,
-  Auth0Vars,
   CommonSecrets,
   CommonVars,
   ComplianceEnv,

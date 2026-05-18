@@ -11,7 +11,8 @@
  * Production providers (Onfido / Persona / Sumsub / Middesk) live in
  * sibling files and follow the same shape; their real HTTP calls + HMAC
  * signature checks are stubbed today and finalised against the live API
- * as part of the deploy bootstrap (see `infrastructure/cloudflare/AUTH0-SETUP.md`).
+ * as part of the deploy bootstrap (per-provider secrets documented in
+ * `infrastructure/cloudflare/SECRETS.md`).
  */
 
 import type { KycProvider, KycResult, KycSession, KycSubject } from "./types.js";

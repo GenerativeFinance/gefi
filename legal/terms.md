@@ -26,7 +26,9 @@ You may not use the Service to:
 - Process data you do not have a lawful basis to process.
 - Reverse-engineer model weights or violate the licence of any listed model.
 - Run prohibited workloads (mass surveillance, election manipulation,
-  weapons targeting, etc.) — see the full prohibited use list before launch.
+  weapons targeting, etc.) — see the full
+  [Acceptable Use Policy](/legal/acceptable-use/) for the complete
+  list of prohibited categories, definitions, and examples.
 
 ## Subscriptions & billing
 

@@ -34,6 +34,18 @@ permalink: /models/
       <span>Federated only</span>
     </label>
   </div>
+  <div class="model-filter__group model-filter__group--search">
+    <label class="sr-only" for="model-search">Search models</label>
+    <input
+      type="search"
+      id="model-search"
+      class="model-filter__search"
+      data-filter="search"
+      placeholder="Search models…"
+      autocomplete="off"
+      spellcheck="false"
+    />
+  </div>
   <p class="model-filter__count" data-filter-count aria-live="polite"></p>
 </div>
 

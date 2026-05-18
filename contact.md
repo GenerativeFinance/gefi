@@ -64,9 +64,10 @@ permalink: /contact/
   </label>
   <label>
     Topic
-    <select name="topic">
+    <select name="topic" data-topic-select>
       <option value="sales">Sales / demo</option>
       <option value="enterprise">Enterprise &amp; sovereign tenant</option>
+      <option value="partnerships">Partnerships</option>
       <option value="developer">Developer programme</option>
       <option value="model-request">Request a model</option>
       <option value="research">Research / pitch</option>

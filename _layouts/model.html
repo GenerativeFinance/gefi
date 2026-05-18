@@ -109,10 +109,10 @@ layout: default
           </dd>
         </div>
       </dl>
-      {%- if site.app.enabled -%}
+      {%- if site.app.enabled and site.app.auth_ready -%}
         <a class="btn btn-primary btn-block" href="{{ site.app.signup_url }}?model={{ page.slug }}">Subscribe</a>
       {%- else -%}
-        <a class="btn btn-primary btn-block" href="/contact/?topic=sales&amp;model={{ page.slug }}">Subscribe</a>
+        <a class="btn btn-primary btn-block" href="/contact/?topic=early-access&amp;model={{ page.slug }}">Subscribe</a>
       {%- endif -%}
       <a class="btn btn-ghost btn-block" href="/contact/?topic=sales&amp;model={{ page.slug }}">Talk to sales</a>
     </aside>

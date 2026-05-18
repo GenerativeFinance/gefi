@@ -2,8 +2,8 @@
 
 This repository is the **public marketing and content site** for GeFi
 (`https://gefi.io`). It is a static [Jekyll](https://jekyllrb.com/) site,
-built and deployed by GitHub Actions, served from GitHub Pages on the apex
-custom domain `gefi.io`.
+built and deployed by **Cloudflare Pages** on the apex custom domain
+`gefi.io`.
 
 It is **not** the GeFi platform itself. The platform (APIs, dashboards,
 inference, federated training, audit log, compliance routing) lives on
@@ -11,7 +11,7 @@ Cloudflare and is implemented across separate subdomains:
 
 | Surface             | Where it lives                                | Repo / Task                                  |
 |---------------------|-----------------------------------------------|----------------------------------------------|
-| Marketing site      | GitHub Pages, `https://gefi.io`               | **This repo (Task #1).**                     |
+| Marketing site      | Cloudflare Pages, `https://gefi.io`           | **This repo (Task #1).**                     |
 | API                 | Cloudflare Workers, `https://api.gefi.io`     | Task #2 — Cloudflare backend foundation.     |
 | App / dashboard     | Cloudflare Pages, `https://app.gefi.io`       | Tasks #3, #7 — auth & dashboards.            |
 | Trust portal        | Cloudflare Pages, `https://trust.gefi.io`     | Task #4 — compliance.                        |
@@ -28,10 +28,13 @@ reference while the new platform is built.
 .
 ├── _config.yml              # Jekyll site config
 ├── Gemfile                  # Ruby gem dependencies
-├── CNAME                    # Custom domain (gefi.io)
+├── .ruby-version            # Pins Ruby 3.2.2 for Cloudflare Pages
 ├── 404.html                 # Custom 404
 ├── robots.txt               # Crawler directives + sitemap pointer
-├── .nojekyll                # Disable GitHub's classic Jekyll on Pages (we build via Actions)
+├── package.json             # Wrangler-CLI fallback: `npm run deploy`
+├── wrangler.jsonc           # Pages config for the wrangler-CLI fallback
+│                            # (Default deploy path is the Cloudflare Pages
+│                            #  GitHub App — push to main → auto-build.)
 │
 ├── index.html               # Home page
 ├── features.md              # /features/
@@ -60,8 +63,6 @@ reference while the new platform is built.
 ├── _research/               # Research notes (collection)
 ├── _posts/                  # Blog posts
 │
-├── .github/workflows/
-│   └── deploy-pages.yml     # CI: build + deploy to GitHub Pages
 ├── docs/
 │   └── dns-setup.md         # DNS + Pages setup instructions
 │
@@ -96,19 +97,55 @@ A "Start application" workflow is configured to run `bundle install` +
 `bundle exec jekyll serve` on port 5000. Open the preview pane after the
 workflow signals "Server running".
 
-> Replit is a developer convenience only. Production serving is GitHub
-> Pages — see below.
+> Replit is a developer convenience only. Production serving is
+> Cloudflare Pages — see below.
 
 ## Deployment
 
-Pushing to `main` triggers `.github/workflows/deploy-pages.yml`, which:
+Production lives on **Cloudflare Pages** (project name `gefi`,
+subdomain `gefi-1ns.pages.dev`, custom domains `gefi.io` + `www.gefi.io`).
 
-1. Sets up Ruby 3.2 with Bundler caching.
-2. Runs `bundle exec jekyll build` with `JEKYLL_ENV=production`.
-3. Uploads the built site as a Pages artifact.
-4. Deploys to GitHub Pages, which serves it on `https://gefi.io`.
+**Default path: Git auto-deploy via the Cloudflare Pages GitHub App.**
+The `gefi` Pages project is connected to `AxalNetwork/gefi` (production
+branch = `main`), so **every push to `main` automatically builds and
+deploys** to `gefi.io`, and every PR gets its own `*.pages.dev` preview
+URL. No local command, no token in your shell — just:
 
-For the one-time DNS + Pages configuration steps, see
+```bash
+git push origin main   # → green build in ~3 min → live on gefi.io
+```
+
+Cloudflare-side build settings (configured once in dash → Workers &
+Pages → `gefi` → Settings → Builds & deployments):
+
+- **Build command:** `bundle install && bundle exec jekyll build`
+- **Output dir:** `_site`
+- **Env vars:** `RUBY_VERSION=3.2.2`, `JEKYLL_ENV=production`,
+  `BUNDLE_WITHOUT=development:test`
+
+Watch builds at dash → Workers & Pages → `gefi` → Deployments.
+
+**Fallback path: Direct Upload via wrangler.** Kept for emergency
+out-of-band pushes (Git App outage, hotfix from a non-`main` branch,
+etc.):
+
+```bash
+bundle install && bundle exec jekyll build
+npm install --no-save wrangler@4   # one-time, if not already
+CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… npm run deploy
+```
+
+`npm run deploy` runs `wrangler pages deploy _site --project-name=gefi
+--branch=main`. The token needs `Account → Cloudflare Pages: Edit`,
+`Account → Account Settings: Read`, and (for first-time DNS work)
+`Zone → DNS: Edit` on the `gefi.io` zone. Prefer the Git path above
+unless you have a specific reason not to use it.
+
+`bundle exec htmlproofer ./_site --disable-external --allow-hash-href`
+is the recommended pre-push link/image audit; run it locally against
+`_site/` before pushing to `main` if you want a build-time check.
+
+For the DNS + Pages configuration reference, see
 [`docs/dns-setup.md`](./docs/dns-setup.md).
 
 ## Adding content
@@ -170,7 +207,7 @@ site will start posting real submissions on the next Pages deploy.
   Easier to audit, smaller payload, no build step beyond Jekyll itself.
 - **No backend.** All backend functionality (auth, payments, inference,
   audit log, federation) lives on Cloudflare under `api.gefi.io`.
-- **No Replit hosting in production.** GitHub Pages is canonical.
+- **No Replit hosting in production.** Cloudflare Pages is canonical.
 
 ## License
 

@@ -1,19 +1,22 @@
+{%- comment -%}
+  Until the `gefi-auth` Worker (`auth.gefi.io`) and the dashboards
+  (`app.gefi.io`) are deployed, every header CTA points at the
+  early-access fallback so a click can never escape to a not-yet-live
+  subdomain (which would surface a "DNS_PROBE_FINISHED_NXDOMAIN" /
+  "server IP address could not be found" error in the browser).
+  Flip `app.auth_ready: true` in `_config.yml` once both ship.
+{%- endcomment -%}
 {%- assign signin_url  = site.app.signin_url  -%}
 {%- assign signup_url  = site.app.signup_url  -%}
-{%- unless site.app.enabled -%}
-  {%- comment -%}
-    Sign in routes to the marketing-site magic-link form at /login/ so
-    visitors can request a one-time email link even before app.gefi.io
-    is up. Get started still routes to the contact-sales fallback until
-    self-serve sign-up ships with Task #7.
-  {%- endcomment -%}
-  {%- assign signin_url = '/login/' | relative_url -%}
-  {%- assign signup_url = '/register/' | relative_url -%}
+{%- unless site.app.enabled and site.app.auth_ready -%}
+  {%- assign signin_url = site.app.fallback_url | default: '/contact/' -%}
+  {%- assign signup_url = site.app.fallback_url | default: '/contact/' -%}
 {%- endunless -%}
 <header class="site-header" role="banner" data-site-header>
   <div class="container site-header__inner">
-    <a class="site-header__brand" href="/" aria-label="{{ site.title }} — home">
-      <img class="site-header__logo" src="{{ site.logo | relative_url }}" alt="{{ site.title }}" width="822" height="312" />
+    <a class="site-header__brand" href="/">
+      <img src="{{ site.logo | relative_url }}" alt="" width="104" height="40" class="site-header__logo" />
+      <span class="sr-only">{{ site.title }}</span>
     </a>
 
     <button class="nav-toggle" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="Toggle menu" data-nav-toggle>

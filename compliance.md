@@ -85,11 +85,14 @@ get the full directory; everyone else gets a summary on request.
 
 ## Reporting a vulnerability
 
-We run a coordinated disclosure programme.
+We run a coordinated disclosure programme. Full scope, safe-harbour
+terms, PGP key, and rules of engagement are on the
+[**security & vulnerability disclosure page**](/security/).
 
 - Email **security@gefi.io** with details and your PGP key (optional).
 - We acknowledge within one business day and aim to triage within three.
 - Public disclosure is coordinated; we don't sue researchers.
+- Tooling can discover us via [`/.well-known/security.txt`](/.well-known/security.txt) (RFC 9116).
 
 ## Status & history
 

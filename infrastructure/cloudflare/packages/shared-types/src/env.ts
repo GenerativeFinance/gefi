@@ -36,7 +36,7 @@ export type EntityType =
 
 /**
  * KYC depth performed during onboarding. Mapped from subscription tier:
- * see `subscriptionToKycTier()` in `@gefi/auth`.
+ * see `subscriptionToKycTier()` in `@gefi/auth/kyc-tiers`.
  */
 export type KycTier = "none" | "basic" | "standard" | "enhanced";
 
@@ -69,21 +69,6 @@ export interface CommonVars {
   SITE_PUBLIC_URL: string;
 }
 
-/**
- * Auth0 configuration used to validate user JWTs. Unlike `INTERNAL_SIGNING_KEY`
- * (HS256, edge↔region only) these are RS256 + JWKS, used for *user* auth.
- *
- * `AUTH0_DOMAIN` is the tenant URL, e.g. `https://gefi.eu.auth0.com/` —
- * MUST end with a slash (Auth0 sets `iss` to that exact value).
- * `AUTH0_AUDIENCE` is the API identifier configured in the Auth0 dashboard,
- * usually `https://api.gefi.io`. Both are vars (not secrets) — they're
- * public.
- */
-export interface Auth0Vars {
-  AUTH0_DOMAIN: string;
-  AUTH0_AUDIENCE: string;
-}
-
 /** Common secrets every Worker may need. Set via `wrangler secret put`. */
 export interface CommonSecrets {
   /**
@@ -91,16 +76,6 @@ export interface CommonSecrets {
    * mints when forwarding to a regional `gefi-api`. Different per environment.
    */
   INTERNAL_SIGNING_KEY: string;
-}
-
-/**
- * Optional Auth0 management-API credentials, only needed by background jobs
- * that update user metadata (e.g. write-back of KYC tier after onboarding).
- * Not required for token verification.
- */
-export interface Auth0M2MSecrets {
-  AUTH0_M2M_CLIENT_ID?: string;
-  AUTH0_M2M_CLIENT_SECRET?: string;
 }
 
 /**
@@ -189,8 +164,6 @@ export interface SearchSecrets {
 export interface ApiEnv
   extends CommonVars,
     CommonSecrets,
-    Auth0Vars,
-    Auth0M2MSecrets,
     IntegrationSecrets,
     ComplianceInternalSecrets,
     StripeSecrets,

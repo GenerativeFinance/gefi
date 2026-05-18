@@ -1,0 +1,71 @@
+{%- comment -%}
+  Detailed plan comparison matrix (Task #8). Renders beneath the pricing
+  cards. Data lives in `_config.yml` under `plan_comparison:` so the matrix
+  can be edited without touching HTML.
+
+  Columns are derived from `plan_comparison.plan_ids`; the display name
+  comes from the matching entry in `site.plans`. Rows are grouped (Limits,
+  Support, Compliance, Payments, Security) using <tbody> sections with a
+  group-header row.
+
+  Mobile: the first column (`<th scope="row">`) is `position: sticky` so
+  the row labels stay visible while the user scrolls horizontally — see
+  `.pricing-comparison` rules in assets/css/main.css.
+{%- endcomment -%}
+{%- assign pc = site.plan_comparison -%}
+{%- if pc and pc.plan_ids -%}
+<section class="section pricing-comparison-section">
+  <div class="container">
+    <h2 id="compare-plans">Compare plans in detail</h2>
+    <p class="muted">Side-by-side limits, support, compliance, payments, and security across every plan.</p>
+
+    <div class="pricing-comparison-scroll" tabindex="0" role="region" aria-labelledby="compare-plans">
+      <table class="pricing-comparison">
+        <caption class="visually-hidden">Detailed comparison of GeFi plans across limits, support, compliance, payments, and security.</caption>
+        <thead>
+          <tr>
+            <th scope="col" class="pricing-comparison__rowhead">Feature</th>
+            {%- for plan_id in pc.plan_ids -%}
+              {%- assign plan = site.plans | where: "id", plan_id | first -%}
+              {%- assign plan_name = plan.name | default: plan_id -%}
+              <th scope="col"{% if plan.highlighted %} class="pricing-comparison__col--featured"{% endif %}>
+                {{ plan_name }}
+                {%- if plan.highlighted and plan.badge -%}
+                  <span class="pricing-comparison__badge">{{ plan.badge }}</span>
+                {%- endif -%}
+              </th>
+            {%- endfor -%}
+          </tr>
+        </thead>
+        {%- for group in pc.groups -%}
+          <tbody>
+            <tr class="pricing-comparison__group">
+              <th scope="colgroup" colspan="{{ pc.plan_ids | size | plus: 1 }}">{{ group.title }}</th>
+            </tr>
+            {%- for row in group.rows -%}
+              <tr>
+                <th scope="row" class="pricing-comparison__rowhead">{{ row.label }}</th>
+                {%- for value in row.values -%}
+                  {%- assign plan_id = pc.plan_ids[forloop.index0] -%}
+                  {%- assign plan = site.plans | where: "id", plan_id | first -%}
+                  {%- assign is_empty = false -%}
+                  {%- if value == "—" or value == "-" or value == "" -%}
+                    {%- assign is_empty = true -%}
+                  {%- endif -%}
+                  <td{% if plan.highlighted %} class="pricing-comparison__col--featured"{% endif %}>
+                    {%- if is_empty -%}
+                      <span class="pricing-comparison__none" aria-label="Not included">—</span>
+                    {%- else -%}
+                      {{ value }}
+                    {%- endif -%}
+                  </td>
+                {%- endfor -%}
+              </tr>
+            {%- endfor -%}
+          </tbody>
+        {%- endfor -%}
+      </table>
+    </div>
+  </div>
+</section>
+{%- endif -%}

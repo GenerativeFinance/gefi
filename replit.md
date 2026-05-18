@@ -6,8 +6,11 @@ Keep it short, opinionated, and current.
 ## What this repo is
 
 A **static Jekyll site** for GeFi's public marketing and content surface.
-It is hosted on **GitHub Pages** at the apex domain **`gefi.io`** and built
-by `.github/workflows/deploy-pages.yml` on every push to `main`.
+It is hosted on **Cloudflare Pages** at the apex domain **`gefi.io`**.
+Deploys happen automatically on every push to `main` via the
+**Cloudflare Pages GitHub App** connected to `AxalNetwork/gefi`; the
+**wrangler CLI** (Direct Upload, `npm run deploy`) is kept as an
+out-of-band fallback for emergencies (see `docs/dns-setup.md`).
 
 It is **not** the GeFi platform itself. The platform (APIs, dashboards,
 auth, inference, federated training, audit log, compliance routing) is a
@@ -21,33 +24,38 @@ referenced — never deployed.
 ## Hosting model (do not get this wrong)
 
 - **Production hosting:** **Cloudflare Pages** at the apex domain `gefi.io`.
-  Pages serves the pre-built `_site/` directory as static assets.
-- **Cloudflare config:** `wrangler.jsonc` at the repo root declares
-  `name: gefi` and `pages_build_output_dir: "./_site"`. The repo's
-  `npm run deploy` script runs `bundle exec jekyll build` and then
-  `wrangler pages deploy _site --project-name=gefi --branch=main`.
-  **Do not** switch this back to Workers Static Assets (`assets.directory`
-  + `wrangler deploy`): wrangler 4.87+ auto-config detects Jekyll and
-  re-runs the build via `npx bundle exec jekyll build`, which fails because
-  `bundle` is a Ruby gem, not an npm package. Pages mode skips that trap.
-- **Cloudflare dashboard settings (the Workers Builds project at `gefi`):**
-  - Build command: `npm run build` (which runs `bundle exec jekyll build`)
-  - Build output directory: `_site`
-  - Deploy command: `npx wrangler@4.87.0 pages deploy _site --project-name=gefi --branch=main`
-    — **must be `pages deploy`, not `deploy`**. Plain `wrangler deploy` on a
-    Jekyll repo triggers wrangler 4.87+ auto-config which rewrites the build
-    to `npx bundle exec jekyll build` (fails — `bundle` isn't on npm).
-  - Environment variable: `JEKYLL_ENV=production`
-  - Root directory: repo root (not a subdir)
-  - The repo's `package.json` `npm run deploy` script mirrors this command
-    so local deploys work the same way (needs `CLOUDFLARE_API_TOKEN`).
-- **GitHub Pages:** not used. The only Actions workflow is
-  `.github/workflows/deploy-cloudflare.yml`, which deploys the Workers
-  backend under `infrastructure/cloudflare/` — not the marketing site.
-- **Replit hosting:** **none.** The Replit workflow is a local-preview
-  developer convenience only — it runs `bundle exec jekyll serve` on port 5000.
-- **No Replit `[deployment]` in `.replit`.** Do not add one. Do not suggest
-  "deploy via Replit". The user deploys to Cloudflare Pages.
+  The `gefi.io` zone is on Cloudflare nameservers (`carter.ns.cloudflare.com`
+  + `joan.ns.cloudflare.com`); the Pages project named `gefi` owns the
+  apex + `www` custom domains. DNS is managed inside the same Cloudflare
+  account (see `docs/dns-setup.md`).
+- **How the site reaches Pages (current, default): Git auto-deploy via
+  the Cloudflare Pages GitHub App.** The `gefi` Pages project is
+  connected to `AxalNetwork/gefi` (dash → Workers & Pages → `gefi` →
+  Settings → Builds & deployments), production branch = `main`. Every
+  push to `main` triggers a Cloudflare-side build (`bundle install &&
+  bundle exec jekyll build`, output `_site/`, env
+  `RUBY_VERSION=3.2.2`, `JEKYLL_ENV=production`,
+  `BUNDLE_WITHOUT=development:test`) and PRs get their own
+  `*.pages.dev` preview URL. No local tokens, no manual `npm run
+  deploy`. The Pages project subdomain is `gefi-1ns.pages.dev`.
+- **Fallback: Direct Upload via the wrangler CLI.** Kept for emergency
+  out-of-band pushes (Pages GitHub App outage, hotfix from a non-`main`
+  branch, etc.). Build locally with `bundle install && bundle exec
+  jekyll build`, then push `_site/` with `npm run deploy` (`wrangler
+  pages deploy _site --project-name=gefi --branch=main`). Requires
+  `CLOUDFLARE_API_TOKEN` (with `Pages:Edit` + `Account:Read`) and
+  `CLOUDFLARE_ACCOUNT_ID` in the env. Prefer the Git path above unless
+  you have a specific reason not to use it.
+- **GitHub Pages: not used.** The repo no longer carries `.nojekyll`,
+  `CNAME`, or `.github/workflows/deploy-pages.yml`. The apex DNS no
+  longer points at the four `185.199.10[8-9].153` / `185.199.11[0-1].153`
+  GH Pages IPs.
+- **Cloudflare backend:** the Workers under `infrastructure/cloudflare/`
+  ARE in production (api.gefi.io). They are deployed by
+  `.github/workflows/deploy-cloudflare.yml` — separate from the Pages site.
+- **Replit hosting:** **none.** The Replit workflow runs
+  `bundle exec jekyll serve` on port 5000 for local preview only.
+- **No Replit `[deployment]` in `.replit`.** Do not add one.
 
 ## Tech stack
 
@@ -66,9 +74,8 @@ referenced — never deployed.
 |-------------------------------|----------------------------------------------------|
 | `_config.yml`                 | Site config: title, URL, nav, API endpoints, collections, exclusions |
 | `Gemfile`                     | Ruby gems                                          |
-| `CNAME`                       | `gefi.io`                                          |
-| `.nojekyll`                   | Suppresses GitHub's classic Pages Jekyll processor — harmless under Cloudflare Pages |
-| `package.json` / `wrangler.jsonc` | Cloudflare Pages deploy plumbing (`npm run deploy` → `wrangler pages deploy _site`) |
+| `.ruby-version`               | Pins Ruby `3.2.2` for Cloudflare Pages + local Bundler |
+| `package.json` / `wrangler.jsonc` | Fallback deploy command (`npm run deploy` → `wrangler pages deploy _site --project-name=gefi --branch=main`) for emergency out-of-band pushes. The default deploy path is the Cloudflare Pages GitHub App on `AxalNetwork/gefi` — push to `main` → auto-build. The only `package.json` allowed at the repo root — exists solely to host this fallback script and the `wrangler` devDep. |
 | `index.html`                  | Home                                               |
 | `features.md` / `pricing.md` / `models.md` / `research.md` / `docs.md` / `blog.md` / `about.md` / `compliance.md` / `contact.md` | Top-level marketing pages |
 | `legal/privacy.md`, `legal/terms.md` | Placeholder legal pages                     |
@@ -83,7 +90,7 @@ referenced — never deployed.
 | `_posts/*.md`                 | Blog posts                                         |
 | `.github/workflows/deploy-cloudflare.yml` | Cloudflare Workers backend deploy (not the marketing site) |
 | `docs/dns-setup.md`           | DNS + Pages one-time setup                         |
-| `infrastructure/cloudflare/`  | Cloudflare backend monorepo (Task #2). pnpm + Turborepo. Three Workers (`gefi-web`, `gefi-api`, `gefi-compliance`) + shared packages. Self-contained — own `package.json`, `pnpm-lock.yaml`, `tsconfig.base.json`. **Never** hoist node_modules from here to the repo root. |
+| `infrastructure/cloudflare/`  | Cloudflare backend monorepo (Task #2). pnpm + Turborepo. Three Workers (`gefi-web`, `gefi-api`, `gefi-compliance`) + shared packages. Self-contained — own `package.json`, `pnpm-lock.yaml`, `tsconfig.base.json`. **Never** hoist node_modules from here to the repo root. **All secrets** live in `wrangler secret put` (Workers) or GitHub Environment secrets (CI). The full inventory + exact `wrangler secret put` commands are in `infrastructure/cloudflare/SECRETS.md` — keep it in sync with `packages/shared-types/src/env.ts`. **Never** commit a real secret value to this repo. |
 | `legacy/`                     | Archived React/Express prototype + its `README.md` |
 
 ## Branding tokens (used throughout the site)
@@ -142,16 +149,20 @@ backend / dashboards exist, without any dead links or console errors.
 
 ## Working on this repo
 
-- **Never** add `package.json` or run `npm install` at the root. Node was
-  intentionally removed from this surface. The Cloudflare backend lives
-  under `infrastructure/cloudflare/` and has its own `package.json` /
-  `pnpm-lock.yaml` / `node_modules` — keep it that way.
+- **Never** add a *second* `package.json` at the root and never use it
+  for application code. The root `package.json` exists **only** to host
+  the `wrangler` devDep + the `npm run deploy` script (Direct Upload to
+  Cloudflare Pages). No app code, no React, no bundler. The Cloudflare
+  Workers backend lives under `infrastructure/cloudflare/` with its own
+  `package.json` / `pnpm-lock.yaml` / `node_modules` — keep it that way.
 - **Never** install Tailwind, SCSS, or any JS bundler at the root. Hand-write
   CSS in `assets/css/main.css`.
 - **Never** add a Replit `[deployment]` block to `.replit`.
 - **Never** un-commit `Gemfile.lock` *or* `infrastructure/cloudflare/pnpm-lock.yaml`.
   Deterministic builds are non-negotiable for both the Pages and Workers CI.
-- **Always** keep `CNAME` set to `gefi.io`.
+- **Never** re-add the root `CNAME` file. It's a GitHub-Pages-only
+  signal; on Cloudflare Pages it does nothing and confuses operators.
+  Custom domains live in dash → Pages → `gefi` → Custom domains.
 - **Always** put new pages with a permalink (`permalink: /thing/`) so URLs
   stay clean.
 - **Always** route any new app/auth CTA through `site.app.enabled` — see
@@ -173,7 +184,7 @@ backend / dashboards exist, without any dead links or console errors.
 
 | #  | Title                                                              | State          |
 |----|--------------------------------------------------------------------|----------------|
-| 1  | Static Jekyll site on GitHub Pages                                 | **In progress (this task).** |
+| 1  | Static Jekyll site on Cloudflare Pages                             | **In progress (this task).** |
 | 2  | Cloudflare backend foundation (Workers + D1 + R2 + KV + Vectorize) | **In progress (this task).** |
 | 3  | Auth (Auth0 + JWT) + tenancy                                       | Pending        |
 | 4  | Compliance routing + audit log + trust portal                      | **Done.**      |
@@ -221,19 +232,25 @@ pnpm typecheck     # turbo run typecheck across the graph
 pnpm --filter @gefi/worker-api run dev    # wrangler dev with local D1/R2/KV emulation
 ```
 
-## Task #3 — Auth, multi-tenancy & jurisdiction routing (DONE)
+## Task #3 — Auth, multi-tenancy & jurisdiction routing (PIVOTING)
 
-Auth runs on Auth0 with RS256 tokens. The operator runbook is
-`infrastructure/cloudflare/AUTH0-SETUP.md`. Required env vars:
-`AUTH0_DOMAIN`, `AUTH0_AUDIENCE` (in `wrangler.jsonc`) and the secret
-`AUTH0_M2M_CLIENT_SECRET` (via `wrangler secret put`).
+> **Auth provider pivot (May 2026).** GeFi removed Auth0. Token
+> verification is now the responsibility of an upcoming `gefi-auth`
+> Cloudflare Worker (D1 + KV + Workers crypto + GitHub OAuth +
+> WebAuthn). Until that Worker ships, the `gefi-api` middleware
+> returns `503 auth_unavailable` for any request bearing a token.
+> The Jekyll onboarding flow (`onboarding/*.html`,
+> `_layouts/onboarding.html`, `assets/js/onboarding.js`,
+> `assets/js/role-gate.js`) was deleted along with the Auth0-specific
+> pieces of `@gefi/auth` (`jwks.ts`, `verify.ts` RS256 path,
+> `management.ts`). What survives in `@gefi/auth` is reusable: the
+> claim vocabulary, the RBAC matrix, the subscription→KYC tier map,
+> and the header / payload-peek helpers.
 
 New packages:
-- `packages/auth` — JWKS cache (`jwks.ts`), RS256 verifier (`verify.ts`
-  with both strict and `verifyAuth0TokenLoose` variants), 7-persona
-  RBAC matrix (`rbac.ts`), subscription→KYC tier map (`kyc-tiers.ts`),
-  Auth0 Management M2M client (`management.ts`) for writing
-  `app_metadata.gefi` after onboarding.
+- `packages/auth` — claim vocabulary + 7-persona RBAC matrix
+  (`rbac.ts`) + subscription→KYC tier map (`kyc-tiers.ts`) + bearer
+  header / jurisdiction-peek helpers (`verify.ts`).
 - `packages/integrations` — `KycProvider` + `SanctionsProvider`
   interfaces, with `StubKycProvider`, `OnfidoKycProvider` (HMAC-SHA256
   `X-SHA2-Signature`), `SumsubKycProvider` (HMAC-SHA256
@@ -244,12 +261,10 @@ New packages:
   `SanctionsProviderNotConfiguredError` rather than falling back to
   the stub, and the handlers translate the throw to 503. Dev /
   staging keep the stub fallback for local iteration and tests.
-- `assets/js/role-gate.js` — client-side RBAC primitive. Exports
-  `canPerform()` and a `<role-gate action subject>` web component
-  for plain Jekyll pages; the Task #7 React dashboards will import
-  the same module. A vitest sync test
-  (`packages/auth/src/role-gate-sync.test.ts`) fails the build if
-  this client mirror drifts from the server-side `rbac.ts`.
+- *(removed)* `assets/js/role-gate.js` — Jekyll-side RBAC primitive
+  was deleted in the Auth0 pivot; the Task #7 React dashboards will
+  import the canonical `canPerform()` directly from
+  `@gefi/auth/rbac`.
 
 D1: `workers/api/migrations/0001_init_auth.sql` creates `tenants`,
 `users`, `memberships`, `api_keys`, `kyc_evidence`, `sanction_hits`,
@@ -265,10 +280,10 @@ Cross-region rejection: regional siblings drop traffic whose JWT
 `jurisdiction` claim doesn't match `WORKER_REGION`. The public edge
 forwards based on the JWT's `jurisdiction` (else `cf.country`).
 
-Jekyll onboarding: `onboarding/index.html` (jurisdiction) →
-`/onboarding/entity/` → `/onboarding/identity/` → `/onboarding/security/`,
-gated on `site.app.enabled`. `assets/js/onboarding.js` posts to
-`/v1/auth/onboard` then `/v1/kyc/start`.
+Jekyll onboarding flow (`onboarding/*.html`, `_layouts/onboarding.html`,
+`assets/js/onboarding.js`) was REMOVED in the Auth0 pivot. The
+new sign-up + onboarding UX will live on the React dashboard at
+`app.gefi.io` once the `gefi-auth` Worker + dashboard ship.
 
 Tests: 100/100 (`packages/auth` 34, `packages/integrations` 18,
 `workers/api` 18 incl. integration, `workers/web` 2, `shared-router`

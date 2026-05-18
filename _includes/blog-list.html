@@ -1,30 +1,68 @@
 {%- assign sorted = include.posts | sort: "date" | reverse -%}
-<div class="card-grid card-grid--posts">
-  {%- for post in sorted -%}
-    {%- assign tag = include.tag | default: "" -%}
-    {%- if post.content -%}
-      {%- assign words = post.content | strip_html | number_of_words -%}
-      {%- assign read_time = words | divided_by: 200 -%}
-      {%- if read_time < 1 -%}{%- assign read_time = 1 -%}{%- endif -%}
-    {%- else -%}
-      {%- assign read_time = 1 -%}
-    {%- endif -%}
-    {%- if post.lead -%}
-      {%- assign excerpt_text = post.lead -%}
-    {%- else -%}
-      {%- assign excerpt_text = post.content | strip_html | strip_newlines | truncate: 160 -%}
-    {%- endif -%}
-    <a class="post-card" href="{{ post.url | relative_url }}">
-      <p class="eyebrow">
-        {%- if tag != "" -%}{{ tag }} &middot; {% endif -%}
-        <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %-d, %Y" }}</time>
-      </p>
-      <h3>{{ post.title }}</h3>
-      <p class="muted">{{ excerpt_text }}</p>
-      <footer class="post-card__footer">
-        <span class="muted small">{{ read_time }} min read</span>
-        <span class="muted small">Read &rarr;</span>
-      </footer>
-    </a>
-  {%- endfor -%}
+{%- assign all_tags = "" | split: "" -%}
+{%- for post in sorted -%}
+  {%- if post.tags -%}
+    {%- for t in post.tags -%}
+      {%- assign all_tags = all_tags | push: t -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign unique_tags = all_tags | uniq | sort -%}
+
+<div class="tag-filter" data-tag-filter>
+  {%- if unique_tags.size > 0 -%}
+  <div class="tag-filter__chips" role="group" aria-label="Filter posts by tag">
+    <button type="button" class="filter-chip is-active" data-tag="all">All</button>
+    {%- for t in unique_tags -%}
+      <button type="button" class="filter-chip" data-tag="{{ t | downcase }}">{{ t }}</button>
+    {%- endfor -%}
+  </div>
+  <p class="tag-filter__count muted small" data-tag-count aria-live="polite"></p>
+  {%- endif -%}
+
+  <div class="card-grid card-grid--posts" data-tag-grid>
+    {%- for post in sorted -%}
+      {%- assign tag = include.tag | default: "" -%}
+      {%- if post.content -%}
+        {%- assign words = post.content | strip_html | number_of_words -%}
+        {%- assign read_time = words | divided_by: 200 -%}
+        {%- if read_time < 1 -%}{%- assign read_time = 1 -%}{%- endif -%}
+      {%- else -%}
+        {%- assign read_time = 1 -%}
+      {%- endif -%}
+      {%- if post.lead -%}
+        {%- assign excerpt_text = post.lead -%}
+      {%- else -%}
+        {%- assign excerpt_text = post.content | strip_html | strip_newlines | truncate: 160 -%}
+      {%- endif -%}
+      {%- assign tag_slugs = "" -%}
+      {%- if post.tags -%}
+        {%- for t in post.tags -%}
+          {%- assign tag_slugs = tag_slugs | append: t | downcase | append: "|" -%}
+        {%- endfor -%}
+      {%- endif -%}
+      <a class="post-card" href="{{ post.url | relative_url }}" data-tags="{{ tag_slugs }}">
+        <p class="eyebrow">
+          {%- if tag != "" -%}{{ tag }} &middot; {% endif -%}
+          <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %-d, %Y" }}</time>
+        </p>
+        <h3>{{ post.title }}</h3>
+        <p class="muted">{{ excerpt_text }}</p>
+        {%- if post.tags and post.tags.size > 0 -%}
+          <ul class="badge-row badge-row--tight" aria-label="Tags">
+            {%- for t in post.tags -%}
+              <li class="badge">{{ t }}</li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+        <footer class="post-card__footer">
+          <span class="muted small">{{ read_time }} min read</span>
+          <span class="muted small">Read &rarr;</span>
+        </footer>
+      </a>
+    {%- endfor -%}
+  </div>
+  <p class="muted small tag-filter__empty" data-tag-empty hidden>No posts match that tag yet.</p>
 </div>
+
+<script src="{{ '/assets/js/tag-filter.js' | relative_url }}" defer></script>
