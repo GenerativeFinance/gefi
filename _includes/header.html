@@ -8,7 +8,7 @@
     self-serve sign-up ships with Task #7.
   {%- endcomment -%}
   {%- assign signin_url = '/login/' | relative_url -%}
-  {%- assign signup_url = site.app.fallback_url | default: '/contact/' -%}
+  {%- assign signup_url = '/register/' | relative_url -%}
 {%- endunless -%}
 <header class="site-header" role="banner" data-site-header>
   <div class="container site-header__inner">

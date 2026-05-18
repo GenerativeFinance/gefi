@@ -35,6 +35,11 @@ api:
   # the playground/Cloudflare auth Worker is live, set:
   #   login_endpoint: "https://api.gefi.io/api/auth/request"
   login_endpoint: ""
+  # Self-serve registration endpoint. While empty, /register/ surfaces a
+  # simulated "we've queued your account" message and logs the payload to
+  # the console. When the playground/Cloudflare auth Worker is live, set:
+  #   register_endpoint: "https://api.gefi.io/api/auth/register"
+  register_endpoint: ""
 
 # App surface (app.gefi.io).
 #

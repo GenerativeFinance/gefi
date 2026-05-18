@@ -1,0 +1,227 @@
+---
+layout: page
+title: Create your account
+permalink: /register/
+hide_title: true
+---
+
+<section class="auth-card" aria-labelledby="register-heading">
+  <h1 id="register-heading">Create your GeFi account</h1>
+  <p class="auth-card__sub">
+    Tell us who you are and we'll send a one-time link to confirm your email.
+    No passwords — sign-in is always via magic link.
+  </p>
+
+  <noscript>
+    <p class="auth-card__noscript">
+      JavaScript is required to register. Email
+      <a href="mailto:hello@gefi.io">hello@gefi.io</a> with your name, work
+      email, company and jurisdiction (EU or US) and we'll provision an
+      account manually.
+    </p>
+  </noscript>
+
+  <form class="onboarding-form" id="register-form" novalidate>
+    <label class="onboarding-form__field" for="register-name">
+      Full name
+      <input
+        id="register-name"
+        type="text"
+        name="name"
+        autocomplete="name"
+        required
+        placeholder="Ada Lovelace"
+      />
+    </label>
+
+    <label class="onboarding-form__field" for="register-email">
+      Work email
+      <input
+        id="register-email"
+        type="email"
+        name="email"
+        autocomplete="email"
+        inputmode="email"
+        spellcheck="false"
+        required
+        placeholder="you@firm.com"
+      />
+    </label>
+
+    <label class="onboarding-form__field" for="register-company">
+      Company
+      <input
+        id="register-company"
+        type="text"
+        name="company"
+        autocomplete="organization"
+        required
+        placeholder="Acme Capital"
+      />
+    </label>
+
+    <label class="onboarding-form__field" for="register-jurisdiction">
+      Data region
+      <select id="register-jurisdiction" name="jurisdiction" required>
+        <option value="">Choose a region…</option>
+        <option value="eu">European Union (Frankfurt &amp; Dublin)</option>
+        <option value="us">United States (N. Virginia &amp; Oregon)</option>
+      </select>
+    </label>
+
+    <label class="onboarding-form__field auth-card__check">
+      <input type="checkbox" id="register-terms" name="accept_terms" required />
+      <span>
+        I agree to the
+        <a href="{{ '/legal/terms/' | relative_url }}">Terms of Service</a>
+        and
+        <a href="{{ '/legal/privacy/' | relative_url }}">Privacy Notice</a>.
+      </span>
+    </label>
+
+    <div class="onboarding-form__actions">
+      <button type="submit" class="btn btn-primary" id="register-submit">
+        Create account
+      </button>
+    </div>
+    <p class="onboarding-form__hint" id="register-status" role="status" aria-live="polite"></p>
+    <p class="onboarding-form__error" id="register-error" hidden></p>
+  </form>
+
+  <div class="auth-card__footer">
+    <p>
+      Already have an account?
+      <a href="{{ '/login/' | relative_url }}">Sign in</a>
+    </p>
+    <p>
+      <a href="{{ '/contact/?topic=sales' | relative_url }}">Need an enterprise plan?</a>
+      &middot;
+      <a href="{{ '/legal/privacy/' | relative_url }}">Privacy</a>
+      &middot;
+      <a href="{{ '/legal/terms/' | relative_url }}">Terms</a>
+    </p>
+  </div>
+</section>
+
+<script>
+  // Posts { name, email, company, jurisdiction } to the registration
+  // endpoint configured in _config.yml (api.register_endpoint). When the
+  // endpoint is empty, surface a simulated success — same pattern as the
+  // other forms — so the page is never a dead end while the backend is
+  // still being wired up.
+  (function () {
+    "use strict";
+    var form    = document.getElementById("register-form");
+    var name    = document.getElementById("register-name");
+    var email   = document.getElementById("register-email");
+    var company = document.getElementById("register-company");
+    var region  = document.getElementById("register-jurisdiction");
+    var terms   = document.getElementById("register-terms");
+    var btn     = document.getElementById("register-submit");
+    var status  = document.getElementById("register-status");
+    var error   = document.getElementById("register-error");
+    if (!form) return;
+
+    var endpoint =
+      (window.GEFI_CONFIG && window.GEFI_CONFIG.endpoints &&
+       window.GEFI_CONFIG.endpoints.register) || "";
+
+    function setStatus(msg) {
+      status.textContent = msg;
+      status.setAttribute("data-state", "ok");
+      error.hidden = true;
+    }
+    function setError(msg) {
+      error.textContent = msg;
+      error.hidden = false;
+      status.textContent = "";
+    }
+    function setBusy(on) {
+      btn.disabled = on;
+      btn.textContent = on ? "Creating account…" : "Create account";
+    }
+
+    form.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+
+      var payload = {
+        name:         (name.value    || "").trim(),
+        email:        (email.value   || "").trim().toLowerCase(),
+        company:      (company.value || "").trim(),
+        jurisdiction: region.value,
+      };
+
+      if (!payload.name) {
+        setError("Please enter your full name.");
+        name.focus();
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
+        setError("Enter a valid email address.");
+        email.focus();
+        return;
+      }
+      if (!payload.company) {
+        setError("Please enter your company.");
+        company.focus();
+        return;
+      }
+      if (payload.jurisdiction !== "eu" && payload.jurisdiction !== "us") {
+        setError("Choose a data region.");
+        region.focus();
+        return;
+      }
+      if (!terms.checked) {
+        setError("Please accept the Terms of Service and Privacy Notice.");
+        terms.focus();
+        return;
+      }
+
+      setBusy(true);
+
+      if (!endpoint) {
+        console.info("[gefi] register submission (no API configured yet):", payload);
+        setStatus(
+          "Thanks, " + payload.name.split(" ")[0] + " — we've queued your account. " +
+          "When the backend is live you'll get a confirmation link at " + payload.email + ". " +
+          "(Backend not yet wired in this preview.)"
+        );
+        setBusy(false);
+        return;
+      }
+
+      fetch(endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify(payload),
+        credentials: "include",
+      })
+        .then(function (res) {
+          if (res.status === 204 || res.ok) {
+            setStatus(
+              "Account created. Check " + payload.email + " for a confirmation link — it expires in 15 minutes."
+            );
+            form.reset();
+            return;
+          }
+          if (res.status === 409) {
+            setError("An account already exists for that email. Try signing in instead.");
+            return;
+          }
+          if (res.status === 429) {
+            setError("Too many requests. Try again in a few minutes.");
+            return;
+          }
+          if (res.status === 400) {
+            setError("Some details look invalid. Please double-check and try again.");
+            return;
+          }
+          setError("Something went wrong. Please try again or email hello@gefi.io.");
+        })
+        .catch(function () {
+          setError("Couldn't reach the sign-up service. Check your connection and try again.");
+        })
+        .then(function () { setBusy(false); });
+    });
+  })();
+</script>

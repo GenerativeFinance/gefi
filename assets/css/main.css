@@ -913,3 +913,11 @@ p  { margin: 0 0 var(--space-4); }
   color: var(--c-muted, #6b7280); font-size: .9rem; text-align: center;
 }
 .auth-card__footer p { margin: .25rem 0; }
+
+/* --- Sign-up card extras (/register/) --- */
+.auth-card .onboarding-form__field select { width: 100%; box-sizing: border-box; }
+.auth-card__check {
+  flex-direction: row !important; align-items: flex-start; gap: .55rem;
+  font-weight: 400; color: var(--c-muted, #6b7280); font-size: .9rem;
+}
+.auth-card__check input[type="checkbox"] { margin-top: .2rem; flex: 0 0 auto; }
