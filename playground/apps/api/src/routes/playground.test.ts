@@ -171,6 +171,69 @@ describe("POST /api/playground/:slug/run", () => {
     expect(last!.headers.get("retry-after")).not.toBeNull();
   });
 
+  it("returns 502 + retry-after when the handler throws (no mock fallback)", async () => {
+    const repo = new InMemoryPlaygroundRepository({
+      models: [model("sentiment-from-filings")],
+    });
+    // Force the registered handler to throw by stubbing it through the
+    // route's handler-override hook. The route must NOT fall back to the
+    // canned mock and must NOT write inference/audit rows for a 502.
+    const failingHandler = new Map([[
+      "sentiment-from-filings",
+      {
+        slug: "sentiment-from-filings",
+        runtime: "synthetic" as const,
+        outputSchema: { type: "object" },
+        defaultInput: {},
+        predict: async () => {
+          throw new Error("boom");
+        },
+      },
+    ]]);
+    const app = makeApp(repo, { handlers: failingHandler as never });
+    const body = JSON.stringify(PLAYGROUND_MOCKS_BY_SLUG.get("sentiment-from-filings")!.defaultInput);
+    const res = await app.request(
+      "/api/playground/sentiment-from-filings/run",
+      { method: "POST", headers: { "content-type": "application/json" }, body },
+      envFor(kv),
+    );
+    expect(res.status).toBe(502);
+    expect(res.headers.get("retry-after")).toBe("5");
+    const j = (await res.json()) as { error: string; message: string };
+    expect(j.error).toBe("runtime_error");
+    expect(j.message).toBe("boom");
+    expect(repo.inferenceCalls).toHaveLength(0);
+    expect(repo.auditLog).toHaveLength(0);
+  });
+
+  it("uses the DB-persisted runtime over the handler default", async () => {
+    const repo = new InMemoryPlaygroundRepository({
+      models: [model("sentiment-from-filings")],
+      versions: [
+        {
+          model_slug: "sentiment-from-filings",
+          version: "1.0.0",
+          version_label: null,
+          input_schema: null,
+          output_schema: null,
+          runtime: "workers-ai", // DB value wins
+          created_at: 100,
+        },
+      ],
+    });
+    const app = makeApp(repo, { newId: () => "id-1", now: () => 1700 });
+    const body = JSON.stringify(PLAYGROUND_MOCKS_BY_SLUG.get("sentiment-from-filings")!.defaultInput);
+    const res = await app.request(
+      "/api/playground/sentiment-from-filings/run",
+      { method: "POST", headers: { "content-type": "application/json" }, body },
+      envFor(kv),
+    );
+    expect(res.status).toBe(200);
+    const j = (await res.json()) as { runtime: string };
+    expect(j.runtime).toBe("workers-ai");
+    expect(repo.auditLog[0]!.runtime).toBe("workers-ai");
+  });
+
   it("rejects invalid JSON body", async () => {
     const repo = new InMemoryPlaygroundRepository({
       models: [model("sentiment-from-filings")],

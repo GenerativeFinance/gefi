@@ -111,6 +111,10 @@ export function v1Routes(opts: V1RoutesOptions = {}) {
     }
 
     // ── Dispatch ─────────────────────────────────────────────────────────
+    // Runtime is DB-authoritative — the persisted `model_versions.runtime`
+    // value wins over the handler's declared default, so a runtime swap can
+    // be staged via a SQL UPDATE without redeploying the worker.
+    const runtime = version?.runtime ?? handler.runtime;
     const start = Date.now();
     const inputHash = await canonicalInputHash(body);
     let output: Record<string, unknown>;
@@ -124,6 +128,18 @@ export function v1Routes(opts: V1RoutesOptions = {}) {
       return c.json({ error: "runtime_error", message }, 502, { "retry-after": "5" });
     }
     const latencyMs = Math.max(1, Date.now() - start);
+
+    // Validate the handler's output against the declared output_schema so a
+    // regression can't ship schema-invalid data downstream.
+    const ov = validateAgainstSchema(output, outputSchema);
+    if (!ov.valid) {
+      return c.json(
+        { error: "output_invalid", details: ov.errors },
+        502,
+        { "retry-after": "5" },
+      );
+    }
+
     const outputHash = await sha256Hex(JSON.stringify(output));
 
     await repo.insertInferenceCall({
@@ -143,7 +159,7 @@ export function v1Routes(opts: V1RoutesOptions = {}) {
       user_id: userId,
       input_hash: inputHash,
       output_hash: outputHash,
-      runtime: handler.runtime,
+      runtime,
       now: now(),
     });
 
@@ -151,7 +167,7 @@ export function v1Routes(opts: V1RoutesOptions = {}) {
       output,
       latency_ms: latencyMs,
       version: version?.version ?? null,
-      runtime: handler.runtime,
+      runtime,
       output_schema: outputSchema,
     });
   });

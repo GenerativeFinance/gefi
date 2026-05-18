@@ -14,9 +14,12 @@
  *        - Anonymous: 20/day per IP.
  *        - Authenticated: per-tier daily quota from `subscriptions`
  *          (free=100, pro=10k, enterprise=1M).
- *   6. Dispatch to the per-model handler from `MODEL_HANDLERS`. Handler
- *      crashes / unregistered slugs fall back to the Phase 4 canned mock so
- *      the playground stays alive.
+ *   6. Dispatch to the per-model handler from `MODEL_HANDLERS`. Unregistered
+ *      slugs fall back to the Phase 4 canned mock so the playground stays
+ *      alive while the catalog is growing. Handler *crashes* deliberately
+ *      return 502 + retry-after — we do NOT silently substitute the mock,
+ *      because that would corrupt audit/billing telemetry with non-real
+ *      outputs reported as 200.
  *   7. Write `inference_calls` (billing) + `audit_log` (immutable record).
  *   8. Return `{ output, latency_ms, mock, version, runtime, output_schema }`.
  */
@@ -161,10 +164,13 @@ export function playgroundRoutes(opts: PlaygroundRoutesOptions = {}) {
     }
 
     // ── Dispatch ────────────────────────────────────────────────────────
+    // Runtime is DB-authoritative: the value persisted on `model_versions`
+    // wins. When a version row is absent (test envs, no migrations yet) we
+    // fall back to the handler-declared runtime so the route stays usable.
+    const runtime = version?.runtime ?? handler?.runtime ?? "synthetic";
     const start = Date.now();
     let output: Record<string, unknown>;
     let usedMock = false;
-    let runtime = handler?.runtime ?? "synthetic";
     const inputHash = await canonicalInputHash(body);
     try {
       if (handler) {
@@ -173,26 +179,41 @@ export function playgroundRoutes(opts: PlaygroundRoutesOptions = {}) {
           { seed: inputHash, ai: c.env.AI },
         );
       } else {
+        // No handler registered — the Phase 4 mock is the documented degraded
+        // path. This is NOT a fallback for handler failures (those return 502
+        // per the Phase 6 contract).
         output = mock!.mockOutput(body as Record<string, unknown>);
         usedMock = true;
       }
     } catch (err) {
-      // Handler crashed — fall back to the canned mock if available; otherwise
-      // surface a 502 with retry-after per the Phase 6 contract.
-      if (mock) {
-        output = mock.mockOutput(body as Record<string, unknown>);
-        usedMock = true;
-        runtime = "synthetic";
-      } else {
-        const message = err instanceof Error ? err.message : "runtime_error";
+      // Handler crashed — surface a 502 with retry-after per the Phase 6
+      // contract. We deliberately do NOT fall back to the canned mock: that
+      // would silently return non-real output while reporting 200, polluting
+      // telemetry and undermining trust in the audit log.
+      const message = err instanceof Error ? err.message : "runtime_error";
+      return c.json(
+        { error: "runtime_error", message },
+        502,
+        { "retry-after": "5" },
+      );
+    }
+    const latencyMs = Math.max(1, Date.now() - start);
+
+    // ── Output-conformance check ────────────────────────────────────────
+    // Real handlers must produce outputs that satisfy their declared schema.
+    // A regression here should fail the request rather than ship invalid
+    // data downstream. The canned-mock path is exempt — its shape is
+    // hand-curated in `playground-mocks.ts` and pre-conforms by construction.
+    if (!usedMock && outputSchema) {
+      const ov = validateAgainstSchema(output, outputSchema);
+      if (!ov.valid) {
         return c.json(
-          { error: "runtime_error", message },
+          { error: "output_invalid", details: ov.errors },
           502,
           { "retry-after": "5" },
         );
       }
     }
-    const latencyMs = Math.max(1, Date.now() - start);
 
     // ── Persistence: billing + audit ───────────────────────────────────
     const outputHash = await sha256Hex(JSON.stringify(output));
