@@ -1,7 +1,13 @@
 {%- assign signin_url  = site.app.signin_url  -%}
 {%- assign signup_url  = site.app.signup_url  -%}
 {%- unless site.app.enabled -%}
-  {%- assign signin_url = site.app.fallback_url | default: '/contact/' -%}
+  {%- comment -%}
+    Sign in routes to the marketing-site magic-link form at /login/ so
+    visitors can request a one-time email link even before app.gefi.io
+    is up. Get started still routes to the contact-sales fallback until
+    self-serve sign-up ships with Task #7.
+  {%- endcomment -%}
+  {%- assign signin_url = '/login/' | relative_url -%}
   {%- assign signup_url = site.app.fallback_url | default: '/contact/' -%}
 {%- endunless -%}
 <header class="site-header" role="banner" data-site-header>

@@ -30,6 +30,11 @@ api:
   newsletter_endpoint: ""
   contact_endpoint: ""
   demo_endpoint: ""
+  # Magic-link sign-in endpoint. While empty, /login/ surfaces a simulated
+  # "check your inbox" message and logs the payload to the console. When
+  # the playground/Cloudflare auth Worker is live, set:
+  #   login_endpoint: "https://api.gefi.io/api/auth/request"
+  login_endpoint: ""
 
 # App surface (app.gefi.io).
 #

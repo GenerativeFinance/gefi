@@ -1,0 +1,143 @@
+---
+layout: page
+title: Sign in
+permalink: /login/
+hide_title: true
+---
+
+<section class="auth-card" aria-labelledby="login-heading">
+  <h1 id="login-heading">Sign in to GeFi</h1>
+  <p class="auth-card__sub">
+    We use one-time magic links instead of passwords. Links expire after 15&nbsp;minutes
+    and can only be used once.
+  </p>
+
+  <noscript>
+    <p class="auth-card__noscript">
+      JavaScript is required to request a sign-in link. Email
+      <a href="mailto:hello@gefi.io">hello@gefi.io</a> and we'll send you one
+      manually, or <a href="{{ '/contact/?topic=sales' | relative_url }}">contact sales</a>
+      for assisted onboarding.
+    </p>
+  </noscript>
+
+  <form class="onboarding-form" id="login-form" novalidate>
+    <label class="onboarding-form__field" for="login-email">
+      Work email
+      <input
+        id="login-email"
+        type="email"
+        name="email"
+        autocomplete="email"
+        inputmode="email"
+        spellcheck="false"
+        required
+        placeholder="you@firm.com"
+      />
+    </label>
+    <div class="onboarding-form__actions">
+      <button type="submit" class="btn btn-primary" id="login-submit">
+        Send sign-in link
+      </button>
+    </div>
+    <p class="onboarding-form__hint" id="login-status" role="status" aria-live="polite"></p>
+    <p class="onboarding-form__error" id="login-error" hidden></p>
+  </form>
+
+  <div class="auth-card__footer">
+    <p>
+      New to GeFi?
+      <a href="{% if site.app.enabled %}{{ site.app.signup_url }}{% else %}{{ site.app.fallback_url | default: '/contact/?topic=sales' | relative_url }}{% endif %}">
+        Create an account
+      </a>
+    </p>
+    <p>
+      <a href="{{ '/contact/?topic=support' | relative_url }}">Can't sign in?</a>
+      &middot;
+      <a href="{{ '/legal/privacy/' | relative_url }}">Privacy</a>
+      &middot;
+      <a href="{{ '/legal/terms/' | relative_url }}">Terms</a>
+    </p>
+  </div>
+</section>
+
+<script>
+  // Posts { email } to the magic-link endpoint configured in _config.yml
+  // (api.login_endpoint). When the endpoint is empty, surface a simulated
+  // success so the form never looks dead while the backend is still being
+  // wired up — same pattern as the newsletter / contact forms.
+  (function () {
+    "use strict";
+    var form   = document.getElementById("login-form");
+    var input  = document.getElementById("login-email");
+    var btn    = document.getElementById("login-submit");
+    var status = document.getElementById("login-status");
+    var error  = document.getElementById("login-error");
+    if (!form) return;
+
+    var endpoint =
+      (window.GEFI_CONFIG && window.GEFI_CONFIG.endpoints &&
+       window.GEFI_CONFIG.endpoints.login) || "";
+
+    function setStatus(msg) {
+      status.textContent = msg;
+      status.setAttribute("data-state", "ok");
+      error.hidden = true;
+    }
+    function setError(msg) {
+      error.textContent = msg;
+      error.hidden = false;
+      status.textContent = "";
+    }
+    function setBusy(on) {
+      btn.disabled = on;
+      btn.textContent = on ? "Sending…" : "Send sign-in link";
+    }
+
+    form.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var email = (input.value || "").trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setError("Enter a valid email address.");
+        input.focus();
+        return;
+      }
+      setBusy(true);
+
+      // No backend yet — acknowledge so the form isn't a dead end.
+      if (!endpoint) {
+        console.info("[gefi] login submission (no API configured yet):", { email: email });
+        setStatus("Thanks — if that email is registered, a sign-in link is on its way. (Backend not yet wired in this preview.)");
+        setBusy(false);
+        return;
+      }
+
+      fetch(endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({ email: email }),
+        credentials: "include",
+      })
+        .then(function (res) {
+          // 204 / 200 → success. 400 → invalid email format. 429 → rate-limited.
+          if (res.status === 204 || res.ok) {
+            setStatus("Check your inbox — we sent a sign-in link to " + email + ". It expires in 15 minutes.");
+            return;
+          }
+          if (res.status === 429) {
+            setError("Too many requests. Try again in a few minutes.");
+            return;
+          }
+          if (res.status === 400) {
+            setError("That email looks invalid. Please double-check and try again.");
+            return;
+          }
+          setError("Something went wrong. Please try again or email hello@gefi.io.");
+        })
+        .catch(function () {
+          setError("Couldn't reach the sign-in service. Check your connection and try again.");
+        })
+        .then(function () { setBusy(false); });
+    });
+  })();
+</script>
