@@ -128,7 +128,11 @@ p  { margin: 0 0 var(--space-4); }
   text-decoration: none;
 }
 .site-header__logo {
-  display: block; height: 32px; width: auto; max-width: 100%;
+  display: block;
+  height: 32px;
+  width: auto;
+  max-width: none;
+  flex: 0 0 auto;
 }
 @media (max-width: 640px) {
   .site-header__logo { height: 26px; }
@@ -896,8 +900,7 @@ p  { margin: 0 0 var(--space-4); }
 }
 .site-footer a { color: var(--color-text); }
 .site-footer__brand .badge-row { margin-top: var(--space-3); }
-.site-footer__logo { display: block; height: auto; max-width: 100%; }
-.site-header__logo { display: block; height: auto; }
+.site-footer__logo { display: block; height: 28px; width: auto; max-width: 100%; }
 
 .site-footer__contacts li {
   display: flex; flex-direction: column; gap: 0;
