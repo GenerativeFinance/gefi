@@ -34,18 +34,11 @@
 
     <ul class="pricing-grid" role="list">
       {%- for plan in site.plans -%}
-        {%- if site.app.enabled and site.app.auth_ready -%}
-          {%- if plan.cta_tier == 'enterprise' -%}
-            {%- assign cta_url = '/contact/?topic=enterprise&tier=enterprise' -%}
-          {%- else -%}
-            {%- assign cta_url = site.app.signup_url | append: '?tier=' | append: plan.cta_tier -%}
-          {%- endif -%}
+        {%- if plan.cta_tier == 'enterprise' -%}
+          {%- assign cta_url = '/contact/?topic=enterprise&tier=enterprise' -%}
         {%- else -%}
-          {%- if plan.cta_tier == 'enterprise' -%}
-            {%- assign cta_url = '/contact/?topic=enterprise&tier=enterprise' -%}
-          {%- else -%}
-            {%- assign cta_url = '/contact/?topic=early-access&tier=' | append: plan.cta_tier -%}
-          {%- endif -%}
+          {%- assign signup_base = site.app.signup_url | default: '/register/' -%}
+          {%- assign cta_url = signup_base | append: '?tier=' | append: plan.cta_tier -%}
         {%- endif -%}
 
         {%- comment -%} Resolve monthly + yearly prices for this plan. {%- endcomment -%}

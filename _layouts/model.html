@@ -109,8 +109,9 @@ layout: default
           </dd>
         </div>
       </dl>
-      {%- if site.app.enabled and site.app.auth_ready -%}
-        <a class="btn btn-primary btn-block" href="{{ site.app.signup_url }}?model={{ page.slug }}">Subscribe</a>
+      {%- assign signup_base = site.app.signup_url | default: '/register/' -%}
+      {%- if site.app.enabled -%}
+        <a class="btn btn-primary btn-block" href="{{ signup_base }}?model={{ page.slug }}">Subscribe</a>
       {%- else -%}
         <a class="btn btn-primary btn-block" href="/contact/?topic=early-access&amp;model={{ page.slug }}">Subscribe</a>
       {%- endif -%}

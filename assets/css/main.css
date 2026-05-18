@@ -704,6 +704,10 @@ p  { margin: 0 0 var(--space-4); }
 
 .form-grid { display: grid; gap: var(--space-4); max-width: 560px; }
 .form-grid label { display: flex; flex-direction: column; gap: 4px; font-weight: 500; }
+.form-grid__checkbox { flex-direction: row !important; align-items: flex-start; gap: var(--space-2) !important; font-weight: 400; }
+.form-grid__checkbox input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex: 0 0 18px; }
+.form-grid__checkbox span { font-size: 0.9375rem; color: var(--color-muted); line-height: 1.5; }
+.form-grid__checkbox a { color: var(--color-brand-strong); }
 .form-grid input, .form-grid textarea, .form-grid select {
   padding: 10px 14px; font-size: 1rem; font-family: inherit;
   border: 1px solid var(--color-border); border-radius: var(--radius-sm);

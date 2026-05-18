@@ -7,10 +7,9 @@
   Flip `app.auth_ready: true` in `_config.yml` once both ship.
 {%- endcomment -%}
 {%- assign signin_url  = site.app.signin_url  -%}
-{%- assign signup_url  = site.app.signup_url  -%}
+{%- assign signup_url  = site.app.signup_url | default: '/register/' -%}
 {%- unless site.app.enabled and site.app.auth_ready -%}
   {%- assign signin_url = site.app.fallback_url | default: '/contact/' -%}
-  {%- assign signup_url = site.app.fallback_url | default: '/contact/' -%}
 {%- endunless -%}
 <header class="site-header" role="banner" data-site-header>
   <div class="container site-header__inner">
