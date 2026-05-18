@@ -68,13 +68,13 @@ describe("POST /api/playground/:slug/run", () => {
       { method: "POST", headers: { "content-type": "application/json" }, body: "{}" },
       envFor(kv),
     );
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     const j = (await res.json()) as { error: string; details: { path: string }[] };
     expect(j.error).toBe("invalid_input");
     expect(j.details.length).toBeGreaterThan(0);
   });
 
-  it("returns the canned mock + writes an inference_calls row", async () => {
+  it("dispatches to the real handler + writes audit_log + inference_calls", async () => {
     const repo = new InMemoryPlaygroundRepository({
       models: [model("sentiment-from-filings")],
     });
@@ -86,15 +86,27 @@ describe("POST /api/playground/:slug/run", () => {
       envFor(kv),
     );
     expect(res.status).toBe(200);
-    const j = (await res.json()) as { output: { sentiment: string }; mock: boolean; latency_ms: number };
-    expect(j.mock).toBe(true);
+    const j = (await res.json()) as {
+      output: { sentiment: string };
+      mock: boolean;
+      latency_ms: number;
+      runtime: string;
+    };
+    // Phase 6: the route now delegates to the real handler; `mock` is false.
+    expect(j.mock).toBe(false);
+    expect(j.runtime).toBe("synthetic");
     expect(["positive", "neutral", "negative"]).toContain(j.output.sentiment);
     expect(j.latency_ms).toBeGreaterThan(0);
     expect(repo.inferenceCalls).toHaveLength(1);
     expect(repo.inferenceCalls[0]!.model_slug).toBe("sentiment-from-filings");
     expect(repo.inferenceCalls[0]!.is_playground).toBe(true);
-    expect(repo.inferenceCalls[0]!.mock).toBe(true);
+    expect(repo.inferenceCalls[0]!.mock).toBe(false);
     expect(repo.inferenceCalls[0]!.input_hash).toMatch(/^[0-9a-f]{64}$/);
+    // Phase 6: audit log row mirrors the call, with input + output hashes.
+    expect(repo.auditLog).toHaveLength(1);
+    expect(repo.auditLog[0]!.model_slug).toBe("sentiment-from-filings");
+    expect(repo.auditLog[0]!.output_hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(repo.auditLog[0]!.runtime).toBe("synthetic");
   });
 
   it("rate limits anonymous callers at 20/day per IP", async () => {
@@ -117,11 +129,14 @@ describe("POST /api/playground/:slug/run", () => {
     expect(j.error).toBe("rate_limited");
   });
 
-  it("rate limits authed users at 200/day per user", async () => {
+  it("rate limits free-tier authed users at 100/day per user", async () => {
     const repo = new InMemoryPlaygroundRepository({
       models: [model("sentiment-from-filings")],
     });
-    const app = makeApp(repo, { resolveUserId: () => "u-1" });
+    const app = makeApp(repo, {
+      resolveUserId: () => "u-1",
+      getTier: async () => "free",
+    });
     const body = JSON.stringify(PLAYGROUND_MOCKS_BY_SLUG.get("sentiment-from-filings")!.defaultInput);
     let last: Response | null = null;
     for (let i = 0; i < 25; i++) {
@@ -131,8 +146,29 @@ describe("POST /api/playground/:slug/run", () => {
         envFor(kv),
       );
     }
-    // 25 < 200 → all should still succeed.
+    // 25 < 100 → all should still succeed.
     expect(last!.status).toBe(200);
+  });
+
+  it("returns 429 once a free-tier user exceeds 100/day", async () => {
+    const repo = new InMemoryPlaygroundRepository({
+      models: [model("sentiment-from-filings")],
+    });
+    const app = makeApp(repo, {
+      resolveUserId: () => "u-2",
+      getTier: async () => "free",
+    });
+    const body = JSON.stringify(PLAYGROUND_MOCKS_BY_SLUG.get("sentiment-from-filings")!.defaultInput);
+    let last: Response | null = null;
+    for (let i = 0; i < 101; i++) {
+      last = await app.request(
+        "/api/playground/sentiment-from-filings/run",
+        { method: "POST", headers: { "content-type": "application/json" }, body },
+        envFor(kv),
+      );
+    }
+    expect(last!.status).toBe(429);
+    expect(last!.headers.get("retry-after")).not.toBeNull();
   });
 
   it("rejects invalid JSON body", async () => {

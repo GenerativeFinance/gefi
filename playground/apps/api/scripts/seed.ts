@@ -18,6 +18,7 @@ import { SUBCATEGORIES } from "../src/data/subcategories.js";
 import { AUDITS } from "../src/data/audits.js";
 import { METRICS } from "../src/data/metrics.js";
 import { PLAYGROUND_MOCKS_BY_SLUG } from "../src/data/playground-mocks.js";
+import { MODEL_HANDLERS } from "../src/models/index.js";
 
 interface MinimalD1 {
   prepare(query: string): {
@@ -138,6 +139,14 @@ export async function seed(
       .run();
   }
 
+  // ── Phase 6: write runtime selector per real handler ───────────────────
+  for (const [slug, h] of MODEL_HANDLERS) {
+    await db
+      .prepare(`UPDATE model_versions SET runtime = ? WHERE model_slug = ?`)
+      .bind(h.runtime, slug)
+      .run();
+  }
+
   return {
     categories: CATEGORIES.length,
     subcategories: SUBCATEGORIES.length,
@@ -195,6 +204,13 @@ export function emitSeedSql(now = Math.floor(Date.now() / 1000)): string {
     );
     lines.push(
       `UPDATE model_versions SET input_schema = ${sqlValue(JSON.stringify(m.inputSchema))}, output_schema = ${sqlValue(JSON.stringify(m.outputSchema))} WHERE model_slug = ${sqlValue(m.slug)};`,
+    );
+  }
+
+  // Phase 6: per-handler runtime selector.
+  for (const [slug, h] of MODEL_HANDLERS) {
+    lines.push(
+      `UPDATE model_versions SET runtime = ${sqlValue(h.runtime)} WHERE model_slug = ${sqlValue(slug)};`,
     );
   }
 

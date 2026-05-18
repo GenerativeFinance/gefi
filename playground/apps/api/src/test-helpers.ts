@@ -94,6 +94,9 @@ export class StubD1 {
   models: Record<string, { slug: string; name: string; summary: string; category_slug: string; subcategory_slug: string | null; developer: string; status: string; featured: number; risk_tier: string; maturity: string; price_cents: number; rating_avg: number; rating_count: number; trending_score: number; federated: number; thumbnail_url: string | null; training_enabled?: number; created_at: number; updated_at: number }> = {};
   model_versions: Record<string, { id: string; model_slug: string; version: string; version_label: string | null; sha256: string | null; metrics: string | null; input_schema?: string | null; output_schema?: string | null; created_at: number }> = {};
   model_audits: Record<string, { id: string; model_slug: string; auditor: string; standard: string; audited_at: number; passed: number; hash: string; created_at: number }> = {};
+  audit_log: Array<{ id: string; model_slug: string; model_version: string | null; user_id: string | null; input_hash: string; output_hash: string; runtime: string; created_at: number }> = [];
+  subscriptions: Record<string, { user_id: string; tier: "free" | "pro" | "enterprise"; created_at: number; updated_at: number }> = {};
+  api_keys: Array<{ id: string; user_id: string; key_hash: string; prefix: string; name: string | null; created_at: number; last_used_at: number | null; revoked_at: number | null }> = [];
 
   prepare(query: string) {
     const q = query.replace(/\s+/g, " ").trim();
@@ -104,6 +107,14 @@ export class StubD1 {
           if (q === "SELECT id, email FROM users WHERE email = ?") {
             const u = Object.values(this.users).find((x) => x.email === vals[0]);
             return u ? { id: u.id, email: u.email } : null;
+          }
+          if (q.startsWith("SELECT tier FROM subscriptions")) {
+            const s = this.subscriptions[vals[0] as string];
+            return s ? { tier: s.tier } : null;
+          }
+          if (q.startsWith("SELECT user_id FROM api_keys")) {
+            const k = this.api_keys.find((x) => x.key_hash === vals[0] && x.revoked_at === null);
+            return k ? { user_id: k.user_id } : null;
           }
           throw new Error(`StubD1: unsupported first() query: ${q}`);
         },
@@ -242,6 +253,15 @@ export class StubD1 {
             }
             return { success: true };
           }
+          if (q.startsWith("UPDATE model_versions SET runtime")) {
+            const [runtime, model_slug] = vals as [string, string];
+            for (const v of Object.values(this.model_versions)) {
+              if (v.model_slug === model_slug) {
+                (v as { runtime?: string }).runtime = runtime;
+              }
+            }
+            return { success: true };
+          }
           if (q.startsWith("UPDATE model_versions SET input_schema")) {
             const [input_schema, output_schema, model_slug] = vals as [string, string, string];
             for (const v of Object.values(this.model_versions)) {
@@ -267,6 +287,22 @@ export class StubD1 {
                 created_at,
               };
             }
+            return { success: true };
+          }
+          if (q.startsWith("INSERT INTO audit_log")) {
+            const [id, model_slug, model_version, user_id, input_hash, output_hash, runtime, created_at] =
+              vals as [string, string, string | null, string | null, string, string, string, number];
+            this.audit_log.push({ id, model_slug, model_version, user_id, input_hash, output_hash, runtime, created_at });
+            return { success: true };
+          }
+          if (q.startsWith("INSERT INTO inference_calls")) {
+            // Used by Phase 6 route via the D1 repo path; the in-memory repo
+            // bypasses this branch entirely.
+            return { success: true };
+          }
+          if (q.startsWith("UPDATE api_keys SET last_used_at")) {
+            const k = this.api_keys.find((x) => x.key_hash === vals[1]);
+            if (k) k.last_used_at = vals[0] as number;
             return { success: true };
           }
           throw new Error(`StubD1: unsupported run() query: ${q}`);
@@ -485,6 +521,7 @@ export class InMemoryDetailRepository implements DetailRepository {
  * `created_at` and appends inference rows in insertion order.
  */
 import type {
+  AuditLogInsert,
   InferenceCallInsert,
   PlaygroundRepository,
   PlaygroundVersionRow,
@@ -494,6 +531,7 @@ export class InMemoryPlaygroundRepository implements PlaygroundRepository {
   models: ModelRow[] = [];
   versions: PlaygroundVersionRow[] = [];
   inferenceCalls: InferenceCallInsert[] = [];
+  auditLog: AuditLogInsert[] = [];
 
   constructor(seed?: { models?: ModelRow[]; versions?: PlaygroundVersionRow[] }) {
     if (seed?.models) this.models = seed.models;
@@ -511,6 +549,9 @@ export class InMemoryPlaygroundRepository implements PlaygroundRepository {
   }
   async insertInferenceCall(row: InferenceCallInsert): Promise<void> {
     this.inferenceCalls.push(row);
+  }
+  async insertAuditLog(row: AuditLogInsert): Promise<void> {
+    this.auditLog.push(row);
   }
 }
 

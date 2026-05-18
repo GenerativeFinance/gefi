@@ -142,7 +142,10 @@ export function playgroundRoutes(opts: PlaygroundRoutesOptions = {}) {
           ? await opts.getTier(userId)
           : await getTier(c.env.DB, userId);
         limit = TIER_DAILY_QUOTA[tier];
-        key = `pg:run:user:${userId}`;
+        // Shared key across /api/playground and /v1 so authenticated callers
+        // see one unified per-day quota — otherwise a free-tier user could
+        // burn 100 calls on the playground AND 100 on /v1 in the same day.
+        key = `quota:user:${userId}`;
       } else {
         limit = RATE_LIMIT_ANON;
         key = `pg:run:ip:${ip}`;

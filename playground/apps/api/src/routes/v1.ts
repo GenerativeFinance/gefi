@@ -93,9 +93,11 @@ export function v1Routes(opts: V1RoutesOptions = {}) {
     const rateLimit = opts.rateLimit ?? true;
     if (rateLimit) {
       const tier = opts.getTier ? await opts.getTier(userId) : await getTier(c.env.DB, userId);
+      // Shared key with /api/playground so a user's per-day quota is
+      // enforced across BOTH entry points, not per-route.
       const r = await checkRateLimit(
         c.env.RATE_LIMITS,
-        `v1:predict:user:${userId}`,
+        `quota:user:${userId}`,
         TIER_DAILY_QUOTA[tier],
         ONE_DAY_MS,
       );
