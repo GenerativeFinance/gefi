@@ -127,6 +127,12 @@ p  { margin: 0 0 var(--space-4); }
   font-weight: 700; color: var(--color-text); font-size: 1.125rem;
   text-decoration: none;
 }
+.site-header__logo {
+  display: block; height: 32px; width: auto; max-width: 100%;
+}
+@media (max-width: 640px) {
+  .site-header__logo { height: 26px; }
+}
 .site-nav { display: flex; align-items: center; gap: var(--space-6); }
 .site-nav ul { list-style: none; padding: 0; margin: 0; display: flex; gap: var(--space-5); }
 .site-nav a { color: var(--color-text); font-weight: 500; }

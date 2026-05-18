@@ -12,9 +12,8 @@
 {%- endunless -%}
 <header class="site-header" role="banner" data-site-header>
   <div class="container site-header__inner">
-    <a class="site-header__brand" href="/">
-      <img src="{{ site.logo | relative_url }}" alt="" width="28" height="28" />
-      <span>{{ site.title }}</span>
+    <a class="site-header__brand" href="/" aria-label="{{ site.title }} — home">
+      <img class="site-header__logo" src="{{ site.logo | relative_url }}" alt="{{ site.title }}" width="822" height="312" />
     </a>
 
     <button class="nav-toggle" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="Toggle menu" data-nav-toggle>
