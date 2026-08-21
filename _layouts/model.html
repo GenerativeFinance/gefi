@@ -48,6 +48,135 @@ layout: default
         {{ content }}
       </section>
 
+      {%- comment -%}
+        Try it — rendered entirely from the page's `demo:` front-matter block.
+        Model pages are content-only: they declare fields and an output type,
+        they never touch this layout. See assets/js/model-demo.js.
+      {%- endcomment -%}
+      {%- if page.demo -%}
+        {%- assign demo_slug = page.demo.slug | default: page.slug -%}
+        <section class="model-demo" data-model-demo aria-labelledby="try-it-heading">
+          <h2 id="try-it-heading">Try it</h2>
+          {%- if page.demo.lead -%}
+            <p class="muted">{{ page.demo.lead }}</p>
+          {%- endif -%}
+
+          <form class="demo-form" data-demo-form novalidate>
+            <div class="demo-form__fields">
+              {%- for f in page.demo.fields -%}
+                {%- assign fid = 'demo-' | append: f.name -%}
+                {%- if f.type == 'checkbox' -%}
+                  <label class="demo-field demo-field--check" for="{{ fid }}">
+                    <input type="checkbox" id="{{ fid }}" name="{{ f.name | escape }}"{% if f.value %} checked{% endif %}>
+                    <span>{{ f.label }}</span>
+                  </label>
+                {%- elsif f.type == 'select' -%}
+                  <label class="demo-field" for="{{ fid }}">
+                    <span class="demo-field__label">{{ f.label }}</span>
+                    <select id="{{ fid }}" name="{{ f.name | escape }}">
+                      {%- for opt in f.options -%}
+                        <option value="{{ opt | escape }}"{% if opt == f.value %} selected{% endif %}>{{ opt }}</option>
+                      {%- endfor -%}
+                    </select>
+                  </label>
+                {%- elsif f.type == 'textarea' -%}
+                  <label class="demo-field demo-field--wide" for="{{ fid }}">
+                    <span class="demo-field__label">{{ f.label }}</span>
+                    <textarea id="{{ fid }}" name="{{ f.name | escape }}" rows="4" placeholder="{{ f.placeholder | escape }}">{{ f.value }}</textarea>
+                  </label>
+                {%- else -%}
+                  <label class="demo-field" for="{{ fid }}">
+                    <span class="demo-field__label">
+                      {{ f.label }}
+                      {%- if f.unit %} <span class="demo-field__unit">{{ f.unit }}</span>{% endif -%}
+                    </span>
+                    <input
+                      type="{{ f.type | default: 'text' | escape }}"
+                      id="{{ fid }}"
+                      name="{{ f.name | escape }}"
+                      {% if f.value %}value="{{ f.value | escape }}"{% endif %}
+                      {% if f.min %}min="{{ f.min }}"{% endif %}
+                      {% if f.max %}max="{{ f.max }}"{% endif %}
+                      {% if f.step %}step="{{ f.step }}"{% endif %}
+                      {% if f.placeholder %}placeholder="{{ f.placeholder | escape }}"{% endif %}>
+                  </label>
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+
+            <div class="demo-form__actions" data-demo-js-only>
+              <button type="submit" class="btn btn-primary" data-demo-run>
+                {{ page.demo.cta | default: 'Run model' }}
+              </button>
+              <button type="reset" class="btn btn-ghost">Reset</button>
+              <p class="demo-status" data-demo-status role="status" aria-live="polite"></p>
+            </div>
+          </form>
+
+          <div class="demo-output" data-demo-output hidden></div>
+
+          <p class="demo-nojs" data-demo-nojs>
+            The interactive demo needs JavaScript. The model is also available
+            through the <a href="/docs/">REST API</a>.
+          </p>
+
+          <p class="muted small demo-disclaimer">
+            {%- if site.api.base_url and site.api.base_url != '' -%}
+              Runs are executed against the GeFi API and appended to the audit log.
+            {%- else -%}
+              This demo returns seeded sample output — it is not a live model run.
+            {%- endif -%}
+          </p>
+
+          {%- capture demo_endpoint -%}
+            {%- if site.api.base_url and site.api.base_url != '' -%}
+              {{ site.api.base_url }}/v1/models/{{ demo_slug }}/run
+            {%- endif -%}
+          {%- endcapture -%}
+          {%- comment -%} `"" | split: ","` is Liquid's empty-array literal. {%- endcomment -%}
+          {%- assign none = '' | split: ',' -%}
+          <script type="application/json" data-demo-config>
+            {
+              "slug": {{ demo_slug | jsonify }},
+              "endpoint": {{ demo_endpoint | strip | jsonify }},
+              "output": {{ page.demo.output | default: 'score' | jsonify }},
+              "fields": {{ page.demo.fields | default: none | jsonify }},
+              "scoreLabel": {{ page.demo.score_label | default: 'Score' | jsonify }},
+              "seriesLabel": {{ page.demo.series_label | default: 'Projection' | jsonify }},
+              "chartLabel": {{ page.demo.chart_label | default: 'Projection' | jsonify }},
+              "columns": {{ page.demo.columns | default: none | jsonify }},
+              "rowLabels": {{ page.demo.row_labels | default: none | jsonify }},
+              "rowCount": {{ page.demo.row_count | default: 5 | jsonify }},
+              "drivers": {{ page.demo.drivers | default: none | jsonify }},
+              "xLabels": {{ page.demo.x_labels | default: none | jsonify }},
+              "sampleText": {{ page.demo.sample_text | default: '' | jsonify }}
+            }
+          </script>
+        </section>
+      {%- endif -%}
+
+      {%- comment -%} Live analytics — series comes from the model's row in dashboard.js. {%- endcomment -%}
+      {%- if page.analytics -%}
+        <section class="model-analytics" data-model-analytics aria-labelledby="analytics-heading">
+          <h2 id="analytics-heading">Live analytics</h2>
+          <dl class="analytics-summary">
+            <div>
+              <dt>Latest</dt>
+              <dd class="num" data-analytics-current>—</dd>
+            </div>
+            <div>
+              <dt>Change over window</dt>
+              <dd class="num" data-analytics-delta>—</dd>
+            </div>
+          </dl>
+          <div class="analytics-chart" data-analytics-chart></div>
+          <p class="muted small">
+            Sample series across the last 12 recorded runs. Figures are self-attested
+            and verifiable against the audit log.
+          </p>
+        </section>
+      {%- endif -%}
+
       <section class="model-detail__compliance">
         <h2>Audit &amp; jurisdiction</h2>
         <ul class="compliance-list">
@@ -119,3 +248,7 @@ layout: default
     </aside>
   </div>
 </article>
+{%- if page.demo or page.analytics -%}
+  <script src="{{ '/assets/js/dashboard.js' | relative_url }}" defer></script>
+  <script src="{{ '/assets/js/model-demo.js' | relative_url }}" defer></script>
+{%- endif -%}
