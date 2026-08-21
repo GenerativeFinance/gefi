@@ -43,9 +43,9 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 07 | Liquidity Stress Engine (`liquidity-stress-engine`) | Credit & Risk | P1 | Done. New page + curve demo + MODELS row. NOTE: spec wants a conformity-assessment badge beside the risk badge; badge slots live in the layout, so status is surfaced in metric tiles + copy. Badge slot = future harness change. Build passed. |
 | [x] | 08 | Mortgage Default & Prepay (`mortgage-default-prepay`) | Credit & Risk | P1 | Done. New page + curve demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
 | [x] | 09 | Vendor Risk AIOps (`vendor-risk-aiops`) | Credit & Risk | P1 | Done. New page + score demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
-| [ ] | 10 | Fraud Graph (`fraud-graph`) | Fraud & AML | P1 | |
-| [ ] | 11 | Transaction Monitoring Explainer (`transaction-monitoring-explainer`) | Fraud & AML | P1 | |
-| [ ] | 12 | Claim Fraud Vision (`claim-fraud-vision`) | Fraud & AML | P1 | |
+| [x] | 10 | Fraud Graph (`fraud-graph`) | Fraud & AML | P1 | Done. Enriched existing page + score demo. Also corrected its task-00 seed row (was risk high/federated, page says low/not federated). Build passed. |
+| [x] | 11 | Transaction Monitoring Explainer (`transaction-monitoring-explainer`) | Fraud & AML | P1 | Done. New page + table demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 12 | Claim Fraud Vision (`claim-fraud-vision`) | Fraud & AML | P1 | Done. New page + score demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
 | [ ] | 13 | Trade Finance Doc AI (`trade-finance-doc-ai`) | Trade, Payments & KYB | P1 | |
 | [ ] | 14 | Cross-Border Payment Router (`cross-border-payment-router`) | Trade, Payments & KYB | P1 | |
 | [ ] | 15 | KYB Graph (`kyb-graph`) | Trade, Payments & KYB | P1 | |
