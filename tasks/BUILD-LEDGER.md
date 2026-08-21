@@ -41,8 +41,8 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 05 | Commodities Flow Nowcast (`commodities-flow-nowcast`) | Investing & Macro | P1 | Done. New page + curve demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
 | [x] | 06 | Credit Oracle (`credit-oracle`) | Credit & Risk | P1 | Done. Enriched existing page + score demo w/ adverse-action explanation formats. Copy per customer/backend prompts (cited brief missing). Build passed. |
 | [x] | 07 | Liquidity Stress Engine (`liquidity-stress-engine`) | Credit & Risk | P1 | Done. New page + curve demo + MODELS row. NOTE: spec wants a conformity-assessment badge beside the risk badge; badge slots live in the layout, so status is surfaced in metric tiles + copy. Badge slot = future harness change. Build passed. |
-| [ ] | 08 | Mortgage Default & Prepay (`mortgage-default-prepay`) | Credit & Risk | P1 | |
-| [ ] | 09 | Vendor Risk AIOps (`vendor-risk-aiops`) | Credit & Risk | P1 | |
+| [x] | 08 | Mortgage Default & Prepay (`mortgage-default-prepay`) | Credit & Risk | P1 | Done. New page + curve demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 09 | Vendor Risk AIOps (`vendor-risk-aiops`) | Credit & Risk | P1 | Done. New page + score demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
 | [ ] | 10 | Fraud Graph (`fraud-graph`) | Fraud & AML | P1 | |
 | [ ] | 11 | Transaction Monitoring Explainer (`transaction-monitoring-explainer`) | Fraud & AML | P1 | |
 | [ ] | 12 | Claim Fraud Vision (`claim-fraud-vision`) | Fraud & AML | P1 | |
