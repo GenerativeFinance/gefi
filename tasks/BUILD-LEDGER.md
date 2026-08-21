@@ -29,11 +29,11 @@ Never touch `infrastructure/cloudflare/`. Build with
 
 | ✓ | # | Model | Wing | Priority | Status / Notes |
 |---|---|---|---|---|---|
-| [ ] | 76 | GeFi Copilot (`gefi-copilot`) | Generative AI | P0 | |
-| [ ] | 77 | IC & Credit Memo Generator (`ic-credit-memo-generator`) | Generative AI | P0 | |
-| [ ] | 78 | Board & LP Report Generator (`board-lp-report-generator`) | Generative AI | P0 | |
-| [ ] | 79 | Scenario Narrative Engine (`scenario-narrative-engine`) | Generative AI | P0 | |
-| [ ] | 80 | Disclosure Drafter (`disclosure-drafter`) | Generative AI | P0 | |
+| [x] | 76 | GeFi Copilot (`gefi-copilot`) | Generative AI | P0 | Done. Content-only; text-output demo + analytics row. Build passed. |
+| [x] | 77 | IC & Credit Memo Generator (`ic-credit-memo-generator`) | Generative AI | P0 | Done. Content-only; table-output demo + analytics row. Build passed. |
+| [x] | 78 | Board & LP Report Generator (`board-lp-report-generator`) | Generative AI | P0 | Done. Content-only; table-output demo + analytics row. Build passed. |
+| [x] | 79 | Scenario Narrative Engine (`scenario-narrative-engine`) | Generative AI | P0 | Done. Content-only; text-output demo + analytics row. Build passed. |
+| [x] | 80 | Disclosure Drafter (`disclosure-drafter`) | Generative AI | P0 | Done. Content-only; table-output demo + analytics row. High-risk framing on page per spec. Build passed. |
 | [ ] | 01 | Macro Nowcast (`macro-nowcast`) | Investing & Macro | P1 | |
 | [ ] | 02 | Portfolio Optimiser (`portfolio-optimiser`) | Investing & Macro | P1 | |
 | [ ] | 03 | Sentiment from Filings (`sentiment-from-filings`) | Investing & Macro | P1 | |
