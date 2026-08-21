@@ -107,10 +107,10 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 64 | Options Volatility Arbitrage Engine (`options-vol-arb-engine`) | Relative-Value & Arbitrage | P2 | Done. New page + table demo (mispricing + Greeks) + MODELS row. Completes Relative-Value & Arbitrage wing (8/8). Disclaimer verified. Build passed. |
 | [x] | 65 | Market Making Engine (`market-making-engine`) | Market Microstructure | P2 | Done. New page + curve demo (spread capture vs inventory) + MODELS row. "Not a market maker" notice + MiFID II RTS 6/SEC 15c3-5 framing + disclaimer, all verified in rendered HTML. Build passed. |
 | [x] | 66 | HFT Signal Research Engine (`hft-signal-research-engine`) | Market Microstructure | P2 | Done. New page + curve demo (edge-decay vs latency) + MODELS row. "Research tool, not live execution" framing + disclaimer verified in rendered HTML. Completes Market Microstructure wing. Build passed. |
-| [ ] | 67 | Multifactor Ranking Engine (`multifactor-ranking-engine`) | Factor & Systematic | P2 | |
-| [ ] | 68 | Momentum Factor Screener (`momentum-factor-screener`) | Factor & Systematic | P2 | |
-| [ ] | 69 | Value & Low-Volatility Screener (`value-low-vol-screener`) | Factor & Systematic | P2 | |
-| [ ] | 70 | Risk Parity Allocator (`risk-parity-allocator`) | Factor & Systematic | P2 | |
+| [x] | 67 | Multifactor Ranking Engine (`multifactor-ranking-engine`) | Factor & Systematic | P2 | Done. New page + score demo (factor contributions) + MODELS row. Disclaimer verified. Build passed. |
+| [x] | 68 | Momentum Factor Screener (`momentum-factor-screener`) | Factor & Systematic | P2 | Done. New page + table demo (dual momentum) + MODELS row. Crash-risk prominent per spec. Disclaimer verified. Build passed. |
+| [x] | 69 | Value & Low-Volatility Screener (`value-low-vol-screener`) | Factor & Systematic | P2 | Done. New page + table demo (dual anomaly) + MODELS row. Disclaimer verified. Build passed. |
+| [x] | 70 | Risk Parity Allocator (`risk-parity-allocator`) | Factor & Systematic | P2 | Done. New page + table demo (dollar vs risk weight) + MODELS row. Leverage-required indicator per spec. Completes Factor & Systematic wing. Disclaimer verified. Build passed. |
 | [ ] | 71 | Gradient-Boosted Alpha Engine (`gradient-boosted-alpha-engine`) | ML & Alternative Data | P2 | |
 | [ ] | 72 | Transformer Sentiment Alpha (`transformer-sentiment-alpha`) | ML & Alternative Data | P2 | |
 | [ ] | 73 | RL Execution Agent (`rl-execution-agent`) | ML & Alternative Data | P2 | |
