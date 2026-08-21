@@ -126,7 +126,7 @@ Never touch `infrastructure/cloudflare/`. Build with
 
 | ✓ | # | Surface | Group | Priority | Status / Notes |
 |---|---|---|---|---|---|
-| [ ] | 93 | Credit Oracle (redesign) | Live model pages | High priority | |
+| [x] | 93 | Credit Oracle (redesign) | Live model pages | High priority | Done. Harness gains generic live-slider mode, waterfall output kind, network diagram, metrics_as_of caption — all front-matter-gated; credit-oracle.md consumes them. Regression on untouched pages verified. Build passed. |
 | [ ] | 100 | Models catalogue | Catalogue & pricing | High priority | |
 | [ ] | 102 | Compliance & Trust portal | Trust & security | High priority | |
 | [ ] | 104 | Docs | Content & developer surface | High priority | |

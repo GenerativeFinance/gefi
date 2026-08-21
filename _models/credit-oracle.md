@@ -14,39 +14,44 @@ metrics:
   - { label: "Gini",                 value: "0.68" }
   - { label: "PSI (vs baseline)",    value: "0.04" }
   - { label: "Federated lenders",    value: "14" }
+metrics_as_of: "2026-08-14"
+network:
+  title: Federated lender network
+  count: 14
+  label: partner lenders
+  caption: Fourteen lenders contribute gradients each training round; borrower-level data never leaves its lender of origin.
 analytics: true
 demo:
-  output: score
-  cta: Score the application
-  lead: Enter an SME application. The score is a probability of default; the bars below are the SHAP-style contributions that would appear on an adverse-action notice.
+  output: waterfall
+  live: true
+  base: 0.03
+  cta: Score it
+  lead: Drag the sliders — the PD and its SHAP-style waterfall re-render live, in the format an adverse-action notice uses. Sample data; no session required.
   score_label: PD
+  notice_format: Adverse-action notice
   drivers: [Leverage, Debt service coverage, Sector risk, Trading history, Request vs revenue]
   fields:
     - name: revenue
-      type: number
+      type: range
       label: Annual revenue
       value: 2400000
-      min: 0
-      step: 10000
+      min: 100000
+      max: 20000000
+      step: 100000
       unit: USD
     - name: amount
-      type: number
+      type: range
       label: Request amount
       value: 350000
-      min: 0
-      step: 5000
+      min: 25000
+      max: 5000000
+      step: 25000
       unit: USD
     - name: sector
       type: select
       label: Sector
       options: [Retail, Manufacturing, Construction, Professional services, Hospitality]
       value: Manufacturing
-    - name: trading_years
-      type: number
-      label: Years trading
-      value: 7
-      min: 0
-      max: 100
     - name: notice
       type: select
       label: Explanation format

@@ -1325,3 +1325,53 @@ p  { margin: 0 0 var(--space-4); }
   .demo-drivers li { grid-template-columns: 7rem 1fr 3.5rem; }
   .analytics-summary { gap: var(--space-5); }
 }
+
+/* ------------------------------------------------------------------
+   Task 93+ surface extensions: live sliders, SHAP waterfall,
+   adverse-action notice block, federated-network diagram, freshness.
+   ------------------------------------------------------------------ */
+
+.demo-field--range input[type="range"] { width: 100%; }
+.demo-field__readout {
+  margin-left: auto; font-family: var(--font-mono); font-weight: 600;
+  font-size: 0.875rem; color: var(--color-brand-strong);
+}
+.demo-field--range .demo-field__label { display: flex; align-items: baseline; gap: var(--space-2); }
+
+.demo-waterfall { list-style: none; padding: 0; margin: var(--space-5) 0 0; display: grid; gap: 2px; }
+.demo-waterfall li {
+  display: grid; grid-template-columns: 1fr 5rem 5rem;
+  align-items: center; gap: var(--space-3);
+  padding: 6px 10px; font-size: 0.875rem; border-radius: var(--radius-sm);
+}
+.demo-waterfall li.is-base, .demo-waterfall li.is-final {
+  background: var(--color-surface-2); font-weight: 600;
+}
+.demo-waterfall__name { color: var(--color-text); }
+.demo-waterfall li.is-base .demo-waterfall__name,
+.demo-waterfall li.is-final .demo-waterfall__name { color: var(--color-text); }
+.demo-waterfall__delta { font-family: var(--font-mono); text-align: right; color: var(--color-loss); }
+.demo-waterfall__delta.is-neg { color: var(--color-profit); }
+.demo-waterfall__total { font-family: var(--font-mono); text-align: right; color: var(--color-muted); }
+
+.demo-notice {
+  margin-top: var(--space-5); padding: var(--space-4);
+  border: 1px solid var(--color-border); border-left: 3px solid var(--color-brand);
+  border-radius: var(--radius-sm); background: var(--color-surface-2);
+}
+.demo-notice__title { margin: 0 0 var(--space-2); font-weight: 600; font-size: 0.875rem; }
+.demo-notice ol { margin: 0; padding-left: 1.25rem; font-size: 0.875rem; }
+.demo-notice li { margin: 2px 0; }
+
+.model-network {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: var(--space-5);
+}
+.model-network h2 { margin-top: 0; }
+.network-diagram { max-width: 340px; margin: 0 auto; }
+.gefi-chart__spoke { stroke: var(--color-border); }
+.gefi-chart__node { fill: var(--color-surface-2); stroke: var(--color-brand); stroke-width: 1.5; }
+.gefi-chart__hub { fill: var(--color-brand); }
+.gefi-chart__hub-label { fill: #fff; font-size: 11px; font-weight: 600; font-family: var(--font-sans); }
+
+.metric-freshness { margin: var(--space-3) 0 0; font-family: var(--font-mono); font-size: 0.75rem; }

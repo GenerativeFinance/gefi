@@ -312,6 +312,36 @@
     return svg;
   }
 
+  /* ------------------------------------------------------ primitive: network */
+
+  /* Hub-and-spoke diagram for a federated network of n participants. */
+  function network(count, opts) {
+    var o = opts || {};
+    var n = Math.max(0, Math.min(60, count | 0));
+    var w = 320;
+    var h = 220;
+    var cx = w / 2;
+    var cy = h / 2;
+    var r = 82;
+    var svg = frame(w, h, (o.label || "network") + " diagram");
+
+    for (var i = 0; i < n; i++) {
+      var a = (i / n) * 2 * Math.PI - Math.PI / 2;
+      var x = cx + r * Math.cos(a);
+      var y = cy + r * Math.sin(a);
+      svg.appendChild(svgEl("line", { x1: cx, y1: cy, x2: x.toFixed(1), y2: y.toFixed(1), class: "gefi-chart__spoke" }));
+      svg.appendChild(svgEl("circle", { cx: x.toFixed(1), cy: y.toFixed(1), r: 7, class: "gefi-chart__node" }));
+    }
+    svg.appendChild(svgEl("circle", { cx: cx, cy: cy, r: 24, class: "gefi-chart__hub" }));
+    var t = svgEl("text", { x: cx, y: cy + 4, class: "gefi-chart__hub-label", "text-anchor": "middle" });
+    t.textContent = o.hubLabel || "GeFi";
+    svg.appendChild(t);
+    var cap = svgEl("text", { x: cx, y: h - 6, class: "gefi-chart__caption", "text-anchor": "middle" });
+    cap.textContent = n + " " + (o.label || "participants");
+    svg.appendChild(cap);
+    return svg;
+  }
+
   GeFi.svg = {
     el: svgEl,
     frame: frame,
@@ -319,6 +349,7 @@
     line: line,
     bars: bars,
     sparkline: sparkline,
+    network: network,
     band: band
   };
 
