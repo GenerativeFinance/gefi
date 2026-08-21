@@ -77,10 +77,10 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 34 | Cap Table Manager (`cap-table-manager`) | Venture & Growth Capital | P2 | Done. New page + table demo (round simulator) + MODELS row. Build passed. |
 | [x] | 35 | Waterfall Distribution Engine (`waterfall-distribution`) | Venture & Growth Capital | P2 | Done. New page + table demo (stacked tiers) + MODELS row. Build passed. |
 | [x] | 36 | SAFE & Note Conversion (`safe-note-conversion`) | Venture & Growth Capital | P2 | Done. New page + table demo (pre- vs post-money) + MODELS row. Build passed. |
-| [ ] | 37 | Follow-On Advisor (`follow-on-advisor`) | Venture & Growth Capital | P2 | |
-| [ ] | 38 | Startup Runway Tracker (`startup-runway-tracker`) | Venture & Growth Capital | P2 | |
-| [ ] | 39 | Fund Cash-Flow Modeler (`fund-cash-flow-modeler`) | Private Funds | P2 | |
-| [ ] | 40 | Fund Performance Engine (`fund-performance-engine`) | Private Funds | P2 | |
+| [x] | 37 | Follow-On Advisor (`follow-on-advisor`) | Venture & Growth Capital | P2 | Done. New page + score demo (participate score) + MODELS row. Build passed. |
+| [x] | 38 | Startup Runway Tracker (`startup-runway-tracker`) | Venture & Growth Capital | P2 | Done. New page + curve demo + MODELS row. Completes Venture & Growth wing. Build passed. |
+| [x] | 39 | Fund Cash-Flow Modeler (`fund-cash-flow-modeler`) | Private Funds | P2 | Done. New page + curve demo + MODELS row. Build passed. |
+| [x] | 40 | Fund Performance Engine (`fund-performance-engine`) | Private Funds | P2 | Done. New page + table demo (gross vs net) + MODELS row. Completes Private Funds wing. Build passed. |
 | [ ] | 41 | Capital Budgeting Engine (`capital-budgeting-engine`) | Capital Budgeting & Project Finance | P2 | |
 | [ ] | 42 | Project Finance Modeler (`project-finance-modeler`) | Capital Budgeting & Project Finance | P2 | |
 | [ ] | 43 | Infrastructure Investment Modeler (`infrastructure-investment-modeler`) | Capital Budgeting & Project Finance | P2 | |
