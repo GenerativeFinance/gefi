@@ -62,9 +62,9 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 19 | Liquidation Valuation (`liquidation-valuation`) | Valuation (advanced) | P2 | Done. New page + table demo (claims waterfall) + MODELS row. Build passed. |
 | [x] | 20 | Real Options Valuation (`real-options-valuation`) | Valuation (advanced) | P2 | Done. New page + score demo (flexibility share) + MODELS row. Build passed. |
 | [x] | 21 | Merger Model (`merger-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (pro forma) + MODELS row. Build passed. |
-| [ ] | 22 | Accretion / Dilution (`accretion-dilution`) | M&A & Corporate Transactions | P2 | |
-| [ ] | 23 | LBO Model (`lbo-model`) | M&A & Corporate Transactions | P2 | |
-| [ ] | 24 | MBO Model (`mbo-model`) | M&A & Corporate Transactions | P2 | |
+| [x] | 22 | Accretion / Dilution (`accretion-dilution`) | M&A & Corporate Transactions | P2 | Done. New page + curve demo + MODELS row. Build passed. |
+| [x] | 23 | LBO Model (`lbo-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (returns decomposition) + MODELS row. Build passed. |
+| [x] | 24 | MBO Model (`mbo-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (stakeholder proceeds) + MODELS row. Build passed. |
 | [ ] | 25 | Spin-Off Model (`spin-off-model`) | M&A & Corporate Transactions | P2 | |
 | [ ] | 26 | Carve-Out Model (`carve-out-model`) | M&A & Corporate Transactions | P2 | |
 | [ ] | 27 | Recapitalization (`recapitalization-model`) | M&A & Corporate Transactions | P2 | |
