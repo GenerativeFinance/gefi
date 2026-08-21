@@ -306,3 +306,4 @@ exclude:
   - contracts/
   - attached_assets/
   - .cache/
+  - tasks/
