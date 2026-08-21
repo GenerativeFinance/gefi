@@ -35,8 +35,8 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 79 | Scenario Narrative Engine (`scenario-narrative-engine`) | Generative AI | P0 | Done. Content-only; text-output demo + analytics row. Build passed. |
 | [x] | 80 | Disclosure Drafter (`disclosure-drafter`) | Generative AI | P0 | Done. Content-only; table-output demo + analytics row. High-risk framing on page per spec. Build passed. |
 | [x] | 01 | Macro Nowcast (`macro-nowcast`) | Investing & Macro | P1 | Done. Enriched existing page + curve demo; MODELS row already present. Copy per customer/backend prompts — the cited `tasks/01-enrich-ai-models-library.md` does not exist (handoff known gap). Build passed. |
-| [ ] | 02 | Portfolio Optimiser (`portfolio-optimiser`) | Investing & Macro | P1 | |
-| [ ] | 03 | Sentiment from Filings (`sentiment-from-filings`) | Investing & Macro | P1 | |
+| [x] | 02 | Portfolio Optimiser (`portfolio-optimiser`) | Investing & Macro | P1 | Done. Enriched existing page + table demo (allocation). Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 03 | Sentiment from Filings (`sentiment-from-filings`) | Investing & Macro | P1 | Done. Enriched existing page + score demo. NOTE: spec wants a -1..+1 gauge; harness gauge is unsigned, so the page shows a normalised 0-1 score and says so. Signed gauge = future harness change. Build passed. |
 | [ ] | 04 | Yield-Curve Forecaster (`yield-curve-forecaster`) | Investing & Macro | P1 | |
 | [ ] | 05 | Commodities Flow Nowcast (`commodities-flow-nowcast`) | Investing & Macro | P1 | |
 | [ ] | 06 | Credit Oracle (`credit-oracle`) | Credit & Risk | P1 | |
