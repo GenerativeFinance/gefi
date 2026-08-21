@@ -474,3 +474,207 @@
     return null;
   };
 })(window, document);
+
+/* ==================================================================
+ * Dashboard preview app (Task 111). Runs only on /dashboard/ — the
+ * [data-dash-root] guard makes this a no-op on every other page that
+ * loads this file for the primitives and registry above.
+ * ================================================================== */
+(function (window, document) {
+  "use strict";
+
+  var GeFi = window.GeFi;
+  var root = document.querySelector("[data-dash-root]");
+  var gate = document.querySelector("[data-dash-gate]");
+  if (!root || !gate || !GeFi) return;
+
+  var GATE_KEY = "gefi-dash-preview";
+
+  /* ------------------------------------------------------------- gate */
+
+  function gated() {
+    try {
+      return window.sessionStorage && sessionStorage.getItem(GATE_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function show(section) {
+    gate.hidden = section !== "gate";
+    root.hidden = section !== "app";
+  }
+
+  gate.addEventListener("click", function (e) {
+    if (!e.target.closest("[data-dash-enter]")) return;
+    try {
+      sessionStorage.setItem(GATE_KEY, "1");
+    } catch (err) {
+      /* storage unavailable: still let them in for this page view */
+    }
+    show("app");
+    boot();
+  });
+
+  root.addEventListener("click", function (e) {
+    if (!e.target.closest("[data-dash-exit]")) return;
+    try {
+      sessionStorage.removeItem(GATE_KEY);
+    } catch (err) {}
+    window.location.href = "/";
+  });
+
+  /* -------------------------------------------------------------- tabs */
+
+  var TABS = ["overview", "analytics", "compliance", "federation", "tenants", "approvals", "system"];
+
+  function currentTab() {
+    var h = (window.location.hash || "").replace("#", "");
+    return TABS.indexOf(h) !== -1 ? h : "overview";
+  }
+
+  function renderTab() {
+    var tab = currentTab();
+    root.querySelectorAll("[data-dash-panel]").forEach(function (p) {
+      p.hidden = p.getAttribute("data-dash-panel") !== tab;
+    });
+    root.querySelectorAll("[data-dash-tab-link]").forEach(function (a) {
+      var active = a.getAttribute("data-dash-tab-link") === tab;
+      a.classList.toggle("is-active", active);
+      if (active) {
+        a.setAttribute("aria-current", "page");
+      } else {
+        a.removeAttribute("aria-current");
+      }
+    });
+  }
+
+  window.addEventListener("hashchange", renderTab);
+
+  /* ---------------------------------------------------- seeded mock data */
+
+  function series(seedKey, n, base, drift) {
+    var rand = GeFi.seed.rng(GeFi.seed.hash("dash|" + seedKey));
+    var vals = [];
+    var v = base;
+    for (var i = 0; i < n; i++) {
+      v = Math.max(0, v + (rand() - 0.5 + drift) * base * 0.08);
+      vals.push(v);
+    }
+    return vals;
+  }
+
+  var KPIS = [
+    { key: "calls", label: "Inference calls (24h)", unit: "", base: 41200, drift: 0.012 },
+    { key: "latency", label: "p99 latency", unit: "ms", base: 128, drift: -0.006 },
+    { key: "subs", label: "Active subscriptions", unit: "", base: 312, drift: 0.01 },
+    { key: "revenue", label: "MRR", unit: "USD", base: 48200, drift: 0.014 }
+  ];
+
+  var ALERTS = [
+    { severity: "critical", model: "liquidity-stress-engine", text: "LCR projection crossed the covenant floor in the severe scenario for tenant acme-bank." },
+    { severity: "warn", model: "sentiment-from-filings", text: "Live IR drifting from backtest baseline — 0.61 vs 0.78 over the trailing 60 days." },
+    { severity: "warn", model: "stablecoin-depeg-monitor", text: "Cross-venue peg dispersion widening on USDT — 18bp spread between venues." },
+    { severity: "info", model: "credit-oracle", text: "Model version 2026.08.2 cleared EU conformity review and is serving EU traffic." },
+    { severity: "info", model: "fraud-graph", text: "UAE edge latency back under 50ms after the region's cache rebuild." }
+  ];
+
+  /* ---------------------------------------------------------- overview */
+
+  var SEV_ICON = {
+    critical: "M12 2 L22 20 H2 Z",            /* triangle */
+    warn: "M12 3 a9 9 0 1 0 0.001 0 Z",        /* circle */
+    info: "M4 4 h16 v16 h-16 Z"                /* square */
+  };
+
+  function renderOverview() {
+    var grid = root.querySelector("[data-kpi-grid]");
+    if (grid && !grid.childNodes.length) {
+      KPIS.forEach(function (k) {
+        var vals = series(k.key, 30, k.base, k.drift);
+        var last = vals[vals.length - 1];
+        var delta = last - vals[0];
+
+        var card = document.createElement("div");
+        card.className = "kpi-card";
+
+        /* Sparkline sits behind the number, low opacity, per the redesign. */
+        var spark = document.createElement("div");
+        spark.className = "kpi-card__spark";
+        spark.appendChild(GeFi.svg.line([{ name: k.label, values: vals, kind: "area" }], { label: k.label + " trend" }));
+        card.appendChild(spark);
+
+        var body = document.createElement("div");
+        body.className = "kpi-card__body";
+        var label = document.createElement("p");
+        label.className = "kpi-card__label";
+        label.textContent = k.label;
+        var num = document.createElement("p");
+        num.className = "kpi-card__value";
+        num.textContent = k.unit === "USD" ? GeFi.fmt.money(last, "USD") : GeFi.fmt.compact(last) + (k.unit ? " " + k.unit : "");
+        var d = document.createElement("p");
+        d.className = "kpi-card__delta " + (delta >= 0 ? "is-up" : "is-down");
+        d.textContent = GeFi.fmt.delta(k.unit === "ms" ? delta : (delta / vals[0]) * 100, 1) + (k.unit === "ms" ? " ms" : "%") + " over 30d";
+        body.appendChild(label);
+        body.appendChild(num);
+        body.appendChild(d);
+        card.appendChild(body);
+        grid.appendChild(card);
+      });
+    }
+
+    var list = root.querySelector("[data-dash-alerts]");
+    if (list && !list.childNodes.length) {
+      ALERTS.forEach(function (a) {
+        var li = document.createElement("li");
+        li.className = "dash-alert dash-alert--" + a.severity;
+
+        var svg = GeFi.svg.el("svg", { viewBox: "0 0 24 24", width: 14, height: 14, class: "dash-alert__icon", "aria-hidden": "true" });
+        svg.appendChild(GeFi.svg.el("path", { d: SEV_ICON[a.severity] }));
+        li.appendChild(svg);
+
+        var body = document.createElement("div");
+        var head = document.createElement("p");
+        head.className = "dash-alert__head";
+        var sev = document.createElement("span");
+        sev.className = "dash-alert__sev";
+        sev.textContent = a.severity;
+        var model = document.createElement("span");
+        model.className = "dash-alert__model";
+        model.textContent = a.model;
+        head.appendChild(sev);
+        head.appendChild(model);
+        var text = document.createElement("p");
+        text.className = "dash-alert__text";
+        text.textContent = a.text;
+        body.appendChild(head);
+        body.appendChild(text);
+        li.appendChild(body);
+        list.appendChild(li);
+      });
+    }
+
+    var bell = root.querySelector("[data-dash-bell-count]");
+    if (bell) {
+      var unread = ALERTS.filter(function (a) {
+        return a.severity !== "info";
+      }).length;
+      bell.textContent = String(unread);
+      bell.hidden = unread === 0;
+    }
+  }
+
+  /* --------------------------------------------------------------- boot */
+
+  function boot() {
+    renderTab();
+    renderOverview();
+  }
+
+  if (gated()) {
+    show("app");
+    boot();
+  } else {
+    show("gate");
+  }
+})(window, document);

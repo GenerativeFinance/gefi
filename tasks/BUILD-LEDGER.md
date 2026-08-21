@@ -143,7 +143,7 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [ ] | 103 | Security & vulnerability disclosure | Trust & security | Medium priority | |
 | [ ] | 109 | Sign in / Sign up (prelaunch state) | Auth & operator surfaces | Medium priority | |
 | [ ] | 110 | Admin sign-in | Auth & operator surfaces | Medium priority | |
-| [ ] | 111 | Dashboard — Overview | Auth & operator surfaces | Medium priority | |
+| [x] | 111 | Dashboard — Overview | Auth & operator surfaces | Medium priority | Done — TAKEN OUT OF PRIORITY ORDER: the /dashboard/ shell its spec assumes lived only in the lost session (handoff known gap), and high-priority 115-117 all depend on its tab pattern + gate. Rebuilt shell (layout, gate, hash tabs, sidebar) + Overview per redesign: KPI sparklines behind numbers, 3-way severity encoding. Other tabs = honest empty states for 112/113. Build passed. |
 | [ ] | 112 | Dashboard — Analytics, Compliance, Federation | Auth & operator surfaces | Medium priority | |
 | [ ] | 113 | Dashboard — admin tabs | Auth & operator surfaces | Medium priority | |
 | [ ] | 118 | Transactional email system | Onboarding & account lifecycle | Medium priority | |
