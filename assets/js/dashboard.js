@@ -343,6 +343,7 @@
    */
   GeFi.MODELS = [
     { slug: "board-lp-report-generator", name: "Board & LP Report Generator", wing: "Generative AI", risk: "medium", federated: false, unit: "Reconciled figures", series: [0.97, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1, 1, 1, 1, 1] },
+    { slug: "commodities-flow-nowcast", name: "Commodities Flow Nowcast", wing: "Investing & Macro", risk: "medium", federated: false, unit: "Flow RMSE %", series: [9.1, 8.8, 8.6, 8.4, 8.2, 8.1, 7.9, 7.8, 7.7, 7.6, 7.5, 7.4] },
     { slug: "credit-oracle", name: "Credit Oracle", wing: "Credit & Risk", risk: "medium", federated: true, unit: "AUC", series: [0.79, 0.8, 0.81, 0.8, 0.82, 0.83, 0.83, 0.84, 0.84, 0.83, 0.84, 0.84] },
     { slug: "disclosure-drafter", name: "Disclosure Drafter", wing: "Generative AI", risk: "high", federated: false, unit: "Checklist coverage", series: [0.9, 0.91, 0.92, 0.93, 0.94, 0.94, 0.95, 0.96, 0.96, 0.97, 0.97, 0.98] },
     { slug: "fraud-graph", name: "Fraud Graph", wing: "Fraud & AML", risk: "high", federated: true, unit: "Precision", series: [0.71, 0.73, 0.72, 0.75, 0.77, 0.76, 0.78, 0.79, 0.8, 0.81, 0.81, 0.82] },
@@ -352,7 +353,8 @@
     { slug: "portfolio-optimiser", name: "Portfolio Optimiser", wing: "Investing & Macro", risk: "medium", federated: false, unit: "Sharpe", series: [1.02, 1.05, 1.04, 1.09, 1.12, 1.1, 1.15, 1.18, 1.17, 1.2, 1.22, 1.24] },
     { slug: "scenario-narrative-engine", name: "Scenario Narrative Engine", wing: "Generative AI", risk: "medium", federated: false, unit: "Consistent claims", series: [0.95, 0.96, 0.96, 0.97, 0.98, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1] },
     { slug: "sentiment-from-filings", name: "Sentiment from Filings", wing: "Investing & Macro", risk: "low", federated: false, unit: "F1", series: [0.68, 0.7, 0.71, 0.72, 0.74, 0.75, 0.75, 0.76, 0.77, 0.78, 0.78, 0.79] },
-    { slug: "trade-finance-doc-ai", name: "Trade Finance Doc AI", wing: "Trade, Payments & KYB", risk: "medium", federated: true, unit: "Accuracy", series: [0.88, 0.89, 0.9, 0.9, 0.91, 0.92, 0.92, 0.93, 0.93, 0.94, 0.94, 0.95] }
+    { slug: "trade-finance-doc-ai", name: "Trade Finance Doc AI", wing: "Trade, Payments & KYB", risk: "medium", federated: true, unit: "Accuracy", series: [0.88, 0.89, 0.9, 0.9, 0.91, 0.92, 0.92, 0.93, 0.93, 0.94, 0.94, 0.95] },
+    { slug: "yield-curve-forecaster", name: "Yield-Curve Forecaster", wing: "Investing & Macro", risk: "low", federated: false, unit: "10y RMSE bp", series: [27, 26, 25, 25, 24, 23, 23, 22, 22, 21, 21, 21] }
   ];
 
   GeFi.model = function (slug) {
