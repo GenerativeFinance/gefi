@@ -81,10 +81,10 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 38 | Startup Runway Tracker (`startup-runway-tracker`) | Venture & Growth Capital | P2 | Done. New page + curve demo + MODELS row. Completes Venture & Growth wing. Build passed. |
 | [x] | 39 | Fund Cash-Flow Modeler (`fund-cash-flow-modeler`) | Private Funds | P2 | Done. New page + curve demo + MODELS row. Build passed. |
 | [x] | 40 | Fund Performance Engine (`fund-performance-engine`) | Private Funds | P2 | Done. New page + table demo (gross vs net) + MODELS row. Completes Private Funds wing. Build passed. |
-| [ ] | 41 | Capital Budgeting Engine (`capital-budgeting-engine`) | Capital Budgeting & Project Finance | P2 | |
-| [ ] | 42 | Project Finance Modeler (`project-finance-modeler`) | Capital Budgeting & Project Finance | P2 | |
-| [ ] | 43 | Infrastructure Investment Modeler (`infrastructure-investment-modeler`) | Capital Budgeting & Project Finance | P2 | |
-| [ ] | 44 | Renewable Project Modeler (`renewable-project-modeler`) | Capital Budgeting & Project Finance | P2 | |
+| [x] | 41 | Capital Budgeting Engine (`capital-budgeting-engine`) | Capital Budgeting & Project Finance | P2 | Done. New page + table demo (multi-project ranking) + MODELS row. Build passed. |
+| [x] | 42 | Project Finance Modeler (`project-finance-modeler`) | Capital Budgeting & Project Finance | P2 | Done. New page + curve demo (DSCR vs covenant) + MODELS row. Build passed. |
+| [x] | 43 | Infrastructure Investment Modeler (`infrastructure-investment-modeler`) | Capital Budgeting & Project Finance | P2 | Done. New page + table demo (tornado scenarios) + MODELS row. Build passed. |
+| [x] | 44 | Renewable Project Modeler (`renewable-project-modeler`) | Capital Budgeting & Project Finance | P2 | Done. New page + curve demo (generation w/ degradation) + MODELS row. Completes Capital Budgeting & Project Finance wing. Build passed. |
 | [ ] | 45 | RE Development Modeler (`re-development-modeler`) | Real Estate | P2 | |
 | [ ] | 46 | RE Acquisition Underwriter (`re-acquisition-underwriter`) | Real Estate | P2 | |
 | [ ] | 47 | Lease vs. Buy Analyzer (`lease-vs-buy-analyzer`) | Real Estate | P2 | |
