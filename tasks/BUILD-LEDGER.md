@@ -59,9 +59,9 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 88 | Monte Carlo Simulation Service (`monte-carlo-simulation-service`) | Simulation & Market Primitives | P1 | Done. New page + table demo (percentiles + std. error) + MODELS row. Build passed. |
 | [x] | 89 | Volatility Surface Service (`volatility-surface-service`) | Simulation & Market Primitives | P1 | Done. New page + curve demo + MODELS row. Build passed. |
 | [x] | 90 | LP Treasury & Cash Management (`lp-treasury-cash-management`) | Simulation & Market Primitives | P1 | Done. New page + table demo (cash ladder) + MODELS row. Build passed. |
-| [ ] | 19 | Liquidation Valuation (`liquidation-valuation`) | Valuation (advanced) | P2 | |
-| [ ] | 20 | Real Options Valuation (`real-options-valuation`) | Valuation (advanced) | P2 | |
-| [ ] | 21 | Merger Model (`merger-model`) | M&A & Corporate Transactions | P2 | |
+| [x] | 19 | Liquidation Valuation (`liquidation-valuation`) | Valuation (advanced) | P2 | Done. New page + table demo (claims waterfall) + MODELS row. Build passed. |
+| [x] | 20 | Real Options Valuation (`real-options-valuation`) | Valuation (advanced) | P2 | Done. New page + score demo (flexibility share) + MODELS row. Build passed. |
+| [x] | 21 | Merger Model (`merger-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (pro forma) + MODELS row. Build passed. |
 | [ ] | 22 | Accretion / Dilution (`accretion-dilution`) | M&A & Corporate Transactions | P2 | |
 | [ ] | 23 | LBO Model (`lbo-model`) | M&A & Corporate Transactions | P2 | |
 | [ ] | 24 | MBO Model (`mbo-model`) | M&A & Corporate Transactions | P2 | |
