@@ -111,16 +111,16 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 68 | Momentum Factor Screener (`momentum-factor-screener`) | Factor & Systematic | P2 | Done. New page + table demo (dual momentum) + MODELS row. Crash-risk prominent per spec. Disclaimer verified. Build passed. |
 | [x] | 69 | Value & Low-Volatility Screener (`value-low-vol-screener`) | Factor & Systematic | P2 | Done. New page + table demo (dual anomaly) + MODELS row. Disclaimer verified. Build passed. |
 | [x] | 70 | Risk Parity Allocator (`risk-parity-allocator`) | Factor & Systematic | P2 | Done. New page + table demo (dollar vs risk weight) + MODELS row. Leverage-required indicator per spec. Completes Factor & Systematic wing. Disclaimer verified. Build passed. |
-| [ ] | 71 | Gradient-Boosted Alpha Engine (`gradient-boosted-alpha-engine`) | ML & Alternative Data | P2 | |
-| [ ] | 72 | Transformer Sentiment Alpha (`transformer-sentiment-alpha`) | ML & Alternative Data | P2 | |
-| [ ] | 73 | RL Execution Agent (`rl-execution-agent`) | ML & Alternative Data | P2 | |
-| [ ] | 74 | Alternative Data Alpha Scanner (`alt-data-alpha-scanner`) | ML & Alternative Data | P2 | |
-| [ ] | 75 | Strategy Construction Engine (`strategy-construction-engine`) | Strategy Infrastructure | P2 | |
-| [ ] | 85 | Wallet Risk Scorer (`wallet-risk-scorer`) | Crypto & DeFi | P2 | |
-| [ ] | 86 | Stablecoin Depeg Monitor (`stablecoin-depeg-monitor`) | Crypto & DeFi | P2 | |
-| [ ] | 87 | DeFi Protocol Risk Scorer (`defi-protocol-risk-scorer`) | Crypto & DeFi | P2 | |
-| [ ] | 91 | Underwriting Pricing Engine (`underwriting-pricing-engine`) | Insurance & Actuarial | P2 | |
-| [ ] | 92 | Reserving Engine (`reserving-engine`) | Insurance & Actuarial | P2 | |
+| [x] | 71 | Gradient-Boosted Alpha Engine (`gradient-boosted-alpha-engine`) | ML & Alternative Data | P2 | Done. New page + score demo (SHAP drivers) + MODELS row. Disclaimer verified. Build passed. |
+| [x] | 72 | Transformer Sentiment Alpha (`transformer-sentiment-alpha`) | ML & Alternative Data | P2 | Done. New page + score demo (per-source attribution) + MODELS row. Disclaimer verified. Build passed. |
+| [x] | 73 | RL Execution Agent (`rl-execution-agent`) | ML & Alternative Data | P2 | Done. New page + curve demo (participation schedule) + MODELS row. Schedules-only scope leads the page per spec. Disclaimer verified. Build passed. |
+| [x] | 74 | Alternative Data Alpha Scanner (`alt-data-alpha-scanner`) | ML & Alternative Data | P2 | Done. New page + score demo (per-source contribution) + MODELS row. Completes ML & Alternative Data wing. Disclaimer verified. Build passed. |
+| [x] | 75 | Strategy Construction Engine (`strategy-construction-engine`) | Strategy Infrastructure | P2 | Done. New page + table demo (signal -> final sizes) + MODELS row. Disclaimer verified. Build passed. |
+| [x] | 85 | Wallet Risk Scorer (`wallet-risk-scorer`) | Crypto & DeFi | P2 | Done. New page + score demo (reason codes) + MODELS row. Build passed. |
+| [x] | 86 | Stablecoin Depeg Monitor (`stablecoin-depeg-monitor`) | Crypto & DeFi | P2 | Done. New page + curve demo (peg deviation) + MODELS row. Build passed. |
+| [x] | 87 | DeFi Protocol Risk Scorer (`defi-protocol-risk-scorer`) | Crypto & DeFi | P2 | Done. New page + score demo (3-dimension composite) + MODELS row. Completes Crypto & DeFi wing. Build passed. |
+| [x] | 91 | Underwriting Pricing Engine (`underwriting-pricing-engine`) | Insurance & Actuarial | P2 | Done. New page + table demo (premium decomposition) + MODELS row. Build passed. |
+| [x] | 92 | Reserving Engine (`reserving-engine`) | Insurance & Actuarial | P2 | Done. New page + table demo (CL vs BF) + MODELS row. Completes Insurance & Actuarial wing — and Step 2: all 92 model pages built. Build passed. |
 
 ## Step 3 — Platform surfaces (32), high → medium → low
 
