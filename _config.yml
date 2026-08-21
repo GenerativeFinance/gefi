@@ -307,3 +307,4 @@ exclude:
   - attached_assets/
   - .cache/
   - tasks/
+  - SESSION-HANDOFF.md
