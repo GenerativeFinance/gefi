@@ -49,9 +49,9 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 13 | Trade Finance Doc AI (`trade-finance-doc-ai`) | Trade, Payments & KYB | P1 | Done. Enriched existing page + table demo. Copy per customer/backend prompts (cited brief missing). Build passed. |
 | [x] | 14 | Cross-Border Payment Router (`cross-border-payment-router`) | Trade, Payments & KYB | P1 | Done. New page + table demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
 | [x] | 15 | KYB Graph (`kyb-graph`) | Trade, Payments & KYB | P1 | Done. New page + table demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
-| [ ] | 16 | Tax Residency Classifier (`tax-residency-classifier`) | Compliance & Regulatory | P1 | |
-| [ ] | 17 | Regulatory Change Summariser (`regulatory-change-summariser`) | Compliance & Regulatory | P1 | |
-| [ ] | 18 | ESG Materiality Scorer (`esg-materiality-scorer`) | ESG | P1 | |
+| [x] | 16 | Tax Residency Classifier (`tax-residency-classifier`) | Compliance & Regulatory | P1 | Done. New page + table demo (treaty tie-breaker trace) + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 17 | Regulatory Change Summariser (`regulatory-change-summariser`) | Compliance & Regulatory | P1 | Done. New page + table demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 18 | ESG Materiality Scorer (`esg-materiality-scorer`) | ESG | P1 | Done. New page + table demo (two-axis matrix) + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
 | [ ] | 81 | CECL / IFRS 9 ECL Engine (`cecl-ifrs9-ecl-engine`) | Banking Book & Provisioning | P1 | |
 | [ ] | 82 | IRRBB / ALM Modeler (`irrbb-alm-modeler`) | Banking Book & Provisioning | P1 | |
 | [ ] | 83 | Deposit Behavior Model (`deposit-behavior-model`) | Banking Book & Provisioning | P1 | |
