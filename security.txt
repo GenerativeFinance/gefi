@@ -1,0 +1,17 @@
+---
+permalink: /.well-known/security.txt
+sitemap: false
+layout: none
+---
+# GeFi vulnerability disclosure
+# Full programme details, scope, and safe-harbour terms:
+# {{ site.url }}/security/
+
+Contact: mailto:security@gefi.io
+Contact: {{ site.url }}/security/#report
+Expires: 2027-05-03T00:00:00.000Z
+Encryption: https://keys.openpgp.org/vks/v1/by-fingerprint/9F3D4C2B7A1E5F8D6B0C4A9E2D5F1B8C7E3A6D40
+Preferred-Languages: en
+Canonical: {{ site.url }}/.well-known/security.txt
+Policy: {{ site.url }}/security/
+Hiring: {{ site.url }}/about/#careers

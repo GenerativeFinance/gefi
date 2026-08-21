@@ -1,0 +1,308 @@
+title: GeFi
+tagline: AI financial models — federated, audited, accountable.
+description: >-
+  GeFi is the marketplace for AI financial models. Discover, subscribe to, and
+  contribute to federated, audit-ready models for investing, risk, fraud,
+  compliance, and trade finance.
+url: "https://gefi.io"
+baseurl: ""
+
+author:
+  name: GeFi
+  email: hello@gefi.io
+  twitter: gefi_io
+
+logo: /assets/img/logo.png
+og_image: /assets/img/og-default.png
+twitter_handle: "@gefi_io"
+
+# Backend wiring.
+#
+# Forms POST JSON to these endpoints. While they are empty strings, the
+# client falls back to a "thanks, we'll be in touch" simulated success path
+# (see assets/js/forms.js). Once Task #2 (Cloudflare backend) ships, fill in
+# the URLs:
+#   newsletter_endpoint: "https://api.gefi.io/v1/newsletter/subscribe"
+#   contact_endpoint:    "https://api.gefi.io/v1/contact"
+#   demo_endpoint:       "https://api.gefi.io/v1/demo"
+api:
+  base_url: ""
+  newsletter_endpoint: ""
+  contact_endpoint: ""
+  demo_endpoint: ""
+  # Magic-link sign-in endpoint. While empty, /login/ surfaces a simulated
+  # "check your inbox" message and logs the payload to the console. When
+  # the playground/Cloudflare auth Worker is live, set:
+  #   login_endpoint: "https://api.gefi.io/api/auth/request"
+  login_endpoint: ""
+  # Self-serve registration endpoint. While empty, /register/ surfaces a
+  # simulated "we've queued your account" message and logs the payload to
+  # the console. When the playground/Cloudflare auth Worker is live, set:
+  #   register_endpoint: "https://api.gefi.io/api/auth/register"
+  register_endpoint: ""
+
+# App surface (app.gefi.io).
+#
+# Sign-in / sign-up routes.
+#
+# Auth lives on gefi.io itself (`/login/` and `/register/`). After a
+# successful auth, the user is redirected to the dashboard at
+# `app.gefi.io` (built in a later phase).
+#
+# Auth backend: Cloudflare Worker at `auth.gefi.io` with D1 (users +
+# WebAuthn credentials) and KV (sessions). Providers: Passkeys
+# (WebAuthn), GitHub OAuth, Google Sign-In. No passwords by design.
+app:
+  enabled: true
+  signin_url: "/login/"
+  signup_url: "/register/"
+  dashboard_url: "https://app.gefi.io/"
+  auth_api_base: "https://auth.gefi.io"
+  fallback_url: "/contact/?topic=early-access"
+  # Flip to `true` once the gefi-auth Cloudflare Worker (D1 + KV +
+  # WebAuthn + GitHub/Google OAuth) is deployed at `auth.gefi.io`.
+  # While `false`, /login/ and /register/ render an early-access state
+  # that routes visitors to `fallback_url` instead of attempting a
+  # WebAuthn/OAuth handshake against an endpoint that doesn't exist yet.
+  auth_ready: false
+  early_access_note: "Sign-in opens soon. Join the early-access list and we'll email you the moment passkeys + GitHub/Google sign-in go live."
+  early_access_cta: "Join the early-access list"
+
+nav:
+  - { title: "Models",     url: "/models/" }
+  - { title: "Features",   url: "/features/" }
+  - { title: "Pricing",    url: "/pricing/" }
+  - { title: "Research",   url: "/research/" }
+  - { title: "Docs",       url: "/docs/" }
+  - { title: "Blog",       url: "/blog/" }
+
+footer_nav:
+  product:
+    - { title: "Models",     url: "/models/" }
+    - { title: "Features",   url: "/features/" }
+    - { title: "Pricing",    url: "/pricing/" }
+    - { title: "Research",   url: "/research/" }
+    - { title: "Docs",       url: "/docs/" }
+    - { title: "Request demo", url: "/demo/" }
+  company:
+    - { title: "About",        url: "/about/" }
+    - { title: "Partnerships", url: "/partnerships/" }
+    - { title: "Blog",         url: "/blog/" }
+    - { title: "Contact",      url: "/contact/" }
+  trust:
+    - { title: "Compliance & Trust", url: "/compliance/" }
+    - { title: "Security",           url: "/security/" }
+    - { title: "Status",             url: "https://status.gefi.io" }
+    - { title: "Acceptable Use",     url: "/legal/acceptable-use/" }
+  legal:
+    - { title: "Privacy",       url: "/legal/privacy/" }
+    - { title: "Terms",         url: "/legal/terms/" }
+    - { title: "Cookie Policy", url: "/cookie-policy/" }
+    - { title: "DPA",           url: "/dpa/" }
+
+# Social / community channels surfaced in the footer "Connect" column.
+social:
+  - { name: "Facebook", handle: "generativefinance",  url: "https://www.facebook.com/generativefinance",        icon: "facebook" }
+  - { name: "LinkedIn", handle: "generativefinance",  url: "https://www.linkedin.com/company/generativefinance", icon: "linkedin" }
+  - { name: "X",        handle: "@generativefi",      url: "https://twitter.com/generativefi",                  icon: "twitter" }
+  - { name: "Instagram",handle: "@generativefinance", url: "https://www.instagram.com/generativefinance",       icon: "instagram" }
+  - { name: "YouTube",  handle: "@generativefinance", url: "https://www.youtube.com/@generativefinance",        icon: "youtube" }
+  - { name: "TikTok",   handle: "@generativefinance", url: "https://www.tiktok.com/@generativefinance",         icon: "tiktok" }
+  - { name: "Telegram", handle: "generativefinance",  url: "https://t.me/generativefinance",                    icon: "telegram" }
+  - { name: "Medium",   handle: "generativefinance",  url: "https://medium.com/generativefinance",              icon: "medium" }
+
+# Pricing page (Task #3).
+#
+# `show_pro_price: true` renders Pro as "From $X/mo" using `pro_price`.
+# Flip to `false` to render "Contact us" instead (e.g. during early access
+# while we tune the meter).
+pricing:
+  show_pro_price: true
+  pro_price: "From $499/mo"
+  pro_price_yearly: "From $4,990/yr"
+  pro_price_note_yearly: "/ year"
+  pro_price_contact: "Contact us"
+  # Billing toggle (Task #7).
+  # `billing_default` controls which option is selected on first visit
+  # (sessionStorage overrides per visitor after that).
+  show_billing_toggle: true
+  billing_default: "monthly"
+  billing_monthly_label: "Monthly"
+  billing_yearly_label: "Yearly"
+  yearly_discount_label: "Save ~17% (2 months free)"
+  payment_methods_note: >-
+    Subscriptions can be paid by card, ACH, or wallet (USDC on Base, Arbitrum,
+    and Optimism). Developer payouts can be in fiat or USDC.
+  tax_note: "Invoices include VAT/GST registration numbers per jurisdiction."
+
+plans:
+  - id: free
+    name: Free
+    price: "$0"
+    price_note: "/ month"
+    summary: "For evaluation, research, and tinkering."
+    features:
+      - "100 inference calls / day"
+      - "1 API key"
+      - "Dashboard access"
+      - "Playground sandbox"
+      - "Community support"
+    highlighted: false
+    cta_label: "Start for free"
+    cta_tier: "free"
+  - id: pro
+    name: Pro
+    price: ""        # Resolved at render time from site.pricing
+    price_note: ""
+    summary: "For teams running production strategies."
+    features:
+      - "Unlimited inference calls (metered)"
+      - "10 API keys"
+      - "Federated participation"
+      - "Live risk surface (VaR / stress)"
+      - "Priority support"
+      - "Stripe + onchain payment (USDC on Base, Arbitrum, Optimism)"
+      - "MFA enforced"
+    highlighted: true
+    badge: "Most popular"
+    cta_label: "Start Pro trial"
+    cta_tier: "pro"
+  - id: enterprise
+    name: "Enterprise / Sovereign"
+    price: "Custom"
+    price_note: ""
+    summary: "For sovereign tenants and regulated institutions."
+    features:
+      - "Everything in Pro"
+      - "Sovereign data plane (OVH SecNumCloud, Infomaniak, AWS Bahrain, AWS GovCloud)"
+      - "Per-jurisdiction counsel directory"
+      - "Custom SLA"
+      - "Named CSM"
+      - "Onchain payouts"
+      - "Audit evidence packs"
+    highlighted: false
+    cta_label: "Talk to us"
+    cta_tier: "enterprise"
+
+# Detailed plan comparison matrix rendered beneath the pricing cards
+# (Task #8). Editable here so marketing can tweak the matrix without
+# touching HTML. `plan_ids` controls column order and must reference
+# entries in the `plans:` list above (we look up the display name from
+# there). Values are plain strings — use "—" for "not included".
+plan_comparison:
+  plan_ids: [free, pro, enterprise]
+  groups:
+    - title: "Limits"
+      rows:
+        - { label: "Inference calls",          values: ["100 / day",      "Unlimited (metered)", "Unlimited (metered)"] }
+        - { label: "API keys",                 values: ["1",              "10",                  "Unlimited"] }
+        - { label: "Concurrent requests",      values: ["2",              "50",                  "Custom"] }
+        - { label: "Bulk / streaming mode",    values: ["—",              "Included",            "Included"] }
+        - { label: "Federated participation",  values: ["—",              "Included",            "Included"] }
+    - title: "Support"
+      rows:
+        - { label: "Channel",                  values: ["Community",      "Email + chat",        "Named CSM + Slack Connect"] }
+        - { label: "First-response SLA",       values: ["Best effort",    "Next business day",   "1 hour (24×7, P1)"] }
+        - { label: "Uptime SLA",               values: ["—",              "99.9%",               "99.95% (custom available)"] }
+        - { label: "Onboarding",               values: ["Self-serve",     "Guided checklist",    "White-glove migration"] }
+    - title: "Compliance"
+      rows:
+        - { label: "Sovereign data plane",     values: ["—",              "EU multi-tenant",     "OVH SecNumCloud, Infomaniak, AWS Bahrain, AWS GovCloud"] }
+        - { label: "Data residency choice",    values: ["EU default",     "EU / US",             "Per-jurisdiction pinning"] }
+        - { label: "Audit evidence packs",     values: ["—",              "Quarterly",           "On demand + per-request"] }
+        - { label: "Per-jurisdiction counsel", values: ["—",              "—",                   "Included directory"] }
+        - { label: "DPA + sub-processor list", values: ["Standard DPA",   "Standard DPA",        "Negotiated DPA"] }
+    - title: "Payments"
+      rows:
+        - { label: "Card / ACH (Stripe)",      values: ["—",              "Included",            "Included"] }
+        - { label: "Onchain pay-in (USDC)",    values: ["—",              "Base, Arbitrum, Optimism", "Base, Arbitrum, Optimism"] }
+        - { label: "Developer payouts",        values: ["—",              "Fiat",                "Fiat or onchain (USDC)"] }
+        - { label: "Stripe Tax / VAT invoices",values: ["—",              "Included",            "Included"] }
+        - { label: "Custom invoicing & PO",    values: ["—",              "—",                   "Included"] }
+    - title: "Security"
+      rows:
+        - { label: "MFA",                      values: ["Optional",       "Enforced",            "Enforced + SSO/SAML"] }
+        - { label: "SSO / SCIM",               values: ["—",              "Google, Microsoft",   "SAML, OIDC, SCIM provisioning"] }
+        - { label: "Role-based access",        values: ["Owner only",     "Roles + scoped keys", "Custom roles + tenant isolation"] }
+        - { label: "Audit log retention",      values: ["30 days",        "1 year",              "Per jurisdiction (5–7 years)"] }
+        - { label: "Penetration test reports", values: ["—",              "Annual summary",      "Full report under NDA"] }
+
+compliance_badges:
+  - { label: "SOC 2 Type II (in progress)" }
+  - { label: "ISO 27001 (in progress)" }
+  - { label: "ISO 42001 (in progress)" }
+  - { label: "GDPR" }
+
+subprocessors:
+  - { name: "Cloudflare",   purpose: "Edge compute, DNS, WAF, R2/D1/KV" }
+  - { name: "Stripe",       purpose: "Subscriptions and developer payouts" }
+  - { name: "Resend",       purpose: "Transactional email" }
+  - { name: "Sumsub",       purpose: "KYC / KYB verification" }
+
+collections:
+  models:
+    output: true
+    permalink: /models/:slug/
+  research:
+    output: true
+    permalink: /research/:slug/
+
+defaults:
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: page
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+  - scope:
+      path: ""
+      type: models
+    values:
+      layout: model
+  - scope:
+      path: ""
+      type: research
+    values:
+      layout: page
+
+permalink: /blog/:year/:month/:day/:title/
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+  - jekyll-redirect-from
+
+exclude:
+  - legacy/
+  - infrastructure/
+  - playground/
+  - node_modules/
+  - vendor/
+  - Gemfile
+  - package.json
+  - README.md
+  - replit.md
+  - "*.md.bak"
+  - .github/
+  - .agents/
+  - .local/
+  - .replit
+  - .DS_Store
+  - wrangler.jsonc
+  - wrangler.toml
+  - .wrangler/
+  - admin-fix-status.md
+  - BUG_FIXES_COMPLETED.md
+  - IMPLEMENTATION_SUMMARY.md
+  - OPTIMIZATION_SUMMARY.md
+  - cookies.txt
+  - storage/
+  - migrations/
+  - contracts/
+  - attached_assets/
+  - .cache/

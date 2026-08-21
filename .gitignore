@@ -1,6 +1,57 @@
-node_modules
-dist
+# Jekyll
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+vendor/
+.bundle/
+
+# Ruby
+# (Gemfile.lock IS committed — deterministic builds for GitHub Pages CI.)
+
+# OS
 .DS_Store
-server/public
-vite.config.ts.*
-*.tar.gz
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Replit / agent scratch
+.cache/
+.local/
+.agents/
+.upm/
+.config/
+
+# Legacy Node/React app (kept under legacy/ for reference, but never installed)
+legacy/node_modules/
+
+# Wrangler / Cloudflare Workers
+.wrangler/
+node_modules/
+legacy/dist/
+legacy/.next/
+legacy/build/
+
+# Cloudflare backend monorepo (Task #2). pnpm-lock.yaml IS committed —
+# deterministic builds for the deploy CI, mirroring Gemfile.lock.
+infrastructure/cloudflare/node_modules/
+infrastructure/cloudflare/**/node_modules/
+infrastructure/cloudflare/**/dist/
+infrastructure/cloudflare/.turbo/
+infrastructure/cloudflare/**/.turbo/
+infrastructure/cloudflare/**/.wrangler/
+infrastructure/cloudflare/**/.dev.vars
+infrastructure/cloudflare/**/*.tsbuildinfo
+
+# Misc cruft
+cookies.txt
+*.log
+
+# Agent / IDE scratch attachments. These accumulate prompts, pasted code,
+# and ad-hoc screenshots that aren't part of the published site. Anything
+# that needs to ship lives under assets/ instead.
+attached_assets/

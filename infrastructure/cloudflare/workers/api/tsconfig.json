@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "noEmit": true,
+    "paths": {
+      "@gefi/shared-headers": ["../../packages/shared-headers/src/index.ts"],
+      "@gefi/shared-router": ["../../packages/shared-router/src/index.ts"],
+      "@gefi/shared-router/region": ["../../packages/shared-router/src/region.ts"],
+      "@gefi/shared-router/jwt": ["../../packages/shared-router/src/jwt.ts"],
+      "@gefi/shared-types": ["../../packages/shared-types/src/index.ts"],
+      "@gefi/auth": ["../../packages/auth/src/index.ts"],
+      "@gefi/auth/verify": ["../../packages/auth/src/verify.ts"],
+      "@gefi/auth/rbac": ["../../packages/auth/src/rbac.ts"],
+      "@gefi/auth/kyc-tiers": ["../../packages/auth/src/kyc-tiers.ts"],
+      "@gefi/auth/types": ["../../packages/auth/src/types.ts"],
+      "@gefi/integrations": ["../../packages/integrations/src/index.ts"],
+      "@gefi/integrations/kyc": ["../../packages/integrations/src/kyc/index.ts"],
+      "@gefi/integrations/sanctions": ["../../packages/integrations/src/sanctions/index.ts"]
+    }
+  },
+  "include": ["src/**/*"]
+}

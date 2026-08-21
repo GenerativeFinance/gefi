@@ -1,0 +1,47 @@
+{
+  "name": "gefi-playground",
+  "version": "0.0.0",
+  "private": true,
+  "description": "GeFi Playground monorepo — Jekyll web app + Cloudflare Worker API + shared UI/schemas packages.",
+  "packageManager": "pnpm@10.26.1",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "build:tokens": "pnpm --filter @gefi-playground/ui run build:tokens",
+    "predev": "pnpm run build:tokens",
+    "dev": "concurrently -n web,api -c blue,magenta \"pnpm --filter @gefi-playground/web run dev\" \"pnpm --filter @gefi-playground/api run dev\"",
+    "prebuild": "pnpm run build:tokens",
+    "build": "pnpm -r --parallel run build",
+    "pretest": "pnpm run build:tokens",
+    "test": "pnpm -r run test",
+    "pretypecheck": "pnpm run build:tokens",
+    "typecheck": "pnpm -r run typecheck",
+    "lint": "eslint . --ext .ts,.tsx,.js,.cjs,.mjs",
+    "format": "prettier --write \"**/*.{ts,tsx,js,cjs,mjs,json,md,yml,yaml,html,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,cjs,mjs,json,md,yml,yaml,html,css}\"",
+    "prepare": "node -e \"try{require('husky')()}catch(e){}\""
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "@types/node": "^20.14.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "concurrently": "^9.1.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd",
+      "sharp"
+    ]
+  }
+}

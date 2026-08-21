@@ -1,0 +1,59 @@
+{%- comment -%}
+  Until the `gefi-auth` Worker (`auth.gefi.io`) and the dashboards
+  (`app.gefi.io`) are deployed, every header CTA points at the
+  early-access fallback so a click can never escape to a not-yet-live
+  subdomain (which would surface a "DNS_PROBE_FINISHED_NXDOMAIN" /
+  "server IP address could not be found" error in the browser).
+  Flip `app.auth_ready: true` in `_config.yml` once both ship.
+{%- endcomment -%}
+{%- assign signin_url  = site.app.signin_url  -%}
+{%- assign signup_url  = site.app.signup_url | default: '/register/' -%}
+{%- unless site.app.enabled and site.app.auth_ready -%}
+  {%- assign signin_url = site.app.fallback_url | default: '/contact/' -%}
+{%- endunless -%}
+<header class="site-header" role="banner" data-site-header>
+  <div class="container site-header__inner">
+    <a class="site-header__brand" href="/" aria-label="{{ site.title }} — home">
+      <img class="site-header__logo" src="{{ site.logo | relative_url }}" alt="{{ site.title }}" width="822" height="312" />
+      <span class="sr-only">{{ site.title }}</span>
+    </a>
+
+    <button class="nav-toggle" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="Toggle menu" data-nav-toggle>
+      <span class="sr-only">Toggle menu</span>
+      <span class="nav-toggle__bars" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+    </button>
+
+    <nav id="primary-nav" class="site-nav" aria-label="Primary">
+      <ul>
+        {%- for item in site.nav -%}
+          <li>
+            <a href="{{ item.url }}"
+               {% if page.url == item.url %}aria-current="page"{% endif %}>
+              {{ item.title }}
+            </a>
+          </li>
+        {%- endfor -%}
+      </ul>
+      <div class="site-nav__cta">
+        <a class="btn btn-ghost" href="{{ signin_url }}">Sign in</a>
+        <a class="btn btn-primary" href="{{ signup_url }}">Get started</a>
+      </div>
+    </nav>
+  </div>
+</header>
+<script>
+  // Tiny inline script — toggles `.scrolled` on the sticky header so a
+  // bottom border / shadow only appears once the user has scrolled.
+  (function () {
+    var h = document.querySelector("[data-site-header]");
+    if (!h) return;
+    var update = function () {
+      if (window.scrollY > 4) h.classList.add("scrolled");
+      else h.classList.remove("scrolled");
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+  })();
+</script>

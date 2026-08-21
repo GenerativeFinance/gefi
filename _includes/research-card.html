@@ -1,0 +1,42 @@
+{%- assign r = include.research -%}
+{%- if r.content -%}
+  {%- assign words = r.content | strip_html | number_of_words -%}
+  {%- assign read_time = words | divided_by: 200 -%}
+  {%- if read_time < 1 -%}{%- assign read_time = 1 -%}{%- endif -%}
+{%- else -%}
+  {%- assign read_time = 1 -%}
+{%- endif -%}
+{%- if r.lead -%}
+  {%- assign excerpt_text = r.lead -%}
+{%- else -%}
+  {%- assign excerpt_text = r.content | strip_html | strip_newlines | truncate: 160 -%}
+{%- endif -%}
+{%- assign card_tags = "" | split: "" -%}
+{%- if r.topic -%}{%- assign card_tags = card_tags | push: r.topic -%}{%- endif -%}
+{%- if r.tags -%}{%- for t in r.tags -%}{%- assign card_tags = card_tags | push: t -%}{%- endfor -%}{%- endif -%}
+{%- assign card_tags = card_tags | uniq -%}
+{%- assign tag_slugs = "" -%}
+{%- for t in card_tags -%}
+  {%- assign tag_slugs = tag_slugs | append: t | downcase | append: "|" -%}
+{%- endfor -%}
+<a class="post-card" href="{{ r.url | relative_url }}" data-tags="{{ tag_slugs }}">
+  <p class="eyebrow">
+    <span class="badge badge--compliance">Research</span>
+    {%- if r.date -%}
+      &middot; <time datetime="{{ r.date | date_to_xmlschema }}">{{ r.date | date: "%b %-d, %Y" }}</time>
+    {%- endif -%}
+  </p>
+  <h3>{{ r.title }}</h3>
+  <p class="muted">{{ excerpt_text }}</p>
+  {%- if card_tags.size > 0 -%}
+    <ul class="badge-row badge-row--tight" aria-label="Tags">
+      {%- for t in card_tags -%}
+        <li class="badge">{{ t }}</li>
+      {%- endfor -%}
+    </ul>
+  {%- endif -%}
+  <footer class="post-card__footer">
+    <span class="muted small">{{ read_time }} min read</span>
+    <span class="muted small">Read &rarr;</span>
+  </footer>
+</a>

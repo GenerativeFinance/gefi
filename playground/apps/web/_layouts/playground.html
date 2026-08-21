@@ -1,0 +1,137 @@
+---
+layout: default
+---
+{%- assign m = site.data.models[page.slug] -%}
+{%- assign category = m.category -%}
+{%- assign sim_label = "Simulate" -%}
+{%- assign sim_desc = "Run scenarios against this model — Phase 5 ships category-specific scenario builders." -%}
+{%- assign bt_label = "Backtest" -%}
+{%- assign bt_desc  = "Replay this model against historical data to validate behavior. Wired up in Phase 5." -%}
+{%- if category contains "risk" -%}
+  {%- assign sim_label = "Stress Test" -%}
+  {%- assign sim_desc  = "Apply macro shocks (rates, vol, default rates) and watch this model react. Phase 5 plugs in the shock library." -%}
+{%- elsif category contains "trading" or category contains "market" or category contains "time-series" or category contains "fixed-income" -%}
+  {%- assign sim_label = "Backtest" -%}
+  {%- assign sim_desc  = "Replay the strategy against tick-level history. Phase 5 ships the data set picker + walk-forward fold builder." -%}
+  {%- assign bt_label  = "Walk-forward" -%}
+  {%- assign bt_desc   = "Rolling out-of-sample backtest with re-fit windows. Phase 5 wires this up." -%}
+{%- elsif category contains "portfolio" -%}
+  {%- assign sim_label = "Frontier explorer" -%}
+  {%- assign sim_desc  = "Trace the efficient frontier across risk-aversion settings. Phase 5 ships the live solver." -%}
+{%- elsif category contains "fraud" -%}
+  {%- assign sim_label = "Replay attack" -%}
+  {%- assign sim_desc  = "Stream a labelled attack corpus through the detector and inspect false-positive curves. Phase 5 wires the corpus." -%}
+{%- elsif category contains "compliance" -%}
+  {%- assign sim_label = "Policy probe" -%}
+  {%- assign sim_desc  = "Sweep policy thresholds against a redaction goldset. Phase 5 ships the goldset." -%}
+{%- elsif category contains "credit" or category contains "insurance" -%}
+  {%- assign sim_label = "Scenario stress" -%}
+  {%- assign sim_desc  = "Score a portfolio under custom macro paths. Phase 5 wires the macro generator." -%}
+{%- elsif category contains "esg" -%}
+  {%- assign sim_label = "Coverage check" -%}
+  {%- assign sim_desc  = "Run the classifier across a curated news goldset and inspect label drift. Phase 5 ships the goldset." -%}
+{%- endif -%}
+
+<article class="playground" data-slug="{{ page.slug }}">
+  <header class="playground__header">
+    <p class="playground__crumbs">
+      <a href="{{ '/models/' | append: page.slug | append: '/' | relative_url }}">← Back to model</a>
+    </p>
+    <div class="playground__title-row">
+      <h1 class="playground__title">{{ m.name }}</h1>
+      <span class="model-card__badge model-card__badge--risk-{{ m.riskLevel }}">{{ m.riskLevel | capitalize }} risk</span>
+      {%- if m.federated -%}
+        <span class="model-card__badge model-card__badge--federated">Federated</span>
+      {%- endif -%}
+      <a class="btn btn--ghost playground__detail-link"
+         href="{{ '/models/' | append: page.slug | append: '/' | relative_url }}">
+        Open detail page →
+      </a>
+    </div>
+    <p class="playground__summary">{{ m.summary }}</p>
+  </header>
+
+  <div class="playground__layout">
+    <div class="playground__main">
+      <nav role="tablist" aria-label="Playground sections" class="playground-tabs" data-pg-tabs>
+        <button role="tab" id="pgtab-try"      aria-controls="pgpanel-try"      aria-selected="true"  data-tab="try"      class="playground-tabs__tab is-active">Try</button>
+        <button role="tab" id="pgtab-train"    aria-controls="pgpanel-train"    aria-selected="false" data-tab="train"    class="playground-tabs__tab">Train</button>
+        <button role="tab" id="pgtab-simulate" aria-controls="pgpanel-simulate" aria-selected="false" data-tab="simulate" class="playground-tabs__tab">{{ sim_label }}</button>
+        <button role="tab" id="pgtab-backtest" aria-controls="pgpanel-backtest" aria-selected="false" data-tab="backtest" class="playground-tabs__tab">{{ bt_label }}</button>
+      </nav>
+
+      <section role="tabpanel" id="pgpanel-try" aria-labelledby="pgtab-try" class="playground-panel">
+        <h2 class="visually-hidden">Try</h2>
+        <div class="playground-try" data-pg-try>
+          <form class="playground-try__form" data-pg-form novalidate>
+            <p class="playground-try__hint">
+              Form auto-generated from the model's input schema. Edit any field and press <kbd>Run</kbd>.
+            </p>
+            <div data-pg-form-fields></div>
+          </form>
+          <div class="playground-result" data-pg-result hidden>
+            <div class="playground-result__head">
+              <h3 class="playground-result__title">Output</h3>
+              <div class="playground-result__actions">
+                <button type="button" class="btn btn--ghost" data-pg-copy="json">Copy as JSON</button>
+                <button type="button" class="btn btn--ghost" data-pg-copy="curl">Copy as cURL</button>
+              </div>
+            </div>
+            <p class="playground-result__meta" data-pg-result-meta></p>
+            <div class="playground-result__body" data-pg-result-body></div>
+          </div>
+          <p class="playground-error" data-pg-error hidden role="alert"></p>
+        </div>
+      </section>
+
+      <section role="tabpanel" id="pgpanel-train" aria-labelledby="pgtab-train" class="playground-panel" hidden>
+        <h2 class="visually-hidden">Train</h2>
+        <div data-pg-train></div>
+      </section>
+
+      <section role="tabpanel" id="pgpanel-simulate" aria-labelledby="pgtab-simulate" class="playground-panel" hidden>
+        <h2 class="visually-hidden">{{ sim_label }}</h2>
+        <div class="playground-empty">
+          <h3>{{ sim_label }}</h3>
+          <p>{{ sim_desc }}</p>
+          <p class="playground-empty__cta">
+            <a class="btn btn--ghost" href="{{ '/models/' | append: page.slug | append: '/' | relative_url }}">
+              See model performance →
+            </a>
+          </p>
+        </div>
+      </section>
+
+      <section role="tabpanel" id="pgpanel-backtest" aria-labelledby="pgtab-backtest" class="playground-panel" hidden>
+        <h2 class="visually-hidden">{{ bt_label }}</h2>
+        <div class="playground-empty">
+          <h3>{{ bt_label }}</h3>
+          <p>{{ bt_desc }}</p>
+        </div>
+      </section>
+    </div>
+
+    <aside class="playground__rail" aria-label="Run controls">
+      <div class="playground-rail">
+        <button type="button" class="btn btn--primary playground-rail__run" data-pg-run disabled>
+          <span data-pg-run-label>Run</span>
+        </button>
+        <p class="playground-rail__status" data-pg-status data-state="idle">
+          <span class="playground-rail__dot" aria-hidden="true"></span>
+          <span data-pg-status-label>Idle</span>
+        </p>
+        <p class="playground-rail__hint">
+          20 anonymous runs / day · 200 / day signed in. Mock responses — real backends in Phase 6.
+        </p>
+      </div>
+    </aside>
+  </div>
+
+  <noscript>
+    <p class="playground-noscript">
+      The Playground needs JavaScript to render the auto-form and call the
+      run endpoint. <a href="{{ '/models/' | append: page.slug | append: '/' | relative_url }}">Browse the model
+      detail page</a> for the static overview.
+    </p>
+  </noscript>
+</article>

@@ -1,0 +1,58 @@
+# AUTO-GENERATED — DO NOT EDIT.
+# Source of truth: packages/compliance-rules/src/rules/<jurisdiction>.ts
+# Run `pnpm --filter @gefi/compliance-rules sync-yaml` to refresh.
+- id: "austrac.subpoena.v1"
+  version: 1
+  jurisdiction: "austrac"
+  appliesTo:
+    regions:
+      - "us"
+  trigger:
+    eventKind: "subpoena_received"
+    match:
+      payload:
+        au: true
+  requires:
+    actions:
+      - kind: "create_case"
+      - kind: "route_to_reviewer"
+        slaHours: 24
+        params:
+          template: "austrac-subpoena"
+      - kind: "request_docusign"
+        params:
+          template: "austrac-subpoena-ack"
+      - kind: "audit_anchor"
+    slaHours: 24
+  reviewer: "regulator_liaison"
+  statute: "Anti-Money Laundering and Counter-Terrorism Financing Act 2006 (Cth) § 49"
+  rationale: "AUSTRAC subpoena/notice acknowledgements within 24 hours."
+- id: "austrac.smr-24h.v1"
+  version: 1
+  jurisdiction: "austrac"
+  appliesTo:
+    regions:
+      - "us"
+  trigger:
+    eventKind: "sanction_hit"
+    match:
+      payload:
+        au: true
+      minSeverity: "high"
+  requires:
+    actions:
+      - kind: "create_case"
+      - kind: "route_to_reviewer"
+        slaHours: 24
+        params:
+          template: "austrac-smr"
+      - kind: "notify_regulator"
+        slaHours: 24
+        params:
+          regulator: "austrac"
+          form: "SMR"
+      - kind: "audit_anchor"
+    slaHours: 24
+  reviewer: "aml_officer"
+  statute: "AML/CTF Act 2006 (Cth) § 41 (Suspicious Matter Reports)"
+  rationale: "Suspicious-matter reports to AUSTRAC are due within 24 hours of a high-severity sanction hit."

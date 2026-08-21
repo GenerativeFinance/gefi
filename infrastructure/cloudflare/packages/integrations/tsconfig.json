@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "noEmit": true,
+    "paths": {
+      "@gefi/shared-types": ["../shared-types/src/index.ts"],
+      "@gefi/auth": ["../auth/src/index.ts"],
+      "@gefi/auth/kyc-tiers": ["../auth/src/kyc-tiers.ts"],
+      "@gefi/auth/rbac": ["../auth/src/rbac.ts"],
+      "@gefi/auth/verify": ["../auth/src/verify.ts"],
+      "@gefi/auth/types": ["../auth/src/types.ts"]
+    }
+  },
+  "include": ["src/**/*"]
+}

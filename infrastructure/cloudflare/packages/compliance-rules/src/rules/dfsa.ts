@@ -1,0 +1,56 @@
+/**
+ * DFSA — Dubai Financial Services Authority.
+ *
+ * The DFSA Rulebook General Module (GEN) chapter 11 governs reporting; COB
+ * chapter 6 governs marketing of financial products to UAE retail clients.
+ */
+
+import type { ComplianceRule } from "../types.js";
+
+export const DFSA_RULES: ComplianceRule[] = [
+  {
+    id: "dfsa.cob-listing.v1",
+    version: 1,
+    jurisdiction: "dfsa",
+    appliesTo: { regions: ["eu"] },
+    trigger: {
+      eventKind: "model_listed",
+      match: { payload: { ae: true } },
+    },
+    requires: {
+      actions: [
+        { kind: "create_case" },
+        { kind: "route_to_reviewer", slaHours: 96, params: { template: "dfsa-listing" } },
+        { kind: "request_disclosure_form", params: { form: "DFSA-COB6" } },
+        { kind: "freeze_listing" },
+        { kind: "audit_anchor" },
+      ],
+      slaHours: 96,
+    },
+    reviewer: "securities_counsel",
+    statute: "DFSA Rulebook COB Chapter 6 (Marketing of investments)",
+    rationale: "DIFC-domiciled tenants must observe COB6 before marketing investment products.",
+  },
+  {
+    id: "dfsa.gen11-reporting.v1",
+    version: 1,
+    jurisdiction: "dfsa",
+    appliesTo: { regions: ["eu"] },
+    trigger: {
+      eventKind: "sanction_hit",
+      match: { payload: { ae: true } },
+    },
+    requires: {
+      actions: [
+        { kind: "create_case" },
+        { kind: "route_to_reviewer", slaHours: 48, params: { template: "dfsa-gen11" } },
+        { kind: "notify_regulator", params: { regulator: "dfsa", form: "GEN-11" } },
+        { kind: "audit_anchor" },
+      ],
+      slaHours: 48,
+    },
+    reviewer: "aml_officer",
+    statute: "DFSA Rulebook GEN Chapter 11 (Supervision)",
+    rationale: "Sanctions list hits in the DIFC must be reported via GEN-11.",
+  },
+];

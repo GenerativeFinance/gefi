@@ -1,0 +1,284 @@
+{
+  "slug": "earnings-surprise-predictor",
+  "name": "Earnings Surprise Predictor",
+  "summary": "Pre-print estimate of EPS surprise direction from filings + alt-data.",
+  "category": "time-series",
+  "subcategory": "multivariate",
+  "developer": "GeFi Labs",
+  "riskLevel": "medium",
+  "maturity": "experimental",
+  "price": 0,
+  "rating": 4,
+  "ratingCount": 18,
+  "federated": false,
+  "thumbnailUrl": null,
+  "trainingEnabled": false,
+  "href": "/models/earnings-surprise-predictor/",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "ticker",
+      "consensus_eps"
+    ],
+    "properties": {
+      "ticker": {
+        "type": "string"
+      },
+      "consensus_eps": {
+        "type": "number"
+      },
+      "revisions_30d": {
+        "type": "integer",
+        "minimum": -50,
+        "maximum": 50,
+        "default": 0
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "surprise_direction": {
+        "type": "string",
+        "enum": [
+          "beat",
+          "inline",
+          "miss"
+        ]
+      },
+      "surprise_pct": {
+        "type": "number"
+      },
+      "confidence": {
+        "type": "number"
+      }
+    }
+  },
+  "description": null,
+  "versions": [
+    {
+      "version": "1.0.0",
+      "label": "v1.0.0 (production)",
+      "createdAt": 1730000000
+    }
+  ],
+  "metrics": {
+    "equityCurve": [
+      [
+        1729913600,
+        0.9957
+      ],
+      [
+        1729917200,
+        0.9803
+      ],
+      [
+        1729920800,
+        0.958
+      ],
+      [
+        1729924400,
+        0.9278
+      ],
+      [
+        1729928000,
+        0.9066
+      ],
+      [
+        1729931600,
+        0.8963
+      ],
+      [
+        1729935200,
+        0.875
+      ],
+      [
+        1729938800,
+        0.9037
+      ],
+      [
+        1729942400,
+        0.9051
+      ],
+      [
+        1729946000,
+        0.9192
+      ],
+      [
+        1729949600,
+        0.9218
+      ],
+      [
+        1729953200,
+        0.9531
+      ],
+      [
+        1729956800,
+        0.9894
+      ],
+      [
+        1729960400,
+        0.9933
+      ],
+      [
+        1729964000,
+        0.9898
+      ],
+      [
+        1729967600,
+        0.9578
+      ],
+      [
+        1729971200,
+        0.9893
+      ],
+      [
+        1729974800,
+        0.995
+      ],
+      [
+        1729978400,
+        1.0322
+      ],
+      [
+        1729982000,
+        1.0206
+      ],
+      [
+        1729985600,
+        1.0403
+      ],
+      [
+        1729989200,
+        1.0608
+      ],
+      [
+        1729992800,
+        1.035
+      ],
+      [
+        1729996400,
+        1.0163
+      ]
+    ],
+    "accuracy": [
+      [
+        1729913600,
+        0.7484
+      ],
+      [
+        1729917200,
+        0.7426
+      ],
+      [
+        1729920800,
+        0.7343
+      ],
+      [
+        1729924400,
+        0.7229
+      ],
+      [
+        1729928000,
+        0.715
+      ],
+      [
+        1729931600,
+        0.7111
+      ],
+      [
+        1729935200,
+        0.7031
+      ],
+      [
+        1729938800,
+        0.7139
+      ],
+      [
+        1729942400,
+        0.7144
+      ],
+      [
+        1729946000,
+        0.7197
+      ],
+      [
+        1729949600,
+        0.7207
+      ],
+      [
+        1729953200,
+        0.7324
+      ],
+      [
+        1729956800,
+        0.746
+      ],
+      [
+        1729960400,
+        0.7475
+      ],
+      [
+        1729964000,
+        0.7462
+      ],
+      [
+        1729967600,
+        0.7342
+      ],
+      [
+        1729971200,
+        0.746
+      ],
+      [
+        1729974800,
+        0.7481
+      ],
+      [
+        1729978400,
+        0.7621
+      ],
+      [
+        1729982000,
+        0.7577
+      ],
+      [
+        1729985600,
+        0.7651
+      ],
+      [
+        1729989200,
+        0.7728
+      ],
+      [
+        1729992800,
+        0.7631
+      ],
+      [
+        1729996400,
+        0.7561
+      ]
+    ],
+    "latency": {
+      "p50_ms": 39,
+      "p95_ms": 174
+    }
+  },
+  "audits": [
+    {
+      "id": "audit_earnings-surprise-predictor",
+      "auditor": "OpenZeppelin",
+      "standard": "EU AI Act",
+      "auditedAt": 1725766400,
+      "passed": true,
+      "hash": "9894f17b9894f17b9894f17b9894f17b9894f17b9894f17b9894f17b9894f17b"
+    }
+  ],
+  "favoritedByMe": false,
+  "defaultInput": {
+    "ticker": "AAPL",
+    "consensus_eps": 2.1,
+    "revisions_30d": 3
+  }
+}

@@ -1,0 +1,165 @@
+---
+layout: default
+---
+{%- assign m = site.data.models[page.slug] -%}
+{%- if m.price == 0 -%}
+  {%- assign price_label = "Free" -%}
+{%- else -%}
+  {%- assign dollars = m.price | divided_by: 100.0 -%}
+  {%- assign price_label = dollars | round | prepend: "$" -%}
+{%- endif -%}
+{%- assign rating_value = m.rating | round: 1 -%}
+
+<article class="model-detail" data-slug="{{ page.slug }}">
+  <header class="model-detail__header">
+    <p class="model-detail__crumbs">
+      <a href="{{ '/' | relative_url }}">Home</a>
+      <span aria-hidden="true">/</span>
+      <a href="{{ '/categories/' | append: m.category | append: '/' | relative_url }}">{{ m.category }}</a>
+      <span aria-hidden="true">/</span>
+      <span>{{ m.name }}</span>
+    </p>
+    <div class="model-detail__title-row">
+      <h1 class="model-detail__title">{{ m.name }}</h1>
+      <span class="model-card__badge model-card__badge--risk-{{ m.riskLevel }}">{{ m.riskLevel | capitalize }} risk</span>
+      {%- if m.federated -%}
+        <span class="model-card__badge model-card__badge--federated" title="Federated training">Federated</span>
+      {%- endif -%}
+      <span class="model-detail__maturity" title="Maturity">{{ m.maturity }}</span>
+    </div>
+    <p class="model-detail__summary">{{ m.summary }}</p>
+    <p class="model-detail__developer">by <strong>{{ m.developer }}</strong></p>
+  </header>
+
+  <div class="model-detail__layout">
+    <div class="model-detail__main">
+      <nav role="tablist" aria-label="Model sections" class="model-tabs">
+        <button role="tab" id="tab-overview"   aria-controls="panel-overview"   aria-selected="true"  data-tab="overview"   class="model-tabs__tab is-active">Overview</button>
+        <button role="tab" id="tab-demo"       aria-controls="panel-demo"       aria-selected="false" data-tab="demo"       class="model-tabs__tab">Demo</button>
+        <button role="tab" id="tab-performance" aria-controls="panel-performance" aria-selected="false" data-tab="performance" class="model-tabs__tab">Performance</button>
+        <button role="tab" id="tab-pricing"    aria-controls="panel-pricing"    aria-selected="false" data-tab="pricing"    class="model-tabs__tab">Pricing</button>
+        <button role="tab" id="tab-compliance" aria-controls="panel-compliance" aria-selected="false" data-tab="compliance" class="model-tabs__tab">Compliance</button>
+        <button role="tab" id="tab-reviews"    aria-controls="panel-reviews"    aria-selected="false" data-tab="reviews"    class="model-tabs__tab">Reviews</button>
+      </nav>
+
+      <section role="tabpanel" id="panel-overview" aria-labelledby="tab-overview" class="model-panel">
+        <h2 class="visually-hidden">Overview</h2>
+        <p>{{ m.summary }}</p>
+        <dl class="model-overview__facts">
+          <div><dt>Category</dt><dd><a href="{{ '/categories/' | append: m.category | append: '/' | relative_url }}">{{ m.category }}</a></dd></div>
+          <div><dt>Subcategory</dt><dd>{{ m.subcategory | default: "—" }}</dd></div>
+          <div><dt>Maturity</dt><dd>{{ m.maturity }}</dd></div>
+          <div><dt>Risk tier</dt><dd>{{ m.riskLevel }}</dd></div>
+          <div><dt>Federated</dt><dd>{% if m.federated %}Yes{% else %}No{% endif %}</dd></div>
+        </dl>
+      </section>
+
+      <section role="tabpanel" id="panel-demo" aria-labelledby="tab-demo" class="model-panel" hidden>
+        <h2 class="visually-hidden">Demo</h2>
+        <div class="model-demo" data-model-demo>
+          <div class="demo-card demo-card--empty">
+            <p>This model doesn't have a tailored demo widget yet.</p>
+            <a class="btn btn--primary" href="{{ '/playground/' | append: page.slug | append: '/' | relative_url }}">Try it in the Playground →</a>
+          </div>
+        </div>
+        <noscript>
+          <p>The Demo widget needs JavaScript. <a href="{{ '/playground/' | append: page.slug | append: '/' | relative_url }}">Open the Playground</a> instead.</p>
+        </noscript>
+      </section>
+
+      <section role="tabpanel" id="panel-performance" aria-labelledby="tab-performance" class="model-panel" hidden>
+        <h2 class="visually-hidden">Performance</h2>
+        <div class="perf-charts" data-perf-root>
+          <div class="perf-chart" data-series="equityCurve">
+            <h3 class="perf-chart__title">Equity curve</h3>
+            <div class="perf-chart__canvas" data-uplot></div>
+          </div>
+          <div class="perf-chart" data-series="accuracy">
+            <h3 class="perf-chart__title">Accuracy timeline</h3>
+            <div class="perf-chart__canvas" data-uplot></div>
+          </div>
+          <div class="perf-chart" data-series="latency">
+            <h3 class="perf-chart__title">Latency</h3>
+            <div class="perf-latency" data-latency>
+              <div><span>p50</span><strong data-p50>—</strong><span class="unit">ms</span></div>
+              <div><span>p95</span><strong data-p95>—</strong><span class="unit">ms</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section role="tabpanel" id="panel-pricing" aria-labelledby="tab-pricing" class="model-panel" hidden>
+        <h2 class="visually-hidden">Pricing</h2>
+        <div class="pricing-card">
+          <p class="pricing-card__price">{{ price_label }}</p>
+          <p class="pricing-card__hint">Per month, per seat. Cancel anytime.</p>
+          <ul class="pricing-card__features">
+            <li>Unlimited inferences via the Playground UI</li>
+            <li>API access (Phase 5+)</li>
+            <li>Audit log + signed receipts</li>
+          </ul>
+        </div>
+      </section>
+
+      <section role="tabpanel" id="panel-compliance" aria-labelledby="tab-compliance" class="model-panel" hidden>
+        <h2 class="visually-hidden">Compliance</h2>
+        <ul class="audits-list" data-audits-root></ul>
+        <div class="verify-block">
+          <button type="button" class="btn btn--secondary" data-verify-btn>Verify ZKP</button>
+          <p class="verify-status" data-verify-status role="status" aria-live="polite"></p>
+          <label class="verify-tampered">
+            <input type="checkbox" data-verify-tamper /> Simulate tampered hash
+          </label>
+        </div>
+      </section>
+
+      <section role="tabpanel" id="panel-reviews" aria-labelledby="tab-reviews" class="model-panel" hidden>
+        <h2 class="visually-hidden">Reviews</h2>
+        <form class="review-form" data-review-form>
+          <fieldset class="review-stars" data-stars role="radiogroup" aria-label="Your rating">
+            {%- for n in (1..5) -%}
+              <button type="button" class="review-stars__btn" data-star="{{ n }}" role="radio" aria-checked="false" aria-label="{{ n }} star{% if n != 1 %}s{% endif %}">★</button>
+            {%- endfor -%}
+          </fieldset>
+          <label class="review-comment">
+            <span class="visually-hidden">Comment</span>
+            <textarea data-review-comment maxlength="200" placeholder="Share what you thought (max 200 characters)…"></textarea>
+            <span class="review-counter" data-review-counter>0 / 200</span>
+          </label>
+          <button type="submit" class="btn btn--primary" data-review-submit disabled>Post review</button>
+          <p class="review-status" data-review-status role="status" aria-live="polite"></p>
+        </form>
+        <ul class="reviews-list" data-reviews-root></ul>
+        <button type="button" class="btn btn--secondary" data-reviews-more hidden>Load more</button>
+      </section>
+    </div>
+
+    <aside class="model-rail" data-rail>
+      <div class="model-rail__price">{{ price_label }}</div>
+      <a class="btn btn--primary model-rail__try" href="{{ '/playground/' | append: page.slug | append: '/' | relative_url }}">Try in Playground</a>
+      <button type="button" class="btn btn--secondary" data-subscribe-btn>Subscribe</button>
+      <button type="button" class="btn btn--ghost" data-share-btn aria-label="Share">
+        <span aria-hidden="true">↗</span> Share
+      </button>
+      <button type="button" class="btn btn--ghost model-rail__fav" data-fav-btn aria-pressed="false" aria-label="Add to watchlist">
+        <span class="model-rail__heart" aria-hidden="true">♡</span>
+        <span data-fav-label>Watchlist</span>
+      </button>
+      <p class="model-rail__rating" aria-label="Average rating">
+        <span aria-hidden="true">★</span>
+        <strong data-rail-rating>{{ rating_value }}</strong>
+        <span class="model-rail__rating-count" data-rail-count>({{ m.ratingCount }})</span>
+      </p>
+    </aside>
+  </div>
+</article>
+
+<dialog class="subscribe-modal" data-subscribe-modal aria-labelledby="subscribe-modal-title">
+  <h2 id="subscribe-modal-title">Subscribe to {{ m.name }}</h2>
+  <p>Subscriptions land in Phase 5+ — wired to Stripe Connect with monthly developer payouts.</p>
+  <form method="dialog">
+    <button class="btn btn--secondary" type="submit">Close</button>
+  </form>
+</dialog>
+
+<script type="application/json" id="model-data">{{ m | jsonify }}</script>

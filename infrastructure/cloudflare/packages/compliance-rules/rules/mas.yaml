@@ -1,0 +1,56 @@
+# AUTO-GENERATED — DO NOT EDIT.
+# Source of truth: packages/compliance-rules/src/rules/<jurisdiction>.ts
+# Run `pnpm --filter @gefi/compliance-rules sync-yaml` to refresh.
+- id: "mas.fi-listing-review.v1"
+  version: 1
+  jurisdiction: "mas"
+  appliesTo:
+    regions:
+      - "us"
+  trigger:
+    eventKind: "model_listed"
+    match:
+      payload:
+        sg: true
+  requires:
+    actions:
+      - kind: "create_case"
+      - kind: "route_to_reviewer"
+        slaHours: 96
+        params:
+          template: "mas-listing"
+      - kind: "freeze_listing"
+      - kind: "audit_anchor"
+    slaHours: 96
+  reviewer: "securities_counsel"
+  statute: "MAS Notice SFA 04-N15 (Reporting of Misconduct); Securities and Futures Act 2001"
+  rationale: "MAS requires SFA-licensed FI sign-off before SG-targeted instruments are listed."
+- id: "mas.cyber-incident-1h.v1"
+  version: 1
+  jurisdiction: "mas"
+  appliesTo:
+    regions:
+      - "us"
+  trigger:
+    eventKind: "data_breach"
+    match:
+      payload:
+        sg: true
+      minSeverity: "high"
+  requires:
+    actions:
+      - kind: "create_case"
+      - kind: "route_to_reviewer"
+        slaHours: 1
+        params:
+          template: "mas-cyber"
+      - kind: "notify_regulator"
+        slaHours: 1
+        params:
+          regulator: "mas"
+          form: "TRMG-incident"
+      - kind: "audit_anchor"
+    slaHours: 1
+  reviewer: "regulator_liaison"
+  statute: "MAS Notice 644 (Technology Risk Management); MAS TRMG (2021)"
+  rationale: "MAS TRMG requires notification of material cyber incidents within 1 hour."

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    {%- include head.html -%}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    {%- include site-header.html -%}
+    <main id="main" role="main">{{ content }}</main>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>window.GEFI_API_BASE = "{{ site.api.base_url }}";</script>
+    <script src="{{ '/assets/js/subscribe.js' | relative_url }}" defer></script>
+    <script src="{{ '/assets/js/search.js' | relative_url }}" defer></script>
+    {%- if page.layout == "category" -%}
+      <script src="{{ '/assets/js/category.js' | relative_url }}" defer></script>
+    {%- endif -%}
+    {%- if page.url == "/" -%}
+      <script src="{{ '/assets/js/featured.js' | relative_url }}" defer></script>
+    {%- endif -%}
+    {%- if page.layout == "model" -%}
+      <script src="{{ '/assets/js/model-tabs.js' | relative_url }}" defer></script>
+      <script src="{{ '/assets/js/model-actions.js' | relative_url }}" defer></script>
+      <script src="{{ '/assets/js/model-perf.js' | relative_url }}" defer></script>
+      <script src="{{ '/assets/js/model-compliance.js' | relative_url }}" defer></script>
+      <script src="{{ '/assets/js/model-reviews.js' | relative_url }}" defer></script>
+      <script src="{{ '/assets/js/model-widgets.js' | relative_url }}" defer></script>
+    {%- endif -%}
+    {%- if page.layout == "playground" -%}
+      <script src="{{ '/assets/js/schema-form.js' | relative_url }}" defer></script>
+      <script src="{{ '/assets/js/playground-result-widgets.js' | relative_url }}" defer></script>
+      <script src="{{ '/assets/js/playground-shell.js' | relative_url }}" defer></script>
+    {%- endif -%}
+  </body>
+</html>

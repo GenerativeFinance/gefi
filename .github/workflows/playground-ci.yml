@@ -1,0 +1,59 @@
+name: playground-ci
+
+on:
+  pull_request:
+    paths:
+      - "playground/**"
+      - ".github/workflows/playground-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "playground/**"
+      - ".github/workflows/playground-ci.yml"
+
+defaults:
+  run:
+    working-directory: playground
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+          cache-dependency-path: playground/pnpm-lock.yaml
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: playground/apps/web
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build brand tokens (must run before lint/typecheck/build)
+        run: pnpm run build:tokens
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Test
+        run: pnpm run test
+
+      - name: Build TS workspaces (api + ui + schemas)
+        run: pnpm -r --parallel --filter '!@gefi-playground/web' run build
+
+      - name: Build Jekyll site
+        run: pnpm --filter @gefi-playground/web run build

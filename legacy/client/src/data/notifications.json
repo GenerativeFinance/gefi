@@ -1,0 +1,62 @@
+[
+  {
+    "id": "new_model_2024_001",
+    "title": "New AI Model Released",
+    "message": "Advanced Portfolio Optimizer v2.0 is now available with enhanced risk assessment capabilities.",
+    "type": "new_release",
+    "priority": "high",
+    "category": "Portfolio Management",
+    "actionUrl": "/marketplace",
+    "actionText": "Explore Now",
+    "date": "2024-02-01T10:00:00Z",
+    "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=300&h=200&fit=crop&crop=center"
+  },
+  {
+    "id": "feature_update_2024_002",
+    "title": "Learning Center Expanded",
+    "message": "25 new tutorials added covering advanced financial modeling techniques and AI implementation.",
+    "type": "feature_update",
+    "priority": "medium",
+    "category": "Education",
+    "actionUrl": "/learning-center",
+    "actionText": "Start Learning",
+    "date": "2024-01-28T14:30:00Z",
+    "image": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300&h=200&fit=crop&crop=center"
+  },
+  {
+    "id": "compliance_update_2024_003",
+    "title": "Regulatory Compliance Update",
+    "message": "New Basel III compliance models are now available to help meet latest regulatory requirements.",
+    "type": "compliance",
+    "priority": "high",
+    "category": "Compliance",
+    "actionUrl": "/marketplace?category=compliance",
+    "actionText": "View Models",
+    "date": "2024-01-25T09:15:00Z",
+    "image": "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=300&h=200&fit=crop&crop=center"
+  },
+  {
+    "id": "platform_improvement_2024_004",
+    "title": "Performance Enhancements",
+    "message": "Platform response times improved by 40% with new infrastructure optimizations.",
+    "type": "improvement",
+    "priority": "low",
+    "category": "Platform",
+    "actionUrl": "/analytics",
+    "actionText": "See Analytics",
+    "date": "2024-01-20T16:45:00Z",
+    "image": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=300&h=200&fit=crop&crop=center"
+  },
+  {
+    "id": "security_update_2024_005",
+    "title": "Enhanced Security Features",
+    "message": "Multi-factor authentication and advanced encryption now available for all accounts.",
+    "type": "security",
+    "priority": "high",
+    "category": "Security",
+    "actionUrl": "/profile",
+    "actionText": "Update Settings",
+    "date": "2024-01-15T11:20:00Z",
+    "image": "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=300&h=200&fit=crop&crop=center"
+  }
+]

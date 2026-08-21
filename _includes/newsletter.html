@@ -1,0 +1,23 @@
+{%- comment -%}
+  Newsletter form. Until site.api.newsletter_endpoint is set, the JS handler
+  shows a simulated "thanks" message and logs the payload to the console.
+  No-JS users see the noscript fallback below pointing at our mailbox.
+{%- endcomment -%}
+<form class="newsletter" data-form="newsletter">
+  <label class="sr-only" for="newsletter-email">Email address</label>
+  <input
+    id="newsletter-email"
+    type="email"
+    name="email"
+    required
+    autocomplete="email"
+    placeholder="you@company.com"
+  />
+  <button type="submit" class="btn btn-primary">Subscribe</button>
+  <p class="newsletter__status" data-status role="status" aria-live="polite"></p>
+  <noscript>
+    <p class="small muted">JavaScript is off — email
+      <a href="mailto:hello@gefi.io?subject=Subscribe">hello@gefi.io</a>
+      to subscribe.</p>
+  </noscript>
+</form>

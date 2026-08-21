@@ -1,0 +1,136 @@
+---
+layout: default
+title: AI financial models — federated, audited, accountable
+description: GeFi is the marketplace for AI financial models. Discover, subscribe to, and contribute to federated, audit-ready models for investing, risk, fraud, compliance, and trade finance.
+---
+
+{%- comment -%}
+  Gate the hero CTA the same way every other "Get started" / "Sign in"
+  surface does — see _includes/header.html and _includes/cta.html. Until
+  app.gefi.io ships (Task #7) we route to the contact form so the hero
+  CTA never points at a not-yet-live URL.
+{%- endcomment -%}
+{%- assign hero_primary_url = site.app.signup_url -%}
+{%- unless site.app.enabled and site.app.auth_ready -%}
+  {%- assign hero_primary_url = site.app.fallback_url | default: '/contact/?topic=sales' -%}
+{%- endunless -%}
+
+{% include hero.html
+   eyebrow="Marketplace + Federation + Compliance"
+   title="AI financial models that pass the audit."
+   lead="GeFi is where investors, banks, and quants discover, subscribe to, and contribute to federated AI models — with provable training data, hash-chained inference logs, and compliance routing per jurisdiction."
+   primary_label="Get started free"
+   primary_url=hero_primary_url
+   secondary_label="Browse models"
+   secondary_url="/models/"
+   note="No card required. 100 free inference calls a day on the Free tier." %}
+
+{% include proof-bar.html %}
+
+<section class="section">
+  <div class="container">
+    <header class="section__header">
+      <p class="eyebrow">Why GeFi</p>
+      <h2>Built for the things every other marketplace skips.</h2>
+      <p class="lead">Most AI marketplaces stop at "buy a model." GeFi handles the parts that actually matter to a regulated buyer: where the data came from, where the inference ran, and who gets to see the audit log.</p>
+    </header>
+
+    <ul class="feature-grid">
+      <li class="feature-card">
+        <div class="feature-card__icon" aria-hidden="true">◐</div>
+        <h3>Federated by default</h3>
+        <p>Train against private datasets that never leave their owner. Models earn revenue every time their gradients improve a strategy.</p>
+      </li>
+      <li class="feature-card">
+        <div class="feature-card__icon" aria-hidden="true">⛨</div>
+        <h3>Audit-ready, not audit-friendly</h3>
+        <p>Every inference is appended to a hash-chained log and Merkle-anchored. Auditors get cryptographic proofs, not screenshots.</p>
+      </li>
+      <li class="feature-card">
+        <div class="feature-card__icon" aria-hidden="true">⚖</div>
+        <h3>Compliance routing</h3>
+        <p>Each model declares its jurisdictions. We map them to local counsel, KYC tiers, and disclosure obligations automatically.</p>
+      </li>
+      <li class="feature-card">
+        <div class="feature-card__icon" aria-hidden="true">⌁</div>
+        <h3>Edge-native</h3>
+        <p>Built on Cloudflare Workers, D1, R2, KV, and Vectorize. Sub-100&nbsp;ms inference at the edge, billed per call.</p>
+      </li>
+      <li class="feature-card">
+        <div class="feature-card__icon" aria-hidden="true">∑</div>
+        <h3>Risk surface</h3>
+        <p>Live VaR, stress tests, drawdowns, and exposure across every model you've subscribed to — one screen, one number.</p>
+      </li>
+      <li class="feature-card">
+        <div class="feature-card__icon" aria-hidden="true">⌬</div>
+        <h3>Sovereign tenants</h3>
+        <p>Regional data planes for US / EU / MENA, with sovereign-cloud options (OVH SecNumCloud, Infomaniak, AWS Bahrain) on the Enterprise tier.</p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section class="section" style="background: var(--color-surface);">
+  <div class="container">
+    <header class="section__header">
+      <p class="eyebrow">Featured models</p>
+      <h2>Production AI for investors, banks, and quants.</h2>
+    </header>
+
+    {% assign featured = site.models | where: "featured", true %}
+    {% if featured.size == 0 %}{% assign featured = site.models | slice: 0, 6 %}{% endif %}
+    <div class="card-grid">
+      {% for m in featured limit: 6 %}
+        {% include model-card.html model=m %}
+      {% endfor %}
+    </div>
+
+    <p style="text-align: center; margin-top: var(--space-6);">
+      <a class="btn btn-ghost" href="/models/">See the full catalogue &rarr;</a>
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container narrow" style="text-align: center;">
+    <p class="eyebrow">How it works</p>
+    <h2>Four steps from "interesting model" to "in production".</h2>
+  </div>
+  <div class="container">
+    <ul class="steps-grid" style="margin-top: var(--space-6); list-style: none; padding: 0;">
+      <li class="step-card">
+        <span class="step-card__num" aria-hidden="true">01</span>
+        <h3>Discover</h3>
+        <p>Browse 60+ models across investing, risk, fraud, and trade finance. Filter by jurisdiction, federated status, or risk class.</p>
+      </li>
+      <li class="step-card">
+        <span class="step-card__num" aria-hidden="true">02</span>
+        <h3>Subscribe</h3>
+        <p>Pick a tier, complete KYC if needed, and get an API key in under five minutes. Pay by card or onchain.</p>
+      </li>
+      <li class="step-card">
+        <span class="step-card__num" aria-hidden="true">03</span>
+        <h3>Run</h3>
+        <p>Call the model from your stack, the GeFi dashboard, or our paper-trading sandbox. Every call is logged and provable.</p>
+      </li>
+      <li class="step-card">
+        <span class="step-card__num" aria-hidden="true">04</span>
+        <h3>Audit</h3>
+        <p>Pull a Merkle proof for any run, export a compliance pack for your jurisdiction, and ship it to your regulator.</p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section class="section" style="background: var(--color-surface);">
+  <div class="container narrow" style="text-align: center;">
+    <p class="eyebrow">Stay in the loop</p>
+    <h2>New models, research, and shipping notes — about once a month.</h2>
+    <p class="muted">No spam. Unsubscribe in one click.</p>
+    {% include newsletter.html %}
+  </div>
+</section>
+
+{% include cta.html
+   title="Put a federated, audited AI model into production this week."
+   lead="Free to start. Pro plan unlocks federated participation and live execution." %}

@@ -1,0 +1,21 @@
+<section class="section">
+  <div class="container">
+    {%- if include.title -%}
+      <header class="section__header">
+        {%- if include.eyebrow -%}<p class="eyebrow">{{ include.eyebrow }}</p>{%- endif -%}
+        <h2>{{ include.title }}</h2>
+        {%- if include.lead -%}<p class="lead">{{ include.lead }}</p>{%- endif -%}
+      </header>
+    {%- endif -%}
+
+    <ul class="feature-grid">
+      {%- for f in include.features -%}
+        <li class="feature-card">
+          {%- if f.icon -%}<div class="feature-card__icon" aria-hidden="true">{{ f.icon }}</div>{%- endif -%}
+          <h3>{{ f.title }}</h3>
+          <p>{{ f.body }}</p>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+</section>

@@ -1,0 +1,121 @@
+---
+layout: default
+---
+<article class="container model-detail">
+  <p class="eyebrow"><a href="/models/">Models</a> &middot; {{ page.category }}</p>
+
+  <header class="model-detail__header">
+    <div class="model-detail__intro">
+      <h1>{{ page.title }}</h1>
+      {%- if page.lead -%}
+        <p class="lead">{{ page.lead }}</p>
+      {%- endif -%}
+      <ul class="badge-row" role="list">
+        {%- if page.risk -%}
+          <li><span class="badge badge--risk-{{ page.risk | downcase }}">Risk: {{ page.risk }}</span></li>
+        {%- endif -%}
+        {%- if page.maturity -%}
+          <li><span class="badge">{{ page.maturity }}</span></li>
+        {%- endif -%}
+        {%- if page.federated -%}
+          <li><span class="badge badge--federated">Federated</span></li>
+        {%- endif -%}
+        {%- if page.jurisdictions -%}
+          {%- for j in page.jurisdictions -%}
+            <li><span class="badge badge--jurisdiction">{{ j }}</span></li>
+          {%- endfor -%}
+        {%- endif -%}
+      </ul>
+    </div>
+  </header>
+
+  {%- if page.metrics -%}
+    <section class="model-detail__metrics" aria-label="Reported metrics">
+      <dl class="metric-grid metric-grid--four">
+        {%- for m in page.metrics limit: 4 -%}
+          <div>
+            <dt>{{ m.label }}</dt>
+            <dd>{{ m.value }}</dd>
+          </div>
+        {%- endfor -%}
+      </dl>
+    </section>
+  {%- endif -%}
+
+  <div class="model-detail__body">
+    <div class="model-detail__main">
+      <section class="prose model-detail__content">
+        {{ content }}
+      </section>
+
+      <section class="model-detail__compliance">
+        <h2>Audit &amp; jurisdiction</h2>
+        <ul class="compliance-list">
+          {%- for j in page.jurisdictions -%}
+            <li><strong>{{ j }}</strong> &mdash; reviewed and routed to local counsel.</li>
+          {%- endfor -%}
+        </ul>
+        <p>
+          Every run of this model is appended to a hash-chained audit log. Anyone with
+          a run id can fetch a Merkle inclusion proof &mdash; see the
+          <a href="/compliance/">Compliance &amp; Trust</a> page.
+        </p>
+        {%- if page.metrics -%}
+          <p class="muted small">
+            Reported metrics are self-attested by the model author and verifiable against the audit log.
+          </p>
+        {%- endif -%}
+      </section>
+    </div>
+
+    <aside class="model-detail__rail" aria-label="Model summary">
+      <dl class="model-detail__facts">
+        {%- if page.jurisdictions -%}
+          <div>
+            <dt>Jurisdictions</dt>
+            <dd>
+              <ul class="badge-row badge-row--tight" role="list">
+                {%- for j in page.jurisdictions -%}
+                  <li><span class="badge badge--jurisdiction">{{ j }}</span></li>
+                {%- endfor -%}
+              </ul>
+            </dd>
+          </div>
+        {%- endif -%}
+        {%- if page.risk -%}
+          <div>
+            <dt>Risk class</dt>
+            <dd><span class="badge badge--risk-{{ page.risk | downcase }}">{{ page.risk }}</span></dd>
+          </div>
+        {%- endif -%}
+        {%- if page.maturity -%}
+          <div>
+            <dt>Maturity</dt>
+            <dd>{{ page.maturity }}</dd>
+          </div>
+        {%- endif -%}
+        <div>
+          <dt>Federated</dt>
+          <dd>{% if page.federated %}Yes{% else %}No{% endif %}</dd>
+        </div>
+        <div>
+          <dt>Price</dt>
+          <dd>
+            {%- if page.price -%}
+              <span class="price-inline">${{ page.price }}<span class="price-period">/mo</span></span>
+            {%- else -%}
+              Contact us
+            {%- endif -%}
+          </dd>
+        </div>
+      </dl>
+      {%- assign signup_base = site.app.signup_url | default: '/register/' -%}
+      {%- if site.app.enabled -%}
+        <a class="btn btn-primary btn-block" href="{{ signup_base }}?model={{ page.slug }}">Subscribe</a>
+      {%- else -%}
+        <a class="btn btn-primary btn-block" href="/contact/?topic=early-access&amp;model={{ page.slug }}">Subscribe</a>
+      {%- endif -%}
+      <a class="btn btn-ghost btn-block" href="/contact/?topic=sales&amp;model={{ page.slug }}">Talk to sales</a>
+    </aside>
+  </div>
+</article>

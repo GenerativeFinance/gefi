@@ -1,0 +1,297 @@
+{
+  "slug": "portfolio-optimiser",
+  "name": "Adaptive Portfolio Optimiser",
+  "summary": "Black-Litterman with ML-derived views and turnover-aware constraints.",
+  "category": "portfolio-optimisation",
+  "subcategory": "long-only",
+  "developer": "GeFi Labs",
+  "riskLevel": "medium",
+  "maturity": "staging",
+  "price": 19900,
+  "rating": 4.5,
+  "ratingCount": 84,
+  "federated": true,
+  "thumbnailUrl": null,
+  "trainingEnabled": true,
+  "href": "/models/portfolio-optimiser/",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "tickers",
+      "risk_aversion"
+    ],
+    "properties": {
+      "tickers": {
+        "type": "array",
+        "title": "Tickers",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 2,
+        "maxItems": 20
+      },
+      "risk_aversion": {
+        "type": "number",
+        "title": "Risk aversion (λ)",
+        "minimum": 0.1,
+        "maximum": 10,
+        "multipleOf": 0.1,
+        "default": 2.5
+      },
+      "long_only": {
+        "type": "boolean",
+        "title": "Long only",
+        "default": true
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "weights": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      "expected_return": {
+        "type": "number"
+      },
+      "expected_vol": {
+        "type": "number"
+      }
+    }
+  },
+  "description": null,
+  "versions": [
+    {
+      "version": "1.0.0",
+      "label": "v1.0.0 (production)",
+      "createdAt": 1730000000
+    }
+  ],
+  "metrics": {
+    "equityCurve": [
+      [
+        1729913600,
+        1.0279
+      ],
+      [
+        1729917200,
+        1.0085
+      ],
+      [
+        1729920800,
+        1.0035
+      ],
+      [
+        1729924400,
+        0.964
+      ],
+      [
+        1729928000,
+        0.9343
+      ],
+      [
+        1729931600,
+        0.9133
+      ],
+      [
+        1729935200,
+        0.9013
+      ],
+      [
+        1729938800,
+        0.8685
+      ],
+      [
+        1729942400,
+        0.8823
+      ],
+      [
+        1729946000,
+        0.8872
+      ],
+      [
+        1729949600,
+        0.9066
+      ],
+      [
+        1729953200,
+        0.8722
+      ],
+      [
+        1729956800,
+        0.8924
+      ],
+      [
+        1729960400,
+        0.9277
+      ],
+      [
+        1729964000,
+        0.9355
+      ],
+      [
+        1729967600,
+        0.9456
+      ],
+      [
+        1729971200,
+        0.9652
+      ],
+      [
+        1729974800,
+        0.9694
+      ],
+      [
+        1729978400,
+        0.9901
+      ],
+      [
+        1729982000,
+        1.012
+      ],
+      [
+        1729985600,
+        1.0105
+      ],
+      [
+        1729989200,
+        1.0061
+      ],
+      [
+        1729992800,
+        1.0101
+      ],
+      [
+        1729996400,
+        0.9958
+      ]
+    ],
+    "accuracy": [
+      [
+        1729913600,
+        0.7605
+      ],
+      [
+        1729917200,
+        0.7532
+      ],
+      [
+        1729920800,
+        0.7513
+      ],
+      [
+        1729924400,
+        0.7365
+      ],
+      [
+        1729928000,
+        0.7254
+      ],
+      [
+        1729931600,
+        0.7175
+      ],
+      [
+        1729935200,
+        0.713
+      ],
+      [
+        1729938800,
+        0.7007
+      ],
+      [
+        1729942400,
+        0.7059
+      ],
+      [
+        1729946000,
+        0.7077
+      ],
+      [
+        1729949600,
+        0.715
+      ],
+      [
+        1729953200,
+        0.7021
+      ],
+      [
+        1729956800,
+        0.7097
+      ],
+      [
+        1729960400,
+        0.7229
+      ],
+      [
+        1729964000,
+        0.7258
+      ],
+      [
+        1729967600,
+        0.7296
+      ],
+      [
+        1729971200,
+        0.737
+      ],
+      [
+        1729974800,
+        0.7385
+      ],
+      [
+        1729978400,
+        0.7463
+      ],
+      [
+        1729982000,
+        0.7545
+      ],
+      [
+        1729985600,
+        0.7539
+      ],
+      [
+        1729989200,
+        0.7523
+      ],
+      [
+        1729992800,
+        0.7538
+      ],
+      [
+        1729996400,
+        0.7484
+      ]
+    ],
+    "latency": {
+      "p50_ms": 21,
+      "p95_ms": 102
+    }
+  },
+  "audits": [
+    {
+      "id": "audit_portfolio-optimiser",
+      "auditor": "OpenZeppelin",
+      "standard": "SOC 2 Type II",
+      "auditedAt": 1729395200,
+      "passed": true,
+      "hash": "82ec1a5a82ec1a5a82ec1a5a82ec1a5a82ec1a5a82ec1a5a82ec1a5a82ec1a5a"
+    }
+  ],
+  "favoritedByMe": false,
+  "defaultInput": {
+    "tickers": [
+      "AAPL",
+      "MSFT",
+      "NVDA",
+      "GOOGL"
+    ],
+    "risk_aversion": 2.5,
+    "long_only": true
+  }
+}

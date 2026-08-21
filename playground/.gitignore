@@ -1,0 +1,21 @@
+node_modules/
+.pnpm-store/
+dist/
+build/
+_site/
+.cache/
+.wrangler/
+.dev.vars
+*.log
+.DS_Store
+
+# Generated brand tokens — regenerated from packages/ui/src/tokens.ts
+apps/web/assets/css/tokens.css
+apps/api/src/generated/
+packages/ui/dist/
+
+# Jekyll
+apps/web/.jekyll-cache/
+apps/web/vendor/
+apps/web/.bundle/
+apps/web/Gemfile.lock

@@ -1,0 +1,69 @@
+---
+layout: default
+title: "AI Financial Model Library"
+description: "Federated. Audited. Accountable."
+---
+
+<section class="hero hero--marketplace" aria-labelledby="hero-title">
+  <h1 id="hero-title" class="hero__title">AI Financial Model Library</h1>
+  <p class="hero__subtitle">Federated. Audited. Accountable.</p>
+  <div class="hero__search">
+    {%- include search.html id_prefix="hero-" modifier_class="global-search--hero" placeholder="Search 100+ models — VaR, sentiment, credit…" -%}
+  </div>
+</section>
+
+<section class="featured" aria-labelledby="featured-title">
+  <div class="section-head">
+    <h2 id="featured-title">Featured models</h2>
+    <p class="section-head__hint">Hand-picked launch lineup, refreshed weekly.</p>
+  </div>
+  <div class="featured__rail" id="featured-rail" role="list">
+    {%- for m in site.data.featured -%}
+      <div role="listitem" class="featured__item">
+        {%- include model-card.html m=m -%}
+      </div>
+    {%- endfor -%}
+  </div>
+</section>
+
+<section class="categories" aria-labelledby="categories-title">
+  <div class="section-head">
+    <h2 id="categories-title">Browse by category</h2>
+    <p class="section-head__hint">14 verticals across markets, risk, compliance, and analytics.</p>
+  </div>
+  <ul class="category-grid" role="list">
+    {%- for c in site.data.categories -%}
+      <li class="category-grid__item">
+        <a class="category-tile" href="{{ '/categories/' | append: c.slug | append: '/' | relative_url }}">
+          <span class="category-tile__icon" data-icon="{{ c.icon }}" aria-hidden="true"></span>
+          <span class="category-tile__name">{{ c.name }}</span>
+          <span class="category-tile__desc">{{ c.description }}</span>
+          <span class="category-tile__risk model-card__badge--risk-{{ c.risk_tier }}">{{ c.risk_tier | capitalize }} risk</span>
+        </a>
+      </li>
+    {%- endfor -%}
+  </ul>
+</section>
+
+<section class="subscribe-section" aria-labelledby="subscribe-title">
+  <form
+    id="subscribe-form"
+    class="subscribe"
+    method="post"
+    action="{{ site.api.base_url }}{{ site.api.subscribe_endpoint }}"
+    novalidate
+  >
+    <h2 id="subscribe-title" class="subscribe__label">Get early access</h2>
+    <div class="subscribe__row">
+      <input id="email" name="email" type="email" autocomplete="email" inputmode="email"
+             placeholder="you@firm.com" required aria-required="true" />
+      <button class="btn btn--primary" type="submit">Subscribe</button>
+    </div>
+    <p class="subscribe__status" id="subscribe-status" role="status" aria-live="polite"></p>
+    <noscript>
+      <p class="subscribe__noscript">
+        JavaScript disabled — email <a href="mailto:hello@gefi.io">hello@gefi.io</a> to be added.
+      </p>
+    </noscript>
+  </form>
+</section>
