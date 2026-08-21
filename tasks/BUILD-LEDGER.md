@@ -93,10 +93,10 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 50 | Securitization Modeler (`securitization-modeler`) | Corporate Treasury & Structured Finance | P2 | Done. New page + table demo (tranche waterfall) + MODELS row. Completes Corporate Treasury wing. Build passed. |
 | [x] | 51 | Trend Following Engine (`trend-following-engine`) | Directional Strategies | P2 | Done. New page + curve demo + MODELS row. Hypothetical-performance disclaimer + signals-only statement verified in rendered HTML. Build passed. |
 | [x] | 52 | Cross-Sectional Mean Reversion (`cross-sectional-mean-reversion`) | Directional Strategies | P2 | Done. New page + table demo + MODELS row. Disclaimer + signals-only verified. Build passed. |
-| [ ] | 53 | Breakout Signal Engine (`breakout-signal-engine`) | Directional Strategies | P2 | |
-| [ ] | 54 | Reversal Detector (`reversal-detector`) | Directional Strategies | P2 | |
-| [ ] | 55 | Global Macro Signal Engine (`global-macro-signal-engine`) | Directional Strategies | P2 | |
-| [ ] | 56 | Carry Trade Optimizer (`carry-trade-optimizer`) | Directional Strategies | P2 | |
+| [x] | 53 | Breakout Signal Engine (`breakout-signal-engine`) | Directional Strategies | P2 | Done. New page + score demo (confirmation) + MODELS row. Disclaimer + signals-only verified. Build passed. |
+| [x] | 54 | Reversal Detector (`reversal-detector`) | Directional Strategies | P2 | Done. New page + score demo + MODELS row. Hardest-to-time caveat leads the page per spec. Disclaimer verified. Build passed. |
+| [x] | 55 | Global Macro Signal Engine (`global-macro-signal-engine`) | Directional Strategies | P2 | Done. New page + table demo (themes vs consensus) + MODELS row. Disclaimer verified. Build passed. |
+| [x] | 56 | Carry Trade Optimizer (`carry-trade-optimizer`) | Directional Strategies | P2 | Done. New page + score demo + MODELS row. Crash-risk warning panel per spec. Completes Directional Strategies wing. Disclaimer verified. Build passed. |
 | [ ] | 57 | Statistical Arbitrage Engine (`statistical-arbitrage-engine`) | Relative-Value & Arbitrage | P2 | |
 | [ ] | 58 | Pairs Trading Engine (`pairs-trading-engine`) | Relative-Value & Arbitrage | P2 | |
 | [ ] | 59 | Convertible Arbitrage Modeler (`convertible-arbitrage-modeler`) | Relative-Value & Arbitrage | P2 | |
