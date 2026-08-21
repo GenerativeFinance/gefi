@@ -1506,3 +1506,56 @@ p  { margin: 0 0 var(--space-4); }
   }
   .status-board li { grid-template-columns: 1fr; gap: 4px; }
 }
+
+/* ------------------------------------------------------------------
+   Task 104: docs landing — language tabs, code styling, reference cards.
+   ------------------------------------------------------------------ */
+
+.docs-quickstart, .docs-auth {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: var(--space-6); margin: var(--space-6) 0;
+}
+.docs-quickstart h2, .docs-auth h2 { margin-top: 0; }
+.docs-steps { margin: 0 0 var(--space-5); }
+
+.code-tabs__bar { display: flex; gap: 2px; margin-bottom: -1px; position: relative; z-index: 2; }
+.code-tabs__tab {
+  padding: 8px 16px; font-size: 0.875rem; font-weight: 600; font-family: var(--font-mono);
+  background: var(--color-surface-2); color: var(--color-muted);
+  border: 1px solid var(--color-border); border-bottom: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0; cursor: pointer;
+}
+.code-tabs__tab.is-active { background: var(--color-hero-bg); color: var(--color-hero-text); border-color: var(--color-hero-bg); }
+.js .code-tabs__panel { display: none; }
+.js .code-tabs__panel.is-active { display: block; }
+.js .code-tabs__nojs-label { display: none; }
+.no-js .code-tabs__bar { display: none; }
+.code-tabs__nojs-label {
+  margin: var(--space-4) 0 0; font-family: var(--font-mono); font-size: 0.75rem;
+  font-weight: 600; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+.docs-code {
+  background: var(--color-hero-bg); color: var(--color-hero-text);
+  border-radius: 0 var(--radius-md) var(--radius-md) var(--radius-md);
+  padding: var(--space-5); overflow-x: auto; margin: 0;
+  font-size: 0.8125rem; line-height: 1.65;
+}
+.docs-code code { font-family: var(--font-mono); background: none; padding: 0; }
+.docs-code--response { border-radius: var(--radius-md); }
+.tok-k { color: var(--color-brand); font-weight: 600; }
+.docs-code .tok-k { color: #A79BFF; }
+.tok-s { color: var(--color-accent); }
+.docs-code .tok-s { color: #7EE3F4; }
+.docs-response-label {
+  margin: var(--space-5) 0 var(--space-2); font-family: var(--font-mono);
+  font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--color-muted);
+}
+
+.docs-card__endpoint {
+  margin: var(--space-2) 0 0; font-family: var(--font-mono); font-size: 0.75rem;
+  color: var(--color-brand-strong); background: var(--color-surface-2);
+  padding: 6px 10px; border-radius: var(--radius-sm);
+  overflow-x: auto; white-space: nowrap;
+}

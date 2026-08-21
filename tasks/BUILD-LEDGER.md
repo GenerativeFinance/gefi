@@ -129,7 +129,7 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 93 | Credit Oracle (redesign) | Live model pages | High priority | Done. Harness gains generic live-slider mode, waterfall output kind, network diagram, metrics_as_of caption — all front-matter-gated; credit-oracle.md consumes them. Regression on untouched pages verified. Build passed. |
 | [x] | 100 | Models catalogue | Catalogue & pricing | High priority | Done. Grouped grid (28 family sections, sticky labels), live facet counts on every chip (computed client-side, cross-filter aware), GA solid / Beta dashed card borders + maturity badges. Spec was written for 18 models; implemented against the real 92. Build passed. |
 | [x] | 102 | Compliance & Trust portal | Trust & security | High priority | Done. Trust-center layout: evidence cards w/ live dots, sticky jump-nav, counsel status board with pills, animated hash-chain diagram, run_id verifier (endpoint-or-sample fallback). Browser test caught a kramdown indentation bug that emptied the subprocessor table — fixed pre-commit. Build passed. |
-| [ ] | 104 | Docs | Content & developer surface | High priority | |
+| [x] | 104 | Docs | Content & developer surface | High priority | Done. Real landing: cURL/Python/JS tabbed quickstart for POST /v1/models/{slug}/run + response, auth & rate-limits table, 11 featured reference cards w/ mono endpoints. Accessible tabs; no-JS shows all three stacked. Build passed. |
 | [ ] | 115 | Onboarding & KYC wizard | Onboarding & account lifecycle | High priority | |
 | [ ] | 116 | Dashboard — API Keys tab | Onboarding & account lifecycle | High priority | |
 | [ ] | 117 | Alerts & Notification Center | Onboarding & account lifecycle | High priority | |
