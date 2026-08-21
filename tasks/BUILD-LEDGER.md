@@ -34,18 +34,18 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 78 | Board & LP Report Generator (`board-lp-report-generator`) | Generative AI | P0 | Done. Content-only; table-output demo + analytics row. Build passed. |
 | [x] | 79 | Scenario Narrative Engine (`scenario-narrative-engine`) | Generative AI | P0 | Done. Content-only; text-output demo + analytics row. Build passed. |
 | [x] | 80 | Disclosure Drafter (`disclosure-drafter`) | Generative AI | P0 | Done. Content-only; table-output demo + analytics row. High-risk framing on page per spec. Build passed. |
-| [ ] | 01 | Macro Nowcast (`macro-nowcast`) | Investing & Macro | P1 | |
-| [ ] | 02 | Portfolio Optimiser (`portfolio-optimiser`) | Investing & Macro | P1 | |
-| [ ] | 03 | Sentiment from Filings (`sentiment-from-filings`) | Investing & Macro | P1 | |
-| [ ] | 04 | Yield-Curve Forecaster (`yield-curve-forecaster`) | Investing & Macro | P1 | |
-| [ ] | 05 | Commodities Flow Nowcast (`commodities-flow-nowcast`) | Investing & Macro | P1 | |
-| [ ] | 06 | Credit Oracle (`credit-oracle`) | Credit & Risk | P1 | |
-| [ ] | 07 | Liquidity Stress Engine (`liquidity-stress-engine`) | Credit & Risk | P1 | |
-| [ ] | 08 | Mortgage Default & Prepay (`mortgage-default-prepay`) | Credit & Risk | P1 | |
-| [ ] | 09 | Vendor Risk AIOps (`vendor-risk-aiops`) | Credit & Risk | P1 | |
-| [ ] | 10 | Fraud Graph (`fraud-graph`) | Fraud & AML | P1 | |
-| [ ] | 11 | Transaction Monitoring Explainer (`transaction-monitoring-explainer`) | Fraud & AML | P1 | |
-| [ ] | 12 | Claim Fraud Vision (`claim-fraud-vision`) | Fraud & AML | P1 | |
+| [x] | 01 | Macro Nowcast (`macro-nowcast`) | Investing & Macro | P1 | Done. Enriched existing page + curve demo; MODELS row already present. Copy per customer/backend prompts — the cited `tasks/01-enrich-ai-models-library.md` does not exist (handoff known gap). Build passed. |
+| [x] | 02 | Portfolio Optimiser (`portfolio-optimiser`) | Investing & Macro | P1 | Done. Enriched existing page + table demo (allocation). Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 03 | Sentiment from Filings (`sentiment-from-filings`) | Investing & Macro | P1 | Done. Enriched existing page + score demo. NOTE: spec wants a -1..+1 gauge; harness gauge is unsigned, so the page shows a normalised 0-1 score and says so. Signed gauge = future harness change. Build passed. |
+| [x] | 04 | Yield-Curve Forecaster (`yield-curve-forecaster`) | Investing & Macro | P1 | Done. New page + curve demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 05 | Commodities Flow Nowcast (`commodities-flow-nowcast`) | Investing & Macro | P1 | Done. New page + curve demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 06 | Credit Oracle (`credit-oracle`) | Credit & Risk | P1 | Done. Enriched existing page + score demo w/ adverse-action explanation formats. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 07 | Liquidity Stress Engine (`liquidity-stress-engine`) | Credit & Risk | P1 | Done. New page + curve demo + MODELS row. NOTE: spec wants a conformity-assessment badge beside the risk badge; badge slots live in the layout, so status is surfaced in metric tiles + copy. Badge slot = future harness change. Build passed. |
+| [x] | 08 | Mortgage Default & Prepay (`mortgage-default-prepay`) | Credit & Risk | P1 | Done. New page + curve demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 09 | Vendor Risk AIOps (`vendor-risk-aiops`) | Credit & Risk | P1 | Done. New page + score demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 10 | Fraud Graph (`fraud-graph`) | Fraud & AML | P1 | Done. Enriched existing page + score demo. Also corrected its task-00 seed row (was risk high/federated, page says low/not federated). Build passed. |
+| [x] | 11 | Transaction Monitoring Explainer (`transaction-monitoring-explainer`) | Fraud & AML | P1 | Done. New page + table demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 12 | Claim Fraud Vision (`claim-fraud-vision`) | Fraud & AML | P1 | Done. New page + score demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
 | [ ] | 13 | Trade Finance Doc AI (`trade-finance-doc-ai`) | Trade, Payments & KYB | P1 | |
 | [ ] | 14 | Cross-Border Payment Router (`cross-border-payment-router`) | Trade, Payments & KYB | P1 | |
 | [ ] | 15 | KYB Graph (`kyb-graph`) | Trade, Payments & KYB | P1 | |
