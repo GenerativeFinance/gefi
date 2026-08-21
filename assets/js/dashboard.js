@@ -345,6 +345,7 @@
     { slug: "accretion-dilution", name: "Accretion / Dilution", wing: "M&A & Corporate Transactions", risk: "medium", federated: false, unit: "Yr1 accretion %", series: [0.4, 0.6, 0.9, 1.1, 1.4, 1.6, 1.9, 2.1, 2.3, 2.5, 2.7, 2.9] },
     { slug: "basel-rwa-capital-calculator", name: "Basel RWA & Capital Calculator", wing: "Banking Book & Provisioning", risk: "medium", federated: false, unit: "CET1 %", series: [13.4, 13.5, 13.6, 13.7, 13.8, 13.8, 13.9, 14.0, 14.0, 14.1, 14.2, 14.2] },
     { slug: "board-lp-report-generator", name: "Board & LP Report Generator", wing: "Generative AI", risk: "medium", federated: false, unit: "Reconciled figures", series: [0.97, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1, 1, 1, 1, 1] },
+    { slug: "cap-table-manager", name: "Cap Table Manager", wing: "Venture & Growth Capital", risk: "low", federated: false, unit: "Founder %", series: [62, 60, 58, 56, 54, 52, 50, 49, 47, 46, 44, 43] },
     { slug: "carve-out-model", name: "Carve-Out Model", wing: "M&A & Corporate Transactions", risk: "medium", federated: false, unit: "Standalone EBITDA %", series: [11.8, 12.0, 12.1, 12.3, 12.4, 12.6, 12.7, 12.9, 13.0, 13.2, 13.3, 13.5] },
     { slug: "cecl-ifrs9-ecl-engine", name: "CECL / IFRS 9 ECL Engine", wing: "Banking Book & Provisioning", risk: "high", federated: false, unit: "Coverage ratio %", series: [1.42, 1.45, 1.48, 1.51, 1.55, 1.58, 1.61, 1.63, 1.66, 1.69, 1.72, 1.74] },
     { slug: "claim-fraud-vision", name: "Claim Fraud Vision", wing: "Fraud & AML", risk: "low", federated: true, unit: "Detection AUC", series: [0.72, 0.73, 0.74, 0.74, 0.75, 0.76, 0.76, 0.77, 0.78, 0.78, 0.79, 0.79] },
@@ -375,6 +376,7 @@
     { slug: "real-options-valuation", name: "Real Options Valuation", wing: "Valuation (advanced)", risk: "medium", federated: false, unit: "Flex premium", series: [0.18, 0.19, 0.2, 0.21, 0.22, 0.22, 0.23, 0.24, 0.24, 0.25, 0.26, 0.26] },
     { slug: "recapitalization-model", name: "Recapitalization", wing: "M&A & Corporate Transactions", risk: "medium", federated: false, unit: "Headroom %", series: [22, 21, 20, 19, 18, 18, 17, 16, 16, 15, 15, 14] },
     { slug: "regulatory-change-summariser", name: "Regulatory Change Summariser", wing: "Compliance & Regulatory", risk: "low", federated: false, unit: "Delivery success", series: [0.981, 0.983, 0.985, 0.986, 0.988, 0.99, 0.991, 0.992, 0.993, 0.994, 0.995, 0.996] },
+    { slug: "safe-note-conversion", name: "SAFE & Note Conversion", wing: "Venture & Growth Capital", risk: "low", federated: false, unit: "Conversion %", series: [8.2, 8.6, 9.0, 9.4, 9.8, 10.1, 10.5, 10.9, 11.2, 11.6, 11.9, 12.3] },
     { slug: "scenario-narrative-engine", name: "Scenario Narrative Engine", wing: "Generative AI", risk: "medium", federated: false, unit: "Consistent claims", series: [0.95, 0.96, 0.96, 0.97, 0.98, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1] },
     { slug: "sentiment-from-filings", name: "Sentiment from Filings", wing: "Investing & Macro", risk: "low", federated: false, unit: "F1", series: [0.68, 0.7, 0.71, 0.72, 0.74, 0.75, 0.75, 0.76, 0.77, 0.78, 0.78, 0.79] },
     { slug: "spin-off-model", name: "Spin-Off Model", wing: "M&A & Corporate Transactions", risk: "medium", federated: false, unit: "Stranded cost %", series: [4.2, 4.1, 4.0, 3.9, 3.8, 3.7, 3.6, 3.6, 3.5, 3.4, 3.3, 3.3] },
@@ -383,8 +385,10 @@
     { slug: "trade-finance-doc-ai", name: "Trade Finance Doc AI", wing: "Trade, Payments & KYB", risk: "low", federated: false, unit: "Accuracy", series: [0.88, 0.89, 0.9, 0.9, 0.91, 0.92, 0.92, 0.93, 0.93, 0.94, 0.94, 0.95] },
     { slug: "transaction-monitoring-explainer", name: "Transaction Monitoring Explainer", wing: "Fraud & AML", risk: "medium", federated: false, unit: "Alerts explained", series: [0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1, 1, 1, 1] },
     { slug: "vc-method-valuation", name: "VC Method Valuation", wing: "Venture & Growth Capital", risk: "low", federated: false, unit: "Implied pre-money", series: [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29] },
+    { slug: "vc-portfolio-tracker", name: "VC Portfolio Tracker", wing: "Venture & Growth Capital", risk: "low", federated: true, unit: "TVPI", series: [1.9, 2.0, 2.05, 2.1, 2.2, 2.25, 2.3, 2.4, 2.45, 2.5, 2.6, 2.65] },
     { slug: "vendor-risk-aiops", name: "Vendor Risk AIOps", wing: "Credit & Risk", risk: "low", federated: false, unit: "Alert precision", series: [0.78, 0.79, 0.8, 0.81, 0.82, 0.82, 0.83, 0.84, 0.84, 0.85, 0.85, 0.86] },
     { slug: "volatility-surface-service", name: "Volatility Surface Service", wing: "Simulation & Market Primitives", risk: "medium", federated: false, unit: "Fit R2", series: [0.955, 0.958, 0.961, 0.963, 0.966, 0.968, 0.971, 0.973, 0.975, 0.977, 0.979, 0.981] },
+    { slug: "waterfall-distribution", name: "Waterfall Distribution Engine", wing: "Venture & Growth Capital", risk: "medium", federated: false, unit: "Common share %", series: [12, 13, 15, 16, 18, 19, 21, 22, 24, 25, 27, 28] },
     { slug: "yield-curve-forecaster", name: "Yield-Curve Forecaster", wing: "Investing & Macro", risk: "low", federated: false, unit: "10y RMSE bp", series: [27, 26, 25, 25, 24, 23, 23, 22, 22, 21, 21, 21] }
   ];
 

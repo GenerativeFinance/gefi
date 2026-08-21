@@ -73,10 +73,10 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 30 | IPO Model (`ipo-model`) | Venture & Growth Capital | P2 | Done. New page + table demo (price range) + MODELS row. Access-logging framing leads the page per spec. Build passed. |
 | [x] | 31 | Startup Financial Model (`startup-financial-model`) | Venture & Growth Capital | P2 | Done. New page + curve demo (runway) + MODELS row. Build passed. |
 | [x] | 32 | VC Method Valuation (`vc-method-valuation`) | Venture & Growth Capital | P2 | Done. New page + table demo (sensitivity) + MODELS row. Build passed. |
-| [ ] | 33 | VC Portfolio Tracker (`vc-portfolio-tracker`) | Venture & Growth Capital | P2 | |
-| [ ] | 34 | Cap Table Manager (`cap-table-manager`) | Venture & Growth Capital | P2 | |
-| [ ] | 35 | Waterfall Distribution Engine (`waterfall-distribution`) | Venture & Growth Capital | P2 | |
-| [ ] | 36 | SAFE & Note Conversion (`safe-note-conversion`) | Venture & Growth Capital | P2 | |
+| [x] | 33 | VC Portfolio Tracker (`vc-portfolio-tracker`) | Venture & Growth Capital | P2 | Done. New page + table demo (fund vs peer median) + MODELS row. Build passed. |
+| [x] | 34 | Cap Table Manager (`cap-table-manager`) | Venture & Growth Capital | P2 | Done. New page + table demo (round simulator) + MODELS row. Build passed. |
+| [x] | 35 | Waterfall Distribution Engine (`waterfall-distribution`) | Venture & Growth Capital | P2 | Done. New page + table demo (stacked tiers) + MODELS row. Build passed. |
+| [x] | 36 | SAFE & Note Conversion (`safe-note-conversion`) | Venture & Growth Capital | P2 | Done. New page + table demo (pre- vs post-money) + MODELS row. Build passed. |
 | [ ] | 37 | Follow-On Advisor (`follow-on-advisor`) | Venture & Growth Capital | P2 | |
 | [ ] | 38 | Startup Runway Tracker (`startup-runway-tracker`) | Venture & Growth Capital | P2 | |
 | [ ] | 39 | Fund Cash-Flow Modeler (`fund-cash-flow-modeler`) | Private Funds | P2 | |
