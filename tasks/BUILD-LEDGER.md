@@ -30,7 +30,7 @@ Never touch `infrastructure/cloudflare/`. Build with
 | ✓ | # | Model | Wing | Priority | Status / Notes |
 |---|---|---|---|---|---|
 | [x] | 76 | GeFi Copilot (`gefi-copilot`) | Generative AI | P0 | Done. Content-only; text-output demo + analytics row. Build passed. |
-| [ ] | 77 | IC & Credit Memo Generator (`ic-credit-memo-generator`) | Generative AI | P0 | |
+| [x] | 77 | IC & Credit Memo Generator (`ic-credit-memo-generator`) | Generative AI | P0 | Done. Content-only; table-output demo + analytics row. Build passed. |
 | [ ] | 78 | Board & LP Report Generator (`board-lp-report-generator`) | Generative AI | P0 | |
 | [ ] | 79 | Scenario Narrative Engine (`scenario-narrative-engine`) | Generative AI | P0 | |
 | [ ] | 80 | Disclosure Drafter (`disclosure-drafter`) | Generative AI | P0 | |
