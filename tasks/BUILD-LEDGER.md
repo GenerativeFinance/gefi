@@ -46,19 +46,19 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 10 | Fraud Graph (`fraud-graph`) | Fraud & AML | P1 | Done. Enriched existing page + score demo. Also corrected its task-00 seed row (was risk high/federated, page says low/not federated). Build passed. |
 | [x] | 11 | Transaction Monitoring Explainer (`transaction-monitoring-explainer`) | Fraud & AML | P1 | Done. New page + table demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
 | [x] | 12 | Claim Fraud Vision (`claim-fraud-vision`) | Fraud & AML | P1 | Done. New page + score demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
-| [ ] | 13 | Trade Finance Doc AI (`trade-finance-doc-ai`) | Trade, Payments & KYB | P1 | |
-| [ ] | 14 | Cross-Border Payment Router (`cross-border-payment-router`) | Trade, Payments & KYB | P1 | |
-| [ ] | 15 | KYB Graph (`kyb-graph`) | Trade, Payments & KYB | P1 | |
-| [ ] | 16 | Tax Residency Classifier (`tax-residency-classifier`) | Compliance & Regulatory | P1 | |
-| [ ] | 17 | Regulatory Change Summariser (`regulatory-change-summariser`) | Compliance & Regulatory | P1 | |
-| [ ] | 18 | ESG Materiality Scorer (`esg-materiality-scorer`) | ESG | P1 | |
-| [ ] | 81 | CECL / IFRS 9 ECL Engine (`cecl-ifrs9-ecl-engine`) | Banking Book & Provisioning | P1 | |
-| [ ] | 82 | IRRBB / ALM Modeler (`irrbb-alm-modeler`) | Banking Book & Provisioning | P1 | |
-| [ ] | 83 | Deposit Behavior Model (`deposit-behavior-model`) | Banking Book & Provisioning | P1 | |
-| [ ] | 84 | Basel RWA & Capital Calculator (`basel-rwa-capital-calculator`) | Banking Book & Provisioning | P1 | |
-| [ ] | 88 | Monte Carlo Simulation Service (`monte-carlo-simulation-service`) | Simulation & Market Primitives | P1 | |
-| [ ] | 89 | Volatility Surface Service (`volatility-surface-service`) | Simulation & Market Primitives | P1 | |
-| [ ] | 90 | LP Treasury & Cash Management (`lp-treasury-cash-management`) | Simulation & Market Primitives | P1 | |
+| [x] | 13 | Trade Finance Doc AI (`trade-finance-doc-ai`) | Trade, Payments & KYB | P1 | Done. Enriched existing page + table demo. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 14 | Cross-Border Payment Router (`cross-border-payment-router`) | Trade, Payments & KYB | P1 | Done. New page + table demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 15 | KYB Graph (`kyb-graph`) | Trade, Payments & KYB | P1 | Done. New page + table demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 16 | Tax Residency Classifier (`tax-residency-classifier`) | Compliance & Regulatory | P1 | Done. New page + table demo (treaty tie-breaker trace) + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 17 | Regulatory Change Summariser (`regulatory-change-summariser`) | Compliance & Regulatory | P1 | Done. New page + table demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 18 | ESG Materiality Scorer (`esg-materiality-scorer`) | ESG | P1 | Done. New page + table demo (two-axis matrix) + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
+| [x] | 81 | CECL / IFRS 9 ECL Engine (`cecl-ifrs9-ecl-engine`) | Banking Book & Provisioning | P1 | Done. New page + table demo (provision waterfall) + MODELS row. Build passed. |
+| [x] | 82 | IRRBB / ALM Modeler (`irrbb-alm-modeler`) | Banking Book & Provisioning | P1 | Done. New page + curve demo (EVE by bucket) + MODELS row. Build passed. |
+| [x] | 83 | Deposit Behavior Model (`deposit-behavior-model`) | Banking Book & Provisioning | P1 | Done. New page + curve demo + MODELS row. Build passed. |
+| [x] | 84 | Basel RWA & Capital Calculator (`basel-rwa-capital-calculator`) | Banking Book & Provisioning | P1 | Done. New page + table demo (rule-referenced weights) + MODELS row. Build passed. |
+| [x] | 88 | Monte Carlo Simulation Service (`monte-carlo-simulation-service`) | Simulation & Market Primitives | P1 | Done. New page + table demo (percentiles + std. error) + MODELS row. Build passed. |
+| [x] | 89 | Volatility Surface Service (`volatility-surface-service`) | Simulation & Market Primitives | P1 | Done. New page + curve demo + MODELS row. Build passed. |
+| [x] | 90 | LP Treasury & Cash Management (`lp-treasury-cash-management`) | Simulation & Market Primitives | P1 | Done. New page + table demo (cash ladder) + MODELS row. Build passed. |
 | [ ] | 19 | Liquidation Valuation (`liquidation-valuation`) | Valuation (advanced) | P2 | |
 | [ ] | 20 | Real Options Valuation (`real-options-valuation`) | Valuation (advanced) | P2 | |
 | [ ] | 21 | Merger Model (`merger-model`) | M&A & Corporate Transactions | P2 | |
