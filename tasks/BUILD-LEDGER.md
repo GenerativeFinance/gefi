@@ -105,8 +105,8 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 62 | FX Triangular Arbitrage Scanner (`fx-triangular-arbitrage-scanner`) | Relative-Value & Arbitrage | P2 | Done. New page + score demo (net-of-cost) + MODELS row. Disclaimer verified. Build passed. |
 | [x] | 63 | Calendar Spread Optimizer (`calendar-spread-optimizer`) | Relative-Value & Arbitrage | P2 | Done. New page + curve demo (term structure) + MODELS row. Disclaimer verified. Build passed. |
 | [x] | 64 | Options Volatility Arbitrage Engine (`options-vol-arb-engine`) | Relative-Value & Arbitrage | P2 | Done. New page + table demo (mispricing + Greeks) + MODELS row. Completes Relative-Value & Arbitrage wing (8/8). Disclaimer verified. Build passed. |
-| [ ] | 65 | Market Making Engine (`market-making-engine`) | Market Microstructure | P2 | |
-| [ ] | 66 | HFT Signal Research Engine (`hft-signal-research-engine`) | Market Microstructure | P2 | |
+| [x] | 65 | Market Making Engine (`market-making-engine`) | Market Microstructure | P2 | Done. New page + curve demo (spread capture vs inventory) + MODELS row. "Not a market maker" notice + MiFID II RTS 6/SEC 15c3-5 framing + disclaimer, all verified in rendered HTML. Build passed. |
+| [x] | 66 | HFT Signal Research Engine (`hft-signal-research-engine`) | Market Microstructure | P2 | Done. New page + curve demo (edge-decay vs latency) + MODELS row. "Research tool, not live execution" framing + disclaimer verified in rendered HTML. Completes Market Microstructure wing. Build passed. |
 | [ ] | 67 | Multifactor Ranking Engine (`multifactor-ranking-engine`) | Factor & Systematic | P2 | |
 | [ ] | 68 | Momentum Factor Screener (`momentum-factor-screener`) | Factor & Systematic | P2 | |
 | [ ] | 69 | Value & Low-Volatility Screener (`value-low-vol-screener`) | Factor & Systematic | P2 | |
