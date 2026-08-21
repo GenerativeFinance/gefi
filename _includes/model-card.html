@@ -1,11 +1,15 @@
 {%- assign m = include.model -%}
 {%- assign cat_lower = m.category | downcase -%}
+{%- assign family = m.category | split: '/' | first | strip | downcase -%}
 {%- assign risk_class = m.risk | default: "" | downcase -%}
+{%- assign maturity_class = m.maturity | default: "beta" | downcase -%}
 {%- if m.federated -%}{%- assign fed_attr = "true" -%}{%- else -%}{%- assign fed_attr = "false" -%}{%- endif -%}
-<a class="model-card"
+<a class="model-card model-card--{{ maturity_class }}"
    href="{{ m.url | relative_url }}"
    data-model-card
    data-category="{{ cat_lower }}"
+   data-family="{{ family }}"
+   data-maturity="{{ maturity_class }}"
    data-risk="{{ risk_class }}"
    data-federated="{{ fed_attr }}">
   <header class="model-card__header">
@@ -35,6 +39,9 @@
     <div class="model-card__badges">
       {%- if m.risk -%}
         <span class="badge badge--risk-{{ risk_class }}">Risk: {{ m.risk }}</span>
+      {%- endif -%}
+      {%- if m.maturity -%}
+        <span class="badge badge--maturity-{{ maturity_class }}">{{ m.maturity }}</span>
       {%- endif -%}
     </div>
     {%- if m.price -%}

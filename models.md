@@ -6,27 +6,23 @@ lead: Production-ready AI models for investing, risk, fraud, compliance, and tra
 permalink: /models/
 ---
 
-{%- assign featured = site.models | where: "featured", true | sort: "title" -%}
-{%- assign rest = site.models | where_exp: "m", "m.featured != true" | sort: "title" -%}
+{%- assign grouped = site.models | group_by_exp: "m", "m.category | split: '/' | first | strip" | sort: "name" -%}
 
 {% if site.models.size > 0 %}
 <div class="model-filter" data-model-filter aria-label="Filter models">
-  <div class="model-filter__group" role="group" aria-label="Category">
+  <div class="model-filter__group model-filter__group--families" role="group" aria-label="Category">
     <span class="model-filter__label">Category</span>
-    <button type="button" class="filter-chip is-active" data-filter="category" data-value="all">All</button>
-    <button type="button" class="filter-chip" data-filter="category" data-value="investing">Investing</button>
-    <button type="button" class="filter-chip" data-filter="category" data-value="risk">Risk</button>
-    <button type="button" class="filter-chip" data-filter="category" data-value="fraud">Fraud</button>
-    <button type="button" class="filter-chip" data-filter="category" data-value="trade finance">Trade Finance</button>
-    <button type="button" class="filter-chip" data-filter="category" data-value="compliance">Compliance</button>
-    <button type="button" class="filter-chip" data-filter="category" data-value="esg">ESG</button>
+    <button type="button" class="filter-chip is-active" data-filter="category" data-value="all">All <span class="filter-chip__count" data-facet-count></span></button>
+    {%- for g in grouped %}
+    <button type="button" class="filter-chip" data-filter="category" data-value="{{ g.name | downcase }}">{{ g.name }} <span class="filter-chip__count" data-facet-count></span></button>
+    {%- endfor %}
   </div>
   <div class="model-filter__group" role="group" aria-label="Risk level">
     <span class="model-filter__label">Risk</span>
-    <button type="button" class="filter-chip is-active" data-filter="risk" data-value="all">All</button>
-    <button type="button" class="filter-chip" data-filter="risk" data-value="low">Low</button>
-    <button type="button" class="filter-chip" data-filter="risk" data-value="medium">Medium</button>
-    <button type="button" class="filter-chip" data-filter="risk" data-value="high">High</button>
+    <button type="button" class="filter-chip is-active" data-filter="risk" data-value="all">All <span class="filter-chip__count" data-facet-count></span></button>
+    <button type="button" class="filter-chip" data-filter="risk" data-value="low">Low <span class="filter-chip__count" data-facet-count></span></button>
+    <button type="button" class="filter-chip" data-filter="risk" data-value="medium">Medium <span class="filter-chip__count" data-facet-count></span></button>
+    <button type="button" class="filter-chip" data-filter="risk" data-value="high">High <span class="filter-chip__count" data-facet-count></span></button>
   </div>
   <div class="model-filter__group">
     <label class="model-filter__toggle">
@@ -49,13 +45,21 @@ permalink: /models/
   <p class="model-filter__count" data-filter-count aria-live="polite"></p>
 </div>
 
-<div class="card-grid" data-model-grid>
-  {% for m in featured %}
-    {% include model-card.html model=m %}
-  {% endfor %}
-  {% for m in rest %}
-    {% include model-card.html model=m %}
-  {% endfor %}
+<div data-model-grid>
+  {%- for g in grouped %}
+  <section class="model-group" data-model-group>
+    <h2 class="model-group__label">
+      {{ g.name }}
+      <span class="model-group__count muted" data-group-count>({{ g.items | size }})</span>
+    </h2>
+    <div class="card-grid">
+      {%- assign items = g.items | sort: "title" -%}
+      {%- for m in items %}
+        {% include model-card.html model=m %}
+      {%- endfor %}
+    </div>
+  </section>
+  {%- endfor %}
 </div>
 
 <p class="muted small model-filter__empty" data-filter-empty hidden>

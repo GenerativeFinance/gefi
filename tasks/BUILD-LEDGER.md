@@ -126,10 +126,10 @@ Never touch `infrastructure/cloudflare/`. Build with
 
 | ✓ | # | Surface | Group | Priority | Status / Notes |
 |---|---|---|---|---|---|
-| [ ] | 93 | Credit Oracle (redesign) | Live model pages | High priority | |
-| [ ] | 100 | Models catalogue | Catalogue & pricing | High priority | |
-| [ ] | 102 | Compliance & Trust portal | Trust & security | High priority | |
-| [ ] | 104 | Docs | Content & developer surface | High priority | |
+| [x] | 93 | Credit Oracle (redesign) | Live model pages | High priority | Done. Harness gains generic live-slider mode, waterfall output kind, network diagram, metrics_as_of caption — all front-matter-gated; credit-oracle.md consumes them. Regression on untouched pages verified. Build passed. |
+| [x] | 100 | Models catalogue | Catalogue & pricing | High priority | Done. Grouped grid (28 family sections, sticky labels), live facet counts on every chip (computed client-side, cross-filter aware), GA solid / Beta dashed card borders + maturity badges. Spec was written for 18 models; implemented against the real 92. Build passed. |
+| [x] | 102 | Compliance & Trust portal | Trust & security | High priority | Done. Trust-center layout: evidence cards w/ live dots, sticky jump-nav, counsel status board with pills, animated hash-chain diagram, run_id verifier (endpoint-or-sample fallback). Browser test caught a kramdown indentation bug that emptied the subprocessor table — fixed pre-commit. Build passed. |
+| [x] | 104 | Docs | Content & developer surface | High priority | Done. Real landing: cURL/Python/JS tabbed quickstart for POST /v1/models/{slug}/run + response, auth & rate-limits table, 11 featured reference cards w/ mono endpoints. Accessible tabs; no-JS shows all three stacked. Build passed. |
 | [ ] | 115 | Onboarding & KYC wizard | Onboarding & account lifecycle | High priority | |
 | [ ] | 116 | Dashboard — API Keys tab | Onboarding & account lifecycle | High priority | |
 | [ ] | 117 | Alerts & Notification Center | Onboarding & account lifecycle | High priority | |
@@ -143,7 +143,7 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [ ] | 103 | Security & vulnerability disclosure | Trust & security | Medium priority | |
 | [ ] | 109 | Sign in / Sign up (prelaunch state) | Auth & operator surfaces | Medium priority | |
 | [ ] | 110 | Admin sign-in | Auth & operator surfaces | Medium priority | |
-| [ ] | 111 | Dashboard — Overview | Auth & operator surfaces | Medium priority | |
+| [x] | 111 | Dashboard — Overview | Auth & operator surfaces | Medium priority | Done — TAKEN OUT OF PRIORITY ORDER: the /dashboard/ shell its spec assumes lived only in the lost session (handoff known gap), and high-priority 115-117 all depend on its tab pattern + gate. Rebuilt shell (layout, gate, hash tabs, sidebar) + Overview per redesign: KPI sparklines behind numbers, 3-way severity encoding. Other tabs = honest empty states for 112/113. Build passed. |
 | [ ] | 112 | Dashboard — Analytics, Compliance, Federation | Auth & operator surfaces | Medium priority | |
 | [ ] | 113 | Dashboard — admin tabs | Auth & operator surfaces | Medium priority | |
 | [ ] | 118 | Transactional email system | Onboarding & account lifecycle | Medium priority | |
