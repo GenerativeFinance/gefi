@@ -35,7 +35,22 @@ layout: default
         {%- for m in page.metrics limit: 4 -%}
           <div>
             <dt>{{ m.label }}</dt>
-            <dd>{{ m.value }}</dd>
+            {%- if m.live -%}
+              <dd class="metric-live"
+                  data-live-metric
+                  data-live-slug="{{ page.slug }}"
+                  data-live-base="{{ m.live.base }}"
+                  data-live-jitter="{{ m.live.jitter | default: '' }}"
+                  data-live-floor="{{ m.live.floor | default: 0 }}"
+                  data-live-unit="{{ m.live.unit | default: '' | escape }}"
+                  data-live-decimals="{{ m.live.decimals | default: 0 }}">
+                <span data-live-value>{{ m.value }}</span>
+                <span class="metric-live__spark" data-live-spark aria-hidden="true"></span>
+                <span class="metric-live__note">measured this session &mdash; sample</span>
+              </dd>
+            {%- else -%}
+              <dd>{{ m.value }}</dd>
+            {%- endif -%}
           </div>
         {%- endfor -%}
       </dl>
@@ -73,6 +88,22 @@ layout: default
                     <input type="checkbox" id="{{ fid }}" name="{{ f.name | escape }}"{% if f.value %} checked{% endif %}>
                     <span>{{ f.label }}</span>
                   </label>
+                {%- elsif f.type == 'tabs' -%}
+                  <fieldset class="demo-field demo-field--tabs demo-field--wide">
+                    <legend class="demo-field__label">{{ f.label }}</legend>
+                    <div class="demo-tabs">
+                      {%- for opt in f.options -%}
+                        {%- assign opt_label = opt.label | default: opt -%}
+                        <label class="demo-tab{% if opt_label == f.value %} is-active{% endif %}">
+                          <input type="radio" name="{{ f.name | escape }}" value="{{ opt_label | escape }}"{% if opt_label == f.value %} checked{% endif %}>
+                          <span class="demo-tab__label">{{ opt_label }}</span>
+                          {%- if opt.desc -%}
+                            <span class="demo-tab__desc">{{ opt.desc }}</span>
+                          {%- endif -%}
+                        </label>
+                      {%- endfor -%}
+                    </div>
+                  </fieldset>
                 {%- elsif f.type == 'select' -%}
                   <label class="demo-field" for="{{ fid }}">
                     <span class="demo-field__label">{{ f.label }}</span>
@@ -129,8 +160,20 @@ layout: default
               </button>
               <button type="reset" class="btn btn-ghost">Reset</button>
               <p class="demo-status" data-demo-status role="status" aria-live="polite"></p>
+              {%- if page.demo.refreshed -%}
+                <p class="demo-refreshed" data-demo-refreshed hidden></p>
+              {%- endif -%}
             </div>
           </form>
+
+          {%- if page.demo.graph -%}
+            <figure class="demo-graph" data-demo-graph>
+              <div class="demo-graph__canvas" data-demo-graph-canvas></div>
+              {%- if page.demo.graph.caption -%}
+                <figcaption class="muted small">{{ page.demo.graph.caption }}</figcaption>
+              {%- endif -%}
+            </figure>
+          {%- endif -%}
 
           <div class="demo-output" data-demo-output hidden></div>
 
@@ -171,7 +214,11 @@ layout: default
               "sampleText": {{ page.demo.sample_text | default: '' | jsonify }},
               "live": {{ page.demo.live | default: false | jsonify }},
               "base": {{ page.demo.base | default: 0 | jsonify }},
-              "noticeFormat": {{ page.demo.notice_format | default: '' | jsonify }}
+              "noticeFormat": {{ page.demo.notice_format | default: '' | jsonify }},
+              "graph": {{ page.demo.graph | default: false | jsonify }},
+              "refreshed": {{ page.demo.refreshed | default: false | jsonify }},
+              "reference": {{ page.demo.reference | default: false | jsonify }},
+              "barLabels": {{ page.demo.bar_labels | default: none | jsonify }}
             }
           </script>
         </section>

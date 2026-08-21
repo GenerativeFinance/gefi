@@ -242,7 +242,11 @@
         );
       }
       svg.appendChild(
-        svgEl("path", { d: pathFrom(pts), class: "gefi-chart__line gefi-chart__series--" + (i + 1), fill: "none" })
+        svgEl("path", {
+          d: pathFrom(pts),
+          class: "gefi-chart__line gefi-chart__series--" + (i + 1) + (s.kind === "dashed" ? " gefi-chart__line--dashed" : ""),
+          fill: "none"
+        })
       );
     });
 

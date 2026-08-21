@@ -17,11 +17,16 @@ metrics:
 analytics: true
 demo:
   output: curve
+  live: true
+  refreshed: true
   cta: Run the nowcast
-  lead: Pick a geography and indicator. The curve is the rolling nowcast; the track record below reports how it has scored against final prints.
+  lead: Pick a geography and indicator — the nowcast line re-renders as you switch, against the last confirmed print. The timestamp shows the refresh cadence the real-time claim rests on.
   series_label: Nowcast
   chart_label: Nowcast vs last confirmed print
   x_labels: [12 refreshes ago, latest]
+  reference:
+    label: Last confirmed print
+    field: vs_print
   fields:
     - name: geography
       type: select

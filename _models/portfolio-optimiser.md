@@ -16,36 +16,28 @@ metrics:
   - { label: "Federated participants", value: "27" }
 analytics: true
 demo:
-  output: table
+  output: bars
+  live: true
   cta: Solve
-  lead: Choose a regime and constraints, then solve. The allocation below is the optimiser's output — weights and risk contribution per sleeve.
-  columns: [Sleeve, Weight %, Risk contribution %]
-  row_labels: [Global equity, Government bonds, Credit, Real assets, Cash]
-  row_count: 5
+  lead: Pick a regime and flip the constraints — the allocation re-solves live, so "risk-parity" and "long-only" are visibly different outputs, not just different words.
+  bar_labels: [Global equity, Government bonds, Credit, Real assets, Cash]
   fields:
     - name: regime
-      type: select
+      type: tabs
       label: Regime
-      options: [Mean-variance, Black-Litterman, Risk-parity]
       value: Black-Litterman
-    - name: mandate
-      type: select
-      label: Mandate
-      options: [Long-only, Long-short]
-      value: Long-only
-    - name: turnover
-      type: number
-      label: Turnover cap
-      value: 15
-      min: 0
-      max: 100
-      unit: "%"
-    - name: cardinality
-      type: number
-      label: Max positions
-      value: 40
-      min: 5
-      max: 500
+      options:
+        - { label: Mean-variance, desc: "Classic risk-versus-return trade-off from your own estimates." }
+        - { label: Black-Litterman, desc: "Blends market equilibrium with your views — steadier weights." }
+        - { label: Risk-parity, desc: "Each sleeve contributes equal risk, whatever its dollar size." }
+    - name: long_only
+      type: checkbox
+      label: Long-only mandate
+      value: true
+    - name: cap_sleeve
+      type: checkbox
+      label: Cap any sleeve at 40%
+      value: false
     - name: federated
       type: checkbox
       label: Use the federated prior
