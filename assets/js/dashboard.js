@@ -344,6 +344,7 @@
   GeFi.MODELS = [
     { slug: "board-lp-report-generator", name: "Board & LP Report Generator", wing: "Generative AI", risk: "medium", federated: false, unit: "Reconciled figures", series: [0.97, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1, 1, 1, 1, 1] },
     { slug: "credit-oracle", name: "Credit Oracle", wing: "Credit & Risk", risk: "medium", federated: true, unit: "AUC", series: [0.79, 0.8, 0.81, 0.8, 0.82, 0.83, 0.83, 0.84, 0.84, 0.83, 0.84, 0.84] },
+    { slug: "disclosure-drafter", name: "Disclosure Drafter", wing: "Generative AI", risk: "high", federated: false, unit: "Checklist coverage", series: [0.9, 0.91, 0.92, 0.93, 0.94, 0.94, 0.95, 0.96, 0.96, 0.97, 0.97, 0.98] },
     { slug: "fraud-graph", name: "Fraud Graph", wing: "Fraud & AML", risk: "high", federated: true, unit: "Precision", series: [0.71, 0.73, 0.72, 0.75, 0.77, 0.76, 0.78, 0.79, 0.8, 0.81, 0.81, 0.82] },
     { slug: "gefi-copilot", name: "GeFi Copilot", wing: "Generative AI", risk: "medium", federated: false, unit: "Grounded claims", series: [0.94, 0.95, 0.95, 0.96, 0.96, 0.97, 0.97, 0.97, 0.98, 0.98, 0.98, 0.98] },
     { slug: "ic-credit-memo-generator", name: "IC & Credit Memo Generator", wing: "Generative AI", risk: "medium", federated: false, unit: "Grounded figures", series: [0.96, 0.97, 0.97, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1, 1, 1] },
