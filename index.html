@@ -23,9 +23,9 @@ description: GeFi is the marketplace for AI financial models. Discover, subscrib
    primary_url=hero_primary_url
    secondary_label="Browse models"
    secondary_url="/models/"
-   note="No card required. 100 free inference calls a day on the Free tier." %}
-
-{% include proof-bar.html %}
+   note="No card required. 100 free inference calls a day on the Free tier."
+   ticker=true
+   proof=true %}
 
 <section class="section">
   <div class="container">
@@ -40,31 +40,37 @@ description: GeFi is the marketplace for AI financial models. Discover, subscrib
         <div class="feature-card__icon" aria-hidden="true">◐</div>
         <h3>Federated by default</h3>
         <p>Train against private datasets that never leave their owner. Models earn revenue every time their gradients improve a strategy.</p>
+        <p class="feature-card__badge"><span class="badge badge--federated">Federated</span></p>
       </li>
       <li class="feature-card">
         <div class="feature-card__icon" aria-hidden="true">⛨</div>
         <h3>Audit-ready, not audit-friendly</h3>
         <p>Every inference is appended to a hash-chained log and Merkle-anchored. Auditors get cryptographic proofs, not screenshots.</p>
+        <p class="feature-card__badge"><span class="badge badge--compliance">Audited</span></p>
       </li>
       <li class="feature-card">
         <div class="feature-card__icon" aria-hidden="true">⚖</div>
         <h3>Compliance routing</h3>
         <p>Each model declares its jurisdictions. We map them to local counsel, KYC tiers, and disclosure obligations automatically.</p>
+        <p class="feature-card__badge"><span class="badge badge--jurisdiction">Jurisdictional</span></p>
       </li>
       <li class="feature-card">
         <div class="feature-card__icon" aria-hidden="true">⌁</div>
         <h3>Edge-native</h3>
         <p>Built on Cloudflare Workers, D1, R2, KV, and Vectorize. Sub-100&nbsp;ms inference at the edge, billed per call.</p>
+        <p class="feature-card__badge"><span class="badge badge--compliance">Audited</span></p>
       </li>
       <li class="feature-card">
         <div class="feature-card__icon" aria-hidden="true">∑</div>
         <h3>Risk surface</h3>
         <p>Live VaR, stress tests, drawdowns, and exposure across every model you've subscribed to — one screen, one number.</p>
+        <p class="feature-card__badge"><span class="badge badge--jurisdiction">Jurisdictional</span></p>
       </li>
       <li class="feature-card">
         <div class="feature-card__icon" aria-hidden="true">⌬</div>
         <h3>Sovereign tenants</h3>
         <p>Regional data planes for US / EU / MENA, with sovereign-cloud options (OVH SecNumCloud, Infomaniak, AWS Bahrain) on the Enterprise tier.</p>
+        <p class="feature-card__badge"><span class="badge badge--federated">Federated</span></p>
       </li>
     </ul>
   </div>
@@ -134,3 +140,6 @@ description: GeFi is the marketplace for AI financial models. Discover, subscrib
 {% include cta.html
    title="Put a federated, audited AI model into production this week."
    lead="Free to start. Pro plan unlocks federated participation and live execution." %}
+
+<script src="{{ '/assets/js/dashboard.js' | relative_url }}" defer></script>
+<script src="{{ '/assets/js/home-ticker.js' | relative_url }}" defer></script>

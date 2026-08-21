@@ -296,6 +296,53 @@ p  { margin: 0 0 var(--space-4); }
   .proof-bar__grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-4); }
 }
 
+/* Task 99: proof bar embedded in the hero's lower third — stats visible
+   without scrolling. The standalone variant above still works elsewhere. */
+.proof-bar--hero {
+  background: transparent;
+  border-top: 1px solid var(--color-hero-border);
+  margin-top: var(--space-6);
+  padding: var(--space-5) 0 0;
+}
+
+/* Task 99: hero inference ticker. */
+.hero-ticker {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin-top: var(--space-5); padding: 8px 16px;
+  background: rgba(230, 232, 240, 0.05);
+  border: 1px solid var(--color-hero-border);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  color: var(--color-hero-muted);
+  max-width: 100%;
+}
+.hero-ticker__dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--color-accent); flex-shrink: 0;
+  animation: hero-ticker-pulse 2.4s ease-in-out infinite;
+}
+@keyframes hero-ticker-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.hero-ticker__text {
+  font-family: var(--font-mono);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  opacity: 0; transition: opacity 0.24s ease;
+}
+.hero-ticker__text.is-in { opacity: 1; }
+.hero-ticker__tag {
+  flex-shrink: 0; font-size: 0.6875rem; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--color-hero-muted);
+  border: 1px solid var(--color-hero-border); border-radius: 999px;
+  padding: 2px 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-ticker__dot { animation: none; }
+}
+
+.feature-card__badge { margin: var(--space-3) 0 0; }
+
 /* Feature grid ------------------------------------------------------- */
 .feature-grid {
   list-style: none; padding: 0; margin: 0;
