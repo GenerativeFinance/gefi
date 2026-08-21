@@ -42,6 +42,12 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 - **Design→Code order:** Design prompt produces the mock; Code prompt
   implements it in this stack. When executing without a fresh mock, implement
   from the prompt text + reference notes directly.
+- **Per-model UI design prompts:** every model also has a dark-system Claude
+  Design prompt for its own page UI at `models[].prompts.designApp` in
+  `tasks/prompt-library.json` (generated from each built page's front matter
+  — demo kind, inputs, metrics, network, compliance posture). Prepend the §1
+  prefix. Use them for dark model-page mocks (task 233's option b) or as the
+  model-detail views inside app surfaces like the marketplace (task 213).
 
 ## Checklist
 
