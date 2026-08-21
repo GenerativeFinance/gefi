@@ -146,6 +146,21 @@
       return { sample: true, kind: "table", columns: cols, rows: rows };
     }
 
+    if (kind === "waterfall") {
+      /* Signed contributions from a base rate to a final score. */
+      var base = GeFi.util.isNum && typeof cfg.base === "number" ? cfg.base : 0.05;
+      var names = cfg.drivers && cfg.drivers.length ? cfg.drivers : ["Factor 1", "Factor 2", "Factor 3"];
+      var contribs = names.map(function (d) {
+        return { name: d, delta: (rand() - 0.45) * 0.12 };
+      });
+      var total = base;
+      contribs.forEach(function (c) {
+        total += c.delta;
+      });
+      total = Math.max(0.005, Math.min(0.95, total));
+      return { sample: true, kind: "waterfall", base: base, contribs: contribs, value: total, label: cfg.scoreLabel || "Score" };
+    }
+
     return {
       sample: true,
       kind: "text",
@@ -201,6 +216,69 @@
       }
     } else if (res.kind === "curve") {
       wrap.appendChild(GeFi.svg.line(res.series, { label: cfg.chartLabel || "Projection", xLabels: res.xLabels }));
+    } else if (res.kind === "waterfall") {
+      var wg = GeFi.svg.gauge(res.value, {
+        label: res.label,
+        format: function (v) {
+          return GeFi.fmt.num(v, 2);
+        }
+      });
+      var whead = document.createElement("div");
+      whead.className = "demo-result__gauge";
+      whead.appendChild(wg);
+      wrap.appendChild(whead);
+
+      var wl = document.createElement("ul");
+      wl.className = "demo-waterfall";
+      var running = res.base;
+      function wrow(name, delta, total, cls) {
+        var li = document.createElement("li");
+        if (cls) li.className = cls;
+        var n = document.createElement("span");
+        n.className = "demo-waterfall__name";
+        n.textContent = name;
+        var d = document.createElement("span");
+        d.className = "demo-waterfall__delta" + (delta != null && delta < 0 ? " is-neg" : "");
+        d.textContent = delta == null ? "" : GeFi.fmt.delta(delta, 3);
+        var t = document.createElement("span");
+        t.className = "demo-waterfall__total";
+        t.textContent = GeFi.fmt.num(total, 3);
+        li.appendChild(n);
+        li.appendChild(d);
+        li.appendChild(t);
+        wl.appendChild(li);
+      }
+      wrow("Base rate", null, res.base, "is-base");
+      res.contribs.forEach(function (c) {
+        running += c.delta;
+        wrow(c.name, c.delta, running);
+      });
+      wrow("Final " + (res.label || "score"), null, res.value, "is-final");
+      wrap.appendChild(wl);
+
+      if (cfg.noticeFormat) {
+        var adverse = res.contribs
+          .filter(function (c) {
+            return c.delta > 0;
+          })
+          .sort(function (a, b) {
+            return b.delta - a.delta;
+          });
+        var notice = document.createElement("div");
+        notice.className = "demo-notice";
+        var nh = document.createElement("p");
+        nh.className = "demo-notice__title";
+        nh.textContent = cfg.noticeFormat + " — principal reasons affecting this result";
+        notice.appendChild(nh);
+        var ol = document.createElement("ol");
+        adverse.slice(0, 4).forEach(function (c) {
+          var oli = document.createElement("li");
+          oli.textContent = c.name;
+          ol.appendChild(oli);
+        });
+        notice.appendChild(ol);
+        wrap.appendChild(notice);
+      }
     } else if (res.kind === "table") {
       var t = document.createElement("table");
       t.className = "demo-table";
@@ -251,7 +329,8 @@
     out.setAttribute("aria-busy", "true");
 
     if (!cfg.endpoint) {
-      /* Local seeded mock. Small delay so the loading state is perceivable. */
+      /* Local seeded mock. Small delay so the loading state is perceivable
+       * (skipped in live mode, where latency would fight the sliders). */
       window.setTimeout(function () {
         try {
           renderResult(mock(data));
@@ -262,7 +341,7 @@
         }
         out.setAttribute("aria-busy", "false");
         setBusy(false);
-      }, 320);
+      }, cfg.live ? 40 : 320);
       return;
     }
 
@@ -297,6 +376,30 @@
     run();
   });
 
+  /* Range readouts track their slider. */
+  form.addEventListener("input", function (e) {
+    var el = e.target;
+    if (el && el.type === "range") {
+      var label = el.closest(".demo-field--range");
+      var out = label && label.querySelector("[data-range-readout]");
+      if (out) out.textContent = el.value;
+    }
+  });
+
+  /* Live mode: re-run on every input, debounced, and once on load. */
+  if (cfg.live) {
+    var liveTimer = null;
+    form.addEventListener("input", function () {
+      window.clearTimeout(liveTimer);
+      liveTimer = window.setTimeout(run, 180);
+    });
+    form.addEventListener("change", function () {
+      window.clearTimeout(liveTimer);
+      liveTimer = window.setTimeout(run, 60);
+    });
+    run();
+  }
+
   form.addEventListener("reset", function () {
     window.setTimeout(function () {
       out.hidden = true;
@@ -306,6 +409,14 @@
   });
 
   /* --------------------------------------------------------- analytics */
+
+  var netTarget = document.querySelector("[data-network-diagram]");
+  if (netTarget) {
+    var netCount = parseInt(netTarget.getAttribute("data-network-count"), 10) || 0;
+    if (netCount > 0) {
+      netTarget.appendChild(GeFi.svg.network(netCount, { label: netTarget.getAttribute("data-network-label") || "participants" }));
+    }
+  }
 
   var analytics = document.querySelector("[data-model-analytics]");
   if (analytics) {

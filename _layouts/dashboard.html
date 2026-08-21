@@ -1,0 +1,65 @@
+---
+layout: null
+---
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <script>document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/, "js");</script>
+    {%- include head.html -%}
+  </head>
+  <body class="theme-light dash-body">
+    <a class="skip-link" href="#dash-main">Skip to content</a>
+
+    <div class="dash-gate" data-dash-gate hidden>
+      <div class="dash-gate__card">
+        <p class="eyebrow">Preview</p>
+        <h1>GeFi dashboard</h1>
+        <p class="muted">
+          This is a seeded preview of the operator dashboard — mock data, no
+          backend calls, nothing here is a live tenant. The production
+          dashboard ships on <code>app.gefi.io</code>.
+        </p>
+        <button type="button" class="btn btn-primary" data-dash-enter>Enter preview</button>
+        <p class="muted small"><a href="/">Back to gefi.io</a></p>
+      </div>
+    </div>
+
+    <div class="dash-shell" data-dash-root hidden>
+      <header class="dash-topbar">
+        <a class="dash-topbar__brand" href="/">GeFi</a>
+        <span class="badge">Preview — sample data</span>
+        <div class="dash-topbar__spacer"></div>
+        <button type="button" class="dash-bell" data-dash-bell aria-label="Notifications">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span class="dash-bell__count" data-dash-bell-count hidden></span>
+        </button>
+        <button type="button" class="btn btn-ghost" data-dash-exit>Exit preview</button>
+      </header>
+      <nav class="dash-sidebar" aria-label="Dashboard sections">
+        <p class="dash-sidebar__label">Operate</p>
+        <a href="#overview" data-dash-tab-link="overview">Overview</a>
+        <a href="#analytics" data-dash-tab-link="analytics">Analytics</a>
+        <a href="#compliance" data-dash-tab-link="compliance">Compliance</a>
+        <a href="#federation" data-dash-tab-link="federation">Federation</a>
+        <a href="#api-keys" data-dash-tab-link="api-keys">API keys</a>
+        <a href="#alerts" data-dash-tab-link="alerts">Alerts</a>
+        <p class="dash-sidebar__label">Admin</p>
+        <a href="#tenants" data-dash-tab-link="tenants">Tenants</a>
+        <a href="#approvals" data-dash-tab-link="approvals">Approvals</a>
+        <a href="#system" data-dash-tab-link="system">System</a>
+      </nav>
+      <main id="dash-main" class="dash-main">
+        {{ content }}
+      </main>
+    </div>
+
+    <noscript>
+      <div class="container" style="padding: 48px 24px;">
+        <h1>GeFi dashboard preview</h1>
+        <p class="muted">The dashboard preview needs JavaScript. The rest of the site works without it — <a href="/">back to gefi.io</a>.</p>
+      </div>
+    </noscript>
+
+    <script src="{{ '/assets/js/dashboard.js' | relative_url }}" defer></script>
+  </body>
+</html>

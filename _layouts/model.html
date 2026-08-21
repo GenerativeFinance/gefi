@@ -39,6 +39,9 @@ layout: default
           </div>
         {%- endfor -%}
       </dl>
+      {%- if page.metrics_as_of -%}
+        <p class="muted small metric-freshness">Metrics as of {{ page.metrics_as_of }} &mdash; refreshed with each published evaluation run.</p>
+      {%- endif -%}
     </section>
   {%- endif -%}
 
@@ -83,6 +86,22 @@ layout: default
                   <label class="demo-field demo-field--wide" for="{{ fid }}">
                     <span class="demo-field__label">{{ f.label }}</span>
                     <textarea id="{{ fid }}" name="{{ f.name | escape }}" rows="4" placeholder="{{ f.placeholder | escape }}">{{ f.value }}</textarea>
+                  </label>
+                {%- elsif f.type == 'range' -%}
+                  <label class="demo-field demo-field--range" for="{{ fid }}">
+                    <span class="demo-field__label">
+                      {{ f.label }}
+                      {%- if f.unit %} <span class="demo-field__unit">{{ f.unit }}</span>{% endif -%}
+                      <output class="demo-field__readout" data-range-readout for="{{ fid }}">{{ f.value }}</output>
+                    </span>
+                    <input
+                      type="range"
+                      id="{{ fid }}"
+                      name="{{ f.name | escape }}"
+                      {% if f.value %}value="{{ f.value | escape }}"{% endif %}
+                      {% if f.min %}min="{{ f.min }}"{% endif %}
+                      {% if f.max %}max="{{ f.max }}"{% endif %}
+                      {% if f.step %}step="{{ f.step }}"{% endif %}>
                   </label>
                 {%- else -%}
                   <label class="demo-field" for="{{ fid }}">
@@ -149,13 +168,29 @@ layout: default
               "rowCount": {{ page.demo.row_count | default: 5 | jsonify }},
               "drivers": {{ page.demo.drivers | default: none | jsonify }},
               "xLabels": {{ page.demo.x_labels | default: none | jsonify }},
-              "sampleText": {{ page.demo.sample_text | default: '' | jsonify }}
+              "sampleText": {{ page.demo.sample_text | default: '' | jsonify }},
+              "live": {{ page.demo.live | default: false | jsonify }},
+              "base": {{ page.demo.base | default: 0 | jsonify }},
+              "noticeFormat": {{ page.demo.notice_format | default: '' | jsonify }}
             }
           </script>
         </section>
       {%- endif -%}
 
       {%- comment -%} Live analytics — series comes from the model's row in dashboard.js. {%- endcomment -%}
+      {%- comment -%} Federated-network diagram — from a `network:` front-matter block. {%- endcomment -%}
+      {%- if page.network -%}
+        <section class="model-network" data-model-network aria-labelledby="network-heading">
+          <h2 id="network-heading">{{ page.network.title | default: 'Federated network' }}</h2>
+          <div class="network-diagram" data-network-diagram
+               data-network-count="{{ page.network.count | default: 0 }}"
+               data-network-label="{{ page.network.label | default: 'participants' | escape }}"></div>
+          {%- if page.network.caption -%}
+            <p class="muted small">{{ page.network.caption }}</p>
+          {%- endif -%}
+        </section>
+      {%- endif -%}
+
       {%- if page.analytics -%}
         <section class="model-analytics" data-model-analytics aria-labelledby="analytics-heading">
           <h2 id="analytics-heading">Live analytics</h2>
@@ -248,7 +283,7 @@ layout: default
     </aside>
   </div>
 </article>
-{%- if page.demo or page.analytics -%}
+{%- if page.demo or page.analytics or page.network -%}
   <script src="{{ '/assets/js/dashboard.js' | relative_url }}" defer></script>
   <script src="{{ '/assets/js/model-demo.js' | relative_url }}" defer></script>
 {%- endif -%}

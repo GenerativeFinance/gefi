@@ -1,7 +1,7 @@
 ---
 layout: default
 ---
-<article class="container narrow page">
+<article class="container {% unless page.wide %}narrow {% endunless %}page">
   {%- if page.eyebrow -%}
     <p class="eyebrow">{{ page.eyebrow }}</p>
   {%- endif -%}
