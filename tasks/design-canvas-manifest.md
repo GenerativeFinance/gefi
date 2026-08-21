@@ -1,0 +1,162 @@
+# Design canvas manifest — continuous Claude Design automation
+
+Tracks progress publishing every prompt in `gefi-design-prompts.md` (the Design-only queue split
+from the prompt pack; source prompts live in `tasks/design-system-v2.md`, `tasks/UI-FOLLOWUP-LEDGER.md`
+and `tasks/prompt-library.json`) as a Claude Design canvas via the `design` skill.
+
+**Loop contract:** find the first `[ ]` row below; draft its prompt as `.dc.html` artboard(s)
+(prepend the tagged prefix — DARK app system or LIGHT marketing system); seed with
+`seed-canvas.mjs`; `--check`; publish with `Artifact` (`contract: "0.1.31"`, declaring whatever the
+`artifact-capabilities` roster lists); record the published URL in this row; tick `[x]`; move to
+the next row. On a publish that cannot be saved (no roster capability, or a refused pin), still
+tick the row and note "view-only" plus the handed-over path. After two failed attempts on one row,
+mark `BLOCKED: <reason>` and stop.
+
+- [x] 001 — Task 200 — App shell (DARK) — https://claude.ai/code/artifact/f97235b6-8185-4404-8ff7-edf6da15a752
+- [ ] 002 — Task 202 — App component library (DARK) — 
+- [ ] 003 — Task 203 — Investor Overview (DARK) — 
+- [ ] 004 — Task 204 — Holdings · Transactions · Watchlist (DARK) — 
+- [ ] 005 — Task 205 — Analytics · Insights (DARK) — 
+- [ ] 006 — Task 206 — Portfolio Performance (DARK) — 
+- [ ] 007 — Task 207 — AI Portfolio (DARK) — 
+- [ ] 008 — Task 208 — Portfolio AI Models (DARK) — 
+- [ ] 009 — Task 209 — Rebalancing & Actions (DARK) — 
+- [ ] 010 — Task 210 — Live Trading (DARK) — 
+- [ ] 011 — Task 211 — Order History + Activity (DARK) — 
+- [ ] 012 — Task 212 — Backtesting Environment (DARK) — 
+- [ ] 013 — Task 213 — AI Model Marketplace (DARK) — 
+- [ ] 014 — Task 214 — Model Categories (DARK) — 
+- [ ] 015 — Task 215 — Developers directory (DARK) — 
+- [ ] 016 — Task 216 — Developer Console: Overview + My Models (DARK) — 
+- [ ] 017 — Task 217 — Developer Console: Training + Deployment + Monitoring (DARK) — 
+- [ ] 018 — Task 218 — Developer Console: Collaboration + Bounty Board (DARK) — 
+- [ ] 019 — Task 219 — Learning Center (DARK) — 
+- [ ] 020 — Task 220 — Market Data (DARK) — 
+- [ ] 021 — Task 221 — Data Provider Overview + Datasets (DARK) — 
+- [ ] 022 — Task 222 — Market Insights + Revenue (DARK) — 
+- [ ] 023 — Task 223 — Funding Hub dashboard (DARK) — 
+- [ ] 024 — Task 224 — Bot Funding + AI Model Funding (DARK) — 
+- [ ] 025 — Task 225 — Bounty Funding (DARK) — 
+- [ ] 026 — Task 226 — Reports (merged page) (DARK) — 
+- [ ] 027 — Task 227 — Compliance Reports + Risk Reports (DARK) — 
+- [ ] 028 — Task 228 — Custom Report Builder (DARK) — 
+- [ ] 029 — Task 229 — Regulator Overview (DARK) — 
+- [ ] 030 — Task 230 — Regulator sub-pages (the five 404 tabs) (DARK) — 
+- [ ] 031 — Task 231 — zKML Verification surface (DARK) — 
+- [ ] 032 — Task 303 — Auth & identity + auth screens (DARK) — 
+- [ ] 033 — Model 01 — macro-nowcast (DARK) — 
+- [ ] 034 — Model 02 — portfolio-optimiser (DARK) — 
+- [ ] 035 — Model 03 — sentiment-from-filings (DARK) — 
+- [ ] 036 — Model 04 — yield-curve-forecaster (DARK) — 
+- [ ] 037 — Model 05 — commodities-flow-nowcast (DARK) — 
+- [ ] 038 — Model 06 — credit-oracle (DARK) — 
+- [ ] 039 — Model 07 — liquidity-stress-engine (DARK) — 
+- [ ] 040 — Model 08 — mortgage-default-prepay (DARK) — 
+- [ ] 041 — Model 09 — vendor-risk-aiops (DARK) — 
+- [ ] 042 — Model 10 — fraud-graph (DARK) — 
+- [ ] 043 — Model 11 — transaction-monitoring-explainer (DARK) — 
+- [ ] 044 — Model 12 — claim-fraud-vision (DARK) — 
+- [ ] 045 — Model 13 — trade-finance-doc-ai (DARK) — 
+- [ ] 046 — Model 14 — cross-border-payment-router (DARK) — 
+- [ ] 047 — Model 15 — kyb-graph (DARK) — 
+- [ ] 048 — Model 16 — tax-residency-classifier (DARK) — 
+- [ ] 049 — Model 17 — regulatory-change-summariser (DARK) — 
+- [ ] 050 — Model 18 — esg-materiality-scorer (DARK) — 
+- [ ] 051 — Model 19 — liquidation-valuation (DARK) — 
+- [ ] 052 — Model 20 — real-options-valuation (DARK) — 
+- [ ] 053 — Model 21 — merger-model (DARK) — 
+- [ ] 054 — Model 22 — accretion-dilution (DARK) — 
+- [ ] 055 — Model 23 — lbo-model (DARK) — 
+- [ ] 056 — Model 24 — mbo-model (DARK) — 
+- [ ] 057 — Model 25 — spin-off-model (DARK) — 
+- [ ] 058 — Model 26 — carve-out-model (DARK) — 
+- [ ] 059 — Model 27 — recapitalization-model (DARK) — 
+- [ ] 060 — Model 28 — purchase-price-allocation (DARK) — 
+- [ ] 061 — Model 29 — growth-equity-model (DARK) — 
+- [ ] 062 — Model 30 — ipo-model (DARK) — 
+- [ ] 063 — Model 31 — startup-financial-model (DARK) — 
+- [ ] 064 — Model 32 — vc-method-valuation (DARK) — 
+- [ ] 065 — Model 33 — vc-portfolio-tracker (DARK) — 
+- [ ] 066 — Model 34 — cap-table-manager (DARK) — 
+- [ ] 067 — Model 35 — waterfall-distribution (DARK) — 
+- [ ] 068 — Model 36 — safe-note-conversion (DARK) — 
+- [ ] 069 — Model 37 — follow-on-advisor (DARK) — 
+- [ ] 070 — Model 38 — startup-runway-tracker (DARK) — 
+- [ ] 071 — Model 39 — fund-cash-flow-modeler (DARK) — 
+- [ ] 072 — Model 40 — fund-performance-engine (DARK) — 
+- [ ] 073 — Model 41 — capital-budgeting-engine (DARK) — 
+- [ ] 074 — Model 42 — project-finance-modeler (DARK) — 
+- [ ] 075 — Model 43 — infrastructure-investment-modeler (DARK) — 
+- [ ] 076 — Model 44 — renewable-project-modeler (DARK) — 
+- [ ] 077 — Model 45 — re-development-modeler (DARK) — 
+- [ ] 078 — Model 46 — re-acquisition-underwriter (DARK) — 
+- [ ] 079 — Model 47 — lease-vs-buy-analyzer (DARK) — 
+- [ ] 080 — Model 48 — debt-schedule-engine (DARK) — 
+- [ ] 081 — Model 49 — working-capital-forecaster (DARK) — 
+- [ ] 082 — Model 50 — securitization-modeler (DARK) — 
+- [ ] 083 — Model 51 — trend-following-engine (DARK) — 
+- [ ] 084 — Model 52 — cross-sectional-mean-reversion (DARK) — 
+- [ ] 085 — Model 53 — breakout-signal-engine (DARK) — 
+- [ ] 086 — Model 54 — reversal-detector (DARK) — 
+- [ ] 087 — Model 55 — global-macro-signal-engine (DARK) — 
+- [ ] 088 — Model 56 — carry-trade-optimizer (DARK) — 
+- [ ] 089 — Model 57 — statistical-arbitrage-engine (DARK) — 
+- [ ] 090 — Model 58 — pairs-trading-engine (DARK) — 
+- [ ] 091 — Model 59 — convertible-arbitrage-modeler (DARK) — 
+- [ ] 092 — Model 60 — fixed-income-arbitrage-engine (DARK) — 
+- [ ] 093 — Model 61 — merger-arbitrage-tracker (DARK) — 
+- [ ] 094 — Model 62 — fx-triangular-arbitrage-scanner (DARK) — 
+- [ ] 095 — Model 63 — calendar-spread-optimizer (DARK) — 
+- [ ] 096 — Model 64 — options-vol-arb-engine (DARK) — 
+- [ ] 097 — Model 65 — market-making-engine (DARK) — 
+- [ ] 098 — Model 66 — hft-signal-research-engine (DARK) — 
+- [ ] 099 — Model 67 — multifactor-ranking-engine (DARK) — 
+- [ ] 100 — Model 68 — momentum-factor-screener (DARK) — 
+- [ ] 101 — Model 69 — value-low-vol-screener (DARK) — 
+- [ ] 102 — Model 70 — risk-parity-allocator (DARK) — 
+- [ ] 103 — Model 71 — gradient-boosted-alpha-engine (DARK) — 
+- [ ] 104 — Model 72 — transformer-sentiment-alpha (DARK) — 
+- [ ] 105 — Model 73 — rl-execution-agent (DARK) — 
+- [ ] 106 — Model 74 — alt-data-alpha-scanner (DARK) — 
+- [ ] 107 — Model 75 — strategy-construction-engine (DARK) — 
+- [ ] 108 — Model 76 — gefi-copilot (DARK) — 
+- [ ] 109 — Model 77 — ic-credit-memo-generator (DARK) — 
+- [ ] 110 — Model 78 — board-lp-report-generator (DARK) — 
+- [ ] 111 — Model 79 — scenario-narrative-engine (DARK) — 
+- [ ] 112 — Model 80 — disclosure-drafter (DARK) — 
+- [ ] 113 — Model 81 — cecl-ifrs9-ecl-engine (DARK) — 
+- [ ] 114 — Model 82 — irrbb-alm-modeler (DARK) — 
+- [ ] 115 — Model 83 — deposit-behavior-model (DARK) — 
+- [ ] 116 — Model 84 — basel-rwa-capital-calculator (DARK) — 
+- [ ] 117 — Model 85 — wallet-risk-scorer (DARK) — 
+- [ ] 118 — Model 86 — stablecoin-depeg-monitor (DARK) — 
+- [ ] 119 — Model 87 — defi-protocol-risk-scorer (DARK) — 
+- [ ] 120 — Model 88 — monte-carlo-simulation-service (DARK) — 
+- [ ] 121 — Model 89 — volatility-surface-service (DARK) — 
+- [ ] 122 — Model 90 — lp-treasury-cash-management (DARK) — 
+- [ ] 123 — Model 91 — underwriting-pricing-engine (DARK) — 
+- [ ] 124 — Model 92 — reserving-engine (DARK) — 
+- [ ] 125 — Surface 119 — Model Developer Console (LIGHT) — 
+- [ ] 126 — Surface 123 — trust.gefi.io portal (LIGHT) — 
+- [ ] 127 — Surface 94 — Fraud Graph (redesign) (LIGHT) — 
+- [ ] 128 — Surface 95 — Macro Nowcast (redesign) (LIGHT) — 
+- [ ] 129 — Surface 96 — Portfolio Optimiser (redesign) (LIGHT) — 
+- [ ] 130 — Surface 99 — Homepage & navigation shell (LIGHT) — 
+- [ ] 131 — Surface 101 — Pricing (LIGHT) — 
+- [ ] 132 — Surface 103 — Security & vulnerability disclosure (LIGHT) — 
+- [ ] 133 — Surface 109 — Sign in / Sign up (prelaunch state) (LIGHT) — 
+- [ ] 134 — Surface 110 — Admin sign-in (LIGHT) — 
+- [ ] 135 — Surface 112 — Dashboard — Analytics, Compliance, Federation (LIGHT) — 
+- [ ] 136 — Surface 113 — Dashboard — admin tabs (LIGHT) — 
+- [ ] 137 — Surface 118 — Transactional email system (LIGHT) — 
+- [ ] 138 — Surface 120 — Paper-Trading Sandbox (LIGHT) — 
+- [ ] 139 — Surface 121 — Public Model Leaderboard (LIGHT) — 
+- [ ] 140 — Surface 124 — Federated Participant Console (LIGHT) — 
+- [ ] 141 — Surface 97 — Sentiment from Filings (redesign) (LIGHT) — 
+- [ ] 142 — Surface 98 — Trade Finance Doc AI (redesign) (LIGHT) — 
+- [ ] 143 — Surface 105 — Research hub (LIGHT) — 
+- [ ] 144 — Surface 106 — Blog (LIGHT) — 
+- [ ] 145 — Surface 107 — About & Partnerships (LIGHT) — 
+- [ ] 146 — Surface 108 — Contact & Demo request (LIGHT) — 
+- [ ] 147 — Surface 114 — 404 / error state (LIGHT) — 
+- [ ] 148 — Surface 122 — Data-Feed Catalog (LIGHT) — 
