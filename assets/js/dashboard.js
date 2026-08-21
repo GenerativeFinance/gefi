@@ -349,6 +349,7 @@
     { slug: "fraud-graph", name: "Fraud Graph", wing: "Fraud & AML", risk: "high", federated: true, unit: "Precision", series: [0.71, 0.73, 0.72, 0.75, 0.77, 0.76, 0.78, 0.79, 0.8, 0.81, 0.81, 0.82] },
     { slug: "gefi-copilot", name: "GeFi Copilot", wing: "Generative AI", risk: "medium", federated: false, unit: "Grounded claims", series: [0.94, 0.95, 0.95, 0.96, 0.96, 0.97, 0.97, 0.97, 0.98, 0.98, 0.98, 0.98] },
     { slug: "ic-credit-memo-generator", name: "IC & Credit Memo Generator", wing: "Generative AI", risk: "medium", federated: false, unit: "Grounded figures", series: [0.96, 0.97, 0.97, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1, 1, 1] },
+    { slug: "liquidity-stress-engine", name: "Liquidity Stress Engine", wing: "Credit & Risk", risk: "high", federated: false, unit: "LCR %", series: [148, 144, 138, 131, 124, 118, 115, 113, 112, 114, 117, 121] },
     { slug: "macro-nowcast", name: "Macro Nowcast", wing: "Investing & Macro", risk: "low", federated: false, unit: "RMSE", series: [0.42, 0.4, 0.39, 0.38, 0.37, 0.36, 0.36, 0.35, 0.34, 0.34, 0.33, 0.33] },
     { slug: "portfolio-optimiser", name: "Portfolio Optimiser", wing: "Investing & Macro", risk: "medium", federated: false, unit: "Sharpe", series: [1.02, 1.05, 1.04, 1.09, 1.12, 1.1, 1.15, 1.18, 1.17, 1.2, 1.22, 1.24] },
     { slug: "scenario-narrative-engine", name: "Scenario Narrative Engine", wing: "Generative AI", risk: "medium", federated: false, unit: "Consistent claims", series: [0.95, 0.96, 0.96, 0.97, 0.98, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1] },
