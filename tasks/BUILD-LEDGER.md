@@ -101,10 +101,10 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 58 | Pairs Trading Engine (`pairs-trading-engine`) | Relative-Value & Arbitrage | P2 | Done. New page + curve demo (spread z-score) + MODELS row. Disclaimer verified. Build passed. |
 | [x] | 59 | Convertible Arbitrage Modeler (`convertible-arbitrage-modeler`) | Relative-Value & Arbitrage | P2 | Done. New page + table demo + MODELS row. Disclaimer verified. Build passed. |
 | [x] | 60 | Fixed Income Arbitrage Engine (`fixed-income-arbitrage-engine`) | Relative-Value & Arbitrage | P2 | Done. New page + table demo (leverage disclosed per signal) + MODELS row. Disclaimer verified. Build passed. |
-| [ ] | 61 | Merger Arbitrage Tracker (`merger-arbitrage-tracker`) | Relative-Value & Arbitrage | P2 | |
-| [ ] | 62 | FX Triangular Arbitrage Scanner (`fx-triangular-arbitrage-scanner`) | Relative-Value & Arbitrage | P2 | |
-| [ ] | 63 | Calendar Spread Optimizer (`calendar-spread-optimizer`) | Relative-Value & Arbitrage | P2 | |
-| [ ] | 64 | Options Volatility Arbitrage Engine (`options-vol-arb-engine`) | Relative-Value & Arbitrage | P2 | |
+| [x] | 61 | Merger Arbitrage Tracker (`merger-arbitrage-tracker`) | Relative-Value & Arbitrage | P2 | Done. New page + score demo (completion probability) + MODELS row. Public-data-only notice per spec. Disclaimer verified. Build passed. |
+| [x] | 62 | FX Triangular Arbitrage Scanner (`fx-triangular-arbitrage-scanner`) | Relative-Value & Arbitrage | P2 | Done. New page + score demo (net-of-cost) + MODELS row. Disclaimer verified. Build passed. |
+| [x] | 63 | Calendar Spread Optimizer (`calendar-spread-optimizer`) | Relative-Value & Arbitrage | P2 | Done. New page + curve demo (term structure) + MODELS row. Disclaimer verified. Build passed. |
+| [x] | 64 | Options Volatility Arbitrage Engine (`options-vol-arb-engine`) | Relative-Value & Arbitrage | P2 | Done. New page + table demo (mispricing + Greeks) + MODELS row. Completes Relative-Value & Arbitrage wing (8/8). Disclaimer verified. Build passed. |
 | [ ] | 65 | Market Making Engine (`market-making-engine`) | Market Microstructure | P2 | |
 | [ ] | 66 | HFT Signal Research Engine (`hft-signal-research-engine`) | Market Microstructure | P2 | |
 | [ ] | 67 | Multifactor Ranking Engine (`multifactor-ranking-engine`) | Factor & Systematic | P2 | |
