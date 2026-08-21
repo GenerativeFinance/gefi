@@ -23,7 +23,7 @@ Never touch `infrastructure/cloudflare/`. Build with
 
 | ✓ | # | Task | Status / Notes |
 |---|---|---|---|
-| [ ] | 00 | Model Page Harness (`_layouts/model.html` + `assets/js/model-demo.js`) | |
+| [x] | 00 | Model Page Harness (`_layouts/model.html` + `assets/js/model-demo.js`) | Done. Front-matter `demo:` (score/curve/table/text) + `analytics: true`; also created `assets/js/dashboard.js` (SVG primitives + MODELS registry) which did not exist. Build passed; verified in Chromium. |
 
 ## Step 2 — Model pages (92), P0 → P1 → P2
 

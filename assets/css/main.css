@@ -1185,3 +1185,143 @@ p  { margin: 0 0 var(--space-4); }
   .auth-card { padding: var(--space-5); }
   .auth-title { font-size: 1.375rem; }
 }
+
+/* ------------------------------------------------------------------
+   Model demo harness (Task 00) — "Try it" + "Live analytics".
+   Driven by _layouts/model.html front-matter; see assets/js/model-demo.js.
+   ------------------------------------------------------------------ */
+
+.model-demo, .model-analytics {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+}
+.model-demo h2, .model-analytics h2 { margin-top: 0; }
+
+/* Inputs are editable — visually distinct from calculated output below. */
+.demo-form__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.demo-field { display: flex; flex-direction: column; gap: 4px; font-weight: 500; }
+.demo-field--wide { grid-column: 1 / -1; }
+.demo-field__label { font-size: 0.875rem; }
+.demo-field__unit {
+  font-family: var(--font-mono); font-size: 0.75rem;
+  color: var(--color-muted); font-weight: 400;
+}
+.demo-field input, .demo-field select, .demo-field textarea {
+  padding: 10px 12px; font-size: 0.9375rem; font-family: inherit;
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-surface-2); color: var(--color-text);
+}
+.demo-field input[type="number"] { font-family: var(--font-mono); }
+.demo-field textarea { resize: vertical; }
+.demo-field input:focus-visible,
+.demo-field select:focus-visible,
+.demo-field textarea:focus-visible {
+  outline: 2px solid var(--color-brand); outline-offset: 1px;
+  border-color: var(--color-brand);
+}
+.demo-field--check {
+  flex-direction: row; align-items: center; gap: var(--space-2);
+  font-weight: 400; align-self: end; padding-bottom: 10px;
+}
+.demo-field--check input { width: 18px; height: 18px; flex: 0 0 18px; accent-color: var(--color-brand); }
+.demo-field input[type="range"] { accent-color: var(--color-brand); padding: 0; background: transparent; border: 0; }
+
+.demo-form__actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.demo-form__actions .btn[disabled] { opacity: 0.6; cursor: progress; }
+.demo-status { margin: 0; font-size: 0.875rem; color: var(--color-muted); min-height: 1.25em; }
+.demo-status[data-state="ok"]    { color: var(--color-profit); }
+.demo-status[data-state="error"] { color: var(--color-loss); }
+.demo-status[data-state="busy"]  { color: var(--color-brand-strong); }
+
+/* Calculated output — flat, no input affordance. */
+.demo-output { margin-top: var(--space-5); }
+.demo-result {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-5);
+}
+.demo-result__gauge { max-width: 260px; margin: 0 auto; }
+.demo-sample-note {
+  margin: var(--space-4) 0 0; font-size: 0.75rem; color: var(--color-muted);
+  text-align: center; font-style: italic;
+}
+.demo-text { margin: 0; }
+.demo-disclaimer { margin-top: var(--space-4); }
+
+.demo-error {
+  border: 1px solid var(--color-loss); border-radius: var(--radius-sm);
+  padding: var(--space-4); background: rgba(220, 38, 38, 0.04);
+}
+.demo-error__title { margin: 0 0 4px; font-weight: 600; color: var(--color-loss); }
+.demo-error__detail { margin: 0; font-size: 0.875rem; color: var(--color-muted); }
+
+/* Score drivers */
+.demo-drivers { list-style: none; padding: 0; margin: var(--space-5) 0 0; display: grid; gap: var(--space-2); }
+.demo-drivers li {
+  display: grid; grid-template-columns: 9rem 1fr 4rem;
+  align-items: center; gap: var(--space-3); font-size: 0.875rem;
+}
+.demo-drivers__name { color: var(--color-muted); }
+.demo-drivers__bar {
+  height: 8px; border-radius: 4px; background: var(--color-surface-2);
+  position: relative; overflow: hidden;
+}
+.demo-drivers__bar::after {
+  content: ""; position: absolute; inset: 0 auto 0 0;
+  width: var(--w, 0%); background: var(--color-brand); border-radius: 4px;
+}
+.demo-drivers__bar.is-neg::after { background: var(--color-loss); }
+.demo-drivers__val { font-family: var(--font-mono); text-align: right; }
+
+/* Result table */
+.demo-table-scroll { overflow-x: auto; }
+.demo-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.demo-table th, .demo-table td {
+  padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--color-border);
+}
+.demo-table th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-muted); }
+.demo-table td.is-num { font-family: var(--font-mono); text-align: right; }
+
+/* No-JS fallback: form stays visible and documented, controls hide. */
+.demo-nojs { margin: var(--space-4) 0 0; font-size: 0.875rem; color: var(--color-muted); }
+.js .demo-nojs { display: none; }
+.no-js [data-demo-js-only] { display: none; }
+
+/* Live analytics */
+.analytics-summary { display: flex; gap: var(--space-6); margin: 0 0 var(--space-5); }
+.analytics-summary > div { display: flex; flex-direction: column; gap: 2px; }
+.analytics-summary dt { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-muted); }
+.analytics-summary dd { margin: 0; font-family: var(--font-mono); font-size: 1.25rem; font-weight: 600; }
+.analytics-summary dd[data-dir="up"]   { color: var(--color-profit); }
+.analytics-summary dd[data-dir="down"] { color: var(--color-loss); }
+
+/* Shared SVG chart primitives (assets/js/dashboard.js) */
+.gefi-chart { display: block; max-width: 100%; height: auto; overflow: visible; }
+.gefi-chart__track { stroke: var(--color-surface-2); fill: none; }
+.gefi-chart__arc { stroke: var(--color-brand); }
+.gefi-chart__arc--good { stroke: var(--color-profit); }
+.gefi-chart__arc--warn { stroke: var(--color-warn); }
+.gefi-chart__arc--bad  { stroke: var(--color-loss); }
+.gefi-chart__value { font-family: var(--font-mono); font-size: 28px; font-weight: 600; fill: var(--color-text); }
+.gefi-chart__caption { font-size: 12px; fill: var(--color-muted); }
+.gefi-chart__grid { stroke: var(--color-border); stroke-dasharray: 2 4; }
+.gefi-chart__tick { font-family: var(--font-mono); font-size: 10px; fill: var(--color-muted); }
+.gefi-chart__line { stroke: var(--color-brand); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.gefi-chart__area { fill: rgba(109, 91, 255, 0.12); stroke: none; }
+.gefi-chart__series--2.gefi-chart__line { stroke: var(--color-accent); }
+.gefi-chart__series--2.gefi-chart__area { fill: rgba(34, 211, 238, 0.12); }
+.gefi-chart__bar { fill: var(--color-brand); }
+.gefi-chart__bar--neg { fill: var(--color-loss); }
+.gefi-chart__spark { stroke: var(--color-brand); stroke-width: 1.5; }
+
+@media (max-width: 640px) {
+  .demo-form__fields { grid-template-columns: 1fr; }
+  .demo-drivers li { grid-template-columns: 7rem 1fr 3.5rem; }
+  .analytics-summary { gap: var(--space-5); }
+}
