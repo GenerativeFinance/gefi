@@ -85,10 +85,10 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 42 | Project Finance Modeler (`project-finance-modeler`) | Capital Budgeting & Project Finance | P2 | Done. New page + curve demo (DSCR vs covenant) + MODELS row. Build passed. |
 | [x] | 43 | Infrastructure Investment Modeler (`infrastructure-investment-modeler`) | Capital Budgeting & Project Finance | P2 | Done. New page + table demo (tornado scenarios) + MODELS row. Build passed. |
 | [x] | 44 | Renewable Project Modeler (`renewable-project-modeler`) | Capital Budgeting & Project Finance | P2 | Done. New page + curve demo (generation w/ degradation) + MODELS row. Completes Capital Budgeting & Project Finance wing. Build passed. |
-| [ ] | 45 | RE Development Modeler (`re-development-modeler`) | Real Estate | P2 | |
-| [ ] | 46 | RE Acquisition Underwriter (`re-acquisition-underwriter`) | Real Estate | P2 | |
-| [ ] | 47 | Lease vs. Buy Analyzer (`lease-vs-buy-analyzer`) | Real Estate | P2 | |
-| [ ] | 48 | Debt Schedule Engine (`debt-schedule-engine`) | Corporate Treasury & Structured Finance | P2 | |
+| [x] | 45 | RE Development Modeler (`re-development-modeler`) | Real Estate | P2 | Done. New page + curve demo (cumulative cash / peak equity) + MODELS row. Build passed. |
+| [x] | 46 | RE Acquisition Underwriter (`re-acquisition-underwriter`) | Real Estate | P2 | Done. New page + table demo (property vs investor) + MODELS row. Build passed. |
+| [x] | 47 | Lease vs. Buy Analyzer (`lease-vs-buy-analyzer`) | Real Estate | P2 | Done. New page + table demo (cash + accounting) + MODELS row. Completes Real Estate wing. Build passed. |
+| [x] | 48 | Debt Schedule Engine (`debt-schedule-engine`) | Corporate Treasury & Structured Finance | P2 | Done. New page + curve demo (headroom over time) + MODELS row. Build passed. |
 | [ ] | 49 | Working Capital Forecaster (`working-capital-forecaster`) | Corporate Treasury & Structured Finance | P2 | |
 | [ ] | 50 | Securitization Modeler (`securitization-modeler`) | Corporate Treasury & Structured Finance | P2 | |
 | [ ] | 51 | Trend Following Engine (`trend-following-engine`) | Directional Strategies | P2 | |
