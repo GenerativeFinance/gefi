@@ -1677,3 +1677,70 @@ p  { margin: 0 0 var(--space-4); }
   .dash-sidebar { flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--color-border); }
   .dash-sidebar__label { width: 100%; margin: var(--space-2) 0; }
 }
+
+/* ------------------------------------------------------------------
+   Task 115: onboarding & KYC wizard.
+   ------------------------------------------------------------------ */
+
+.onb-shell { min-height: 100vh; display: flex; flex-direction: column; }
+.onb-body { display: grid; grid-template-columns: 220px 1fr; gap: var(--space-7); flex: 1; max-width: 980px; width: 100%; margin: 0 auto; padding: var(--space-7) var(--space-5); }
+.onb-rail ol { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-4); }
+.onb-rail li { display: flex; align-items: center; gap: var(--space-3); color: var(--color-muted); font-weight: 500; font-size: 0.9375rem; }
+.onb-rail__num {
+  width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--color-border); font-family: var(--font-mono); font-size: 0.8125rem;
+  background: var(--color-surface);
+}
+.onb-rail li.is-current { color: var(--color-text); font-weight: 600; }
+.onb-rail li.is-current .onb-rail__num { border-color: var(--color-brand); color: var(--color-brand-strong); }
+.onb-rail li.is-done { color: var(--color-text); }
+.onb-rail li.is-done .onb-rail__num { background: var(--color-brand); border-color: var(--color-brand); color: #fff; }
+.onb-main h1 { font-size: 1.5rem; }
+.onb-subhead { font-size: 1.0625rem; margin-top: var(--space-6); }
+
+.onb-choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-5); }
+.onb-choice {
+  text-align: left; display: flex; flex-direction: column; gap: var(--space-2);
+  background: var(--color-surface); border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md); padding: var(--space-5); cursor: pointer;
+  font: inherit; color: inherit;
+}
+.onb-choice:hover { border-color: var(--color-brand); }
+.onb-choice.is-selected { border-color: var(--color-brand); background: rgba(109, 91, 255, 0.06); }
+
+.onb-field { display: flex; flex-direction: column; gap: 4px; max-width: 320px; font-weight: 500; margin-top: var(--space-4); }
+.onb-field select {
+  padding: 10px 12px; font-size: 1rem; font-family: inherit;
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-surface); color: var(--color-text);
+}
+
+.onb-tiers { width: 100%; border-collapse: collapse; font-size: 0.9375rem; margin-top: var(--space-3); }
+.onb-tiers th, .onb-tiers td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+.onb-tiers th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); }
+
+.onb-sumsub {
+  border: 1.5px dashed var(--color-border); border-radius: var(--radius-md);
+  padding: var(--space-6); text-align: center; background: var(--color-surface);
+  margin-top: var(--space-5);
+}
+.onb-sumsub__label { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-muted); margin: 0 0 var(--space-2); }
+.onb-sumsub__done { color: var(--color-profit); font-weight: 600; margin: var(--space-3) 0 0; }
+
+.onb-review { display: grid; gap: var(--space-2); margin: var(--space-5) 0; }
+.onb-review div { display: grid; grid-template-columns: 11rem 1fr; gap: var(--space-3); padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: 0.9375rem; }
+.onb-review dt { color: var(--color-muted); }
+.onb-review dd { margin: 0; font-weight: 600; }
+
+.onb-status { margin-top: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-5); }
+.onb-status__headline { margin: 0 0 var(--space-2); font-weight: 700; font-family: var(--font-mono); }
+
+.onb-nav { display: flex; gap: var(--space-3); margin-top: var(--space-6); max-width: 980px; width: 100%; margin-left: auto; margin-right: auto; padding: 0 var(--space-5) var(--space-7); }
+.onb-nav .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 720px) {
+  .onb-body { grid-template-columns: 1fr; }
+  .onb-rail ol { flex-direction: row; flex-wrap: wrap; }
+  .onb-choice-grid { grid-template-columns: 1fr; }
+}

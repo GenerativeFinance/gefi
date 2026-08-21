@@ -1,0 +1,59 @@
+---
+layout: null
+---
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <script>document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/, "js");</script>
+    {%- include head.html -%}
+  </head>
+  <body class="theme-light dash-body">
+    <a class="skip-link" href="#onb-main">Skip to content</a>
+
+    <div class="dash-gate" data-onb-gate hidden>
+      <div class="dash-gate__card">
+        <p class="eyebrow">Preview</p>
+        <h1>Onboarding &amp; KYC</h1>
+        <p class="muted">
+          A seeded preview of the tenant onboarding wizard — the Sumsub
+          document-capture embed is mocked and no data leaves this page.
+          Production onboarding ships on <code>app.gefi.io</code>.
+        </p>
+        <button type="button" class="btn btn-primary" data-onb-enter>Enter preview</button>
+        <p class="muted small"><a href="/">Back to gefi.io</a></p>
+      </div>
+    </div>
+
+    <div class="onb-shell" data-onb-root hidden>
+      <header class="dash-topbar">
+        <a class="dash-topbar__brand" href="/">GeFi</a>
+        <span class="badge">Onboarding preview — sample data</span>
+        <div class="dash-topbar__spacer"></div>
+        <a class="btn btn-ghost" href="/dashboard/">Dashboard</a>
+      </header>
+      <div class="onb-body">
+        <nav class="onb-rail" aria-label="Onboarding progress" data-onb-rail>
+          <ol>
+            <li data-onb-rail-step="1"><span class="onb-rail__num">1</span> Account type</li>
+            <li data-onb-rail-step="2"><span class="onb-rail__num">2</span> Jurisdiction</li>
+            <li data-onb-rail-step="3"><span class="onb-rail__num">3</span> Documents</li>
+            <li data-onb-rail-step="4"><span class="onb-rail__num">4</span> Review &amp; status</li>
+          </ol>
+        </nav>
+        <main id="onb-main" class="onb-main">
+          {{ content }}
+        </main>
+      </div>
+    </div>
+
+    <noscript>
+      <div class="container" style="padding: 48px 24px;">
+        <h1>Onboarding preview</h1>
+        <p class="muted">The wizard preview needs JavaScript. <a href="/">Back to gefi.io</a>.</p>
+      </div>
+    </noscript>
+
+    <script src="{{ '/assets/js/dashboard.js' | relative_url }}" defer></script>
+    <script src="{{ '/assets/js/onboarding.js' | relative_url }}" defer></script>
+  </body>
+</html>
