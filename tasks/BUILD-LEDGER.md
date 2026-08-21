@@ -89,10 +89,10 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 46 | RE Acquisition Underwriter (`re-acquisition-underwriter`) | Real Estate | P2 | Done. New page + table demo (property vs investor) + MODELS row. Build passed. |
 | [x] | 47 | Lease vs. Buy Analyzer (`lease-vs-buy-analyzer`) | Real Estate | P2 | Done. New page + table demo (cash + accounting) + MODELS row. Completes Real Estate wing. Build passed. |
 | [x] | 48 | Debt Schedule Engine (`debt-schedule-engine`) | Corporate Treasury & Structured Finance | P2 | Done. New page + curve demo (headroom over time) + MODELS row. Build passed. |
-| [ ] | 49 | Working Capital Forecaster (`working-capital-forecaster`) | Corporate Treasury & Structured Finance | P2 | |
-| [ ] | 50 | Securitization Modeler (`securitization-modeler`) | Corporate Treasury & Structured Finance | P2 | |
-| [ ] | 51 | Trend Following Engine (`trend-following-engine`) | Directional Strategies | P2 | |
-| [ ] | 52 | Cross-Sectional Mean Reversion (`cross-sectional-mean-reversion`) | Directional Strategies | P2 | |
+| [x] | 49 | Working Capital Forecaster (`working-capital-forecaster`) | Corporate Treasury & Structured Finance | P2 | Done. New page + curve demo + MODELS row. Build passed. |
+| [x] | 50 | Securitization Modeler (`securitization-modeler`) | Corporate Treasury & Structured Finance | P2 | Done. New page + table demo (tranche waterfall) + MODELS row. Completes Corporate Treasury wing. Build passed. |
+| [x] | 51 | Trend Following Engine (`trend-following-engine`) | Directional Strategies | P2 | Done. New page + curve demo + MODELS row. Hypothetical-performance disclaimer + signals-only statement verified in rendered HTML. Build passed. |
+| [x] | 52 | Cross-Sectional Mean Reversion (`cross-sectional-mean-reversion`) | Directional Strategies | P2 | Done. New page + table demo + MODELS row. Disclaimer + signals-only verified. Build passed. |
 | [ ] | 53 | Breakout Signal Engine (`breakout-signal-engine`) | Directional Strategies | P2 | |
 | [ ] | 54 | Reversal Detector (`reversal-detector`) | Directional Strategies | P2 | |
 | [ ] | 55 | Global Macro Signal Engine (`global-macro-signal-engine`) | Directional Strategies | P2 | |

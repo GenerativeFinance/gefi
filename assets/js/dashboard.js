@@ -353,6 +353,7 @@
     { slug: "commodities-flow-nowcast", name: "Commodities Flow Nowcast", wing: "Investing & Macro", risk: "medium", federated: false, unit: "Flow RMSE %", series: [9.1, 8.8, 8.6, 8.4, 8.2, 8.1, 7.9, 7.8, 7.7, 7.6, 7.5, 7.4] },
     { slug: "credit-oracle", name: "Credit Oracle", wing: "Credit & Risk", risk: "medium", federated: true, unit: "AUC", series: [0.79, 0.8, 0.81, 0.8, 0.82, 0.83, 0.83, 0.84, 0.84, 0.83, 0.84, 0.84] },
     { slug: "cross-border-payment-router", name: "Cross-Border Payment Router", wing: "Trade, Payments & KYB", risk: "low", federated: false, unit: "Landed cost %", series: [2.4, 2.35, 2.3, 2.28, 2.22, 2.18, 2.15, 2.1, 2.06, 2.02, 1.98, 1.95] },
+    { slug: "cross-sectional-mean-reversion", name: "Cross-Sectional Mean Reversion", wing: "Directional Strategies", risk: "medium", federated: false, unit: "Sharpe (sim.)", series: [0.52, 0.55, 0.58, 0.54, 0.6, 0.62, 0.59, 0.64, 0.66, 0.63, 0.68, 0.7] },
     { slug: "debt-schedule-engine", name: "Debt Schedule Engine", wing: "Corporate Treasury & Structured Finance", risk: "medium", federated: false, unit: "Headroom %", series: [26, 25, 24, 23, 22, 21, 21, 20, 19, 18, 18, 17] },
     { slug: "deposit-behavior-model", name: "Deposit Behavior Model", wing: "Banking Book & Provisioning", risk: "medium", federated: false, unit: "Backtest error %", series: [4.8, 4.6, 4.4, 4.3, 4.1, 4.0, 3.9, 3.7, 3.6, 3.5, 3.4, 3.3] },
     { slug: "disclosure-drafter", name: "Disclosure Drafter", wing: "Generative AI", risk: "high", federated: false, unit: "Checklist coverage", series: [0.9, 0.91, 0.92, 0.93, 0.94, 0.94, 0.95, 0.96, 0.96, 0.97, 0.97, 0.98] },
@@ -389,6 +390,7 @@
     { slug: "renewable-project-modeler", name: "Renewable Project Modeler", wing: "Capital Budgeting & Project Finance", risk: "medium", federated: false, unit: "Capacity factor %", series: [30.2, 30.4, 30.5, 30.7, 30.8, 31.0, 31.1, 31.2, 31.4, 31.5, 31.6, 31.8] },
     { slug: "safe-note-conversion", name: "SAFE & Note Conversion", wing: "Venture & Growth Capital", risk: "low", federated: false, unit: "Conversion %", series: [8.2, 8.6, 9.0, 9.4, 9.8, 10.1, 10.5, 10.9, 11.2, 11.6, 11.9, 12.3] },
     { slug: "scenario-narrative-engine", name: "Scenario Narrative Engine", wing: "Generative AI", risk: "medium", federated: false, unit: "Consistent claims", series: [0.95, 0.96, 0.96, 0.97, 0.98, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1] },
+    { slug: "securitization-modeler", name: "Securitization Modeler", wing: "Corporate Treasury & Structured Finance", risk: "high", federated: false, unit: "Class A enhancement %", series: [22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27] },
     { slug: "sentiment-from-filings", name: "Sentiment from Filings", wing: "Investing & Macro", risk: "low", federated: false, unit: "F1", series: [0.68, 0.7, 0.71, 0.72, 0.74, 0.75, 0.75, 0.76, 0.77, 0.78, 0.78, 0.79] },
     { slug: "spin-off-model", name: "Spin-Off Model", wing: "M&A & Corporate Transactions", risk: "medium", federated: false, unit: "Stranded cost %", series: [4.2, 4.1, 4.0, 3.9, 3.8, 3.7, 3.6, 3.6, 3.5, 3.4, 3.3, 3.3] },
     { slug: "startup-financial-model", name: "Startup Financial Model", wing: "Venture & Growth Capital", risk: "low", federated: false, unit: "Runway months", series: [21, 20, 19, 19, 18, 17, 17, 16, 16, 15, 15, 14] },
@@ -396,11 +398,13 @@
     { slug: "tax-residency-classifier", name: "Tax Residency Classifier", wing: "Compliance & Regulatory", risk: "low", federated: false, unit: "Backtest agreement", series: [0.89, 0.9, 0.9, 0.91, 0.91, 0.92, 0.92, 0.93, 0.93, 0.94, 0.94, 0.94] },
     { slug: "trade-finance-doc-ai", name: "Trade Finance Doc AI", wing: "Trade, Payments & KYB", risk: "low", federated: false, unit: "Accuracy", series: [0.88, 0.89, 0.9, 0.9, 0.91, 0.92, 0.92, 0.93, 0.93, 0.94, 0.94, 0.95] },
     { slug: "transaction-monitoring-explainer", name: "Transaction Monitoring Explainer", wing: "Fraud & AML", risk: "medium", federated: false, unit: "Alerts explained", series: [0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1, 1, 1, 1] },
+    { slug: "trend-following-engine", name: "Trend Following Engine", wing: "Directional Strategies", risk: "medium", federated: false, unit: "Sharpe (sim.)", series: [0.61, 0.64, 0.6, 0.67, 0.7, 0.66, 0.72, 0.75, 0.71, 0.78, 0.8, 0.77] },
     { slug: "vc-method-valuation", name: "VC Method Valuation", wing: "Venture & Growth Capital", risk: "low", federated: false, unit: "Implied pre-money", series: [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29] },
     { slug: "vc-portfolio-tracker", name: "VC Portfolio Tracker", wing: "Venture & Growth Capital", risk: "low", federated: true, unit: "TVPI", series: [1.9, 2.0, 2.05, 2.1, 2.2, 2.25, 2.3, 2.4, 2.45, 2.5, 2.6, 2.65] },
     { slug: "vendor-risk-aiops", name: "Vendor Risk AIOps", wing: "Credit & Risk", risk: "low", federated: false, unit: "Alert precision", series: [0.78, 0.79, 0.8, 0.81, 0.82, 0.82, 0.83, 0.84, 0.84, 0.85, 0.85, 0.86] },
     { slug: "volatility-surface-service", name: "Volatility Surface Service", wing: "Simulation & Market Primitives", risk: "medium", federated: false, unit: "Fit R2", series: [0.955, 0.958, 0.961, 0.963, 0.966, 0.968, 0.971, 0.973, 0.975, 0.977, 0.979, 0.981] },
     { slug: "waterfall-distribution", name: "Waterfall Distribution Engine", wing: "Venture & Growth Capital", risk: "medium", federated: false, unit: "Common share %", series: [12, 13, 15, 16, 18, 19, 21, 22, 24, 25, 27, 28] },
+    { slug: "working-capital-forecaster", name: "Working Capital Forecaster", wing: "Corporate Treasury & Structured Finance", risk: "low", federated: false, unit: "CCC days", series: [86, 85, 84, 83, 82, 82, 81, 80, 80, 79, 79, 78] },
     { slug: "yield-curve-forecaster", name: "Yield-Curve Forecaster", wing: "Investing & Macro", risk: "low", federated: false, unit: "10y RMSE bp", series: [27, 26, 25, 25, 24, 23, 23, 22, 22, 21, 21, 21] }
   ];
 
