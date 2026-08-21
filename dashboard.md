@@ -103,3 +103,57 @@ sitemap: false
   <h1 class="dash-panel__title">System</h1>
   <p class="dash-empty">The region status map lands with the admin-tabs task.</p>
 </section>
+
+<section class="dash-panel" data-dash-panel="dev-models" hidden>
+  <div class="dash-panel__head">
+    <h1 class="dash-panel__title">My models</h1>
+    <span class="badge">70% revenue share</span>
+  </div>
+  <p class="muted small">Every model you publish moves through the same pipeline: draft &rarr; pending approval &rarr; live. Task&nbsp;#5 shipped the API surface behind this — publish, versions with R2 artifacts and sha-256 anchoring, admin approval, Stripe Connect payouts.</p>
+  <table class="dash-table" data-dev-models-table>
+    <thead>
+      <tr><th>Model</th><th>Category</th><th>Status</th><th>Version</th><th>Submitted</th><th></th></tr>
+    </thead>
+    <tbody data-dev-models-body></tbody>
+  </table>
+</section>
+
+<section class="dash-panel" data-dash-panel="dev-versions" hidden>
+  <h1 class="dash-panel__title">Versions</h1>
+  <div class="dash-versions__upload">
+    <label class="onb-field"><span>Model</span>
+      <select data-dev-version-model></select>
+    </label>
+    <label class="onb-field"><span>Version label</span>
+      <input type="text" data-dev-version-label placeholder="e.g. 2026.09.1" maxlength="24">
+    </label>
+    <button type="button" class="btn btn-primary" data-dev-version-upload>Upload new version</button>
+  </div>
+  <p class="muted small">Uploading computes a sha-256 artifact hash immediately; the Polygon anchor transaction confirms a few seconds later in this preview.</p>
+  <table class="dash-table" data-dev-versions-table>
+    <thead>
+      <tr><th>Model</th><th>Version</th><th>Artifact hash</th><th>Anchor</th><th>Status</th><th>Uploaded</th></tr>
+    </thead>
+    <tbody data-dev-versions-body></tbody>
+  </table>
+</section>
+
+<section class="dash-panel" data-dash-panel="dev-earnings" hidden>
+  <h1 class="dash-panel__title">Earnings</h1>
+  <div class="kpi-grid" data-dev-earnings-kpis></div>
+
+  <h2 class="dash-panel__subtitle">Payouts</h2>
+  <div class="dash-stripe-card" data-dev-stripe-card>
+    <div data-dev-stripe-disconnected>
+      <p class="muted">Connect a Stripe Connect account to receive payouts on your 70% revenue share.</p>
+      <button type="button" class="btn btn-primary" data-dev-stripe-connect>Connect payouts with Stripe</button>
+    </div>
+    <div data-dev-stripe-connected hidden>
+      <p><span class="status-pill status-pill--ok">Connected</span> <span class="muted small" data-dev-stripe-account></span></p>
+    </div>
+  </div>
+  <table class="dash-table" data-dev-payouts-table>
+    <thead><tr><th>Period</th><th>Gross</th><th>Your share</th><th>Status</th></tr></thead>
+    <tbody data-dev-payouts-body></tbody>
+  </table>
+</section>

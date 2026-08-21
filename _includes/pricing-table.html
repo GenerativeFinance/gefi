@@ -86,6 +86,14 @@
             </span>
           </p>
           {%- if plan.summary -%}<p class="muted">{{ plan.summary }}</p>{%- endif -%}
+          {%- if plan.compliance_badges -%}
+            {%- comment -%} Task 101: compliance differentiation on the card itself. {%- endcomment -%}
+            <ul class="badge-row badge-row--tight pricing-card__compliance" role="list">
+              {%- for b in plan.compliance_badges -%}
+                <li><span class="badge badge--compliance">{{ b }}</span></li>
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
           <ul class="checklist">
             {%- for feature in plan.features -%}
               <li>{{ feature }}</li>
@@ -96,6 +104,42 @@
         </li>
       {%- endfor -%}
     </ul>
+    {%- comment -%}
+      Task 101: Pro usage calculator. Rates come from site.pricing.calc_* —
+      output is an estimate, labelled as such. Static fallback without JS.
+    {%- endcomment -%}
+    <div class="pricing-calc" data-pricing-calc
+         data-calc-base="{{ site.pricing.calc_base_monthly | default: 499 }}"
+         data-calc-included-calls="{{ site.pricing.calc_included_calls_per_day | default: 5000 }}"
+         data-calc-rate="{{ site.pricing.calc_call_rate | default: 0.0008 }}"
+         data-calc-included-keys="{{ site.pricing.calc_included_keys | default: 10 }}"
+         data-calc-key-price="{{ site.pricing.calc_extra_key_price | default: 5 }}">
+      <h3 class="pricing-calc__title">Estimate your Pro bill</h3>
+      <p class="muted small">"Unlimited, metered" deserves a number. Drag the sliders — the estimate updates live.</p>
+      <div class="pricing-calc__controls" data-pricing-calc-controls hidden>
+        <label class="pricing-calc__field">
+          <span>Inference calls / day
+            <output class="pricing-calc__readout" data-calc-calls-out>25,000</output>
+          </span>
+          <input type="range" data-calc-calls min="1000" max="500000" step="1000" value="25000">
+        </label>
+        <label class="pricing-calc__field">
+          <span>API keys
+            <output class="pricing-calc__readout" data-calc-keys-out>10</output>
+          </span>
+          <input type="range" data-calc-keys min="1" max="50" step="1" value="10">
+        </label>
+        <p class="pricing-calc__total">
+          <span class="pricing-calc__total-label">Estimated monthly total</span>
+          <span class="pricing-calc__total-num" data-calc-total>$0</span>
+        </p>
+        <p class="muted small" data-calc-breakdown></p>
+        <p class="muted small">Estimate only — {{ site.pricing.calc_included_calls_per_day | default: 5000 }} calls/day and {{ site.pricing.calc_included_keys | default: 10 }} keys are included in the base plan; metering applies beyond that. Your invoice depends on the models you call.</p>
+      </div>
+      <p class="muted small" data-pricing-calc-nojs>
+        Pro starts at {{ site.pricing.pro_price }} with {{ site.pricing.calc_included_calls_per_day | default: 5000 }} inference calls/day and {{ site.pricing.calc_included_keys | default: 10 }} API keys included; metered beyond that. The interactive estimator needs JavaScript.
+      </p>
+    </div>
     {%- if site.pricing.tax_note -%}
       <p class="pricing-note muted small">{{ site.pricing.tax_note }}</p>
     {%- endif -%}

@@ -2,7 +2,7 @@
   Social-proof bar shown directly under the hero. Numbers are real claims
   the rest of the site backs up — no fake logos.
 {%- endcomment -%}
-<section class="proof-bar" aria-label="At a glance">
+<section class="proof-bar{% if include.embedded %} proof-bar--hero{% endif %}" aria-label="At a glance">
   <div class="container">
     <ul class="proof-bar__grid">
       <li>

@@ -242,7 +242,11 @@
         );
       }
       svg.appendChild(
-        svgEl("path", { d: pathFrom(pts), class: "gefi-chart__line gefi-chart__series--" + (i + 1), fill: "none" })
+        svgEl("path", {
+          d: pathFrom(pts),
+          class: "gefi-chart__line gefi-chart__series--" + (i + 1) + (s.kind === "dashed" ? " gefi-chart__line--dashed" : ""),
+          fill: "none"
+        })
       );
     });
 
@@ -526,12 +530,60 @@
 
   /* -------------------------------------------------------------- tabs */
 
-  var TABS = ["overview", "analytics", "compliance", "federation", "api-keys", "alerts", "tenants", "approvals", "system"];
+  var TABS = ["overview", "analytics", "compliance", "federation", "api-keys", "alerts", "tenants", "approvals", "system", "dev-models", "dev-versions", "dev-earnings"];
+  var OPERATOR_TABS = ["overview", "analytics", "compliance", "federation", "api-keys", "alerts", "tenants", "approvals", "system"];
+  var DEVELOPER_TABS = ["dev-models", "dev-versions", "dev-earnings"];
+
+  var PERSONA_KEY = "gefi-dash-persona";
+
+  function loadPersona() {
+    try {
+      var p = sessionStorage.getItem(PERSONA_KEY);
+      if (p === "developer" || p === "operator") return p;
+    } catch (e) {}
+    return "operator";
+  }
+
+  function savePersona(p) {
+    try {
+      sessionStorage.setItem(PERSONA_KEY, p);
+    } catch (e) {}
+  }
 
   function currentTab() {
     var h = (window.location.hash || "").replace("#", "");
-    return TABS.indexOf(h) !== -1 ? h : "overview";
+    if (TABS.indexOf(h) !== -1) return h;
+    return loadPersona() === "developer" ? "dev-models" : "overview";
   }
+
+  /* Persona toggle gates which sidebar groups (and therefore which tabs)
+   * are reachable — this is a preview convenience, not an auth boundary. */
+  function applyPersona() {
+    var persona = loadPersona();
+    root.querySelectorAll("[data-dash-group]").forEach(function (el) {
+      var isDeveloperGroup = el.getAttribute("data-dash-group") === "developer";
+      el.hidden = isDeveloperGroup !== (persona === "developer");
+    });
+    root.querySelectorAll("[data-dash-persona-btn]").forEach(function (btn) {
+      btn.classList.toggle("is-active", btn.getAttribute("data-dash-persona-btn") === persona);
+    });
+    return persona;
+  }
+
+  root.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-dash-persona-btn]");
+    if (!btn) return;
+    var persona = btn.getAttribute("data-dash-persona-btn");
+    savePersona(persona);
+    applyPersona();
+    var tabs = persona === "developer" ? DEVELOPER_TABS : OPERATOR_TABS;
+    var rawHash = (window.location.hash || "").replace("#", "");
+    if (tabs.indexOf(rawHash) === -1) {
+      window.location.hash = "#" + tabs[0];
+    } else {
+      renderCurrent();
+    }
+  });
 
   function renderTab() {
     var tab = currentTab();
@@ -550,11 +602,15 @@
   }
 
   function renderCurrent() {
+    applyPersona();
     renderTab();
     var tab = currentTab();
     if (tab === "overview") renderOverview();
     if (tab === "api-keys") renderApiKeys();
     if (tab === "alerts") renderAlerts(true);
+    if (tab === "dev-models") renderDevModels();
+    if (tab === "dev-versions") renderDevVersions();
+    if (tab === "dev-earnings") renderDevEarnings();
     updateBell();
   }
 
@@ -1043,6 +1099,254 @@
     if (e.target.closest("[data-dash-bell]")) {
       window.location.hash = "#alerts";
     }
+  });
+
+  /* ------------------------------------------- developer console (Task 119) */
+
+  var DEV_MODELS = [
+    { slug: "signal-momentum-v2", name: "Signal Momentum v2", category: "Quant / Signals", status: "live", version: "2026.07.3", submitted: "2026-07-02" },
+    { slug: "credit-tail-risk", name: "Credit Tail Risk", category: "Credit / Risk", status: "pending", version: "2026.08.1", submitted: "2026-08-18" },
+    { slug: "esg-controversy-scan", name: "ESG Controversy Scan", category: "ESG / Screening", status: "draft", version: "0.9.0", submitted: "—" },
+    { slug: "macro-regime-classifier", name: "Macro Regime Classifier", category: "Macro", status: "live", version: "2026.05.6", submitted: "2026-05-14" }
+  ];
+
+  var DEV_STATUS_LABEL = { draft: "Draft", pending: "Pending approval", live: "Live" };
+  var DEV_STATUS_PILL = { draft: "status-pill--muted", pending: "status-pill--progress", live: "status-pill--brand" };
+
+  function tableRow(cells) {
+    var tr = document.createElement("tr");
+    cells.forEach(function (c) {
+      var cell = document.createElement("td");
+      if (c.cls) cell.className = c.cls;
+      if (typeof c.content === "string") {
+        cell.textContent = c.content;
+      } else {
+        cell.appendChild(c.content);
+      }
+      tr.appendChild(cell);
+    });
+    return tr;
+  }
+
+  function statusPill(cls, text) {
+    var span = document.createElement("span");
+    span.className = "status-pill " + cls;
+    span.textContent = text;
+    return span;
+  }
+
+  var pendingVersionModel = null;
+
+  function renderDevModels() {
+    var body = root.querySelector("[data-dev-models-body]");
+    if (!body || body.childNodes.length) return;
+    DEV_MODELS.forEach(function (m) {
+      var view = document.createElement("button");
+      view.type = "button";
+      view.className = "btn btn-ghost";
+      view.textContent = "View";
+      view.setAttribute("data-dev-model-view", m.slug);
+      body.appendChild(tableRow([
+        { content: m.name },
+        { content: m.category },
+        { content: statusPill(DEV_STATUS_PILL[m.status], DEV_STATUS_LABEL[m.status]) },
+        { content: m.version, cls: "is-mono" },
+        { content: m.submitted },
+        { content: view, cls: "is-actions" }
+      ]));
+    });
+  }
+
+  root.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-dev-model-view]");
+    if (!btn) return;
+    pendingVersionModel = btn.getAttribute("data-dev-model-view");
+    window.location.hash = "#dev-versions";
+  });
+
+  /* -------------------------------------- developer console: versions */
+
+  var DEV_VERSIONS_KEY = "gefi-dash-dev-versions";
+
+  function artifactHash(seedKey) {
+    var h = GeFi.seed.hash("artifact|" + seedKey).toString(16);
+    while (h.length < 10) h = "0" + h;
+    return "sha256:" + h.slice(0, 10) + "…";
+  }
+
+  function seedDevVersions() {
+    var rows = [];
+    DEV_MODELS.forEach(function (m) {
+      if (m.status === "draft") return;
+      rows.push({
+        model: m.name,
+        version: m.version,
+        hash: artifactHash(m.slug + "|" + m.version),
+        anchored: true,
+        status: m.status,
+        uploaded: m.submitted
+      });
+    });
+    return rows;
+  }
+
+  function loadDevVersions() {
+    try {
+      var raw = sessionStorage.getItem(DEV_VERSIONS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return seedDevVersions();
+  }
+
+  function saveDevVersions(rows) {
+    try {
+      sessionStorage.setItem(DEV_VERSIONS_KEY, JSON.stringify(rows));
+    } catch (e) {}
+  }
+
+  function renderVersionsTable() {
+    var body = root.querySelector("[data-dev-versions-body]");
+    if (!body) return;
+    body.innerHTML = "";
+    loadDevVersions().forEach(function (v) {
+      body.appendChild(tableRow([
+        { content: v.model },
+        { content: v.version, cls: "is-mono" },
+        { content: v.hash, cls: "is-mono" },
+        { content: statusPill(v.anchored ? "status-pill--ok" : "status-pill--progress", v.anchored ? "Anchored" : "Anchoring…") },
+        { content: statusPill(DEV_STATUS_PILL[v.status] || "status-pill--muted", DEV_STATUS_LABEL[v.status] || v.status) },
+        { content: v.uploaded }
+      ]));
+    });
+  }
+
+  function renderDevVersions() {
+    var select = root.querySelector("[data-dev-version-model]");
+    if (select && !select.childNodes.length) {
+      DEV_MODELS.forEach(function (m) {
+        var opt = document.createElement("option");
+        opt.value = m.slug;
+        opt.textContent = m.name;
+        select.appendChild(opt);
+      });
+    }
+    if (select && pendingVersionModel) {
+      select.value = pendingVersionModel;
+      pendingVersionModel = null;
+    }
+    renderVersionsTable();
+  }
+
+  root.addEventListener("click", function (e) {
+    if (!e.target.closest("[data-dev-version-upload]")) return;
+    var select = root.querySelector("[data-dev-version-model]");
+    var input = root.querySelector("[data-dev-version-label]");
+    var slug = select ? select.value : DEV_MODELS[0].slug;
+    var matches = DEV_MODELS.filter(function (m) { return m.slug === slug; });
+    var model = matches[0] || DEV_MODELS[0];
+    var rows = loadDevVersions();
+    var label = (input && input.value.trim()) || ("draft-" + (rows.length + 1));
+    if (input) input.value = "";
+
+    var row = {
+      model: model.name,
+      version: label,
+      hash: artifactHash(slug + "|" + label + "|" + rows.length),
+      anchored: false,
+      status: "pending",
+      uploaded: "just now"
+    };
+    rows.unshift(row);
+    saveDevVersions(rows);
+    renderVersionsTable();
+
+    /* The anchor transaction confirms a moment later, same shape as
+     * waiting on a real Polygon confirmation. */
+    window.setTimeout(function () {
+      var current = loadDevVersions();
+      var match = current.filter(function (r) {
+        return r.model === row.model && r.version === row.version && r.hash === row.hash;
+      })[0];
+      if (match) match.anchored = true;
+      saveDevVersions(current);
+      renderVersionsTable();
+    }, 1400);
+  });
+
+  /* -------------------------------------- developer console: earnings */
+
+  var DEV_EARNINGS_KEY = "gefi-dash-dev-stripe";
+  var DEV_SHARE_PCT = 70;
+
+  var DEV_PAYOUTS = [
+    { period: "Jul 2026", gross: 18400, status: "paid" },
+    { period: "Jun 2026", gross: 16120, status: "paid" },
+    { period: "Aug 2026 (to date)", gross: 9860, status: "pending" }
+  ];
+
+  function stripeConnected() {
+    try {
+      return sessionStorage.getItem(DEV_EARNINGS_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function renderDevEarnings() {
+    var grid = root.querySelector("[data-dev-earnings-kpis]");
+    if (grid && !grid.childNodes.length) {
+      var gross = DEV_PAYOUTS.reduce(function (sum, p) { return sum + p.gross; }, 0);
+      var share = gross * (DEV_SHARE_PCT / 100);
+      var cards = [
+        { label: "Gross revenue (trailing 3mo)", value: GeFi.fmt.money(gross, "USD") },
+        { label: "Your share (" + DEV_SHARE_PCT + "%)", value: GeFi.fmt.money(share, "USD") },
+        { label: "Next payout date", value: "Sep 1, 2026" }
+      ];
+      cards.forEach(function (c) {
+        var card = document.createElement("div");
+        card.className = "kpi-card";
+        var body = document.createElement("div");
+        body.className = "kpi-card__body";
+        var label = document.createElement("p");
+        label.className = "kpi-card__label";
+        label.textContent = c.label;
+        var val = document.createElement("p");
+        val.className = "kpi-card__value";
+        val.textContent = c.value;
+        body.appendChild(label);
+        body.appendChild(val);
+        card.appendChild(body);
+        grid.appendChild(card);
+      });
+    }
+
+    var disconnected = root.querySelector("[data-dev-stripe-disconnected]");
+    var connected = root.querySelector("[data-dev-stripe-connected]");
+    var account = root.querySelector("[data-dev-stripe-account]");
+    var isConnected = stripeConnected();
+    if (disconnected) disconnected.hidden = isConnected;
+    if (connected) connected.hidden = !isConnected;
+    if (account && isConnected) account.textContent = "Payouts to Chase … 4821";
+
+    var payoutsBody = root.querySelector("[data-dev-payouts-body]");
+    if (payoutsBody && !payoutsBody.childNodes.length) {
+      DEV_PAYOUTS.forEach(function (p) {
+        payoutsBody.appendChild(tableRow([
+          { content: p.period },
+          { content: GeFi.fmt.money(p.gross, "USD"), cls: "is-mono" },
+          { content: GeFi.fmt.money(p.gross * (DEV_SHARE_PCT / 100), "USD"), cls: "is-mono" },
+          { content: statusPill(p.status === "paid" ? "status-pill--ok" : "status-pill--progress", p.status === "paid" ? "Paid" : "Pending") }
+        ]));
+      });
+    }
+  }
+
+  root.addEventListener("click", function (e) {
+    if (!e.target.closest("[data-dev-stripe-connect]")) return;
+    try {
+      sessionStorage.setItem(DEV_EARNINGS_KEY, "1");
+    } catch (err) {}
+    renderDevEarnings();
   });
 
   /* --------------------------------------------------------------- boot */

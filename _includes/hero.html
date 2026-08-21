@@ -14,5 +14,20 @@
     {%- if include.note -%}
       <p class="muted small">{{ include.note }}</p>
     {%- endif -%}
+    {%- if include.ticker -%}
+      {%- comment -%}
+        Live-feeling inference ticker (Task 99). Seeded sample events built
+        from the real model registry in dashboard.js; a deployed audit-log
+        endpoint replaces the sample feed. Static line without JS.
+      {%- endcomment -%}
+      <div class="hero-ticker" data-hero-ticker>
+        <span class="hero-ticker__dot" aria-hidden="true"></span>
+        <span class="hero-ticker__text" data-hero-ticker-text>Credit Oracle scored a request in Sofia &middot; 41&nbsp;ms</span>
+        <span class="hero-ticker__tag" data-hero-ticker-tag>sample feed</span>
+      </div>
+    {%- endif -%}
   </div>
+  {%- if include.proof -%}
+    {%- include proof-bar.html embedded=true -%}
+  {%- endif -%}
 </section>

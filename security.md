@@ -6,13 +6,30 @@ lead: How to report a security issue to GeFi, what's in scope, and the safe-harb
 permalink: /security/
 ---
 
+<div class="sec-report" id="report" markdown="0">
+<div class="sec-report__panel">
+<p class="sec-report__eyebrow">Found something? Report it now.</p>
+<p class="sec-report__email"><a href="mailto:security@gefi.io">security@gefi.io</a></p>
+<div class="sec-report__links">
+<a class="btn btn-ghost" href="/.well-known/security.txt">security.txt</a>
+<a class="btn btn-ghost" href="#encryption">PGP key</a>
+</div>
+<p class="muted small">Good-faith research is protected — see the safe-harbour terms below.</p>
+</div>
+<ul class="sec-report__tiles" role="list">
+<li><span class="sec-report__num">1<span class="sec-report__unit">business day</span></span><span class="sec-report__label">to acknowledge your report</span></li>
+<li><span class="sec-report__num">3<span class="sec-report__unit">business days</span></span><span class="sec-report__label">to triage and assess severity</span></li>
+<li><span class="sec-report__num">30/60/90<span class="sec-report__unit">days</span></span><span class="sec-report__label">fix targets by severity</span></li>
+</ul>
+</div>
+
 We run a coordinated vulnerability disclosure programme. Independent
 security researchers are an essential part of how we keep GeFi safe for
 the institutions, regulators, and end-users who depend on it. This page
 is the human-readable companion to our machine-readable
 [`/.well-known/security.txt`](/.well-known/security.txt) (RFC 9116).
 
-<h2 id="report">Reporting a vulnerability</h2>
+## What to include in a report
 
 Email **<a href="mailto:security@gefi.io">security@gefi.io</a>** with:
 
@@ -46,38 +63,32 @@ advisory and on this page (unless you prefer to remain anonymous), and
 will not take legal action against researchers acting in good faith
 under the [safe-harbour](#safe-harbour) terms below.
 
-<h2 id="scope">In-scope assets</h2>
+<h2 id="scope">Scope</h2>
 
-The following GeFi-operated assets are in scope:
-
-- `gefi.io` and all subdomains (`app.gefi.io`, `api.gefi.io`,
-  `docs.gefi.io`, `status.gefi.io`, `trust.gefi.io`).
-- Public GeFi APIs documented at [/docs/](/docs/).
-- The GeFi mobile and desktop clients distributed through our official
-  channels.
-- Source code in the [`gefi-io` GitHub organisation](https://github.com/gefi-io)
-  that is part of the production stack (audit-spec, SDKs, model
-  reference implementations).
-- Federated model integrity, audit-log tamper resistance, and Merkle
-  inclusion-proof verification.
-
-### Out of scope
-
-- Third-party services we use (Cloudflare, Stripe, Auth0, Sumsub,
-  Resend) — please report those directly to the vendor. We will help
-  coordinate where appropriate.
-- Findings that require physical access to a user's device, social
-  engineering of GeFi staff or customers, or compromise of a third
-  party's account.
-- Denial-of-service, volumetric, or load-testing attacks.
-- Reports based solely on automated scanner output without a
-  demonstrated impact.
-- Missing security headers, cookie flags, SPF/DKIM/DMARC nits, or
-  TLS configuration findings without a working exploit.
-- Self-XSS, clickjacking on pages with no sensitive actions, and
-  rate-limit absence on non-authenticated endpoints.
-- Vulnerabilities in unsupported or end-of-life browsers or OS
-  versions.
+<div class="sec-scope" markdown="0">
+<div class="sec-scope__col sec-scope__col--in">
+<h3><span class="sec-scope__mark sec-scope__mark--in" aria-hidden="true">✓</span> In scope</h3>
+<ul>
+<li><code>gefi.io</code> and all subdomains (<code>app</code>, <code>api</code>, <code>docs</code>, <code>status</code>, <code>trust</code>)</li>
+<li>Public GeFi APIs documented at <a href="/docs/">/docs/</a></li>
+<li>GeFi mobile and desktop clients from official channels</li>
+<li>Production source code in the <a href="https://github.com/gefi-io">gefi-io GitHub organisation</a> (audit-spec, SDKs, model reference implementations)</li>
+<li>Federated model integrity, audit-log tamper resistance, Merkle inclusion-proof verification</li>
+</ul>
+</div>
+<div class="sec-scope__col sec-scope__col--out">
+<h3><span class="sec-scope__mark sec-scope__mark--out" aria-hidden="true">✕</span> Out of scope</h3>
+<ul>
+<li>Third-party services (Cloudflare, Stripe, Auth0, Sumsub, Resend) — report to the vendor; we help coordinate</li>
+<li>Physical access, social engineering, or third-party account compromise</li>
+<li>Denial-of-service, volumetric, or load-testing attacks</li>
+<li>Raw scanner output without demonstrated impact</li>
+<li>Header/cookie/SPF/DKIM/TLS nits without a working exploit</li>
+<li>Self-XSS, clickjacking without sensitive actions, rate-limit absence on unauthenticated endpoints</li>
+<li>Unsupported or end-of-life browsers and OS versions</li>
+</ul>
+</div>
+</div>
 
 <h2 id="rules">Rules of engagement</h2>
 
@@ -95,7 +106,8 @@ When testing, please:
   coordinated disclosure timeline.
 - Comply with all applicable laws.
 
-<h2 id="safe-harbour">Safe harbour</h2>
+<details class="sec-legal" id="safe-harbour" markdown="1">
+<summary><strong>Safe harbour</strong> — the legal terms researchers can rely on</summary>
 
 If you make a good-faith effort to comply with this policy during your
 security research, GeFi will:
@@ -115,6 +127,8 @@ security research, GeFi will:
 
 If at any point you are unsure whether a particular action is covered,
 contact us at `security@gefi.io` first and we will tell you.
+
+</details>
 
 <h2 id="encryption">Encryption (PGP)</h2>
 

@@ -134,6 +134,13 @@ pricing:
     Subscriptions can be paid by card, ACH, or wallet (USDC on Base, Arbitrum,
     and Optimism). Developer payouts can be in fiat or USDC.
   tax_note: "Invoices include VAT/GST registration numbers per jurisdiction."
+  # Usage calculator under the Pro card (Task 101). Illustrative rates —
+  # the calculator labels its output as an estimate, not a quote.
+  calc_base_monthly: 499
+  calc_included_calls_per_day: 5000
+  calc_call_rate: 0.0008
+  calc_included_keys: 10
+  calc_extra_key_price: 5
 
 plans:
   - id: free
@@ -183,6 +190,10 @@ plans:
     highlighted: false
     cta_label: "Talk to us"
     cta_tier: "enterprise"
+    compliance_badges:
+      - "Sovereign data plane"
+      - "Audit evidence packs"
+      - "Per-jurisdiction counsel"
 
 # Detailed plan comparison matrix rendered beneath the pricing cards
 # (Task #8). Editable here so marketing can tweak the matrix without

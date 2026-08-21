@@ -29,6 +29,10 @@ layout: null
         <a class="dash-topbar__brand" href="/">GeFi</a>
         <span class="badge">Preview — sample data</span>
         <div class="dash-topbar__spacer"></div>
+        <div class="dash-persona" data-dash-persona role="group" aria-label="Preview persona">
+          <button type="button" class="dash-persona__btn" data-dash-persona-btn="operator">Operator</button>
+          <button type="button" class="dash-persona__btn" data-dash-persona-btn="developer">Developer</button>
+        </div>
         <button type="button" class="dash-bell" data-dash-bell aria-label="Notifications">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
           <span class="dash-bell__count" data-dash-bell-count hidden></span>
@@ -36,17 +40,21 @@ layout: null
         <button type="button" class="btn btn-ghost" data-dash-exit>Exit preview</button>
       </header>
       <nav class="dash-sidebar" aria-label="Dashboard sections">
-        <p class="dash-sidebar__label">Operate</p>
-        <a href="#overview" data-dash-tab-link="overview">Overview</a>
-        <a href="#analytics" data-dash-tab-link="analytics">Analytics</a>
-        <a href="#compliance" data-dash-tab-link="compliance">Compliance</a>
-        <a href="#federation" data-dash-tab-link="federation">Federation</a>
-        <a href="#api-keys" data-dash-tab-link="api-keys">API keys</a>
-        <a href="#alerts" data-dash-tab-link="alerts">Alerts</a>
-        <p class="dash-sidebar__label">Admin</p>
-        <a href="#tenants" data-dash-tab-link="tenants">Tenants</a>
-        <a href="#approvals" data-dash-tab-link="approvals">Approvals</a>
-        <a href="#system" data-dash-tab-link="system">System</a>
+        <p class="dash-sidebar__label" data-dash-group="operator">Operate</p>
+        <a href="#overview" data-dash-tab-link="overview" data-dash-group="operator">Overview</a>
+        <a href="#analytics" data-dash-tab-link="analytics" data-dash-group="operator">Analytics</a>
+        <a href="#compliance" data-dash-tab-link="compliance" data-dash-group="operator">Compliance</a>
+        <a href="#federation" data-dash-tab-link="federation" data-dash-group="operator">Federation</a>
+        <a href="#api-keys" data-dash-tab-link="api-keys" data-dash-group="operator">API keys</a>
+        <a href="#alerts" data-dash-tab-link="alerts" data-dash-group="operator">Alerts</a>
+        <p class="dash-sidebar__label" data-dash-group="admin">Admin</p>
+        <a href="#tenants" data-dash-tab-link="tenants" data-dash-group="admin">Tenants</a>
+        <a href="#approvals" data-dash-tab-link="approvals" data-dash-group="admin">Approvals</a>
+        <a href="#system" data-dash-tab-link="system" data-dash-group="admin">System</a>
+        <p class="dash-sidebar__label" data-dash-group="developer">Developer</p>
+        <a href="#dev-models" data-dash-tab-link="dev-models" data-dash-group="developer">My models</a>
+        <a href="#dev-versions" data-dash-tab-link="dev-versions" data-dash-group="developer">Versions</a>
+        <a href="#dev-earnings" data-dash-tab-link="dev-earnings" data-dash-group="developer">Earnings</a>
       </nav>
       <main id="dash-main" class="dash-main">
         {{ content }}
