@@ -1375,3 +1375,31 @@ p  { margin: 0 0 var(--space-4); }
 .gefi-chart__hub-label { fill: #fff; font-size: 11px; font-weight: 600; font-family: var(--font-sans); }
 
 .metric-freshness { margin: var(--space-3) 0 0; font-family: var(--font-mono); font-size: 0.75rem; }
+
+/* ------------------------------------------------------------------
+   Task 100: grouped catalogue, facet counts, maturity-weighted cards.
+   ------------------------------------------------------------------ */
+
+.model-filter__group--families { flex-wrap: wrap; row-gap: var(--space-2); }
+.filter-chip__count { color: var(--color-muted); font-size: 0.75rem; font-family: var(--font-mono); }
+.filter-chip.is-active .filter-chip__count { color: inherit; opacity: 0.8; }
+.filter-chip.is-zero { opacity: 0.45; }
+
+.model-group { margin-bottom: var(--space-6); }
+.model-group[hidden] { display: none; }
+.model-group__label {
+  position: sticky; top: 58px; z-index: 10;
+  background: var(--color-bg);
+  margin: 0 0 var(--space-4); padding: var(--space-3) 0;
+  font-size: 1.125rem; border-bottom: 1px solid var(--color-border);
+}
+.model-group__count { font-weight: 400; font-size: 0.875rem; font-family: var(--font-mono); }
+
+/* Maturity weighting: GA reads shipped, Beta reads experimental, at a glance. */
+.model-card--ga { border: 1.5px solid var(--color-accent); }
+.model-card--beta { border: 1.5px dashed var(--color-border); }
+.model-card--alpha { border: 1.5px dashed var(--color-warn); }
+.model-card--ga:hover, .model-card--beta:hover, .model-card--alpha:hover { border-color: var(--color-brand); border-style: solid; }
+.badge--maturity-ga { background: rgba(34, 211, 238, 0.14); color: #0E7490; }
+.badge--maturity-beta { background: var(--color-surface-2); color: var(--color-muted); }
+.badge--maturity-alpha { background: rgba(245, 158, 11, 0.14); color: #92400E; }

@@ -5,6 +5,7 @@
   var grid = document.querySelector("[data-model-grid]");
   if (!root || !grid) return;
 
+  var groups = Array.prototype.slice.call(grid.querySelectorAll("[data-model-group]"));
   var cards = Array.prototype.slice.call(grid.querySelectorAll("[data-model-card]"));
   var countEl = root.querySelector("[data-filter-count]");
   var emptyEl = document.querySelector("[data-filter-empty]");
@@ -20,22 +21,59 @@
 
   var state = { category: "all", risk: "all", federated: false, search: "" };
 
+  /* Does card i match the current state, with any one dimension overridden?
+   * The override is what makes facet counts live: a chip's count is "how many
+   * cards would show if this chip were active, holding the other filters". */
+  function matches(i, dim, value) {
+    var card = cards[i];
+    var s = {
+      category: dim === "category" ? value : state.category,
+      risk: dim === "risk" ? value : state.risk,
+      federated: dim === "federated" ? value : state.federated,
+      search: state.search
+    };
+    var family = (card.getAttribute("data-family") || "").toLowerCase();
+    var risk = (card.getAttribute("data-risk") || "").toLowerCase();
+    var fed = card.getAttribute("data-federated") === "true";
+
+    var catOk = s.category === "all" || family === s.category;
+    var riskOk = s.risk === "all" || risk === s.risk;
+    var fedOk = !s.federated || fed;
+    var searchOk = !s.search || cardIndex[i].indexOf(s.search) !== -1;
+    return catOk && riskOk && fedOk && searchOk;
+  }
+
+  function updateFacetCounts() {
+    var chips = root.querySelectorAll(".filter-chip");
+    chips.forEach(function (chip) {
+      var span = chip.querySelector("[data-facet-count]");
+      if (!span) return;
+      var dim = chip.getAttribute("data-filter");
+      var value = chip.getAttribute("data-value");
+      var n = 0;
+      for (var i = 0; i < cards.length; i++) {
+        if (matches(i, dim, value)) n++;
+      }
+      span.textContent = "(" + n + ")";
+      chip.classList.toggle("is-zero", n === 0);
+    });
+  }
+
   function apply() {
     var visible = 0;
-    var query = state.search;
     cards.forEach(function (card, i) {
-      var cat = (card.getAttribute("data-category") || "").toLowerCase();
-      var risk = (card.getAttribute("data-risk") || "").toLowerCase();
-      var fed = card.getAttribute("data-federated") === "true";
-
-      var catOk = state.category === "all" || cat.indexOf(state.category) !== -1;
-      var riskOk = state.risk === "all" || risk === state.risk;
-      var fedOk = !state.federated || fed;
-      var searchOk = !query || cardIndex[i].indexOf(query) !== -1;
-
-      var show = catOk && riskOk && fedOk && searchOk;
+      var show = matches(i, null, null);
       card.classList.toggle("is-hidden", !show);
       if (show) visible++;
+    });
+
+    /* Hide group sections (and their sticky labels) with nothing visible;
+     * update each label's live count. */
+    groups.forEach(function (g) {
+      var inGroup = g.querySelectorAll("[data-model-card]:not(.is-hidden)").length;
+      g.hidden = inGroup === 0;
+      var gc = g.querySelector("[data-group-count]");
+      if (gc) gc.textContent = "(" + inGroup + ")";
     });
 
     if (countEl) {
@@ -44,6 +82,7 @@
     if (emptyEl) {
       emptyEl.hidden = visible !== 0;
     }
+    updateFacetCounts();
   }
 
   root.addEventListener("click", function (e) {
