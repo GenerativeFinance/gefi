@@ -1,0 +1,31 @@
+---
+layout: null
+---
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <script>document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/, "js");</script>
+    {%- include head.html -%}
+  </head>
+  <body class="theme-light trust-portal">
+    <a class="skip-link" href="#trust-main">Skip to content</a>
+    <header class="trust-portal__topbar">
+      <span class="trust-portal__brand">GeFi <span class="trust-portal__brand-suffix">Trust</span></span>
+      <span class="badge">Evidence portal</span>
+      <div class="trust-portal__spacer"></div>
+      <a class="btn btn-ghost" href="https://gefi.io/">gefi.io</a>
+    </header>
+    <main id="trust-main" class="container trust-portal__main">
+      {{ content }}
+    </main>
+    <footer class="trust-portal__footer">
+      <p class="muted small">
+        &copy; 2026 GeFi Technologies &middot; Questions or access requests:
+        <a href="mailto:trust@gefi.io">trust@gefi.io</a> &middot;
+        <a href="https://gefi.io/compliance/">Compliance &amp; trust center</a> &middot;
+        <a href="https://gefi.io/security/">Security</a>
+      </p>
+    </footer>
+    <script src="{{ '/assets/js/trust-anchors.js' | relative_url }}" defer></script>
+  </body>
+</html>

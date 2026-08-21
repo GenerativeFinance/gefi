@@ -1,0 +1,42 @@
+# Data behind the trust portal (/trust/ — served as trust.gefi.io in production).
+# Certification statuses here are the single source the portal renders; keep in
+# step with compliance_badges in _config.yml when statuses change.
+
+certifications:
+  - name: "SOC 2 Type II"
+    status: in_progress
+    detail: "Observation window opened March 2026; report expected Q1 2027. Type I report available under NDA."
+  - name: "ISO 27001"
+    status: in_progress
+    detail: "Stage 1 audit complete; Stage 2 scheduled Q4 2026."
+  - name: "ISO 42001"
+    status: in_progress
+    detail: "AI management system scoped to model lifecycle and federated training; gap assessment complete."
+  - name: "GDPR"
+    status: aligned
+    detail: "DPA with SCCs available; EU data residency on Enterprise. No sale of personal data."
+  - name: "EU AI Act"
+    status: aligned
+    detail: "High-risk credit-scoring models ship with conformity documentation; versions serve EU traffic only after clearing the approval queue."
+
+reports:
+  - name: "Penetration test — annual summary"
+    access: public
+    note: "Executive summary of the most recent third-party test."
+  - name: "Penetration test — full report"
+    access: nda
+    note: "Complete findings and remediation log."
+  - name: "SOC 2 Type I report"
+    access: nda
+    note: "Point-in-time controls report while the Type II window runs."
+  - name: "Architecture & data-flow overview"
+    access: public
+    note: "Where customer data lives, what leaves a tenant, and what never does."
+
+evidence_packs:
+  - name: "Security questionnaire pack"
+    note: "Pre-filled CAIQ and SIG Lite."
+  - name: "Data processing agreement"
+    note: "DPA with SCCs, ready for countersignature."
+  - name: "Subprocessor list"
+    note: "The list below, as a signed PDF with change history."
