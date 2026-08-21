@@ -131,8 +131,8 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 102 | Compliance & Trust portal | Trust & security | High priority | Done. Trust-center layout: evidence cards w/ live dots, sticky jump-nav, counsel status board with pills, animated hash-chain diagram, run_id verifier (endpoint-or-sample fallback). Browser test caught a kramdown indentation bug that emptied the subprocessor table — fixed pre-commit. Build passed. |
 | [x] | 104 | Docs | Content & developer surface | High priority | Done. Real landing: cURL/Python/JS tabbed quickstart for POST /v1/models/{slug}/run + response, auth & rate-limits table, 11 featured reference cards w/ mono endpoints. Accessible tabs; no-JS shows all three stacked. Build passed. |
 | [x] | 115 | Onboarding & KYC wizard | Onboarding & account lifecycle | High priority | Done. 4-step wizard (/onboarding/, gated preview, resumable sessionStorage state), progress rail, tier-unlock table, mocked Sumsub embed, staged status polling w/ honest review-time expectations. Built on the 111 shell. Build passed. |
-| [ ] | 116 | Dashboard — API Keys tab | Onboarding & account lifecycle | High priority | |
-| [ ] | 117 | Alerts & Notification Center | Onboarding & account lifecycle | High priority | |
+| [x] | 116 | Dashboard — API Keys tab | Onboarding & account lifecycle | High priority | Done. Key table (masked prefix/scope/created/last-used), 7-day usage sparklines, create modal w/ scope picker + one-time reveal + copy, revoke w/ typed confirmation, sessionStorage persistence. Build passed. |
+| [x] | 117 | Alerts & Notification Center | Onboarding & account lifecycle | High priority | Done. Bell w/ unread count opens inbox (grouped by model, severity styling reused), per-model mute + min-severity prefs, email/webhook/Slack delivery matrix per severity, prefs persist. Build passed. |
 | [ ] | 119 | Model Developer Console | Marketplace expansion | High priority | |
 | [ ] | 123 | trust.gefi.io portal | Trust & federation surfaces | High priority | |
 | [ ] | 94 | Fraud Graph (redesign) | Live model pages | Medium priority | |

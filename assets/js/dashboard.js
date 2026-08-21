@@ -526,7 +526,7 @@
 
   /* -------------------------------------------------------------- tabs */
 
-  var TABS = ["overview", "analytics", "compliance", "federation", "tenants", "approvals", "system"];
+  var TABS = ["overview", "analytics", "compliance", "federation", "api-keys", "alerts", "tenants", "approvals", "system"];
 
   function currentTab() {
     var h = (window.location.hash || "").replace("#", "");
@@ -549,7 +549,16 @@
     });
   }
 
-  window.addEventListener("hashchange", renderTab);
+  function renderCurrent() {
+    renderTab();
+    var tab = currentTab();
+    if (tab === "overview") renderOverview();
+    if (tab === "api-keys") renderApiKeys();
+    if (tab === "alerts") renderAlerts(true);
+    updateBell();
+  }
+
+  window.addEventListener("hashchange", renderCurrent);
 
   /* ---------------------------------------------------- seeded mock data */
 
@@ -578,6 +587,379 @@
     { severity: "info", model: "credit-oracle", text: "Model version 2026.08.2 cleared EU conformity review and is serving EU traffic." },
     { severity: "info", model: "fraud-graph", text: "UAE edge latency back under 50ms after the region's cache rebuild." }
   ];
+
+  /* ------------------------------------------- api keys (Task 116) */
+
+  var KEYS_KEY = "gefi-dash-keys";
+
+  function seedKeys() {
+    return [
+      { name: "prod-inference", prefix: "gefi_sk_9f2c", scope: "inference", created: "2026-06-02", lastUsed: "today", usage: [820, 940, 1010, 880, 1200, 1150, 1290] },
+      { name: "ci-smoke", prefix: "gefi_sk_41d7", scope: "read", created: "2026-07-11", lastUsed: "3 days ago", usage: [40, 38, 42, 36, 40, 44, 39] }
+    ];
+  }
+
+  function loadKeys() {
+    try {
+      var raw = sessionStorage.getItem(KEYS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return seedKeys();
+  }
+
+  function saveKeys(keys) {
+    try {
+      sessionStorage.setItem(KEYS_KEY, JSON.stringify(keys));
+    } catch (e) {}
+  }
+
+  function randomKey() {
+    var hex = "";
+    for (var i = 0; i < 8; i++) {
+      hex += Math.floor((Date.now() / (i + 3) + i * 7919) % 16).toString(16);
+    }
+    /* Preview-only key material: derived, not random, and never real. */
+    var body = GeFi.seed.hash("key|" + hex + "|" + (loadKeys().length + 1)).toString(16);
+    return "gefi_sk_" + hex + body + body.split("").reverse().join("");
+  }
+
+  function renderApiKeys() {
+    var body = root.querySelector("[data-keys-body]");
+    var empty = root.querySelector("[data-keys-empty]");
+    if (!body) return;
+    var keys = loadKeys();
+    body.innerHTML = "";
+    empty.hidden = keys.length !== 0;
+    root.querySelector("[data-keys-table]").hidden = keys.length === 0;
+
+    keys.forEach(function (k, idx) {
+      var tr = document.createElement("tr");
+
+      function td(content, cls) {
+        var cell = document.createElement("td");
+        if (cls) cell.className = cls;
+        if (typeof content === "string") {
+          cell.textContent = content;
+        } else {
+          cell.appendChild(content);
+        }
+        tr.appendChild(cell);
+        return cell;
+      }
+
+      td(k.name);
+      td(k.prefix + "\u2026", "is-mono");
+      var scope = document.createElement("span");
+      scope.className = "badge";
+      scope.textContent = k.scope;
+      td(scope);
+      td(k.created, "is-mono");
+      td(k.lastUsed);
+      var spark = document.createElement("span");
+      spark.className = "dash-keyspark";
+      spark.appendChild(GeFi.svg.sparkline(k.usage, { label: k.name + " 7-day usage" }));
+      td(spark);
+
+      var actions = document.createElement("td");
+      actions.className = "is-actions";
+      if (k.confirming) {
+        var input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = "Type \"" + k.name + "\" to revoke";
+        input.className = "dash-confirm-input";
+        input.setAttribute("data-revoke-input", String(idx));
+        var confirm = document.createElement("button");
+        confirm.type = "button";
+        confirm.className = "btn btn-ghost is-danger";
+        confirm.textContent = "Confirm revoke";
+        confirm.setAttribute("data-revoke-confirm", String(idx));
+        actions.appendChild(input);
+        actions.appendChild(confirm);
+      } else {
+        var revoke = document.createElement("button");
+        revoke.type = "button";
+        revoke.className = "btn btn-ghost";
+        revoke.textContent = "Revoke";
+        revoke.setAttribute("data-revoke-start", String(idx));
+        actions.appendChild(revoke);
+      }
+      tr.appendChild(actions);
+      body.appendChild(tr);
+    });
+  }
+
+  root.addEventListener("click", function (e) {
+    var t = e.target;
+    if (t.closest("[data-key-create-open]")) {
+      var modal = root.querySelector("[data-key-modal]");
+      modal.hidden = false;
+      root.querySelector("[data-key-modal-form]").hidden = false;
+      root.querySelector("[data-key-modal-reveal]").hidden = true;
+      root.querySelector("[data-key-name]").value = "";
+      return;
+    }
+    if (t.closest("[data-key-modal-cancel]")) {
+      root.querySelector("[data-key-modal]").hidden = true;
+      return;
+    }
+    if (t.closest("[data-key-modal-create]")) {
+      var name = (root.querySelector("[data-key-name]").value || "").trim() || "unnamed-key";
+      var scope = root.querySelector("[data-key-scope]").value;
+      var full = randomKey();
+      var keys = loadKeys();
+      keys.push({
+        name: name,
+        prefix: full.slice(0, 12),
+        scope: scope,
+        created: "today",
+        lastUsed: "never",
+        usage: [0, 0, 0, 0, 0, 0, 0]
+      });
+      saveKeys(keys);
+      root.querySelector("[data-key-full]").textContent = full;
+      root.querySelector("[data-key-modal-form]").hidden = true;
+      root.querySelector("[data-key-modal-reveal]").hidden = false;
+      root.querySelector("[data-key-copied]").hidden = true;
+      renderApiKeys();
+      return;
+    }
+    if (t.closest("[data-key-copy]")) {
+      var text = root.querySelector("[data-key-full]").textContent;
+      var done = function () {
+        root.querySelector("[data-key-copied]").hidden = false;
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        done();
+      }
+      return;
+    }
+    if (t.closest("[data-key-modal-done]")) {
+      root.querySelector("[data-key-modal]").hidden = true;
+      root.querySelector("[data-key-full]").textContent = "";
+      return;
+    }
+    var start = t.closest("[data-revoke-start]");
+    if (start) {
+      var keys2 = loadKeys();
+      keys2[parseInt(start.getAttribute("data-revoke-start"), 10)].confirming = true;
+      saveKeys(keys2);
+      renderApiKeys();
+      return;
+    }
+    var conf = t.closest("[data-revoke-confirm]");
+    if (conf) {
+      var i = parseInt(conf.getAttribute("data-revoke-confirm"), 10);
+      var keys3 = loadKeys();
+      var typed = root.querySelector('[data-revoke-input="' + i + '"]').value.trim();
+      if (typed === keys3[i].name) {
+        keys3.splice(i, 1);
+      } else {
+        delete keys3[i].confirming;
+      }
+      saveKeys(keys3);
+      renderApiKeys();
+      return;
+    }
+  });
+
+  /* --------------------------------------- alerts center (Task 117) */
+
+  var PREFS_KEY = "gefi-dash-alert-prefs";
+  var READ_KEY = "gefi-dash-alerts-read";
+  var SEV_RANK = { info: 0, warn: 1, critical: 2 };
+
+  function loadPrefs() {
+    try {
+      var raw = sessionStorage.getItem(PREFS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return { mutes: {}, minSev: {}, delivery: { critical: { email: true, webhook: true, slack: true }, warn: { email: true, webhook: false, slack: true }, info: { email: false, webhook: false, slack: false } } };
+  }
+
+  function savePrefs(p) {
+    try {
+      sessionStorage.setItem(PREFS_KEY, JSON.stringify(p));
+    } catch (e) {}
+  }
+
+  function alertsRead() {
+    try {
+      return sessionStorage.getItem(READ_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function visibleAlerts() {
+    var prefs = loadPrefs();
+    return ALERTS.filter(function (a) {
+      if (prefs.mutes[a.model]) return false;
+      var min = prefs.minSev[a.model] || "info";
+      return SEV_RANK[a.severity] >= SEV_RANK[min];
+    });
+  }
+
+  function updateBell() {
+    var bell = root.querySelector("[data-dash-bell-count]");
+    if (!bell) return;
+    var unread = alertsRead()
+      ? 0
+      : visibleAlerts().filter(function (a) {
+          return a.severity !== "info";
+        }).length;
+    bell.textContent = String(unread);
+    bell.hidden = unread === 0;
+  }
+
+  function alertItem(a) {
+    var li = document.createElement("li");
+    li.className = "dash-alert dash-alert--" + a.severity;
+    var svg = GeFi.svg.el("svg", { viewBox: "0 0 24 24", width: 14, height: 14, class: "dash-alert__icon", "aria-hidden": "true" });
+    svg.appendChild(GeFi.svg.el("path", { d: SEV_ICON[a.severity] }));
+    li.appendChild(svg);
+    var bodyEl = document.createElement("div");
+    var head = document.createElement("p");
+    head.className = "dash-alert__head";
+    var sev = document.createElement("span");
+    sev.className = "dash-alert__sev";
+    sev.textContent = a.severity;
+    head.appendChild(sev);
+    var text = document.createElement("p");
+    text.className = "dash-alert__text";
+    text.textContent = a.text;
+    bodyEl.appendChild(head);
+    bodyEl.appendChild(text);
+    li.appendChild(bodyEl);
+    return li;
+  }
+
+  function renderAlerts(markRead) {
+    var inbox = root.querySelector("[data-alerts-inbox]");
+    if (!inbox) return;
+    if (markRead && currentTab() === "alerts") {
+      try {
+        sessionStorage.setItem(READ_KEY, "1");
+      } catch (e) {}
+    }
+
+    /* Inbox grouped by model. */
+    inbox.innerHTML = "";
+    var byModel = {};
+    visibleAlerts().forEach(function (a) {
+      (byModel[a.model] = byModel[a.model] || []).push(a);
+    });
+    var models = Object.keys(byModel).sort();
+    if (!models.length) {
+      var none = document.createElement("p");
+      none.className = "dash-empty";
+      none.textContent = "Nothing in the inbox — everything is either read, muted, or below your severity thresholds.";
+      inbox.appendChild(none);
+    }
+    models.forEach(function (m) {
+      var group = document.createElement("div");
+      group.className = "dash-alertgroup";
+      var h = document.createElement("h3");
+      h.className = "dash-alertgroup__model";
+      h.textContent = m;
+      group.appendChild(h);
+      var ul = document.createElement("ul");
+      ul.className = "dash-alerts";
+      byModel[m].forEach(function (a) {
+        ul.appendChild(alertItem(a));
+      });
+      group.appendChild(ul);
+      inbox.appendChild(group);
+    });
+
+    /* Per-model preferences. */
+    var prefs = loadPrefs();
+    var prefBody = root.querySelector("[data-alert-prefs-body]");
+    prefBody.innerHTML = "";
+    var allModels = [];
+    ALERTS.forEach(function (a) {
+      if (allModels.indexOf(a.model) === -1) allModels.push(a.model);
+    });
+    allModels.sort().forEach(function (m) {
+      var tr = document.createElement("tr");
+      var name = document.createElement("td");
+      name.className = "is-mono";
+      name.textContent = m;
+      tr.appendChild(name);
+
+      var muteTd = document.createElement("td");
+      var mute = document.createElement("input");
+      mute.type = "checkbox";
+      mute.checked = !!prefs.mutes[m];
+      mute.setAttribute("data-alert-mute", m);
+      muteTd.appendChild(mute);
+      tr.appendChild(muteTd);
+
+      var sevTd = document.createElement("td");
+      var sel = document.createElement("select");
+      sel.setAttribute("data-alert-minsev", m);
+      ["info", "warn", "critical"].forEach(function (sv) {
+        var opt = document.createElement("option");
+        opt.value = sv;
+        opt.textContent = sv;
+        if ((prefs.minSev[m] || "info") === sv) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sevTd.appendChild(sel);
+      tr.appendChild(sevTd);
+      prefBody.appendChild(tr);
+    });
+
+    /* Delivery matrix. */
+    var dBody = root.querySelector("[data-delivery-body]");
+    dBody.innerHTML = "";
+    ["critical", "warn", "info"].forEach(function (sv) {
+      var tr = document.createElement("tr");
+      var name = document.createElement("td");
+      var sevSpan = document.createElement("span");
+      sevSpan.className = "dash-alert__sev dash-sev--" + sv;
+      sevSpan.textContent = sv;
+      name.appendChild(sevSpan);
+      tr.appendChild(name);
+      ["email", "webhook", "slack"].forEach(function (ch) {
+        var td = document.createElement("td");
+        var cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = !!(prefs.delivery[sv] && prefs.delivery[sv][ch]);
+        cb.setAttribute("data-delivery", sv + "|" + ch);
+        td.appendChild(cb);
+        tr.appendChild(td);
+      });
+      dBody.appendChild(tr);
+    });
+  }
+
+  root.addEventListener("change", function (e) {
+    var t = e.target;
+    var prefs = loadPrefs();
+    if (t.matches("[data-alert-mute]")) {
+      prefs.mutes[t.getAttribute("data-alert-mute")] = t.checked;
+      savePrefs(prefs);
+      renderAlerts(false);
+      updateBell();
+      return;
+    }
+    if (t.matches("[data-alert-minsev]")) {
+      prefs.minSev[t.getAttribute("data-alert-minsev")] = t.value;
+      savePrefs(prefs);
+      renderAlerts(false);
+      updateBell();
+      return;
+    }
+    if (t.matches("[data-delivery]")) {
+      var parts = t.getAttribute("data-delivery").split("|");
+      prefs.delivery[parts[0]] = prefs.delivery[parts[0]] || {};
+      prefs.delivery[parts[0]][parts[1]] = t.checked;
+      savePrefs(prefs);
+      return;
+    }
+  });
 
   /* ---------------------------------------------------------- overview */
 
@@ -654,21 +1036,19 @@
       });
     }
 
-    var bell = root.querySelector("[data-dash-bell-count]");
-    if (bell) {
-      var unread = ALERTS.filter(function (a) {
-        return a.severity !== "info";
-      }).length;
-      bell.textContent = String(unread);
-      bell.hidden = unread === 0;
-    }
+    updateBell();
   }
+
+  root.addEventListener("click", function (e) {
+    if (e.target.closest("[data-dash-bell]")) {
+      window.location.hash = "#alerts";
+    }
+  });
 
   /* --------------------------------------------------------------- boot */
 
   function boot() {
-    renderTab();
-    renderOverview();
+    renderCurrent();
   }
 
   if (gated()) {
