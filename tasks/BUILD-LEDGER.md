@@ -56,9 +56,9 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 82 | IRRBB / ALM Modeler (`irrbb-alm-modeler`) | Banking Book & Provisioning | P1 | Done. New page + curve demo (EVE by bucket) + MODELS row. Build passed. |
 | [x] | 83 | Deposit Behavior Model (`deposit-behavior-model`) | Banking Book & Provisioning | P1 | Done. New page + curve demo + MODELS row. Build passed. |
 | [x] | 84 | Basel RWA & Capital Calculator (`basel-rwa-capital-calculator`) | Banking Book & Provisioning | P1 | Done. New page + table demo (rule-referenced weights) + MODELS row. Build passed. |
-| [ ] | 88 | Monte Carlo Simulation Service (`monte-carlo-simulation-service`) | Simulation & Market Primitives | P1 | |
-| [ ] | 89 | Volatility Surface Service (`volatility-surface-service`) | Simulation & Market Primitives | P1 | |
-| [ ] | 90 | LP Treasury & Cash Management (`lp-treasury-cash-management`) | Simulation & Market Primitives | P1 | |
+| [x] | 88 | Monte Carlo Simulation Service (`monte-carlo-simulation-service`) | Simulation & Market Primitives | P1 | Done. New page + table demo (percentiles + std. error) + MODELS row. Build passed. |
+| [x] | 89 | Volatility Surface Service (`volatility-surface-service`) | Simulation & Market Primitives | P1 | Done. New page + curve demo + MODELS row. Build passed. |
+| [x] | 90 | LP Treasury & Cash Management (`lp-treasury-cash-management`) | Simulation & Market Primitives | P1 | Done. New page + table demo (cash ladder) + MODELS row. Build passed. |
 | [ ] | 19 | Liquidation Valuation (`liquidation-valuation`) | Valuation (advanced) | P2 | |
 | [ ] | 20 | Real Options Valuation (`real-options-valuation`) | Valuation (advanced) | P2 | |
 | [ ] | 21 | Merger Model (`merger-model`) | M&A & Corporate Transactions | P2 | |

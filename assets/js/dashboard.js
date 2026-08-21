@@ -358,7 +358,9 @@
     { slug: "irrbb-alm-modeler", name: "IRRBB / ALM Modeler", wing: "Banking Book & Provisioning", risk: "high", federated: false, unit: "EVE sensitivity %", series: [-8.2, -8.0, -7.9, -7.7, -7.5, -7.4, -7.2, -7.1, -6.9, -6.8, -6.6, -6.5] },
     { slug: "kyb-graph", name: "KYB Graph", wing: "Trade, Payments & KYB", risk: "low", federated: false, unit: "UBO resolution", series: [0.84, 0.85, 0.85, 0.86, 0.87, 0.88, 0.88, 0.89, 0.9, 0.9, 0.91, 0.91] },
     { slug: "liquidity-stress-engine", name: "Liquidity Stress Engine", wing: "Credit & Risk", risk: "high", federated: false, unit: "LCR %", series: [148, 144, 138, 131, 124, 118, 115, 113, 112, 114, 117, 121] },
+    { slug: "lp-treasury-cash-management", name: "LP Treasury & Cash Management", wing: "Simulation & Market Primitives", risk: "medium", federated: false, unit: "Coverage prob.", series: [0.93, 0.94, 0.94, 0.95, 0.95, 0.96, 0.96, 0.97, 0.97, 0.97, 0.98, 0.98] },
     { slug: "macro-nowcast", name: "Macro Nowcast", wing: "Investing & Macro", risk: "medium", federated: false, unit: "RMSE", series: [0.42, 0.4, 0.39, 0.38, 0.37, 0.36, 0.36, 0.35, 0.34, 0.34, 0.33, 0.33] },
+    { slug: "monte-carlo-simulation-service", name: "Monte Carlo Simulation Service", wing: "Simulation & Market Primitives", risk: "low", federated: false, unit: "Convergence", series: [0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.96, 0.97, 0.98, 0.98, 0.99] },
     { slug: "mortgage-default-prepay", name: "Mortgage Default & Prepay", wing: "Credit & Risk", risk: "medium", federated: true, unit: "Default AUC", series: [0.76, 0.77, 0.77, 0.78, 0.78, 0.79, 0.79, 0.8, 0.8, 0.81, 0.81, 0.81] },
     { slug: "portfolio-optimiser", name: "Portfolio Optimiser", wing: "Investing & Macro", risk: "medium", federated: true, unit: "Sharpe", series: [1.02, 1.05, 1.04, 1.09, 1.12, 1.1, 1.15, 1.18, 1.17, 1.2, 1.22, 1.24] },
     { slug: "regulatory-change-summariser", name: "Regulatory Change Summariser", wing: "Compliance & Regulatory", risk: "low", federated: false, unit: "Delivery success", series: [0.981, 0.983, 0.985, 0.986, 0.988, 0.99, 0.991, 0.992, 0.993, 0.994, 0.995, 0.996] },
@@ -368,6 +370,7 @@
     { slug: "trade-finance-doc-ai", name: "Trade Finance Doc AI", wing: "Trade, Payments & KYB", risk: "low", federated: false, unit: "Accuracy", series: [0.88, 0.89, 0.9, 0.9, 0.91, 0.92, 0.92, 0.93, 0.93, 0.94, 0.94, 0.95] },
     { slug: "transaction-monitoring-explainer", name: "Transaction Monitoring Explainer", wing: "Fraud & AML", risk: "medium", federated: false, unit: "Alerts explained", series: [0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1, 1, 1, 1] },
     { slug: "vendor-risk-aiops", name: "Vendor Risk AIOps", wing: "Credit & Risk", risk: "low", federated: false, unit: "Alert precision", series: [0.78, 0.79, 0.8, 0.81, 0.82, 0.82, 0.83, 0.84, 0.84, 0.85, 0.85, 0.86] },
+    { slug: "volatility-surface-service", name: "Volatility Surface Service", wing: "Simulation & Market Primitives", risk: "medium", federated: false, unit: "Fit R2", series: [0.955, 0.958, 0.961, 0.963, 0.966, 0.968, 0.971, 0.973, 0.975, 0.977, 0.979, 0.981] },
     { slug: "yield-curve-forecaster", name: "Yield-Curve Forecaster", wing: "Investing & Macro", risk: "low", federated: false, unit: "10y RMSE bp", series: [27, 26, 25, 25, 24, 23, 23, 22, 22, 21, 21, 21] }
   ];
 
