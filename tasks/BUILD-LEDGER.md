@@ -65,10 +65,10 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 22 | Accretion / Dilution (`accretion-dilution`) | M&A & Corporate Transactions | P2 | Done. New page + curve demo + MODELS row. Build passed. |
 | [x] | 23 | LBO Model (`lbo-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (returns decomposition) + MODELS row. Build passed. |
 | [x] | 24 | MBO Model (`mbo-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (stakeholder proceeds) + MODELS row. Build passed. |
-| [ ] | 25 | Spin-Off Model (`spin-off-model`) | M&A & Corporate Transactions | P2 | |
-| [ ] | 26 | Carve-Out Model (`carve-out-model`) | M&A & Corporate Transactions | P2 | |
-| [ ] | 27 | Recapitalization (`recapitalization-model`) | M&A & Corporate Transactions | P2 | |
-| [ ] | 28 | Purchase Price Allocation (`purchase-price-allocation`) | M&A & Corporate Transactions | P2 | |
+| [x] | 25 | Spin-Off Model (`spin-off-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (parent/SpinCo + stranded cost) + MODELS row. Build passed. |
+| [x] | 26 | Carve-Out Model (`carve-out-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (reported/allocated/pro forma) + MODELS row. Build passed. |
+| [x] | 27 | Recapitalization (`recapitalization-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (before/after + headroom) + MODELS row. Build passed. |
+| [x] | 28 | Purchase Price Allocation (`purchase-price-allocation`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (allocation + reconciliation) + MODELS row. Build passed. |
 | [ ] | 29 | Growth Equity Model (`growth-equity-model`) | Venture & Growth Capital | P2 | |
 | [ ] | 30 | IPO Model (`ipo-model`) | Venture & Growth Capital | P2 | |
 | [ ] | 31 | Startup Financial Model (`startup-financial-model`) | Venture & Growth Capital | P2 | |
