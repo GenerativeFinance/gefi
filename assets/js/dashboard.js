@@ -343,6 +343,7 @@
    */
   GeFi.MODELS = [
     { slug: "accretion-dilution", name: "Accretion / Dilution", wing: "M&A & Corporate Transactions", risk: "medium", federated: false, unit: "Yr1 accretion %", series: [0.4, 0.6, 0.9, 1.1, 1.4, 1.6, 1.9, 2.1, 2.3, 2.5, 2.7, 2.9] },
+    { slug: "alt-data-alpha-scanner", name: "Alternative Data Alpha Scanner", wing: "ML & Alternative Data", risk: "medium", federated: true, unit: "Source IC", series: [0.06, 0.062, 0.058, 0.064, 0.066, 0.06, 0.063, 0.067, 0.061, 0.065, 0.068, 0.063] },
     { slug: "basel-rwa-capital-calculator", name: "Basel RWA & Capital Calculator", wing: "Banking Book & Provisioning", risk: "medium", federated: false, unit: "CET1 %", series: [13.4, 13.5, 13.6, 13.7, 13.8, 13.8, 13.9, 14.0, 14.0, 14.1, 14.2, 14.2] },
     { slug: "board-lp-report-generator", name: "Board & LP Report Generator", wing: "Generative AI", risk: "medium", federated: false, unit: "Reconciled figures", series: [0.97, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1, 1, 1, 1, 1] },
     { slug: "breakout-signal-engine", name: "Breakout Signal Engine", wing: "Directional Strategies", risk: "medium", federated: false, unit: "Hit rate", series: [0.38, 0.4, 0.37, 0.41, 0.43, 0.39, 0.42, 0.44, 0.41, 0.45, 0.43, 0.46] },
@@ -370,6 +371,7 @@
     { slug: "fx-triangular-arbitrage-scanner", name: "FX Triangular Arbitrage Scanner", wing: "Relative-Value & Arbitrage", risk: "medium", federated: false, unit: "Net-viable windows/day", series: [2, 3, 1, 2, 4, 2, 3, 2, 1, 3, 4, 2] },
     { slug: "gefi-copilot", name: "GeFi Copilot", wing: "Generative AI", risk: "medium", federated: false, unit: "Grounded claims", series: [0.94, 0.95, 0.95, 0.96, 0.96, 0.97, 0.97, 0.97, 0.98, 0.98, 0.98, 0.98] },
     { slug: "global-macro-signal-engine", name: "Global Macro Signal Engine", wing: "Directional Strategies", risk: "medium", federated: true, unit: "Sharpe (sim.)", series: [0.44, 0.47, 0.5, 0.46, 0.52, 0.55, 0.51, 0.57, 0.59, 0.56, 0.61, 0.63] },
+    { slug: "gradient-boosted-alpha-engine", name: "Gradient-Boosted Alpha Engine", wing: "ML & Alternative Data", risk: "medium", federated: false, unit: "OOS IC", series: [0.041, 0.043, 0.04, 0.045, 0.047, 0.042, 0.046, 0.048, 0.043, 0.047, 0.05, 0.045] },
     { slug: "growth-equity-model", name: "Growth Equity Model", wing: "Venture & Growth Capital", risk: "medium", federated: false, unit: "Investor MOIC", series: [2.1, 2.15, 2.2, 2.25, 2.3, 2.35, 2.4, 2.45, 2.5, 2.55, 2.6, 2.65] },
     { slug: "hft-signal-research-engine", name: "HFT Signal Research Engine", wing: "Market Microstructure", risk: "high", federated: false, unit: "Edge at 200us (bp)", series: [1.8, 1.9, 1.7, 2.0, 2.1, 1.8, 2.0, 2.2, 1.9, 2.1, 2.3, 2.0] },
     { slug: "ic-credit-memo-generator", name: "IC & Credit Memo Generator", wing: "Generative AI", risk: "medium", federated: false, unit: "Grounded figures", series: [0.96, 0.97, 0.97, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1, 1, 1] },
@@ -404,6 +406,7 @@
     { slug: "renewable-project-modeler", name: "Renewable Project Modeler", wing: "Capital Budgeting & Project Finance", risk: "medium", federated: false, unit: "Capacity factor %", series: [30.2, 30.4, 30.5, 30.7, 30.8, 31.0, 31.1, 31.2, 31.4, 31.5, 31.6, 31.8] },
     { slug: "reversal-detector", name: "Reversal Detector", wing: "Directional Strategies", risk: "medium", federated: false, unit: "Accuracy", series: [0.31, 0.33, 0.3, 0.34, 0.36, 0.33, 0.35, 0.37, 0.34, 0.38, 0.36, 0.39] },
     { slug: "risk-parity-allocator", name: "Risk Parity Allocator", wing: "Factor & Systematic", risk: "medium", federated: true, unit: "Realised vol %", series: [8.4, 8.2, 8.5, 8.1, 7.9, 8.3, 8.0, 7.8, 8.2, 7.9, 7.7, 8.0] },
+    { slug: "rl-execution-agent", name: "RL Execution Agent", wing: "ML & Alternative Data", risk: "high", federated: false, unit: "Sim. savings bp", series: [3.2, 3.4, 3.1, 3.5, 3.7, 3.3, 3.6, 3.8, 3.4, 3.7, 3.9, 3.6] },
     { slug: "safe-note-conversion", name: "SAFE & Note Conversion", wing: "Venture & Growth Capital", risk: "low", federated: false, unit: "Conversion %", series: [8.2, 8.6, 9.0, 9.4, 9.8, 10.1, 10.5, 10.9, 11.2, 11.6, 11.9, 12.3] },
     { slug: "scenario-narrative-engine", name: "Scenario Narrative Engine", wing: "Generative AI", risk: "medium", federated: false, unit: "Consistent claims", series: [0.95, 0.96, 0.96, 0.97, 0.98, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1] },
     { slug: "securitization-modeler", name: "Securitization Modeler", wing: "Corporate Treasury & Structured Finance", risk: "high", federated: false, unit: "Class A enhancement %", series: [22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27] },
@@ -415,6 +418,7 @@
     { slug: "tax-residency-classifier", name: "Tax Residency Classifier", wing: "Compliance & Regulatory", risk: "low", federated: false, unit: "Backtest agreement", series: [0.89, 0.9, 0.9, 0.91, 0.91, 0.92, 0.92, 0.93, 0.93, 0.94, 0.94, 0.94] },
     { slug: "trade-finance-doc-ai", name: "Trade Finance Doc AI", wing: "Trade, Payments & KYB", risk: "low", federated: false, unit: "Accuracy", series: [0.88, 0.89, 0.9, 0.9, 0.91, 0.92, 0.92, 0.93, 0.93, 0.94, 0.94, 0.95] },
     { slug: "transaction-monitoring-explainer", name: "Transaction Monitoring Explainer", wing: "Fraud & AML", risk: "medium", federated: false, unit: "Alerts explained", series: [0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1, 1, 1, 1] },
+    { slug: "transformer-sentiment-alpha", name: "Transformer Sentiment Alpha", wing: "ML & Alternative Data", risk: "medium", federated: false, unit: "Sharpe (sim.)", series: [0.55, 0.58, 0.53, 0.6, 0.62, 0.56, 0.61, 0.64, 0.58, 0.62, 0.66, 0.6] },
     { slug: "trend-following-engine", name: "Trend Following Engine", wing: "Directional Strategies", risk: "medium", federated: false, unit: "Sharpe (sim.)", series: [0.61, 0.64, 0.6, 0.67, 0.7, 0.66, 0.72, 0.75, 0.71, 0.78, 0.8, 0.77] },
     { slug: "value-low-vol-screener", name: "Value & Low-Volatility Screener", wing: "Factor & Systematic", risk: "low", federated: false, unit: "Book-to-price", series: [1.12, 1.15, 1.1, 1.18, 1.21, 1.13, 1.19, 1.23, 1.14, 1.2, 1.25, 1.17] },
     { slug: "vc-method-valuation", name: "VC Method Valuation", wing: "Venture & Growth Capital", risk: "low", federated: false, unit: "Implied pre-money", series: [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29] },
