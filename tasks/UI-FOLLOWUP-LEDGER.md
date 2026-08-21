@@ -8,6 +8,12 @@ with seeded data). Companion document: `tasks/design-system-v2.md` — its §1
 master prefix MUST be prepended to every Design prompt below, and its §4
 canonical dataset and §5 improvements are binding on every task.
 
+Two workstreams: the **200-series** builds the UI surfaces on seeded mocks;
+the **300-series** builds the backend the UIs assume (gap analysis in
+design-system-v2 §7) — contract-first with a mock server, so each UI later
+flips from mock to live without redesign. 200-series tasks do not wait on
+300-series ones; the 302 data layer migrates them when it lands.
+
 ## Standing conventions (apply to every task; keep prompts short)
 
 - **Where pages live:** app preview pages under `app/` (URLs `/app/...`),
@@ -88,6 +94,30 @@ canonical dataset and §5 improvements are binding on every task.
 ### Cross-cutting
 - [ ] 232 — Consistency + accessibility sweep
 - [ ] 233 — Decision task: unify marketing site on the dark system?
+
+### Backend workstream (300-series — what the UIs assume but the repo lacks)
+- [ ] 300 — API contract pack: envelope conventions + OpenAPI skeletons
+- [ ] 301 — Mock API server implementing the contracts from `GeFi.DEMO`
+- [ ] 302 — Client data layer: live-with-fallback (`assets/js/app/api.js`)
+- [ ] 303 — Auth & identity service + auth screens
+- [ ] 304 — Portfolio & risk service
+- [ ] 305 — Rebalancing engine
+- [ ] 306 — Marketplace, subscriptions & recommendations
+- [ ] 307 — Model runtime & inference (`/v1/models/{slug}/run` for real)
+- [ ] 308 — Trading & market-data streaming
+- [ ] 309 — Backtesting service
+- [ ] 310 — Developer console ops (training / deployment / monitoring)
+- [ ] 311 — Collaboration & bounty services
+- [ ] 312 — Data platform (datasets, quality, revenue)
+- [ ] 313 — Funding services (projects, contributions, approvals)
+- [ ] 314 — Learning service
+- [ ] 315 — Reports & compliance engine
+- [ ] 316 — Regulator portal services
+- [ ] 317 — Notifications & alerts
+- [ ] 318 — AI insights service
+- [ ] 319 — zKML proof pipeline
+- [ ] 320 — Platform cross-cutting (API keys, rate limits, audit chain, search, i18n, GDPR)
+- [ ] 321 — Decision task: where the real backend runs
 
 ---
 
@@ -1030,4 +1060,389 @@ light marketing, dark app (common; Stripe-style); (b) restyle marketing dark
 to match (one brand, bigger change; the §6 token mapping in design-system-v2
 would guide it). Record the owner's choice here, then — if (b) — raise a
 dedicated ledger of restyle tasks. Mark this row done when the decision is
+recorded.
+
+---
+
+# 300-SERIES — BACKEND WORKSTREAM
+
+The reference UIs assume a running platform backend that the repo does not
+have: the pre-purge `server/` was removed with the old history, and the only
+API contract in the codebase today is the mocked
+`{{site.api.base_url}}/v1/models/{slug}/run`. The full UI→backend gap
+analysis is `tasks/design-system-v2.md` §7. This workstream closes the gap
+**contract-first** so UI wiring never waits on infrastructure decisions.
+
+## 300-series conventions (in addition to the standing conventions)
+
+- **Contract-first.** Every service task adds/extends an OpenAPI 3.1 file in
+  `api/openapi/<service>.yaml` using the shared envelope from task 300. The
+  contract is the deliverable; the mock implements it; the UI consumes it.
+- **Mock server.** `backend/mock/` holds a dependency-free Node server
+  (node:http) implementing every contract by loading
+  `assets/js/app-demo-data.js` through a small GeFi shim — the canonical
+  dataset stays single-source. Run: `node backend/mock/server.js` (port
+  8788). State mutations live in memory per process, seeded-deterministic.
+- **Live-with-fallback.** App pages call endpoints through the task-302 data
+  layer; when the API is absent they fall back to `GeFi.DEMO` client-side —
+  the same pattern as the model demo harness. Pages must work in BOTH modes;
+  Playwright verifies both (mock running, mock stopped).
+- **Excluded from the site.** `api/` and `backend/` are added to
+  `_config.yml` `exclude:` in task 300; the Jekyll build must stay green and
+  `_site` must not contain them.
+- **Off-limits unchanged.** Never touch `infrastructure/cloudflare/` or
+  `_layouts/model.html`. Real deployment is task 321, an owner decision.
+- **Realtime.** Streaming surfaces standardise on SSE endpoints in the
+  contracts; the mock serves them with seeded ticks; the client falls back
+  to seeded local simulation.
+- Design prompts: n/a for 300-series except task 303 (auth screens are a UI).
+
+## Task 300 — API contract pack
+Unblocks: every other 300-series task; gives 200-series pages stable paths.
+
+**Code prompt:**
+> Create `api/openapi/_envelope.yaml` defining shared components: bearer +
+> API-key auth schemes, cursor pagination (`limit`/`cursor`/`next_cursor`),
+> the error object (`code`, `message`, `details[]`, `request_id`), idempotency
+> keys for mutating POSTs, `X-GeFi-Sample: true` header semantics for mock
+> responses, and SSE event framing conventions. Create skeleton
+> `api/openapi/<service>.yaml` files for: auth, portfolio, rebalance,
+> marketplace, models-runtime, trading, backtesting, devconsole, collab,
+> data-platform, funding, learning, reports, regulator, notifications,
+> insights, zkml, platform — each with info block, tag list, and the resource
+> list from design-system-v2 §7 (paths stubbed, schemas referenced). Add
+> `api/` and `backend/` to `_config.yml` exclude. Add `api/README.md`
+> explaining contract-first flow and the live-with-fallback rule. Verify:
+> every YAML parses (python3 yaml.safe_load loop); build passes; `_site`
+> contains no `api/` or `backend/`.
+
+## Task 301 — Mock API server
+Unblocks: live-mode verification for all 200-series pages.
+
+**Code prompt:**
+> Build `backend/mock/server.js` (Node, no dependencies): loads
+> `assets/js/app-demo-data.js` via a GeFi shim, serves every contract in
+> `api/openapi/` on port 8788 with CORS for localhost, the shared envelope,
+> `X-GeFi-Sample: true` on every response, in-memory mutations (orders,
+> contributions, claims, resolves...) reset on restart, and SSE endpoints
+> (`/v1/stream/...`) emitting seeded ticks. Add `backend/mock/README.md` and
+> a route table generated from the contracts at startup (fail fast on a
+> contract path with no handler — coverage by construction). Smoke script
+> `backend/mock/smoke.sh` curls one endpoint per service and checks JSON
+> shape. Verify: smoke passes; build stays green; server start/stop leaves
+> no artifacts.
+
+## Task 302 — Client data layer
+Unblocks: converts 200-series pages from mock-only to live-with-fallback.
+
+**Code prompt:**
+> Create `assets/js/app/api.js`: `GeFi.api.get/post(path, opts)` using
+> `site.api.base_url` (default `http://localhost:8788` in dev via a meta
+> tag), 2s timeout, one retry, and deterministic fallback — on network
+> failure or non-2xx, resolve from a registered `GeFi.DEMO` resolver for
+> that path and mark the result `sample: true`; surface a subtle "sample
+> data" notice hook pages already render. Add `GeFi.api.stream(path,
+> onEvent)` wrapping EventSource with seeded local simulation fallback.
+> Migrate every existing `app/` page's reads/writes through it (reads keep
+> working identically when the API is down — assert byte-equal rendering in
+> fallback mode). Verify: build; Playwright twice — mock running (live badge,
+> mutations round-trip through the server) and mock stopped (fallback
+> rendering identical to pre-migration), console clean in both.
+
+## Task 303 — Auth & identity + auth screens
+Unblocks: personalised state everywhere; replaces sessionStorage stubs.
+
+**Design prompt** (append after §1 prefix):
+> Design GeFi sign-in and sign-up screens plus a profile/security settings
+> page: centered dark auth card with the brain logo, email + password with
+> visible-toggle, SSO buttons (Google, GitHub) as outline buttons, 2FA code
+> step, password strength meter, error and loading states; sign-up adds
+> persona selection cards (Investor / Developer / Data Provider) with icons
+> and one-line descriptions; settings page shows profile fields, avatar
+> upload, language select, theme toggle, active sessions list with revoke,
+> and a danger zone. Trust strip + footer as always.
+
+**Code prompt:**
+> Fill `api/openapi/auth.yaml`: register, login, refresh, logout, me,
+> sessions list/revoke, profile update, persona field, org membership +
+> roles (investor/developer/data-provider/regulator/admin). Mock implements
+> with an in-memory user store (seeded demo user per persona; JWT-shaped
+> opaque tokens). Build `app/signin.md`, `app/signup.md`, `app/settings.md`
+> wired through `GeFi.api`; on login store the token (sessionStorage
+> `gefi-app-token`) and hydrate the top-bar avatar + persona nav; fallback
+> mode signs in as the seeded demo user. Verify: build; Playwright — login
+> round-trip changes avatar and persists reload, revoke session works
+> against mock, fallback sign-in works with mock stopped, console clean.
+
+## Task 304 — Portfolio & risk service
+Unblocks live mode for: 203–207 (overview, holdings, analytics, performance,
+AI portfolio).
+
+**Code prompt:**
+> Fill `api/openapi/portfolio.yaml`: holdings, transactions, watchlist CRUD,
+> valuation summary, performance series (period param), returns vs
+> benchmark, allocation, risk metrics (sharpe/drawdown/beta/alpha/vol/var95)
+> — all shapes mirroring `GeFi.DEMO` §4 canonical figures. Mock serves them
+> from DEMO (series seeded). Register fallback resolvers in the data layer
+> and switch pages 203–207 to `GeFi.api`. Verify: build; Playwright live +
+> fallback — hero band and KPI figures identical in both modes (assert exact
+> strings, e.g. "$142,500"), watchlist star round-trips through the mock,
+> console clean.
+
+## Task 305 — Rebalancing engine
+Unblocks live mode for: 209.
+
+**Code prompt:**
+> Fill `api/openapi/rebalance.yaml`: GET state (targets, current, drift,
+> settings), PUT targets/settings, POST proposal (returns computed trades),
+> POST execute (idempotency key; returns execution record + updated state).
+> Mock computes drift and proposals server-side from DEMO allocation (same
+> math as the client fallback — extract the calculation into a shared pure
+> function used by both, `assets/js/app/rebalance-math.js`, loaded by the
+> mock through the shim). Switch page 209 to the API with optimistic UI.
+> Verify: build; Playwright live + fallback — identical proposed trades for
+> identical slider positions in both modes (assert), execute round-trip
+> updates Last Rebalance, console clean.
+
+## Task 306 — Marketplace, subscriptions & recommendations
+Unblocks live mode for: 208 (Recommended/Subscribe), 213–215.
+
+**Code prompt:**
+> Fill `api/openapi/marketplace.yaml`: catalog list with filters (category,
+> risk, price, search, sort, pagination), categories with real counts,
+> developers directory, ratings summary, preferences get/put,
+> recommendations (derived from preferences), trending (seeded ranking),
+> subscriptions CRUD with a billing stub (plan, monthly fee, next renewal —
+> no real payments; document the gap for a future billing provider).
+> Mock derives the catalog from `GeFi.MODELS` via the shim. Switch pages
+> 208/213/214/215 to the API. Verify: build; Playwright live + fallback —
+> subscribe persists across reload in live mode (server state), filters
+> return identical result sets in both modes, category counts equal 92
+> total, console clean.
+
+## Task 307 — Model runtime & inference
+Unblocks: real `/v1/models/{slug}/run` behind the 92 model-page demos and
+the marketplace "try" flows — without touching `_layouts/model.html`.
+
+**Code prompt:**
+> Fill `api/openapi/models-runtime.yaml` to match the EXISTING harness
+> contract exactly (`POST /v1/models/{slug}/run` — the request/response
+> shape `assets/js/model-demo.js` already sends/expects, per demo output
+> kinds score/curve/table/text/waterfall), plus GET model metadata/metrics
+> (`metrics_as_of` refresh) and an async job variant (POST run → job id,
+> GET job, SSE progress) for long runs. Mock implements run for all 92
+> slugs by reusing the client's seeded-mock scoring logic through the shim
+> (extract it into a shared pure module first, keeping model-demo.js
+> behavior byte-identical — this file may be edited only for the
+> extraction, no behavior change; `_layouts/model.html` stays untouched).
+> Model pages then hydrate live automatically via their existing endpoint
+> config. Verify: build; catalogue audit still 92/92; Playwright on 3
+> model pages (score, waterfall, curve) live + fallback — identical outputs
+> for identical inputs (assert), sample labelling correct in both, console
+> clean.
+
+## Task 308 — Trading & market-data streaming
+Unblocks live mode for: 210, 211, 220.
+
+**Code prompt:**
+> Fill `api/openapi/trading.yaml`: quotes (single + SSE stream), order
+> place/cancel (idempotent), order list with filters + pagination,
+> positions, paper-fill engine semantics (market fills at seeded price,
+> limit fills when crossed), bots/strategies list (read-only seeded), and
+> `api/openapi/data-platform.yaml`'s market-data source catalog + preview
+> rows + preview stream. Mock runs a seeded price walk per symbol (same
+> generator as the client fallback via the shared shim). Switch pages
+> 210/211/220 to the API. Verify: build; Playwright live — place order,
+> watch fill arrive via SSE, position updates, order appears in 211's table
+> after reload (server state); fallback — full flow still works locally;
+> console clean in both.
+
+## Task 309 — Backtesting service
+Unblocks live mode for: 212.
+
+**Code prompt:**
+> Fill `api/openapi/backtesting.yaml`: create backtest (model, range,
+> preset), list runs, get run (metrics: sharpe, annual return, drawdown,
+> trades), SSE progress, compare (n run ids), optimizer job (param grid →
+> best set, seeded). Mock executes runs as seeded timed simulations
+> (progress events over ~5s). Switch page 212; Results/Comparison segments
+> gain live content in both modes. Verify: build; Playwright live — create
+> run, progress bar driven by SSE to 100%, result row matches GET run;
+> fallback — local simulation produces the same metrics for the same
+> inputs (assert); console clean.
+
+## Task 310 — Developer console ops
+Unblocks live mode for: 216, 217.
+
+**Code prompt:**
+> Fill `api/openapi/devconsole.yaml`: models CRUD (lifecycle
+> draft/testing/approved/deployed), training jobs (create with validated
+> hyperparameters, list, pause/resume, SSE progress, GET logs), deployments
+> (create per env, start/stop, GET ops metrics: uptime/requests/latency/
+> error-rate series), alert rules CRUD, activity feed. Mock seeds per-model
+> DISTINCT telemetry and streams training progress. Switch pages 216/217.
+> Verify: build; Playwright live — create model → draft card from server,
+> training job lifecycle via SSE, deployment stop zeroes live fields on
+> next poll; fallback parity; monitoring meters show different values per
+> model (assert inequality); console clean.
+
+## Task 311 — Collaboration & bounty services
+Unblocks live mode for: 218, and 225's bounty-side data.
+
+**Code prompt:**
+> Fill `api/openapi/collab.yaml`: teams, members, invites (create/accept
+> stub), discussion threads + messages; bounties list with filters, claim
+> (one active claim per user), submissions (create, list, review status),
+> completion + reward record. Mock enforces claim rules and pluralization-
+> ready counts. Switch pages 218 (both frames) and the bounty read-paths of
+> 225. Verify: build; Playwright live — invite appears in members, message
+> posts and persists reload, claim flips OPEN→CLAIMED server-side and a
+> second claim attempt is rejected with the envelope error rendered as a
+> toast; fallback parity; console clean.
+
+## Task 312 — Data platform
+Unblocks live mode for: 221, 222.
+
+**Code prompt:**
+> Extend `api/openapi/data-platform.yaml`: dataset registry CRUD, upload
+> intent → processing → published state machine (mock advances after 2s),
+> quality scoring (seeded per dataset), dataset subscriptions, revenue
+> accounting (per-dataset revenue, downloads, payout schedule — aggregates
+> MUST derive from line items so Overview and Revenue tabs cannot
+> disagree), provider activity feed. Switch pages 221/222. Verify: build;
+> Playwright live — upload round-trip reaches published, archive typed-
+> confirm deletes server-side, Revenue tab totals equal Overview KPI
+> (assert same string) in both modes; console clean.
+
+## Task 313 — Funding services
+Unblocks live mode for: 223, 224, 225.
+
+**Code prompt:**
+> Fill `api/openapi/funding.yaml`: projects (kind bot/model/bounty) with
+> filters, contribute (min enforced, idempotent, updates raised/backers;
+> goal-reach flips status to funded), my contributions, funding requests
+> (create → SUBMITTED, approval transition stub), payouts + ROI records
+> (read-only seeded). All hub aggregates computed from project line items.
+> Switch pages 223/224/225. Verify: build; Playwright live — contribute
+> raises the bar server-side and survives reload, over-goal contribution
+> rejected with envelope error, hub KPIs equal the sum over both lists
+> (assert) in both modes; console clean.
+
+## Task 314 — Learning service
+Unblocks live mode for: 219.
+
+**Code prompt:**
+> Fill `api/openapi/learning.yaml`: content catalog with filters, paths,
+> enrollment, progress put (0–100), certificate issue on completion
+> (record with id + issued date). Mock persists per-user progress in
+> memory. Switch page 219; KPIs computed from server state in live mode.
+> Verify: build; Playwright live — start item, progress persists reload,
+> completing issues a certificate that appears in the KPI; fallback
+> parity; console clean.
+
+## Task 315 — Reports & compliance engine
+Unblocks live mode for: 226, 227, 228.
+
+**Code prompt:**
+> Fill `api/openapi/reports.yaml`: report catalog by category, generate
+> (async: pending → generated via SSE or poll), custom report definitions
+> CRUD + templates, schedules, compliance reports + risk reports lists
+> (KPI strips derived from the same arrays), report content GET (sample
+> narrative). Switch pages 226/227/228. Verify: build; Playwright live —
+> generate flips pending→generated from server events, custom report
+> definition persists reload, compliance KPIs equal computed counts in
+> both modes, single date format everywhere; console clean.
+
+## Task 316 — Regulator portal services
+Unblocks live mode for: 229, 230.
+
+**Code prompt:**
+> Fill `api/openapi/regulator.yaml`: audits (model/dataset) with findings
+> + workflow states, issues with SLA clocks (server computes due state
+> from a fixed seed epoch), resolve transition, communications threads +
+> messages, standards registry + requirements, overview aggregates (all
+> derived), activity feed, entity cross-links (#MT/#DS/#ML/#CS resolve to
+> their records). Switch pages 229/230. Verify: build; Playwright live —
+> resolve updates Overview counts server-side, composer posts persist,
+> deep entity links resolve (no "Regulator Not Found" on valid ids, the
+> designed error state on invalid ones); fallback parity; console clean.
+
+## Task 317 — Notifications & alerts
+Unblocks: top-bar bell everywhere; 205's "Set Alert"; dashboard alert center
+parity.
+
+**Code prompt:**
+> Fill `api/openapi/notifications.yaml`: notifications list + unread count,
+> mark-read, alert rules CRUD (entity, condition, channel), SSE stream for
+> new notifications, delivery preferences (in-app/email/push — email/push
+> as recorded stubs). Mock emits a seeded notification on relevant
+> mutations (order filled, training complete, issue resolved). Wire the
+> app-shell bell (badge + dropdown list) through the data layer on all app
+> pages; wire 205's Set Alert to rules. Keep the existing marketing-site
+> dashboard alert center untouched; note parity in the task row. Verify:
+> build; Playwright live — placing an order pops the bell badge via SSE,
+> mark-read clears it, rule round-trips; fallback — bell renders seeded
+> state; console clean.
+
+## Task 318 — AI insights service
+Unblocks live mode for: 203/205 insights, 222 market insights, 226's
+AI-generated panel.
+
+**Code prompt:**
+> Fill `api/openapi/insights.yaml`: insights list per surface (portfolio,
+> market, regulator, provider) with sentiment, confidence, impact; insight
+> detail; generate-report narrative endpoint. Mock returns deterministic
+> seeded insights; include an OPTIONAL live generator behind
+> `GEFI_INSIGHTS_CLAUDE=1` env var calling the Claude API (model
+> claude-sonnet-5, temperature 0, strict JSON schema output, prompt
+> template in `backend/mock/prompts/insights.txt`) — clearly labelled
+> AI-generated, falling back to seeded output on any error; no key in the
+> repo. Switch the insight panels to the API. Verify: build; Playwright
+> live + fallback — identical seeded insights in both when the env var is
+> unset; schema-validate the generator path with the var set only if a key
+> is present in the environment, else skip and note; console clean.
+
+## Task 319 — zKML proof pipeline
+Unblocks live mode for: 231.
+
+**Code prompt:**
+> Fill `api/openapi/zkml.yaml` from the pipeline in the reference deck:
+> create verification (model, shard count) → job with stages (compile →
+> shard → prove per shard → aggregate → verify), SSE stage/progress/log
+> events, proof record (hash, shard count, wall-clock + task time,
+> verified flag), verification history per model. Mock simulates timing
+> deterministically (seeded per model+shards; hash = FNV-1a as in the
+> client). Switch page 231; history list gains server persistence in live
+> mode. Verify: build; Playwright live — run streams stage events to the
+> stepper and log panel, summary matches GET proof record, same inputs →
+> same hash across runs (assert); fallback parity; console clean.
+
+## Task 320 — Platform cross-cutting
+Unblocks: dashboard API-keys tab parity, trust-center verifier, global
+search, i18n, GDPR claims.
+
+**Code prompt:**
+> Fill `api/openapi/platform.yaml`: API keys (create → one-time reveal,
+> list, revoke with typed-confirm semantics), rate-limit headers on every
+> mock response (X-RateLimit-*), audit hash-chain endpoints matching what
+> the trust-center verifier expects (GET run record by run_id, GET chain
+> segment) served from seeded records, global search (models, datasets,
+> docs, orders — grouped results for the top-bar search), i18n string
+> bundles (en + one stub locale) with a `data-i18n` client hook, GDPR
+> endpoints (export my data, delete my data — recorded stubs with status).
+> Wire the app-shell top-bar search to grouped results; keep marketing-site
+> surfaces untouched. Verify: build; Playwright — search returns grouped
+> live results and seeded fallback, key create/reveal/revoke round-trip,
+> verifier finds a seeded run_id via the API, console clean in both modes.
+
+## Task 321 — Decision: where the real backend runs
+**Not buildable without a decision.** The contracts + mock make every UI
+wireable; production needs a home. Options: (a) Cloudflare Workers + D1/KV/
+Queues/Durable Objects — fits the existing `infrastructure/cloudflare/`
+deployment (changes there are owner-driven; the loop never touches that
+directory); (b) a separate API service (any host) fronted at
+`api.gefi.io`, keeping this repo static-only; (c) stay mock-only for demo
+purposes. Also decide: billing provider (306 stub), email/push provider
+(317 stubs), Claude API key handling (318), and real market-data vendor
+(308). Record choices here; then raise a deployment ledger. Mark done when
 recorded.

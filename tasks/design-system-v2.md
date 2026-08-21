@@ -227,3 +227,49 @@ wanted, map tokens rather than redesigning:
 Semantic colors darken one step in light mode to keep AA contrast on white.
 Component anatomy, spacing, chips, and chart grammar do not change between
 modes — only the token values.
+
+## 7. Backend contract the UIs assume (gap analysis)
+
+The reference UIs presume a running platform backend. Today the repo has
+none: the pre-purge `server/` was removed with the old history, and the only
+API contract in the codebase is `{{site.api.base_url}}/v1/models/{slug}/run`
+(mocked client-side by the model harness). Everything below is therefore
+**missing** and is what the 300-series ledger tasks build — contract-first
+(OpenAPI), with a mock server implementing every contract from the canonical
+demo dataset, so UI wiring can proceed before any real infrastructure
+decision.
+
+**Wiring rule (binding on all app pages):** every data read/write goes
+through one client data layer that calls the documented endpoint when
+`site.api.base_url` responds and falls back to the deterministic `GeFi.DEMO`
+dataset when it doesn't — the same live/fallback pattern the model demo
+harness already uses. Sample data is always labelled as sample.
+
+What each wing needs and does not have:
+
+| Wing / surface | Missing backend capability |
+|---|---|
+| All personas | Auth & identity: sessions, profiles, personas/roles (investor, developer, data provider, regulator, admin), RBAC, orgs; avatar, language, theme persistence |
+| Investor & portfolio | Portfolio service: holdings, valuations, P&L series, returns vs benchmark, risk metrics (Sharpe, drawdown, beta, alpha, vol, VaR), allocation |
+| Rebalancing | Drift computation, trade-proposal generation, execution + history, strategy settings |
+| Marketplace | Model catalog + taxonomy, ratings, subscriptions + recurring billing, preferences → recommendations, trending ranking |
+| Model pages / demos | Real inference behind `/v1/models/{slug}/run`, job queue, per-model metrics refresh |
+| Trading | Market data feed (streaming quotes), order management (place/fill/cancel), positions, paper-trading engine, bots/strategies |
+| Backtesting | Backtest job runner with progress events, results store, optimizer, historical data store (2020→) |
+| Developer console | Model CRUD, training jobs (queue, progress, logs, hyperparameters), deployments (envs, start/stop), ops telemetry (uptime, latency, error rate) + alert rules |
+| Collaboration / bounties | Teams, invites, discussion threads; bounty lifecycle (claim, submission, review, reward) |
+| Data provider | Dataset registry, upload/ingest pipeline with quality scoring, dataset subscriptions, revenue accounting + payouts; market-data source catalog |
+| Funding | Projects (bot/model/bounty), contributions + escrow rules, approval workflow (SUBMITTED→APPROVED), payouts, ROI accounting |
+| Learning | Content catalog, enrollment, progress, certificates |
+| Reports & compliance | Report generation engine (on-demand + scheduled), custom report definitions, compliance rule evaluation, risk aggregation (portfolio VaR) |
+| Regulator portal | Audit workflows (model/dataset), issue tracking with SLA clocks, communications threads, standards registry, cross-entity IDs (#MT/#DS/#ML/#CS) |
+| Notifications | Bell/unread state, alert center, user alert rules ("Set Alert"), email/push delivery |
+| AI insights | Insight/sentiment/prediction generation with confidence scores; report narratives (Claude API behind a flag; deterministic sample otherwise) |
+| zKML | Prover/verifier orchestration (shard proofs → aggregate → verify), proof records, optional on-chain anchoring; federated-learning coordinator |
+| Platform | API gateway conventions, API key management (dashboard UI exists), rate limiting, audit hash chain (trust-center verifier expects it), global search, i18n strings, GDPR retention jobs to back the footer's claims |
+
+Realtime: streaming surfaces (live trading, monitoring, training progress,
+backtest runs, market-data preview) standardise on SSE, with client-side
+seeded simulation as the fallback. Envelope conventions (auth, pagination,
+errors, idempotency) are fixed once in ledger task 300 and reused by every
+service.
