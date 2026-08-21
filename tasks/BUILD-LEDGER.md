@@ -59,44 +59,44 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 88 | Monte Carlo Simulation Service (`monte-carlo-simulation-service`) | Simulation & Market Primitives | P1 | Done. New page + table demo (percentiles + std. error) + MODELS row. Build passed. |
 | [x] | 89 | Volatility Surface Service (`volatility-surface-service`) | Simulation & Market Primitives | P1 | Done. New page + curve demo + MODELS row. Build passed. |
 | [x] | 90 | LP Treasury & Cash Management (`lp-treasury-cash-management`) | Simulation & Market Primitives | P1 | Done. New page + table demo (cash ladder) + MODELS row. Build passed. |
-| [ ] | 19 | Liquidation Valuation (`liquidation-valuation`) | Valuation (advanced) | P2 | |
-| [ ] | 20 | Real Options Valuation (`real-options-valuation`) | Valuation (advanced) | P2 | |
-| [ ] | 21 | Merger Model (`merger-model`) | M&A & Corporate Transactions | P2 | |
-| [ ] | 22 | Accretion / Dilution (`accretion-dilution`) | M&A & Corporate Transactions | P2 | |
-| [ ] | 23 | LBO Model (`lbo-model`) | M&A & Corporate Transactions | P2 | |
-| [ ] | 24 | MBO Model (`mbo-model`) | M&A & Corporate Transactions | P2 | |
-| [ ] | 25 | Spin-Off Model (`spin-off-model`) | M&A & Corporate Transactions | P2 | |
-| [ ] | 26 | Carve-Out Model (`carve-out-model`) | M&A & Corporate Transactions | P2 | |
-| [ ] | 27 | Recapitalization (`recapitalization-model`) | M&A & Corporate Transactions | P2 | |
-| [ ] | 28 | Purchase Price Allocation (`purchase-price-allocation`) | M&A & Corporate Transactions | P2 | |
-| [ ] | 29 | Growth Equity Model (`growth-equity-model`) | Venture & Growth Capital | P2 | |
-| [ ] | 30 | IPO Model (`ipo-model`) | Venture & Growth Capital | P2 | |
-| [ ] | 31 | Startup Financial Model (`startup-financial-model`) | Venture & Growth Capital | P2 | |
-| [ ] | 32 | VC Method Valuation (`vc-method-valuation`) | Venture & Growth Capital | P2 | |
-| [ ] | 33 | VC Portfolio Tracker (`vc-portfolio-tracker`) | Venture & Growth Capital | P2 | |
-| [ ] | 34 | Cap Table Manager (`cap-table-manager`) | Venture & Growth Capital | P2 | |
-| [ ] | 35 | Waterfall Distribution Engine (`waterfall-distribution`) | Venture & Growth Capital | P2 | |
-| [ ] | 36 | SAFE & Note Conversion (`safe-note-conversion`) | Venture & Growth Capital | P2 | |
-| [ ] | 37 | Follow-On Advisor (`follow-on-advisor`) | Venture & Growth Capital | P2 | |
-| [ ] | 38 | Startup Runway Tracker (`startup-runway-tracker`) | Venture & Growth Capital | P2 | |
-| [ ] | 39 | Fund Cash-Flow Modeler (`fund-cash-flow-modeler`) | Private Funds | P2 | |
-| [ ] | 40 | Fund Performance Engine (`fund-performance-engine`) | Private Funds | P2 | |
-| [ ] | 41 | Capital Budgeting Engine (`capital-budgeting-engine`) | Capital Budgeting & Project Finance | P2 | |
-| [ ] | 42 | Project Finance Modeler (`project-finance-modeler`) | Capital Budgeting & Project Finance | P2 | |
-| [ ] | 43 | Infrastructure Investment Modeler (`infrastructure-investment-modeler`) | Capital Budgeting & Project Finance | P2 | |
-| [ ] | 44 | Renewable Project Modeler (`renewable-project-modeler`) | Capital Budgeting & Project Finance | P2 | |
-| [ ] | 45 | RE Development Modeler (`re-development-modeler`) | Real Estate | P2 | |
-| [ ] | 46 | RE Acquisition Underwriter (`re-acquisition-underwriter`) | Real Estate | P2 | |
-| [ ] | 47 | Lease vs. Buy Analyzer (`lease-vs-buy-analyzer`) | Real Estate | P2 | |
-| [ ] | 48 | Debt Schedule Engine (`debt-schedule-engine`) | Corporate Treasury & Structured Finance | P2 | |
-| [ ] | 49 | Working Capital Forecaster (`working-capital-forecaster`) | Corporate Treasury & Structured Finance | P2 | |
-| [ ] | 50 | Securitization Modeler (`securitization-modeler`) | Corporate Treasury & Structured Finance | P2 | |
-| [ ] | 51 | Trend Following Engine (`trend-following-engine`) | Directional Strategies | P2 | |
-| [ ] | 52 | Cross-Sectional Mean Reversion (`cross-sectional-mean-reversion`) | Directional Strategies | P2 | |
-| [ ] | 53 | Breakout Signal Engine (`breakout-signal-engine`) | Directional Strategies | P2 | |
-| [ ] | 54 | Reversal Detector (`reversal-detector`) | Directional Strategies | P2 | |
-| [ ] | 55 | Global Macro Signal Engine (`global-macro-signal-engine`) | Directional Strategies | P2 | |
-| [ ] | 56 | Carry Trade Optimizer (`carry-trade-optimizer`) | Directional Strategies | P2 | |
+| [x] | 19 | Liquidation Valuation (`liquidation-valuation`) | Valuation (advanced) | P2 | Done. New page + table demo (claims waterfall) + MODELS row. Build passed. |
+| [x] | 20 | Real Options Valuation (`real-options-valuation`) | Valuation (advanced) | P2 | Done. New page + score demo (flexibility share) + MODELS row. Build passed. |
+| [x] | 21 | Merger Model (`merger-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (pro forma) + MODELS row. Build passed. |
+| [x] | 22 | Accretion / Dilution (`accretion-dilution`) | M&A & Corporate Transactions | P2 | Done. New page + curve demo + MODELS row. Build passed. |
+| [x] | 23 | LBO Model (`lbo-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (returns decomposition) + MODELS row. Build passed. |
+| [x] | 24 | MBO Model (`mbo-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (stakeholder proceeds) + MODELS row. Build passed. |
+| [x] | 25 | Spin-Off Model (`spin-off-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (parent/SpinCo + stranded cost) + MODELS row. Build passed. |
+| [x] | 26 | Carve-Out Model (`carve-out-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (reported/allocated/pro forma) + MODELS row. Build passed. |
+| [x] | 27 | Recapitalization (`recapitalization-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (before/after + headroom) + MODELS row. Build passed. |
+| [x] | 28 | Purchase Price Allocation (`purchase-price-allocation`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (allocation + reconciliation) + MODELS row. Build passed. |
+| [x] | 29 | Growth Equity Model (`growth-equity-model`) | Venture & Growth Capital | P2 | Done. New page + table demo (returns by exit scenario) + MODELS row. Build passed. |
+| [x] | 30 | IPO Model (`ipo-model`) | Venture & Growth Capital | P2 | Done. New page + table demo (price range) + MODELS row. Access-logging framing leads the page per spec. Build passed. |
+| [x] | 31 | Startup Financial Model (`startup-financial-model`) | Venture & Growth Capital | P2 | Done. New page + curve demo (runway) + MODELS row. Build passed. |
+| [x] | 32 | VC Method Valuation (`vc-method-valuation`) | Venture & Growth Capital | P2 | Done. New page + table demo (sensitivity) + MODELS row. Build passed. |
+| [x] | 33 | VC Portfolio Tracker (`vc-portfolio-tracker`) | Venture & Growth Capital | P2 | Done. New page + table demo (fund vs peer median) + MODELS row. Build passed. |
+| [x] | 34 | Cap Table Manager (`cap-table-manager`) | Venture & Growth Capital | P2 | Done. New page + table demo (round simulator) + MODELS row. Build passed. |
+| [x] | 35 | Waterfall Distribution Engine (`waterfall-distribution`) | Venture & Growth Capital | P2 | Done. New page + table demo (stacked tiers) + MODELS row. Build passed. |
+| [x] | 36 | SAFE & Note Conversion (`safe-note-conversion`) | Venture & Growth Capital | P2 | Done. New page + table demo (pre- vs post-money) + MODELS row. Build passed. |
+| [x] | 37 | Follow-On Advisor (`follow-on-advisor`) | Venture & Growth Capital | P2 | Done. New page + score demo (participate score) + MODELS row. Build passed. |
+| [x] | 38 | Startup Runway Tracker (`startup-runway-tracker`) | Venture & Growth Capital | P2 | Done. New page + curve demo + MODELS row. Completes Venture & Growth wing. Build passed. |
+| [x] | 39 | Fund Cash-Flow Modeler (`fund-cash-flow-modeler`) | Private Funds | P2 | Done. New page + curve demo + MODELS row. Build passed. |
+| [x] | 40 | Fund Performance Engine (`fund-performance-engine`) | Private Funds | P2 | Done. New page + table demo (gross vs net) + MODELS row. Completes Private Funds wing. Build passed. |
+| [x] | 41 | Capital Budgeting Engine (`capital-budgeting-engine`) | Capital Budgeting & Project Finance | P2 | Done. New page + table demo (multi-project ranking) + MODELS row. Build passed. |
+| [x] | 42 | Project Finance Modeler (`project-finance-modeler`) | Capital Budgeting & Project Finance | P2 | Done. New page + curve demo (DSCR vs covenant) + MODELS row. Build passed. |
+| [x] | 43 | Infrastructure Investment Modeler (`infrastructure-investment-modeler`) | Capital Budgeting & Project Finance | P2 | Done. New page + table demo (tornado scenarios) + MODELS row. Build passed. |
+| [x] | 44 | Renewable Project Modeler (`renewable-project-modeler`) | Capital Budgeting & Project Finance | P2 | Done. New page + curve demo (generation w/ degradation) + MODELS row. Completes Capital Budgeting & Project Finance wing. Build passed. |
+| [x] | 45 | RE Development Modeler (`re-development-modeler`) | Real Estate | P2 | Done. New page + curve demo (cumulative cash / peak equity) + MODELS row. Build passed. |
+| [x] | 46 | RE Acquisition Underwriter (`re-acquisition-underwriter`) | Real Estate | P2 | Done. New page + table demo (property vs investor) + MODELS row. Build passed. |
+| [x] | 47 | Lease vs. Buy Analyzer (`lease-vs-buy-analyzer`) | Real Estate | P2 | Done. New page + table demo (cash + accounting) + MODELS row. Completes Real Estate wing. Build passed. |
+| [x] | 48 | Debt Schedule Engine (`debt-schedule-engine`) | Corporate Treasury & Structured Finance | P2 | Done. New page + curve demo (headroom over time) + MODELS row. Build passed. |
+| [x] | 49 | Working Capital Forecaster (`working-capital-forecaster`) | Corporate Treasury & Structured Finance | P2 | Done. New page + curve demo + MODELS row. Build passed. |
+| [x] | 50 | Securitization Modeler (`securitization-modeler`) | Corporate Treasury & Structured Finance | P2 | Done. New page + table demo (tranche waterfall) + MODELS row. Completes Corporate Treasury wing. Build passed. |
+| [x] | 51 | Trend Following Engine (`trend-following-engine`) | Directional Strategies | P2 | Done. New page + curve demo + MODELS row. Hypothetical-performance disclaimer + signals-only statement verified in rendered HTML. Build passed. |
+| [x] | 52 | Cross-Sectional Mean Reversion (`cross-sectional-mean-reversion`) | Directional Strategies | P2 | Done. New page + table demo + MODELS row. Disclaimer + signals-only verified. Build passed. |
+| [x] | 53 | Breakout Signal Engine (`breakout-signal-engine`) | Directional Strategies | P2 | Done. New page + score demo (confirmation) + MODELS row. Disclaimer + signals-only verified. Build passed. |
+| [x] | 54 | Reversal Detector (`reversal-detector`) | Directional Strategies | P2 | Done. New page + score demo + MODELS row. Hardest-to-time caveat leads the page per spec. Disclaimer verified. Build passed. |
+| [x] | 55 | Global Macro Signal Engine (`global-macro-signal-engine`) | Directional Strategies | P2 | Done. New page + table demo (themes vs consensus) + MODELS row. Disclaimer verified. Build passed. |
+| [x] | 56 | Carry Trade Optimizer (`carry-trade-optimizer`) | Directional Strategies | P2 | Done. New page + score demo + MODELS row. Crash-risk warning panel per spec. Completes Directional Strategies wing. Disclaimer verified. Build passed. |
 | [ ] | 57 | Statistical Arbitrage Engine (`statistical-arbitrage-engine`) | Relative-Value & Arbitrage | P2 | |
 | [ ] | 58 | Pairs Trading Engine (`pairs-trading-engine`) | Relative-Value & Arbitrage | P2 | |
 | [ ] | 59 | Convertible Arbitrage Modeler (`convertible-arbitrage-modeler`) | Relative-Value & Arbitrage | P2 | |
