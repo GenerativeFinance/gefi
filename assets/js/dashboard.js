@@ -342,16 +342,20 @@
    * presented as a real result.
    */
   GeFi.MODELS = [
+    { slug: "basel-rwa-capital-calculator", name: "Basel RWA & Capital Calculator", wing: "Banking Book & Provisioning", risk: "medium", federated: false, unit: "CET1 %", series: [13.4, 13.5, 13.6, 13.7, 13.8, 13.8, 13.9, 14.0, 14.0, 14.1, 14.2, 14.2] },
     { slug: "board-lp-report-generator", name: "Board & LP Report Generator", wing: "Generative AI", risk: "medium", federated: false, unit: "Reconciled figures", series: [0.97, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1, 1, 1, 1, 1] },
+    { slug: "cecl-ifrs9-ecl-engine", name: "CECL / IFRS 9 ECL Engine", wing: "Banking Book & Provisioning", risk: "high", federated: false, unit: "Coverage ratio %", series: [1.42, 1.45, 1.48, 1.51, 1.55, 1.58, 1.61, 1.63, 1.66, 1.69, 1.72, 1.74] },
     { slug: "claim-fraud-vision", name: "Claim Fraud Vision", wing: "Fraud & AML", risk: "low", federated: true, unit: "Detection AUC", series: [0.72, 0.73, 0.74, 0.74, 0.75, 0.76, 0.76, 0.77, 0.78, 0.78, 0.79, 0.79] },
     { slug: "commodities-flow-nowcast", name: "Commodities Flow Nowcast", wing: "Investing & Macro", risk: "medium", federated: false, unit: "Flow RMSE %", series: [9.1, 8.8, 8.6, 8.4, 8.2, 8.1, 7.9, 7.8, 7.7, 7.6, 7.5, 7.4] },
     { slug: "credit-oracle", name: "Credit Oracle", wing: "Credit & Risk", risk: "medium", federated: true, unit: "AUC", series: [0.79, 0.8, 0.81, 0.8, 0.82, 0.83, 0.83, 0.84, 0.84, 0.83, 0.84, 0.84] },
     { slug: "cross-border-payment-router", name: "Cross-Border Payment Router", wing: "Trade, Payments & KYB", risk: "low", federated: false, unit: "Landed cost %", series: [2.4, 2.35, 2.3, 2.28, 2.22, 2.18, 2.15, 2.1, 2.06, 2.02, 1.98, 1.95] },
+    { slug: "deposit-behavior-model", name: "Deposit Behavior Model", wing: "Banking Book & Provisioning", risk: "medium", federated: false, unit: "Backtest error %", series: [4.8, 4.6, 4.4, 4.3, 4.1, 4.0, 3.9, 3.7, 3.6, 3.5, 3.4, 3.3] },
     { slug: "disclosure-drafter", name: "Disclosure Drafter", wing: "Generative AI", risk: "high", federated: false, unit: "Checklist coverage", series: [0.9, 0.91, 0.92, 0.93, 0.94, 0.94, 0.95, 0.96, 0.96, 0.97, 0.97, 0.98] },
     { slug: "esg-materiality-scorer", name: "ESG Materiality Scorer", wing: "ESG", risk: "medium", federated: true, unit: "Topic coverage", series: [0.71, 0.73, 0.75, 0.77, 0.79, 0.8, 0.82, 0.83, 0.85, 0.86, 0.87, 0.88] },
     { slug: "fraud-graph", name: "Fraud Graph", wing: "Fraud & AML", risk: "low", federated: false, unit: "Recall @0.1% FPR", series: [0.66, 0.67, 0.68, 0.69, 0.7, 0.7, 0.71, 0.72, 0.72, 0.73, 0.74, 0.74] },
     { slug: "gefi-copilot", name: "GeFi Copilot", wing: "Generative AI", risk: "medium", federated: false, unit: "Grounded claims", series: [0.94, 0.95, 0.95, 0.96, 0.96, 0.97, 0.97, 0.97, 0.98, 0.98, 0.98, 0.98] },
     { slug: "ic-credit-memo-generator", name: "IC & Credit Memo Generator", wing: "Generative AI", risk: "medium", federated: false, unit: "Grounded figures", series: [0.96, 0.97, 0.97, 0.98, 0.98, 0.99, 0.99, 0.99, 1, 1, 1, 1] },
+    { slug: "irrbb-alm-modeler", name: "IRRBB / ALM Modeler", wing: "Banking Book & Provisioning", risk: "high", federated: false, unit: "EVE sensitivity %", series: [-8.2, -8.0, -7.9, -7.7, -7.5, -7.4, -7.2, -7.1, -6.9, -6.8, -6.6, -6.5] },
     { slug: "kyb-graph", name: "KYB Graph", wing: "Trade, Payments & KYB", risk: "low", federated: false, unit: "UBO resolution", series: [0.84, 0.85, 0.85, 0.86, 0.87, 0.88, 0.88, 0.89, 0.9, 0.9, 0.91, 0.91] },
     { slug: "liquidity-stress-engine", name: "Liquidity Stress Engine", wing: "Credit & Risk", risk: "high", federated: false, unit: "LCR %", series: [148, 144, 138, 131, 124, 118, 115, 113, 112, 114, 117, 121] },
     { slug: "macro-nowcast", name: "Macro Nowcast", wing: "Investing & Macro", risk: "medium", federated: false, unit: "RMSE", series: [0.42, 0.4, 0.39, 0.38, 0.37, 0.36, 0.36, 0.35, 0.34, 0.34, 0.33, 0.33] },

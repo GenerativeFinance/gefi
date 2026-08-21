@@ -52,10 +52,10 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 16 | Tax Residency Classifier (`tax-residency-classifier`) | Compliance & Regulatory | P1 | Done. New page + table demo (treaty tie-breaker trace) + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
 | [x] | 17 | Regulatory Change Summariser (`regulatory-change-summariser`) | Compliance & Regulatory | P1 | Done. New page + table demo + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
 | [x] | 18 | ESG Materiality Scorer (`esg-materiality-scorer`) | ESG | P1 | Done. New page + table demo (two-axis matrix) + MODELS row. Copy per customer/backend prompts (cited brief missing). Build passed. |
-| [ ] | 81 | CECL / IFRS 9 ECL Engine (`cecl-ifrs9-ecl-engine`) | Banking Book & Provisioning | P1 | |
-| [ ] | 82 | IRRBB / ALM Modeler (`irrbb-alm-modeler`) | Banking Book & Provisioning | P1 | |
-| [ ] | 83 | Deposit Behavior Model (`deposit-behavior-model`) | Banking Book & Provisioning | P1 | |
-| [ ] | 84 | Basel RWA & Capital Calculator (`basel-rwa-capital-calculator`) | Banking Book & Provisioning | P1 | |
+| [x] | 81 | CECL / IFRS 9 ECL Engine (`cecl-ifrs9-ecl-engine`) | Banking Book & Provisioning | P1 | Done. New page + table demo (provision waterfall) + MODELS row. Build passed. |
+| [x] | 82 | IRRBB / ALM Modeler (`irrbb-alm-modeler`) | Banking Book & Provisioning | P1 | Done. New page + curve demo (EVE by bucket) + MODELS row. Build passed. |
+| [x] | 83 | Deposit Behavior Model (`deposit-behavior-model`) | Banking Book & Provisioning | P1 | Done. New page + curve demo + MODELS row. Build passed. |
+| [x] | 84 | Basel RWA & Capital Calculator (`basel-rwa-capital-calculator`) | Banking Book & Provisioning | P1 | Done. New page + table demo (rule-referenced weights) + MODELS row. Build passed. |
 | [ ] | 88 | Monte Carlo Simulation Service (`monte-carlo-simulation-service`) | Simulation & Market Primitives | P1 | |
 | [ ] | 89 | Volatility Surface Service (`volatility-surface-service`) | Simulation & Market Primitives | P1 | |
 | [ ] | 90 | LP Treasury & Cash Management (`lp-treasury-cash-management`) | Simulation & Market Primitives | P1 | |
