@@ -97,10 +97,10 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 54 | Reversal Detector (`reversal-detector`) | Directional Strategies | P2 | Done. New page + score demo + MODELS row. Hardest-to-time caveat leads the page per spec. Disclaimer verified. Build passed. |
 | [x] | 55 | Global Macro Signal Engine (`global-macro-signal-engine`) | Directional Strategies | P2 | Done. New page + table demo (themes vs consensus) + MODELS row. Disclaimer verified. Build passed. |
 | [x] | 56 | Carry Trade Optimizer (`carry-trade-optimizer`) | Directional Strategies | P2 | Done. New page + score demo + MODELS row. Crash-risk warning panel per spec. Completes Directional Strategies wing. Disclaimer verified. Build passed. |
-| [ ] | 57 | Statistical Arbitrage Engine (`statistical-arbitrage-engine`) | Relative-Value & Arbitrage | P2 | |
-| [ ] | 58 | Pairs Trading Engine (`pairs-trading-engine`) | Relative-Value & Arbitrage | P2 | |
-| [ ] | 59 | Convertible Arbitrage Modeler (`convertible-arbitrage-modeler`) | Relative-Value & Arbitrage | P2 | |
-| [ ] | 60 | Fixed Income Arbitrage Engine (`fixed-income-arbitrage-engine`) | Relative-Value & Arbitrage | P2 | |
+| [x] | 57 | Statistical Arbitrage Engine (`statistical-arbitrage-engine`) | Relative-Value & Arbitrage | P2 | Done. New page + table demo + MODELS row. Disclaimer verified. Build passed. |
+| [x] | 58 | Pairs Trading Engine (`pairs-trading-engine`) | Relative-Value & Arbitrage | P2 | Done. New page + curve demo (spread z-score) + MODELS row. Disclaimer verified. Build passed. |
+| [x] | 59 | Convertible Arbitrage Modeler (`convertible-arbitrage-modeler`) | Relative-Value & Arbitrage | P2 | Done. New page + table demo + MODELS row. Disclaimer verified. Build passed. |
+| [x] | 60 | Fixed Income Arbitrage Engine (`fixed-income-arbitrage-engine`) | Relative-Value & Arbitrage | P2 | Done. New page + table demo (leverage disclosed per signal) + MODELS row. Disclaimer verified. Build passed. |
 | [ ] | 61 | Merger Arbitrage Tracker (`merger-arbitrage-tracker`) | Relative-Value & Arbitrage | P2 | |
 | [ ] | 62 | FX Triangular Arbitrage Scanner (`fx-triangular-arbitrage-scanner`) | Relative-Value & Arbitrage | P2 | |
 | [ ] | 63 | Calendar Spread Optimizer (`calendar-spread-optimizer`) | Relative-Value & Arbitrage | P2 | |
