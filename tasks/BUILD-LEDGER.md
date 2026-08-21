@@ -69,10 +69,10 @@ Never touch `infrastructure/cloudflare/`. Build with
 | [x] | 26 | Carve-Out Model (`carve-out-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (reported/allocated/pro forma) + MODELS row. Build passed. |
 | [x] | 27 | Recapitalization (`recapitalization-model`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (before/after + headroom) + MODELS row. Build passed. |
 | [x] | 28 | Purchase Price Allocation (`purchase-price-allocation`) | M&A & Corporate Transactions | P2 | Done. New page + table demo (allocation + reconciliation) + MODELS row. Build passed. |
-| [ ] | 29 | Growth Equity Model (`growth-equity-model`) | Venture & Growth Capital | P2 | |
-| [ ] | 30 | IPO Model (`ipo-model`) | Venture & Growth Capital | P2 | |
-| [ ] | 31 | Startup Financial Model (`startup-financial-model`) | Venture & Growth Capital | P2 | |
-| [ ] | 32 | VC Method Valuation (`vc-method-valuation`) | Venture & Growth Capital | P2 | |
+| [x] | 29 | Growth Equity Model (`growth-equity-model`) | Venture & Growth Capital | P2 | Done. New page + table demo (returns by exit scenario) + MODELS row. Build passed. |
+| [x] | 30 | IPO Model (`ipo-model`) | Venture & Growth Capital | P2 | Done. New page + table demo (price range) + MODELS row. Access-logging framing leads the page per spec. Build passed. |
+| [x] | 31 | Startup Financial Model (`startup-financial-model`) | Venture & Growth Capital | P2 | Done. New page + curve demo (runway) + MODELS row. Build passed. |
+| [x] | 32 | VC Method Valuation (`vc-method-valuation`) | Venture & Growth Capital | P2 | Done. New page + table demo (sensitivity) + MODELS row. Build passed. |
 | [ ] | 33 | VC Portfolio Tracker (`vc-portfolio-tracker`) | Venture & Growth Capital | P2 | |
 | [ ] | 34 | Cap Table Manager (`cap-table-manager`) | Venture & Growth Capital | P2 | |
 | [ ] | 35 | Waterfall Distribution Engine (`waterfall-distribution`) | Venture & Growth Capital | P2 | |
