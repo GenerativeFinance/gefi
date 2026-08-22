@@ -312,22 +312,45 @@ on("GET /me/personas", () => ({
 on("GET /orgs", (p, q) => page([{ id: "org-1", name: "Meridian Bank", role: "member" }, { id: "org-2", name: "GeFi Labs", role: "owner" }], q));
 on("GET /orgs/{org_id}/members", (p, q) => page(D.devConsole.team.map((t, i) => ({ id: "m-" + i, ...t })), q));
 
-/* ---- portfolio ---- */
+/* ---- portfolio (task 304) ---- */
 on("GET /portfolio", () => D.portfolio);
 on("GET /portfolio/holdings", (p, q) => page(D.holdings, q));
 on("GET /portfolio/transactions", (p, q) => page(D.transactions, q));
-on("GET /portfolio/performance", () => ({ series: series("perf|portfolio", 12, 100, 8), benchmark: series("perf|bench", 12, 100, 6), period: "12m" }));
+on("GET /portfolio/performance", (p, q) => {
+  /* Slice the canonical seeded series so live mode charts exactly what
+   * the sample dataset charts — no second, disagreeing generator. */
+  const WINDOWS = { "1m": 21, "3m": 63, "6m": 126, "1y": 180, ytd: 180, all: 180 };
+  const n = WINDOWS[q.period] || WINDOWS["1y"];
+  const full = D.portfolio.valueSeries;
+  const fullBench = D.portfolio.benchSeries;
+  const s = full.slice(Math.max(0, full.length - n));
+  const bench = fullBench.slice(Math.max(0, fullBench.length - n));
+  const pct = (arr) => (arr.length > 1 ? +(((arr[arr.length - 1] - arr[0]) / arr[0]) * 100).toFixed(2) : 0);
+  return { period: q.period || "1y", series: s, benchmark: bench, returnPct: pct(s), benchReturnPct: pct(bench) };
+});
 on("GET /portfolio/risk", () => D.risk);
 on("GET /portfolio/allocation", () => ({ items: D.allocation, next_cursor: null }));
 on("GET /watchlist", (p, q) => page(S.watchlist, q));
 on("POST /watchlist", (p, q, b) => {
-  const row = { symbol: (b && b.symbol) || "NEW", name: (b && b.name) || "Added symbol" };
+  /* Rows are keyed by `ticker` — the same field DEMO.watchlist uses, so
+   * added rows and seeded rows are interchangeable everywhere. */
+  const ticker = ((b && (b.ticker || b.symbol)) || "").toUpperCase();
+  if (!ticker) return { __status: 422, code: "validation_failed", message: "ticker is required.", details: [{ field: "ticker", issue: "missing" }] };
+  if (S.watchlist.some((w) => w.ticker === ticker)) {
+    return { __status: 409, code: "conflict", message: ticker + " is already on the watchlist." };
+  }
+  const rand = seed.rng(seed.hash("wl|" + ticker));
+  const price = +(40 + rand() * 460).toFixed(2);
+  const spark = [];
+  for (let i = 0; i < 24; i++) spark.push(+(price * (0.98 + rand() * 0.04)).toFixed(2));
+  const row = { ticker: ticker, name: (b && b.name) || ticker, price: price, dayPct: +((rand() - 0.45) * 3).toFixed(2), spark: spark };
   S.watchlist.push(row);
   return { __status: 201, ...row };
 });
 on("DELETE /watchlist/{symbol}", (p) => {
+  const ticker = String(p.symbol || "").toUpperCase();
   const before = S.watchlist.length;
-  S.watchlist = S.watchlist.filter((w) => w.symbol !== p.symbol);
+  S.watchlist = S.watchlist.filter((w) => w.ticker !== ticker);
   return before === S.watchlist.length ? notFound : { ok: true };
 });
 

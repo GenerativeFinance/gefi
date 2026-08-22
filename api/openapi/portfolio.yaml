@@ -1,12 +1,13 @@
 openapi: 3.0.3
 info:
   title: GeFi Portfolio & risk
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Holdings, valuations, P&L series, returns vs benchmark, risk metrics (Sharpe, drawdown, beta, alpha, volatility, VaR), allocation, watchlist.
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Holdings, valuations, P&L series, returns vs benchmark, risk metrics
+    (Sharpe, drawdown, beta, alpha, volatility, VaR), allocation, watchlist.
+    Filled in by ledger task 304 — every shape mirrors the canonical
+    GeFi.DEMO figures (design-system-v2 §4), so live and sample modes render
+    identical strings. Envelope conventions come from _envelope.yaml.
 servers:
   - url: /v1
     description: >
@@ -18,22 +19,97 @@ security:
 tags:
   - name: portfolio
     description: "Portfolio & risk"
+components:
+  schemas:
+    PortfolioSummary:
+      type: object
+      description: "Canonical figures: value 142500, cash 12750 (§4)."
+      properties:
+        value: { type: number, example: 142500 }
+        dayChange: { type: number, example: 2850 }
+        dayChangePct: { type: number, example: 2.04 }
+        monthlyPct: { type: number, example: 2.7 }
+        monthlyBenchPct: { type: number, example: 1.8 }
+        ytdPct: { type: number, example: 24.3 }
+        cash: { type: number, example: 12750 }
+        valueSeries:
+          type: array
+          items: { type: number }
+          description: "Seeded daily portfolio value, 180 points."
+        benchSeries:
+          type: array
+          items: { type: number }
+          description: "Benchmark on the same dates, same length."
+    Holding:
+      type: object
+      properties:
+        ticker: { type: string, example: MSFT }
+        name: { type: string, example: Microsoft Corporation }
+        weight: { type: number, description: "Percent of portfolio", example: 12.2 }
+        ret: { type: number, description: "Total return %", example: 18.3 }
+        dayPct: { type: number, example: 0.8 }
+    Transaction:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        kind: { type: string, enum: [buy, sell, dividend, deposit] }
+        asset: { type: string }
+        qty: { type: number }
+        price: { type: number }
+        value: { type: number }
+        status: { type: string, enum: [settled, pending, failed] }
+    WatchlistRow:
+      type: object
+      properties:
+        ticker: { type: string }
+        name: { type: string }
+        price: { type: number }
+        dayPct: { type: number }
+        spark:
+          type: array
+          items: { type: number }
+          description: "Seeded 24-point sparkline."
+    AllocationSlice:
+      type: object
+      properties:
+        name: { type: string, example: Stocks }
+        pct: { type: number, description: "Slices sum to exactly 100.", example: 45 }
+    RiskMetrics:
+      type: object
+      description: "Canonical §4 risk figures; benchmarks alongside each metric."
+      properties:
+        sharpe: { type: number, example: 1.42 }
+        sharpeBench: { type: number, example: 1.18 }
+        maxDrawdown: { type: number, example: -8.5 }
+        maxDrawdownBench: { type: number, example: -12.3 }
+        beta: { type: number, example: 0.89 }
+        alpha: { type: number, example: 2.1 }
+        volatility: { type: number, example: 14.2 }
+        var95: { type: number, description: "1-day 95% VaR in currency, negative.", example: -7125 }
+        concentration: { type: string, enum: [Low, Medium, High] }
+        sectors: { type: integer, example: 7 }
+        regions: { type: integer, example: 4 }
+    Performance:
+      type: object
+      properties:
+        period: { type: string, enum: ["1m", "3m", "6m", "1y", "ytd", "all"] }
+        series: { type: array, items: { type: number } }
+        benchmark: { type: array, items: { type: number } }
+        returnPct: { type: number }
+        benchReturnPct: { type: number }
 paths:
   /portfolio:
     get:
       operationId: get-portfolio
-      summary: "Portfolio summary (value, day/total P&L)"
+      summary: "Portfolio summary (value, day/total P&L, seeded value + benchmark series)"
       tags: [portfolio]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Summary.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/PortfolioSummary' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /portfolio/holdings:
     get:
       operationId: get-portfolio-holdings
@@ -44,14 +120,17 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Holdings page.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/Holding' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /portfolio/transactions:
     get:
       operationId: get-portfolio-transactions
@@ -62,29 +141,34 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Transactions page.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/Transaction' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /portfolio/performance:
     get:
       operationId: get-portfolio-performance
       summary: "Return series vs benchmark"
       tags: [portfolio]
+      parameters:
+        - name: period
+          in: query
+          description: "Window to return. Defaults to 1y."
+          schema: { type: string, enum: ["1m", "3m", "6m", "1y", "ytd", "all"], default: "1y" }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Performance series.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Performance' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /portfolio/risk:
     get:
       operationId: get-portfolio-risk
@@ -92,14 +176,11 @@ paths:
       tags: [portfolio]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Risk metrics.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/RiskMetrics' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /portfolio/allocation:
     get:
       operationId: get-portfolio-allocation
@@ -107,14 +188,17 @@ paths:
       tags: [portfolio]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Allocation slices.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/AllocationSlice' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /watchlist:
     get:
       operationId: get-watchlist
@@ -125,30 +209,41 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Watchlist page.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/WatchlistRow' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
     post:
       operationId: post-watchlist
       summary: "Add a symbol"
       tags: [portfolio]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ticker]
+              properties:
+                ticker: { type: string }
+                name: { type: string }
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+        '201':
+          description: Symbol added.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/WatchlistRow' } } }
+        '409':
+          description: Already on the watchlist.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /watchlist/{symbol}:
     delete:
       operationId: delete-watchlist-symbol
@@ -158,15 +253,12 @@ paths:
         - name: symbol
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Symbol removed.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+        '404':
+          description: Not on the watchlist.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }

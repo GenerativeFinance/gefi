@@ -129,13 +129,24 @@
         }
         paintStar();
         star.addEventListener("click", function () {
-          if (stars.indexOf(w.ticker) !== -1) {
-            stars = stars.filter(function (s) { return s !== w.ticker; });
-          } else {
-            stars.push(w.ticker);
-          }
+          var starring = stars.indexOf(w.ticker) === -1;
+          if (starring) stars.push(w.ticker);
+          else stars = stars.filter(function (s) { return s !== w.ticker; });
           saveStars(stars);
           paintStar();
+          /* Round-trip through the contract: starring adds the symbol to
+           * the watchlist, unstarring removes it. Offline the resolver
+           * answers locally, so the star behaves identically either way. */
+          var call = starring
+            ? GeFi.api.post("/watchlist", { ticker: w.ticker, name: w.name })
+            : GeFi.api.del("/watchlist/" + encodeURIComponent(w.ticker));
+          call.then(function () {
+            star.setAttribute("data-star-synced", starring ? "added" : "removed");
+          }, function () {
+            /* 409 "already there" / 404 "not there" are both fine — the
+             * local pin state is what the star shows. */
+            star.setAttribute("data-star-synced", "noop");
+          });
         });
 
         var tick = document.createElement("span");

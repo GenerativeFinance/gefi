@@ -232,6 +232,15 @@
       ["/portfolio/risk", function (r) {
         Object.assign(D.risk, r);
       }],
+      ["/portfolio/holdings?limit=100", function (r) {
+        if (r.items && r.items.length) D.holdings = r.items;
+      }],
+      ["/portfolio/transactions?limit=100", function (r) {
+        if (r.items && r.items.length) D.transactions = r.items;
+      }],
+      ["/portfolio/allocation", function (r) {
+        if (r.items && r.items.length) D.allocation = r.items;
+      }],
       ["/orders?limit=100", function (r) {
         D.orders = r.items;
       }],
@@ -301,11 +310,25 @@
     api.register("/portfolio/allocation", function () {
       return D.allocation;
     });
+    api.register("/portfolio/transactions", function () {
+      return D.transactions;
+    });
+    api.register("/portfolio/performance", function () {
+      var s = D.portfolio.valueSeries;
+      var b = D.portfolio.benchSeries;
+      var pct = function (arr) {
+        return arr.length > 1 ? +(((arr[arr.length - 1] - arr[0]) / arr[0]) * 100).toFixed(2) : 0;
+      };
+      return { period: "1y", series: s, benchmark: b, returnPct: pct(s), benchReturnPct: pct(b) };
+    });
     api.register("/orders", function () {
       return D.orders;
     });
     api.register("/watchlist", function () {
       return D.watchlist;
+    });
+    api.register("/watchlist/{symbol}", function () {
+      return { ok: true };
     });
     api.register("/datasets", function () {
       return D.datasets;
