@@ -2939,3 +2939,9 @@ p  { margin: 0 0 var(--space-4); }
 /* Task 211 — order history pager */
 .app-oh-pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
 .app-oh-pager__btns { display: flex; gap: 8px; }
+
+/* Task 213 — marketplace preference modal */
+.app-mk-prefcats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; margin: 12px 0 16px; max-height: 300px; overflow-y: auto; }
+.app-mk-prefcat { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+.app-mk-prefcat input { accent-color: var(--app-brand); width: 15px; height: 15px; flex: 0 0 auto; }
+.app-gridcard .gefi-spark { width: 100%; height: 34px; }

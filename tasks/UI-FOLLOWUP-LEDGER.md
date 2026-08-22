@@ -71,7 +71,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 - [x] 212 — Backtesting Environment — done (6 segments; real sample KPIs not the reference zeros; lifecycle-chip model rows + Active/Limited/Coming Soon data status + data-range note; presets prefill the new-backtest modal; run lifecycle: create -> auto-hash to Live Monitor progress bar -> completed Results row w/ seeded metrics -> KPIs update, persisted; Optimizer/Analysis/Comparison get honest designed empty states)
 
 ### Marketplace & developer wing
-- [ ] 213 — AI Model Marketplace (For You/Trending/Browse All)
+- [x] 213 — AI Model Marketplace (For You/Trending/Browse All) — done (cards from the REAL 92-model registry w/ risk/federated chips + sparklines + Details -> /models/<slug>/; For You empty state w/ exact reference copy -> preferences modal (wings + risk ceiling) -> filled recs, persisted; seeded Trending ranking; Browse All w/ live count, filters (17 high-risk), 12/page pagination, ?category= deep link from 214)
 - [ ] 214 — Model Categories (wired to the real 92-model taxonomy)
 - [ ] 215 — Developers directory
 - [ ] 216 — Developer Console: Overview + My Models
