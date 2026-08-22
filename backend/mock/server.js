@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js", "assets/js/app/reports-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js", "assets/js/app/reports-math.js", "assets/js/app/regulator-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -93,8 +93,9 @@ const DP = GeFi.dataPlatform; /* shared with the provider pages (task 312) */
 const FU = GeFi.funding; /* shared with the funding pages (task 313) */
 const LE = GeFi.learning; /* shared with the learning page (task 314) */
 const RP = GeFi.reports; /* shared with the report pages (task 315) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE || !RP) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning/reports");
+const RG = GeFi.regulator; /* shared with the regulator pages (task 316) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE || !RP || !RG) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning/reports/regulator");
   process.exit(1);
 }
 
@@ -299,6 +300,8 @@ function freshState() {
     issuesResolved: [],
     regThreadExtra: {},
     regAudits: [],
+    regIssuesExtra: [],
+    regActivity: D.regulator.activity.map((a) => ({ ...a })),
     notifications: [
       { id: "n-1", title: "Rebalance executed", detail: "Portfolio Optimiser moved 3.2% into bonds", unread: true },
       { id: "n-2", title: "Model audit passed", detail: "#MT-4521 closed with no findings", unread: true },
@@ -1769,42 +1772,165 @@ on("GET /risk/aggregate", (p, q) => {
   return out;
 });
 
-/* ---- regulator ---- */
+/* ---- regulator (task 316) ----
+ * The register genuinely holds every audit the overview counts, and every
+ * headline figure is derived from it by the shared engine. SLA state runs
+ * from a fixed epoch so a screenshot today and one next month agree. */
 const R = D.regulator;
+
+function regRegister() {
+  return RG.register(R.modelAudits, R.datasetAudits).concat(S.regAudits);
+}
+function issueRow(i) {
+  const sla = RG.slaState(i);
+  return {
+    ...i,
+    due: sla.due,
+    daysOpen: sla.daysOpen,
+    dueInDays: sla.dueInDays,
+    sla: sla.state,
+    status: S.issuesResolved.includes(i.id) ? "resolved" : "open",
+  };
+}
+function allIssues() {
+  return R.issues.concat(S.regIssuesExtra);
+}
+function regOverview() {
+  return RG.overview(regRegister(), allIssues(), R.standardsList, S.issuesResolved);
+}
+
+on("GET /regulator/overview", () => regOverview());
+on("GET /regulator/audits", (p, q) => {
+  let rows = regRegister();
+  const total = rows.length;
+  if (q.kind) rows = rows.filter((a) => a.kind === q.kind);
+  if (q.status) rows = rows.filter((a) => a.status === q.status);
+  if (q.org) rows = rows.filter((a) => a.org === q.org);
+  const out = page(rows, q);
+  /* The register's real size, so a client can tell a page from the whole. */
+  out.total = total;
+  return out;
+});
 on("GET /regulator/audits/model", (p, q) => page(R.modelAudits, q));
 on("GET /regulator/audits/dataset", (p, q) => page(R.datasetAudits, q));
-on("GET /regulator/audits/{id}", (p) => R.modelAudits.concat(R.datasetAudits).find((a) => a.id === p.id) || S.regAudits.find((a) => a.id === p.id) || notFound);
+on("GET /regulator/audits/{id}", (p) => {
+  const hit = regRegister().find((a) => a.id === p.id);
+  if (hit) return hit;
+  const full = R.modelAudits.concat(R.datasetAudits).find((a) => a.id === p.id);
+  return full || notFound;
+});
 on("POST /regulator/audits", (p, q, b) => {
-  const a = { id: "MT-NEW-" + (S.regAudits.length + 1), model: (b && b.entity) || "unnamed", org: "You", type: (b && b.type) || "Model governance", severity: "medium", status: "Scheduled", due: "2026-09-15", findings: [] };
+  const entity = ((b && b.entity) || "").trim();
+  if (!entity) return { __status: 422, code: "validation_failed", message: "entity is required" };
+  const a = {
+    id: "MT-NEW-" + (S.regAudits.length + 1),
+    kind: "model",
+    subject: entity,
+    org: "You",
+    type: (b && b.type) || "Model governance",
+    severity: "medium",
+    status: "Scheduled",
+    due: (b && b.due) || "2026-09-15",
+    findings: 0,
+  };
   S.regAudits.push(a);
   return { __status: 201, ...a };
 });
-on("GET /regulator/issues", (p, q) => page(R.issues.filter((i) => !S.issuesResolved.includes(i.id)), q));
-on("POST /regulator/issues", (p, q, b) => ({ __status: 201, id: "CI-NEW-1", title: (b && b.title) || "New issue", severity: (b && b.severity) || "medium", status: "open" }));
-on("POST /regulator/issues/{id}/resolve", (p) => {
-  const i = R.issues.find((x) => x.id === p.id);
-  if (!i) return notFound;
-  if (!S.issuesResolved.includes(p.id)) S.issuesResolved.push(p.id);
-  return { id: p.id, status: "resolved" };
+
+on("GET /regulator/issues", (p, q) => {
+  let rows = allIssues().filter((i) => !S.issuesResolved.includes(i.id)).map(issueRow);
+  if (q.severity) rows = rows.filter((i) => i.severity === q.severity);
+  if (q.sla) rows = rows.filter((i) => i.sla === q.sla);
+  const out = page(rows, q);
+  out.epoch = RG.EPOCH;
+  return out;
 });
-on("GET /regulator/threads", (p, q) => page(R.threads.map((t) => ({ id: t.id, org: t.org, subject: t.subject, unread: t.unread, messages: t.messages.length + (S.regThreadExtra[t.id] || []).length })), q));
+on("POST /regulator/issues", (p, q, b) => {
+  const title = ((b && b.title) || "").trim();
+  if (!title) return { __status: 422, code: "validation_failed", message: "title is required" };
+  const severity = (b && b.severity) || "medium";
+  if (RG.SEVERITIES.indexOf(severity) === -1) {
+    return { __status: 422, code: "validation_failed", message: "severity must be one of " + RG.SEVERITIES.join(", ") };
+  }
+  const i = {
+    id: "CI-NEW-" + (S.regIssuesExtra.length + 1),
+    title,
+    severity,
+    entity: (b && b.entity) || null,
+    entityKind: b && b.entity ? RG.entityKind(b.entity) : null,
+    assignee: "You",
+    opened: RG.EPOCH,
+  };
+  S.regIssuesExtra.push(i);
+  return { __status: 201, ...issueRow(i) };
+});
+on("POST /regulator/issues/{id}/resolve", (p) => {
+  const i = allIssues().find((x) => x.id === p.id);
+  if (!i) return notFound;
+  if (S.issuesResolved.includes(p.id)) {
+    return { __status: 409, code: "conflict", message: i.title + " is already resolved" };
+  }
+  S.issuesResolved.push(p.id);
+  /* Return the recomputed overview so the caller does not have to guess how
+   * the headline moved. */
+  return { id: p.id, status: "resolved", overview: regOverview() };
+});
+
+on("GET /regulator/threads", (p, q) =>
+  page(
+    R.threads.map((t) => ({
+      id: t.id,
+      org: t.org,
+      subject: t.subject,
+      unread: t.unread,
+      messages: t.messages.length + (S.regThreadExtra[t.id] || []).length,
+    })),
+    q
+  )
+);
+on("GET /regulator/threads/{id}/messages", (p, q) => {
+  const t = R.threads.find((x) => x.id === p.id);
+  if (!t) return notFound;
+  const extra = S.regThreadExtra[p.id] || [];
+  return page(t.messages.concat(extra).map((m, n) => ({ id: p.id + "-m" + (n + 1), ...m })), q);
+});
 on("POST /regulator/threads/{id}/messages", (p, q, b) => {
   const t = R.threads.find((x) => x.id === p.id);
   if (!t) return notFound;
-  S.regThreadExtra[t.id] = S.regThreadExtra[t.id] || [];
-  const m = { from: "you", text: (b && b.text) || "", when: "just now" };
-  S.regThreadExtra[t.id].push(m);
-  return { __status: 201, ...m };
+  const why = RG.validateMessage(b && b.text);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const m = { from: "you", text: String(b.text).trim(), when: "just now" };
+  if (!S.regThreadExtra[p.id]) S.regThreadExtra[p.id] = [];
+  S.regThreadExtra[p.id].push(m);
+  return { __status: 201, id: p.id + "-m" + (t.messages.length + S.regThreadExtra[p.id].length), ...m };
 });
-on("GET /regulator/standards", (p, q) => page(R.standardsList, q));
+
+on("GET /regulator/standards", (p, q) =>
+  page(R.standardsList.map((x, i) => ({ id: "STD-" + (i + 1), ...x })), q)
+);
+on("GET /regulator/activity", (p, q) => page(S.regActivity, q));
+
 on("GET /regulator/entities/{ref}", (p) => {
-  const ref = p.ref.replace(/^#/, "");
-  const audit = R.modelAudits.concat(R.datasetAudits).find((a) => a.id === ref);
-  if (audit) return { ref, kind: R.modelAudits.includes(audit) ? "model_audit" : "dataset_audit", record: audit };
-  const issue = R.issues.find((i) => i.id === ref || i.entity === ref);
-  if (issue) return { ref, kind: "issue", record: issue };
-  const thread = R.threads.find((t) => t.subject.includes(ref));
-  if (thread) return { ref, kind: "thread", record: { id: thread.id, org: thread.org, subject: thread.subject } };
+  const ref = p.ref;
+  const kind = RG.entityKind(ref);
+  if (!kind) return notFound;
+  if (kind === "model_audit" || kind === "dataset_audit") {
+    const full = R.modelAudits.concat(R.datasetAudits).find((a) => a.id === ref);
+    if (full) return { ref, kind, record: full };
+    const row = regRegister().find((a) => a.id === ref);
+    if (row) return { ref, kind, record: row };
+    return notFound;
+  }
+  if (kind === "case") {
+    const t = R.threads.find((x) => (x.subject || "").indexOf(ref) > -1);
+    if (t) return { ref, kind, record: { id: t.id, org: t.org, subject: t.subject } };
+    return notFound;
+  }
+  if (kind === "model") {
+    const m = MODELS.find((x) => x.slug === ref.toLowerCase());
+    if (m) return { ref, kind, record: { slug: m.slug, name: m.name, wing: m.wing } };
+    return notFound;
+  }
   return notFound;
 });
 

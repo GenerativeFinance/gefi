@@ -8,8 +8,12 @@ active_tab: Overview
 permalink: /app/regulator/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/regulator.js
+app_scripts:
+  - /assets/js/app/regulator-math.js
+  - /assets/js/app/regulator.js
 ---
+
+<div data-rg-root>
 
 <div class="app-filterbar">
   <input type="search" placeholder="Search audits, models, or datasets..." aria-label="Search audits, models, or datasets" data-rg-search>
@@ -141,4 +145,6 @@ app_script: /assets/js/app/regulator.js
       </div>
     </form>
   </div>
+</div>
+
 </div>

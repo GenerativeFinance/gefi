@@ -8,8 +8,12 @@ active_tab: Dataset Audits
 permalink: /app/reg-dataset-audits/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/reg-pages.js
+app_scripts:
+  - /assets/js/app/regulator-math.js
+  - /assets/js/app/reg-pages.js
 ---
+
+<div data-rg-root>
 
 <div data-ra-root data-ra-kind="dataset">
   <div class="app-filterbar">
@@ -47,4 +51,6 @@ app_script: /assets/js/app/reg-pages.js
       </div>
     </div>
   </div>
+</div>
+
 </div>

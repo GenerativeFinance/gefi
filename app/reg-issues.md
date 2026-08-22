@@ -8,8 +8,12 @@ active_tab: Compliance Issues
 permalink: /app/reg-issues/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/reg-pages.js
+app_scripts:
+  - /assets/js/app/regulator-math.js
+  - /assets/js/app/reg-pages.js
 ---
+
+<div data-rg-root>
 
 <div data-ri-root>
   <div class="app-kpis" data-ri-kpis></div>
@@ -22,4 +26,6 @@ app_script: /assets/js/app/reg-pages.js
   <div data-ri-resolved></div>
   <p class="app-kpi__sub" data-ri-resolved-note></p>
   <p class="app-kpi__sub" data-ri-toast role="status" aria-live="polite"></p>
+</div>
+
 </div>

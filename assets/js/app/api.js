@@ -435,6 +435,32 @@
     api.register("/reports/custom-definitions", function () {
       return [];
     });
+    api.register("/regulator/overview", function () {
+      var rg = GeFi.regulator;
+      if (!rg) return {};
+      var R = D.regulator;
+      return rg.overview(rg.register(R.modelAudits, R.datasetAudits), R.issues, R.standardsList, []);
+    });
+    api.register("/regulator/issues", function () {
+      var rg = GeFi.regulator;
+      var rows = D.regulator.issues;
+      if (!rg) return rows;
+      return { items: rows.map(function (i) {
+        var sla = rg.slaState(i);
+        return Object.assign({}, i, { due: sla.due, daysOpen: sla.daysOpen, dueInDays: sla.dueInDays, sla: sla.state });
+      }), next_cursor: null, epoch: rg.EPOCH };
+    });
+    api.register("/regulator/threads", function () {
+      return D.regulator.threads.map(function (t) {
+        return { id: t.id, org: t.org, subject: t.subject, unread: t.unread, messages: t.messages.length };
+      });
+    });
+    api.register("/regulator/standards", function () {
+      return D.regulator.standardsList;
+    });
+    api.register("/regulator/activity", function () {
+      return D.regulator.activity;
+    });
     api.register("/learning/catalog", function () {
       return D.learning.items;
     });

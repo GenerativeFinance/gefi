@@ -9,8 +9,12 @@ permalink: /app/reg-communications/
 sitemap: false
 robots: noindex
 primary_action: { label: "Send Communication", url: "/app/reg-communications/#compose" }
-app_script: /assets/js/app/reg-pages.js
+app_scripts:
+  - /assets/js/app/regulator-math.js
+  - /assets/js/app/reg-pages.js
 ---
+
+<div data-rg-root>
 
 <div class="app-comm" data-rc-root>
   <aside class="app-comm__list" aria-label="Threads" data-rc-threads></aside>
@@ -26,4 +30,6 @@ app_script: /assets/js/app/reg-pages.js
     </form>
     <p class="app-kpi__sub" data-rc-status role="status" aria-live="polite"></p>
   </section>
+</div>
+
 </div>
