@@ -59,6 +59,24 @@ score normalised to 0–1, because the shared chart primitive is currently
 unsigned; the underlying figure is unchanged. A signed gauge is a harness
 change rather than a change to this page.
 
+## A detection, in place
+
+This is what the risk-language offsets are for. The passage below is a
+sample in the style of a 10-K risk-factor section; the shading is exactly
+what a reader pane renders from one API response.
+
+<figure class="sf-reader" markdown="0">
+<blockquote class="sf-reader__excerpt">
+Demand for our cloud segment <mark class="sf-mark sf-mark--risk" title="Risk language">may fluctuate materially</mark> if enterprise budgets contract. While <mark class="sf-mark sf-mark--hedge" title="Hedging">we believe</mark> our renewal pipeline <mark class="sf-mark sf-mark--conf" title="Confidence">remains strong</mark>, we <mark class="sf-mark sf-mark--risk" title="Risk language">cannot assure</mark> that current rates will hold, and <mark class="sf-mark sf-mark--risk" title="Risk language">adverse macroeconomic conditions</mark> <mark class="sf-mark sf-mark--risk" title="Risk language">could materially and adversely affect</mark> our results of operations. We remain <mark class="sf-mark sf-mark--conf" title="Confidence">confident</mark> in the multi-year roadmap communicated last quarter.
+</blockquote>
+<figcaption class="sf-reader__legend">
+<span class="sf-legend"><span class="sf-swatch sf-swatch--risk"></span> Risk language (4)</span>
+<span class="sf-legend"><span class="sf-swatch sf-swatch--hedge"></span> Hedging (1)</span>
+<span class="sf-legend"><span class="sf-swatch sf-swatch--conf"></span> Confidence (2)</span>
+<span class="muted small">Sample passage written for this page — not from a real filing, not investment advice. Sentence-level tone: −0.31.</span>
+</figcaption>
+</figure>
+
 ## Where it shines
 
 Long-only equity funds running event-driven strategies on earnings releases

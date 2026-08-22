@@ -56,6 +56,48 @@ of origin, inspection certificate) and returns:
 - A sanctions-screening report against OFAC, UK, EU, and UN lists.
 - A dual-use goods flag against EU regulation 2021/821.
 
+## What an extraction looks like
+
+"Reads a bill of lading" is easy to assert. This is a sample excerpt and the
+structured output it becomes — including the discrepancy that pays for the
+model.
+
+<div class="tf-panel" markdown="0">
+<div class="tf-panel__doc">
+<p class="tf-panel__head">Bill of lading — excerpt (sample)</p>
+<pre class="tf-panel__raw">BILL OF LADING  No. MSCUAB123456
+Shipper: NORDWIND TEXTILES GMBH, BREMEN
+Consignee: TO ORDER OF EMIRATES TRADE BANK
+Vessel: MSC ALTAIR V.229E
+Port of Loading: BREMERHAVEN
+Port of Discharge: JEBEL ALI
+Description: 100% COTTON KNITTED FABRIC,
+  412 CARTONS, HS 6006.21
+Shipped on Board: 14 AUG 2026
+Freight: PREPAID</pre>
+</div>
+<div class="tf-panel__out">
+<p class="tf-panel__head">Normalised extraction</p>
+<table class="tf-panel__fields">
+<tbody>
+<tr><td>shipper</td><td>Nordwind Textiles GmbH (DE)</td></tr>
+<tr><td>consignee</td><td>To order — Emirates Trade Bank</td></tr>
+<tr><td>voyage</td><td>MSC ALTAIR / 229E</td></tr>
+<tr><td>route</td><td>DEBRV &rarr; AEJEA</td></tr>
+<tr><td>goods.hs_code</td><td>6006.21</td></tr>
+<tr><td>goods.description</td><td>100% cotton knitted fabric, 412 cartons</td></tr>
+<tr><td>shipped_on_board</td><td>2026-08-14</td></tr>
+<tr><td>freight_terms</td><td>prepaid</td></tr>
+</tbody>
+</table>
+<div class="tf-panel__flag">
+<p class="tf-panel__flaghead">Discrepancy — UCP 600 art. 14(c)</p>
+<p>L/C field 44C sets the latest shipment date to <strong>2026-08-12</strong>; the on-board date is <strong>2026-08-14</strong>. Late shipment — presentation is non-complying unless the applicant waives.</p>
+</div>
+<p class="muted small">Sample documents drafted for this page; screening columns omitted for space.</p>
+</div>
+</div>
+
 ## Why discrepancy detection is the hard part
 
 A letter of credit is paid against documents, not against goods. A bank
