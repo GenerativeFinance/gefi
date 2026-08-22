@@ -68,7 +68,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 ### Trading wing
 - [x] 210 — Live Trading — done (ONE segmented level Trade/Orders/Positions/History; seeded 2s price ticker + session chart; order form relabels Buy/Sell+symbol, 400ms mock fill -> orders/positions/history w/ chips; positions aggregate fills onto seeded AAPL start; safety notice verbatim incl. "real money is not at risk in this demonstration"; orders persist sessionStorage)
 - [x] 211 — Order History + Activity feed — done (24 seeded rows merged w/ live-session fills; KPIs recompute w/ filters; search incl. strategy names, status/type dropdowns + quick pills kept in sync; 10/page pagination w/ Showing x–y of n; designed empty state; CSV export stamped SAMPLE; dates in the one format; activity feed already lives on /app/ overview)
-- [ ] 212 — Backtesting Environment
+- [x] 212 — Backtesting Environment — done (6 segments; real sample KPIs not the reference zeros; lifecycle-chip model rows + Active/Limited/Coming Soon data status + data-range note; presets prefill the new-backtest modal; run lifecycle: create -> auto-hash to Live Monitor progress bar -> completed Results row w/ seeded metrics -> KPIs update, persisted; Optimizer/Analysis/Comparison get honest designed empty states)
 
 ### Marketplace & developer wing
 - [ ] 213 — AI Model Marketplace (For You/Trending/Browse All)
