@@ -3,6 +3,10 @@ title: "Welcome to GeFi"
 date: 2026-04-15
 author: The GeFi team
 tags: [Company, Launch]
+cites:
+  - { title: "How the GeFi audit log works", url: "/research/audit-log-design/", kind: "methodology" }
+  - { title: "Why federated learning is the right shape for financial AI", url: "/research/why-federated-learning-finance/", kind: "research note" }
+  - { title: "Trust center — certifications, audits, evidence", url: "/compliance/", kind: "trust page" }
 lead: Why we're building a marketplace for AI financial models — and what's live, what's next, and what we're still arguing about.
 ---
 

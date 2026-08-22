@@ -2373,3 +2373,38 @@ p  { margin: 0 0 var(--space-4); }
 }
 .tf-panel__flaghead { margin: 0 0 4px; font-weight: 700; font-size: 0.8125rem; color: var(--color-loss); }
 .tf-panel__flag p:last-child { margin: 0; font-size: 0.875rem; line-height: 1.6; }
+
+/* Task 105 — research type indicators + compliance cross-link callout */
+.badge--readtime { background: var(--color-surface-2); color: var(--color-muted); margin-left: 6px; }
+.post-card--methodology { border-left: 3px solid var(--color-brand); }
+.trust-callout {
+  margin-top: var(--space-4); padding: var(--space-4);
+  background: rgba(109, 91, 255, 0.06); border: 1px solid rgba(109, 91, 255, 0.25);
+  border-radius: var(--radius-sm);
+}
+.trust-callout__head { margin: 0 0 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-brand-strong); }
+.trust-callout p:last-child { margin: 0; font-size: 0.9375rem; line-height: 1.6; }
+
+/* Task 106 — post author card + cited-in strip */
+.author-card {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  margin: var(--space-4) 0 var(--space-5); padding: var(--space-4);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.author-card__avatar { width: 48px; height: 48px; border-radius: 50%; flex: 0 0 auto; }
+.author-card__avatar--initials {
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(109, 91, 255, 0.12); color: var(--color-brand-strong);
+  font-weight: 700; font-size: 1rem;
+}
+.author-card__name { margin: 0; font-weight: 700; font-size: 0.9375rem; }
+.author-card__title { font-weight: 400; color: var(--color-muted); }
+.author-card__cred { margin: 2px 0 0; font-size: 0.8125rem; color: var(--color-muted); line-height: 1.5; }
+.post-cites {
+  margin-top: var(--space-6); padding: var(--space-4);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.post-cites__head { margin: 0 0 var(--space-2); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-muted); }
+.post-cites__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.9375rem; }

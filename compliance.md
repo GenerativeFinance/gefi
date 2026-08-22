@@ -109,6 +109,13 @@ announced on the [blog](/blog/) at least 30 days before they take effect.
           <button type="submit" class="btn btn-primary">Verify</button>
         </form>
         <div class="verify-result" data-verify-result hidden></div>
+        <aside class="trust-callout">
+          <p class="trust-callout__head">How it works</p>
+          <p>The full design — why a CSV is not an audit trail, the hash-chain
+          and daily Merkle anchor, and how offline verification stays honest —
+          is written up as a methodology piece:
+          <a href="/research/audit-log-design/">How the GeFi audit log works</a>.</p>
+        </aside>
       </div>
 </section>
 

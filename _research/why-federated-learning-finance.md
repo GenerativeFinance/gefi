@@ -1,5 +1,6 @@
 ---
 title: Why federated learning is the right shape for financial AI
+type: Note
 topic: Federated learning
 date: 2026-04-22
 slug: why-federated-learning-finance

@@ -1,0 +1,13 @@
+# Author identities for blog bylines (Task 106). Keyed by the exact string
+# a post's `author:` front matter uses. `initials` render as the avatar —
+# swap for a photo path in `photo:` when headshots exist.
+"The GeFi team":
+  name: "The GeFi team"
+  title: "Platform team"
+  credential: "The engineers and counsel building the marketplace, the audit log, and the federations."
+  initials: "GF"
+"Guillaume Lauzier":
+  name: "Guillaume Lauzier"
+  title: "Founder"
+  credential: "Building GeFi; previously zero-knowledge ML research (ZK Montreal) and generative-art infrastructure."
+  initials: "GL"
