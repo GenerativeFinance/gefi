@@ -34,27 +34,18 @@
     }
     var st = load();
 
+    /* Drift/trade math lives in GeFi.rebalanceMath — the same module the
+     * mock server loads, so a given slider position proposes identical
+     * trades whether the API answers or we are offline. */
+    var M = GeFi.rebalanceMath;
     function totalTarget() {
-      return Object.keys(st.targets).reduce(function (n, k) { return n + st.targets[k]; }, 0);
+      return M.totalTarget(st.targets);
     }
     function trades() {
-      var out = [];
-      Object.keys(st.targets).forEach(function (k) {
-        var driftPct = st.targets[k] - st.current[k];
-        if (Math.abs(driftPct) >= 1) {
-          out.push({
-            side: driftPct > 0 ? "Buy" : "Sell",
-            asset: k,
-            value: Math.round(Math.abs(driftPct) / 100 * D.portfolio.value / 500) * 500
-          });
-        }
-      });
-      return out.filter(function (t) { return t.value > 0; });
+      return M.trades(st.targets, st.current, D.portfolio.value);
     }
     function maxDrift() {
-      return Math.max.apply(null, Object.keys(st.targets).map(function (k) {
-        return Math.abs(st.targets[k] - st.current[k]);
-      }));
+      return M.maxDrift(st.targets, st.current);
     }
 
     /* ---- KPIs ---- */
@@ -229,7 +220,10 @@
         return;
       }
       if (e.target.closest("[data-rb-modal-confirm]")) {
-        Object.keys(st.targets).forEach(function (k) { st.current[k] = st.targets[k]; });
+        /* Optimistic: apply locally at once, then confirm with the API.
+         * Offline the resolver answers locally, so the UI is identical. */
+        var executed = trades();
+        st.current = M.applied(st.targets);
         st.lastRebalance = "just now";
         save();
         modal.hidden = true;
@@ -238,6 +232,14 @@
         renderKpis();
         renderActions();
         renderTotals();
+        GeFi.api.post("/rebalance/executions", { targets: st.targets, trades: executed }).then(
+          function (r) {
+            document.querySelector("[data-rb-root]").setAttribute("data-rb-executed", r && r.id ? r.id : "local");
+          },
+          function () {
+            document.querySelector("[data-rb-root]").setAttribute("data-rb-executed", "local");
+          }
+        );
       }
     });
 

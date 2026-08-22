@@ -330,6 +330,15 @@
     api.register("/watchlist/{symbol}", function () {
       return { ok: true };
     });
+    /* Rebalance (task 305): offline the page has already applied the
+     * change optimistically using the SAME shared math the server runs,
+     * so the resolver just acknowledges. */
+    api.register("/rebalance/executions", function () {
+      return { id: "local", executed_at: "2026-08-22" };
+    });
+    api.register("/rebalance/proposals", function () {
+      return { trades: [], trade_count: 0, total_value: 0 };
+    });
     api.register("/datasets", function () {
       return D.datasets;
     });

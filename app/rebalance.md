@@ -8,8 +8,10 @@ active_tab: Rebalancing
 permalink: /app/rebalance/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/rebalance.js
+app_scripts: [/assets/js/app/rebalance-math.js, /assets/js/app/rebalance.js]
 ---
+
+<div data-rb-root>
 
 <div class="app-kpis" data-rb-kpis></div>
 
@@ -91,4 +93,6 @@ app_script: /assets/js/app/rebalance.js
       <button type="button" class="app-btn app-btn--primary" data-rb-modal-confirm>Confirm</button>
     </div>
   </div>
+</div>
+
 </div>

@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -82,8 +82,9 @@ const GeFi = loadGeFi();
 const D = GeFi.DEMO;
 const MODELS = GeFi.MODELS;
 const seed = GeFi.seed;
-if (!D || !MODELS || !seed) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed");
+const RB = GeFi.rebalanceMath; /* shared with the client page (task 305) */
+if (!D || !MODELS || !seed || !RB) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath");
   process.exit(1);
 }
 
@@ -144,7 +145,13 @@ function freshState() {
     orders: D.orders.map((o) => ({ ...o })),
     proposals: [],
     executions: [],
-    rebalanceSettings: { band_pct: 5, cadence: "monthly", auto_execute: false },
+    /* Rebalance state (task 305): targets come from the canonical
+     * allocation; current weights start slightly drifted, exactly as the
+     * client page's defaults do, so both sides start from one story. */
+    rebalanceTargets: D.allocation.reduce((acc, a) => { acc[a.name] = a.pct; return acc; }, {}),
+    rebalanceCurrent: { Stocks: 48, Bonds: 22, "Real Estate": 15, Commodities: 10, Cash: 5 },
+    lastRebalance: "15 days ago",
+    rebalanceSettings: { threshold_pct: 5, auto: false, frequency: "Quarterly", account_costs: true, tax_aware: true },
     ratings: {},
     subscriptions: [{ id: "sub-1", slug: MODELS[1].slug, since: "2026-06-01" }],
     preferences: { wings: [], risk: "medium" },
@@ -354,18 +361,49 @@ on("DELETE /watchlist/{symbol}", (p) => {
   return before === S.watchlist.length ? notFound : { ok: true };
 });
 
-/* ---- rebalance ---- */
-const drift = () =>
-  D.allocation.map((a, i) => ({ name: a.name, current_pct: a.pct, target_pct: a.pct + [1.5, -1.5, 0.5, -0.5, 0][i % 5], drift_pct: -[1.5, -1.5, 0.5, -0.5, 0][i % 5] }));
-on("GET /rebalance/drift", () => ({ items: drift(), next_cursor: null }));
-on("POST /rebalance/proposals", () => {
-  const pr = { id: "prop-" + (S.proposals.length + 1), created: "2026-08-22", trades: drift().filter((d) => d.drift_pct !== 0).map((d) => ({ asset: d.name, side: d.drift_pct > 0 ? "sell" : "buy", pct: Math.abs(d.drift_pct) })) };
+/* ---- rebalance (task 305) — all math via the SHARED module ---- */
+on("GET /rebalance/drift", () => ({
+  items: RB.driftRows(S.rebalanceTargets, S.rebalanceCurrent),
+  next_cursor: null,
+  targets: S.rebalanceTargets,
+  current: S.rebalanceCurrent,
+  max_drift_pct: +RB.maxDrift(S.rebalanceTargets, S.rebalanceCurrent).toFixed(1),
+  settings: S.rebalanceSettings,
+  last_rebalance: S.lastRebalance,
+}));
+on("PUT /rebalance/targets", (p, q, b) => {
+  if (!b || typeof b !== "object") return { __status: 422, code: "validation_failed", message: "Body must be a weights object." };
+  const bad = Object.keys(b).filter((k) => typeof b[k] !== "number" || b[k] < 0);
+  if (bad.length) return { __status: 422, code: "validation_failed", message: "Weights must be non-negative numbers.", details: bad.map((f) => ({ field: f, issue: "invalid" })) };
+  S.rebalanceTargets = Object.assign({}, b);
+  return S.rebalanceTargets;
+});
+on("POST /rebalance/proposals", (p, q, b) => {
+  const targets = (b && b.targets) || S.rebalanceTargets;
+  const pr = RB.proposal(targets, S.rebalanceCurrent, D.portfolio.value);
+  pr.id = "prop-" + (S.proposals.length + 1);
+  pr.created = "2026-08-22";
   S.proposals.push(pr);
   return { __status: 201, ...pr };
 });
 on("GET /rebalance/proposals", (p, q) => page(S.proposals, q));
 on("POST /rebalance/executions", (p, q, b) => {
-  const ex = { id: "exec-" + (S.executions.length + 1), proposal_id: b && b.proposal_id, status: "executed" };
+  const targets = (b && b.targets) || S.rebalanceTargets;
+  const total = RB.totalTarget(targets);
+  if (Math.round(total) !== 100) {
+    return { __status: 422, code: "validation_failed", message: "Targets must sum to 100% (got " + total + "%).", details: [{ field: "targets", issue: "sum != 100" }] };
+  }
+  const proposed = RB.proposal(targets, S.rebalanceCurrent, D.portfolio.value);
+  S.rebalanceTargets = Object.assign({}, targets);
+  S.rebalanceCurrent = RB.applied(targets);
+  S.lastRebalance = "just now";
+  const ex = {
+    id: "exec-" + (S.executions.length + 1),
+    executed_at: "2026-08-22",
+    trades: proposed.trades,
+    total_value: proposed.total_value,
+    resulting_weights: S.rebalanceCurrent,
+  };
   S.executions.push(ex);
   return { __status: 201, ...ex };
 });
