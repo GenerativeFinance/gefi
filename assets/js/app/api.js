@@ -420,6 +420,21 @@
     api.register("/sentiment", function () {
       return D.reports.market;
     });
+    api.register("/compliance/evaluations", function () {
+      var rp = GeFi.reports;
+      var out = { items: D.complianceReports, next_cursor: null };
+      if (rp) out.totals = rp.complianceTotals(D.complianceReports);
+      return out;
+    });
+    api.register("/risk/aggregate", function () {
+      var rp = GeFi.reports;
+      var out = { items: D.riskReports, next_cursor: null };
+      if (rp) out.totals = rp.riskTotals(D.riskReports);
+      return out;
+    });
+    api.register("/reports/custom-definitions", function () {
+      return [];
+    });
     api.register("/learning/catalog", function () {
       return D.learning.items;
     });

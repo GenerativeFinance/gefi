@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js", "assets/js/app/reports-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -92,8 +92,9 @@ const CO = GeFi.collab; /* shared with the collaboration pages (task 311) */
 const DP = GeFi.dataPlatform; /* shared with the provider pages (task 312) */
 const FU = GeFi.funding; /* shared with the funding pages (task 313) */
 const LE = GeFi.learning; /* shared with the learning page (task 314) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning");
+const RP = GeFi.reports; /* shared with the report pages (task 315) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE || !RP) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning/reports");
   process.exit(1);
 }
 
@@ -292,7 +293,9 @@ function freshState() {
       .filter((i) => i.progress >= 100)
       .map((i) => GeFi.learning.certificateFor(i, "2026-07-15")),
     reports: [],
+    nextReportId: 1,
     customDefs: [],
+    nextDefinitionId: 1,
     issuesResolved: [],
     regThreadExtra: {},
     regAudits: [],
@@ -1632,18 +1635,107 @@ function issueCertificate(item) {
   return cert;
 }
 
-/* ---- reports ---- */
-on("GET /reports", (p, q) => page(D.reports.categories.flatMap((c) => c.rows.map((r) => ({ category: c.key, ...r }))).concat(S.reports), q));
+/* ---- reports & compliance (task 315) ----
+ * Naming, validation and the compliance/risk roll-ups all come from the
+ * shared engine. Each register returns its totals ALONGSIDE the rows they
+ * were counted from, so a client can check the headline against the table. */
+
+const CATEGORY_NAME = (key) => {
+  const c = D.reports.categories.find((x) => x.key === key);
+  return c ? c.name : key;
+};
+
+/* Seeded catalog rows get stable ids so they can be fetched and opened. */
+function catalogReports() {
+  const out = [];
+  D.reports.categories.forEach((c) => {
+    c.rows.forEach((r, i) => {
+      out.push({ id: "rp-" + c.key + "-" + (i + 1), cat: c.key, ...r, period: "Monthly", format: "PDF" });
+    });
+  });
+  return out;
+}
+const allReports = () => catalogReports().concat(S.reports);
+
+on("GET /reports", (p, q) => {
+  let rows = allReports();
+  if (q.category) rows = rows.filter((r) => r.cat === q.category);
+  if (q.status) rows = rows.filter((r) => r.status === q.status);
+  const out = page(rows, q);
+  out.categories = D.reports.categories.map((c) => ({
+    key: c.key,
+    name: c.name,
+    accent: c.accent,
+    count: allReports().filter((r) => r.cat === c.key).length,
+  }));
+  return out;
+});
 on("POST /reports/generate", (p, q, b) => {
-  const r = { id: "rep-" + (S.reports.length + 1), category: (b && b.category) || "performance", status: "pending", date: "2026-08-22" };
+  const spec = b || {};
+  const why = RP.validateGenerate(spec, D.reports.categories);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const period = spec.period || "Monthly";
+  const r = {
+    id: "rp-new-" + S.nextReportId++,
+    cat: spec.category,
+    name: RP.reportName(CATEGORY_NAME(spec.category), period),
+    desc: "Queued from the report builder — " + period.toLowerCase() + " period",
+    status: "pending",
+    period,
+    format: spec.format || "PDF",
+    date: "2026-08-22",
+  };
   S.reports.push(r);
-  setTimeout(() => (r.status = "generated"), 1500);
+  /* Generation takes a moment; until it finishes the report is `pending`
+   * and no client may present it as available. */
+  setTimeout(() => {
+    if (r.status === "pending") r.status = "generated";
+  }, 1500);
   return { __status: 202, ...r };
 });
-on("GET /reports/schedules", (p, q) => page(D.reports.categories.flatMap((c) => c.rows.filter((r) => r.status === "pending").map((r) => ({ category: c.key, name: r.name, next: r.date }))), q));
+on("GET /reports/{id}", (p) => allReports().find((r) => r.id === p.id) || notFound);
+on("GET /reports/{id}/content", (p) => {
+  const r = allReports().find((x) => x.id === p.id);
+  if (!r) return notFound;
+  if (r.status !== "generated") {
+    return { __status: 409, code: "conflict", message: r.name + " has not generated yet" };
+  }
+  return { id: r.id, name: r.name, text: RP.narrative(r), sample: true };
+});
+on("GET /reports/schedules", (p, q) =>
+  page(
+    allReports()
+      .filter((r) => r.status === "pending")
+      .map((r) => ({ id: "sch-" + r.id, name: r.name, cadence: r.period || "Monthly", next: r.date, format: r.format || "PDF" })),
+    q
+  )
+);
+on("GET /reports/templates", (p, q) =>
+  page(
+    [
+      { id: "tpl-performance", name: "Performance summary", fields: ["Returns", "Attribution", "Fees"] },
+      { id: "tpl-risk", name: "Risk pack", fields: ["VaR", "Drawdown", "Exposure"] },
+      { id: "tpl-regulatory", name: "Regulatory filing", fields: ["Holdings", "Transactions", "Counterparties"] },
+    ],
+    q
+  )
+);
 on("GET /reports/custom-definitions", (p, q) => page(S.customDefs, q));
 on("POST /reports/custom-definitions", (p, q, b) => {
-  const d = { id: "cd-" + (S.customDefs.length + 1), ...(b || {}) };
+  const why = RP.validateDefinition(b || {}, S.customDefs);
+  if (why) {
+    return why.indexOf("already exists") > -1
+      ? { __status: 409, code: "conflict", message: why }
+      : { __status: 422, code: "validation_failed", message: why };
+  }
+  const d = {
+    id: "cd-" + S.nextDefinitionId++,
+    name: String(b.name).trim(),
+    fields: b.fields,
+    template: b.template || null,
+    schedule: b.schedule || null,
+    created: "2026-08-22",
+  };
   S.customDefs.push(d);
   return { __status: 201, ...d };
 });
@@ -1658,8 +1750,24 @@ on("DELETE /reports/custom-definitions/{id}", (p) => {
   S.customDefs = S.customDefs.filter((x) => x.id !== p.id);
   return before === S.customDefs.length ? notFound : { ok: true };
 });
-on("GET /compliance/evaluations", (p, q) => page(D.complianceReports, q));
-on("GET /risk/aggregate", () => ({ var95_total: D.riskReports.reduce((n, r) => n + r.var95, 0), reports: D.riskReports.length, by_severity: { Critical: 1, High: 2, Medium: 2, Low: 1 } }));
+
+on("GET /compliance/evaluations", (p, q) => {
+  let rows = D.complianceReports;
+  const totals = RP.complianceTotals(rows);
+  if (q.status) rows = rows.filter((r) => r.status === q.status);
+  const out = page(rows, q);
+  /* Totals describe the WHOLE register, not the filtered slice. */
+  out.totals = totals;
+  return out;
+});
+on("GET /risk/aggregate", (p, q) => {
+  let rows = D.riskReports;
+  const totals = RP.riskTotals(rows);
+  if (q.severity) rows = rows.filter((r) => r.severity === q.severity);
+  const out = page(rows, q);
+  out.totals = totals;
+  return out;
+});
 
 /* ---- regulator ---- */
 const R = D.regulator;
@@ -1812,6 +1920,25 @@ const SSE = {
         sseSend(res, "quote.tick", S.tick, { symbol: sym, price: +px.toFixed(2), tick: S.tick });
       });
     }, 1000);
+  },
+  "GET /reports/{id}/events": (req, res, p) => {
+    /* Emits once the report has actually generated, so a client that
+     * follows the stream cannot show it as ready early. */
+    let waited = 0;
+    return setInterval(() => {
+      waited += 1;
+      const r = allReports().find((x) => x.id === p.id);
+      if (!r) {
+        res.end();
+        return;
+      }
+      if (r.status === "generated") {
+        sseSend(res, "report.generated", waited, r);
+        res.end();
+        return;
+      }
+      if (waited > 30) res.end();
+    }, 400);
   },
   "GET /backtests/{id}/events": (req, res, p) => {
     /* Steps come from the shared engine keyed on the run id, so a client

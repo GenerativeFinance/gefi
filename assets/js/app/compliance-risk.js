@@ -49,6 +49,7 @@
       l.textContent = k.label;
       var v = document.createElement("p");
       v.className = "app-kpi__value";
+      if (k.key) v.setAttribute("data-cr-kpi", k.key);
       if (k.color) v.style.color = k.color;
       v.textContent = k.value;
       var s = document.createElement("p");
@@ -89,6 +90,7 @@
     /* ================= Compliance page ================= */
     var crGrid = document.querySelector("[data-cr-grid]");
     if (crGrid) {
+      var RP = GeFi.reports;
       var crRows = D.complianceReports;
       var crState = { q: "", type: "", status: "", due: "" };
       var crToast = document.querySelector("[data-cr-toast]");
@@ -96,17 +98,20 @@
       trapFocus(crModal);
 
       var kpiEl = document.querySelector("[data-cr-kpis]");
-      var compliant = crRows.filter(function (r) { return r.status === "Compliant"; }).length;
-      var warnings = crRows.filter(function (r) { return r.status === "Warning"; }).length;
-      var violations = crRows.filter(function (r) { return r.status === "Violation"; }).length;
-      var dueSoon = crRows.filter(function (r) { return daysUntil(r.next) <= 7; }).length;
+      /* Counted by the shared engine, which is also what the register
+       * endpoint returns — so the KPI strip and the service agree. */
+      var crTotals = RP.complianceTotals(crRows);
+      var compliant = crTotals.compliant;
+      var warnings = crTotals.warnings;
+      var violations = crTotals.violations;
+      var dueSoon = crTotals.dueSoon;
       [
-        { label: "Total Reports", value: String(crRows.length), sub: "across regimes" },
-        { label: "Compliant", value: String(compliant), sub: "no open findings blockers", color: "var(--app-green)" },
-        { label: "Warnings", value: String(warnings), sub: "needs review", color: "var(--app-amber)" },
-        { label: "Violations", value: String(violations), sub: "remediation running", color: "var(--app-red)" },
-        { label: "Compliance Rate", value: Math.round((compliant / crRows.length) * 100) + "%", sub: compliant + " of " + crRows.length + " compliant", color: "var(--app-brand)" },
-        { label: "Due This Week", value: String(dueSoon), sub: "reviews due ≤ 7 days", color: "var(--app-orange)" }
+        { key: "cr-total", label: "Total Reports", value: String(crTotals.total), sub: "across regimes" },
+        { key: "cr-compliant", label: "Compliant", value: String(compliant), sub: "no open findings blockers", color: "var(--app-green)" },
+        { key: "cr-warnings", label: "Warnings", value: String(warnings), sub: "needs review", color: "var(--app-amber)" },
+        { key: "cr-violations", label: "Violations", value: String(violations), sub: "remediation running", color: "var(--app-red)" },
+        { key: "cr-rate", label: "Compliance Rate", value: crTotals.ratePct + "%", sub: compliant + " of " + crTotals.total + " compliant", color: "var(--app-brand)" },
+        { key: "cr-due", label: "Due This Week", value: String(dueSoon), sub: "reviews due \u2264 7 days", color: "var(--app-orange)" }
       ].forEach(function (k) { kpiCard(kpiEl, k); });
 
       var typeSel = document.querySelector("[data-cr-type]");
@@ -267,6 +272,7 @@
     /* ================= Risk page ================= */
     var rrGrid = document.querySelector("[data-rr-grid]");
     if (rrGrid) {
+      var RP = GeFi.reports;
       var rrRows = D.riskReports;
       var rrState = { q: "", type: "", sev: "" };
       var rrToast = document.querySelector("[data-rr-toast]");
@@ -277,16 +283,17 @@
       var sevCount = function (s) {
         return rrRows.filter(function (r) { return r.severity === s; }).length;
       };
-      var totalVar = rrRows.reduce(function (n, r) { return n + r.var95; }, 0);
+      var rrTotals = RP.riskTotals(rrRows);
+      var totalVar = rrTotals.var95;
 
       var rrKpis = document.querySelector("[data-rr-kpis]");
       [
-        { label: "Total Reports", value: String(rrRows.length), sub: "risk dimensions covered" },
-        { label: "Critical", value: String(sevCount("Critical")), sub: "act now", color: "var(--app-red)" },
-        { label: "High", value: String(sevCount("High")), sub: "mitigation planned", color: "var(--app-orange)" },
-        { label: "Medium", value: String(sevCount("Medium")), sub: "monitored", color: "var(--app-amber)" },
-        { label: "Low", value: String(sevCount("Low")), sub: "within appetite", color: "var(--app-green)" },
-        { label: "Total VaR (95%)", value: fmt.moneyFull(totalVar), sub: "sum across reports, 1-day", color: "var(--app-brand)" }
+        { key: "rr-total", label: "Total Reports", value: String(rrTotals.total), sub: "risk dimensions covered" },
+        { key: "rr-critical", label: "Critical", value: String(rrTotals.critical), sub: "act now", color: "var(--app-red)" },
+        { key: "rr-high", label: "High", value: String(rrTotals.high), sub: "mitigation planned", color: "var(--app-orange)" },
+        { key: "rr-medium", label: "Medium", value: String(rrTotals.medium), sub: "monitored", color: "var(--app-amber)" },
+        { key: "rr-low", label: "Low", value: String(rrTotals.low), sub: "within appetite", color: "var(--app-green)" },
+        { key: "rr-var", label: "Total VaR (95%)", value: fmt.moneyFull(totalVar), sub: "sum across reports, 1-day", color: "var(--app-brand)" }
       ].forEach(function (k) { kpiCard(rrKpis, k); });
 
       var typeSel2 = document.querySelector("[data-rr-type]");

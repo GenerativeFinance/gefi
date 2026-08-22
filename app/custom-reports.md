@@ -9,8 +9,12 @@ permalink: /app/custom-reports/
 sitemap: false
 robots: noindex
 primary_action: { label: "Export All", url: "/app/custom-reports/#export" }
-app_script: /assets/js/app/custom-reports.js
+app_scripts:
+  - /assets/js/app/reports-math.js
+  - /assets/js/app/custom-reports.js
 ---
+
+<div data-crb-root>
 
 <div data-segment-scope>
   <div class="app-segments" data-app-segments aria-label="Custom report views">
@@ -105,4 +109,6 @@ app_script: /assets/js/app/custom-reports.js
       </div>
     </form>
   </div>
+</div>
+
 </div>
