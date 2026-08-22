@@ -1516,6 +1516,10 @@ p  { margin: 0 0 var(--space-4); }
 .gefi-chart__area { fill: rgba(109, 91, 255, 0.12); stroke: none; }
 .gefi-chart__series--2.gefi-chart__line { stroke: var(--color-accent); }
 .gefi-chart__series--2.gefi-chart__area { fill: rgba(34, 211, 238, 0.12); }
+.gefi-chart__series--3.gefi-chart__line { stroke: var(--color-profit); }
+.gefi-chart__series--4.gefi-chart__line { stroke: var(--color-warn); }
+.gefi-chart__band { fill: rgba(22, 163, 74, 0.08); }
+.gefi-chart__bandlabel { font-size: 10px; fill: var(--color-profit); font-family: var(--font-mono); }
 .gefi-chart__bar { fill: var(--color-brand); }
 .gefi-chart__bar--neg { fill: var(--color-loss); }
 .gefi-chart__spark { stroke: var(--color-brand); stroke-width: 1.5; }
@@ -2116,3 +2120,54 @@ p  { margin: 0 0 var(--space-4); }
 .dash-sev--critical { color: var(--color-loss); }
 .dash-sev--warn { color: #92400E; }
 .dash-sev--info { color: #0E7490; }
+
+/* ------------------------------------------------------------------ */
+/* Task 112 — dashboard Analytics / Compliance / Federation tabs      */
+
+.ana-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4); }
+.ana-card {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: var(--space-4);
+}
+.ana-card .dash-panel__subtitle { margin-top: 0; }
+.ana-legend { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); list-style: none; margin: var(--space-3) 0 0; padding: 0; }
+.ana-legend li { display: flex; align-items: center; gap: 6px; font-size: 0.8125rem; color: var(--color-muted); }
+.ana-dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+.ana-dot--1 { background: var(--color-brand); }
+.ana-dot--2 { background: var(--color-accent); }
+.ana-dot--3 { background: var(--color-profit); }
+.ana-dot--4 { background: var(--color-warn); }
+@media (max-width: 860px) { .ana-grid { grid-template-columns: 1fr; } }
+
+.sla-chip {
+  display: inline-block; padding: 3px 10px; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 700; font-family: var(--font-mono); white-space: nowrap;
+}
+.sla-chip--ok      { background: rgba(22, 163, 74, 0.12);  color: var(--color-profit); }
+.sla-chip--soon    { background: rgba(245, 158, 11, 0.16); color: #92400E; }
+.sla-chip--overdue { background: rgba(220, 38, 38, 0.14);  color: var(--color-loss); }
+
+.fed-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
+.fed-dot--1 { background: var(--color-brand); }
+.fed-dot--2 { background: var(--color-accent); }
+.fed-dot--3 { background: var(--color-profit); }
+.fed-dot--4 { background: var(--color-warn); }
+.fed-dot--5 { background: #DB2777; }
+.fed-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 9px; margin: 2px 4px 2px 0;
+  border: 1px solid var(--color-border); border-radius: 999px;
+  font-size: 0.75rem; white-space: nowrap; background: var(--color-surface-2);
+}
+.fed-bars { display: flex; flex-direction: column; gap: var(--space-3); max-width: 640px; }
+.fed-bar { display: grid; grid-template-columns: 200px 1fr 48px; align-items: center; gap: var(--space-3); }
+.fed-bar__name { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; }
+.fed-bar__track { height: 14px; background: var(--color-surface-2); border-radius: 999px; overflow: hidden; }
+.fed-bar__fill { height: 100%; border-radius: 999px; }
+.fed-bar__fill--1 { background: var(--color-brand); }
+.fed-bar__fill--2 { background: var(--color-accent); }
+.fed-bar__fill--3 { background: var(--color-profit); }
+.fed-bar__fill--4 { background: var(--color-warn); }
+.fed-bar__fill--5 { background: #DB2777; }
+.fed-bar__val { font-family: var(--font-mono); font-size: 0.8125rem; text-align: right; }
+@media (max-width: 640px) { .fed-bar { grid-template-columns: 1fr; gap: 4px; } .fed-bar__val { text-align: left; } }

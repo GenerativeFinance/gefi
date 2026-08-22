@@ -127,17 +127,25 @@
     return svg;
   }
 
-  /* Map a numeric series into a plot box. */
-  function project(values, box) {
-    var min = Math.min.apply(null, values);
-    var max = Math.max.apply(null, values);
-    if (min === max) {
-      min -= 1;
-      max += 1;
+  /* Map a numeric series into a plot box. A fixed [min, max] domain skips
+   * the auto-scale padding — used by charts that need a truthful axis
+   * (e.g. drift on 0–1). */
+  function project(values, box, domain) {
+    var min, max;
+    if (domain && isNum(domain[0]) && isNum(domain[1]) && domain[1] > domain[0]) {
+      min = domain[0];
+      max = domain[1];
+    } else {
+      min = Math.min.apply(null, values);
+      max = Math.max.apply(null, values);
+      if (min === max) {
+        min -= 1;
+        max += 1;
+      }
+      var pad = (max - min) * 0.08;
+      min -= pad;
+      max += pad;
     }
-    var pad = (max - min) * 0.08;
-    min -= pad;
-    max += pad;
     var n = values.length;
     return values.map(function (v, i) {
       var x = box.x + (n === 1 ? box.w / 2 : (i / (n - 1)) * box.w);
@@ -219,9 +227,16 @@
     });
     if (!all.length) return svg;
 
-    /* Horizontal gridlines + y labels. */
-    var lo = Math.min.apply(null, all);
-    var hi = Math.max.apply(null, all);
+    /* Horizontal gridlines + y labels. o.domain fixes the axis instead of
+     * auto-scaling to the data. */
+    var lo, hi;
+    if (o.domain && isNum(o.domain[0]) && isNum(o.domain[1]) && o.domain[1] > o.domain[0]) {
+      lo = o.domain[0];
+      hi = o.domain[1];
+    } else {
+      lo = Math.min.apply(null, all);
+      hi = Math.max.apply(null, all);
+    }
     for (var g = 0; g <= 3; g++) {
       var gy = box.y + (g / 3) * box.h;
       svg.appendChild(svgEl("line", { x1: box.x, y1: gy, x2: box.x + box.w, y2: gy, class: "gefi-chart__grid" }));
@@ -230,8 +245,24 @@
       svg.appendChild(t);
     }
 
+    /* Shaded horizontal band ("acceptable" range) under the series.
+     * o.bandRange: { from, to, label } in domain units; needs o.domain. */
+    if (o.bandRange && o.domain && isNum(o.bandRange.from) && isNum(o.bandRange.to)) {
+      var bTop = box.y + box.h - ((o.bandRange.to - lo) / (hi - lo)) * box.h;
+      var bBot = box.y + box.h - ((o.bandRange.from - lo) / (hi - lo)) * box.h;
+      svg.appendChild(svgEl("rect", {
+        x: box.x, y: bTop.toFixed(1), width: box.w, height: (bBot - bTop).toFixed(1),
+        class: "gefi-chart__band"
+      }));
+      if (o.bandRange.label) {
+        var bl = svgEl("text", { x: box.x + box.w - 6, y: (bTop + 13).toFixed(1), class: "gefi-chart__bandlabel", "text-anchor": "end" });
+        bl.textContent = o.bandRange.label;
+        svg.appendChild(bl);
+      }
+    }
+
     series.forEach(function (s, i) {
-      var pts = project(s.values, box);
+      var pts = project(s.values, box, o.domain);
       if (s.kind === "area") {
         var floor = box.y + box.h;
         svg.appendChild(
@@ -606,6 +637,9 @@
     renderTab();
     var tab = currentTab();
     if (tab === "overview") renderOverview();
+    if (tab === "analytics") renderAnalytics();
+    if (tab === "compliance") renderCompliance();
+    if (tab === "federation") renderFederation();
     if (tab === "api-keys") renderApiKeys();
     if (tab === "alerts") renderAlerts(true);
     if (tab === "dev-models") renderDevModels();
@@ -643,6 +677,203 @@
     { severity: "info", model: "credit-oracle", text: "Model version 2026.08.2 cleared EU conformity review and is serving EU traffic." },
     { severity: "info", model: "fraud-graph", text: "UAE edge latency back under 50ms after the region's cache rebuild." }
   ];
+
+  /* --------------- analytics / compliance / federation (Task 112) --------------- */
+
+  var DRIFT_MODELS = [
+    { slug: "credit-oracle", name: "Credit Oracle", base: 0.84, trend: -0.0002 },
+    { slug: "sentiment-from-filings", name: "Sentiment from Filings", base: 0.78, trend: -0.006 },
+    { slug: "esg-materiality-scorer", name: "ESG Materiality Scorer", base: 0.72, trend: 0.002 },
+    { slug: "breakout-signal-engine", name: "Breakout Signal Engine", base: 0.66, trend: -0.001 }
+  ];
+
+  function driftSeries(m) {
+    var rand = GeFi.seed.rng(GeFi.seed.hash("drift|" + m.slug));
+    var vals = [];
+    var v = m.base;
+    for (var i = 0; i < 30; i++) {
+      v = Math.min(1, Math.max(0, v + (rand() - 0.5) * 0.02 + m.trend));
+      vals.push(v);
+    }
+    return vals;
+  }
+
+  function renderAnalytics() {
+    var volEl = root.querySelector("[data-ana-volume]");
+    if (!volEl || volEl.childNodes.length) return; /* render once */
+    volEl.appendChild(GeFi.svg.line(
+      [{ name: "Calls", values: series("ana-calls", 30, 41200, 0.012), kind: "area" }],
+      { label: "Inference calls per day over the last 30 days", xLabels: ["30d ago", "today"] }
+    ));
+    root.querySelector("[data-ana-latency]").appendChild(GeFi.svg.line(
+      [
+        { name: "p99", values: series("ana-p99", 30, 128, -0.006) },
+        { name: "p50", values: series("ana-p50", 30, 46, -0.004), kind: "dashed" }
+      ],
+      { label: "p99 (solid) and p50 (dashed) latency in milliseconds over the last 30 days", xLabels: ["30d ago", "today"] }
+    ));
+    /* Drift is the chart the redesign called out: truthful 0-1 axis with a
+     * shaded acceptable band, never auto-scaled to flatter the data. */
+    root.querySelector("[data-ana-drift]").appendChild(GeFi.svg.line(
+      DRIFT_MODELS.map(function (m) { return { name: m.name, values: driftSeries(m) }; }),
+      {
+        label: "Live information ratio versus backtest baseline on a fixed 0 to 1 axis",
+        domain: [0, 1],
+        bandRange: { from: 0.6, to: 0.9, label: "acceptable" },
+        xLabels: ["30d ago", "today"]
+      }
+    ));
+    var leg = root.querySelector("[data-ana-drift-legend]");
+    DRIFT_MODELS.forEach(function (m, i) {
+      var li = document.createElement("li");
+      var dot = document.createElement("span");
+      dot.className = "ana-dot ana-dot--" + (i + 1);
+      dot.setAttribute("aria-hidden", "true");
+      li.appendChild(dot);
+      li.appendChild(document.createTextNode(m.name));
+      leg.appendChild(li);
+    });
+  }
+
+  /* Compliance cases. slaH: hours to SLA breach (negative = overdue).
+   * Seeded snapshot — countdowns are relative to the sample "now". */
+  var CASES = [
+    { id: "C-1039", model: "liquidity-stress-engine", jur: "UK", kind: "Covenant-floor breach investigation", opened: "Aug 10", slaH: -6 },
+    { id: "C-1040", model: "sentiment-from-filings", jur: "US", kind: "Drift disclosure to subscribers", opened: "Aug 11", slaH: 9 },
+    { id: "C-1042", model: "disclosure-drafter", jur: "US", kind: "Marketing-rule review of generated copy", opened: "Aug 15", slaH: 20 },
+    { id: "C-1041", model: "credit-oracle", jur: "EU", kind: "Conformity assessment — version 2026.08.2", opened: "Aug 12", slaH: 62 },
+    { id: "C-1043", model: "market-making-suite", jur: "EU", kind: "RTS 6 annual self-assessment", opened: "Aug 18", slaH: 140 }
+  ];
+
+  function slaChip(h) {
+    var cls, text;
+    if (h < 0) {
+      cls = "sla-chip--overdue";
+      text = "overdue " + Math.abs(h) + "h";
+    } else if (h <= 24) {
+      cls = "sla-chip--soon";
+      text = "due in " + h + "h";
+    } else {
+      cls = "sla-chip--ok";
+      text = "due in " + Math.floor(h / 24) + "d " + (h % 24) + "h";
+    }
+    var span = document.createElement("span");
+    span.className = "sla-chip " + cls;
+    span.textContent = text;
+    return span;
+  }
+
+  function renderCompliance() {
+    var body = root.querySelector("[data-comp-cases]");
+    if (!body || body.childNodes.length) return;
+    CASES.slice().sort(function (a, b) { return a.slaH - b.slaH; }).forEach(function (c) {
+      var tr = document.createElement("tr");
+      var td1 = document.createElement("td");
+      td1.className = "is-mono";
+      td1.textContent = c.id;
+      var td2 = document.createElement("td");
+      td2.textContent = c.model;
+      var td3 = document.createElement("td");
+      td3.className = "is-mono";
+      td3.textContent = c.jur;
+      var td4 = document.createElement("td");
+      td4.textContent = c.kind;
+      var td5 = document.createElement("td");
+      td5.textContent = "Opened " + c.opened;
+      var td6 = document.createElement("td");
+      td6.appendChild(slaChip(c.slaH));
+      [td1, td2, td3, td4, td5, td6].forEach(function (td) { tr.appendChild(td); });
+      body.appendChild(tr);
+    });
+  }
+
+  /* Federated participants share one color key between the rounds table and
+   * the Shapley bars, so contribution and round history read as one view. */
+  var FED_P = [
+    { key: "alpine", name: "Alpine Credit Union", shapley: 0.27 },
+    { key: "meridian", name: "Meridian Bank", shapley: 0.23 },
+    { key: "helvetia", name: "Helvetia Lending", shapley: 0.19 },
+    { key: "nordic", name: "Nordic SME Finance", shapley: 0.17 },
+    { key: "gulf", name: "Gulf Capital House", shapley: 0.14 }
+  ];
+
+  var FED_ROUNDS = [
+    { n: 148, when: "Today 06:00", parts: ["alpine", "meridian", "helvetia", "nordic", "gulf"], eps: "0.8", status: "aggregated" },
+    { n: 147, when: "Yesterday 06:00", parts: ["alpine", "meridian", "helvetia", "gulf"], eps: "0.8", status: "aggregated" },
+    { n: 146, when: "Aug 19 06:00", parts: ["alpine", "meridian", "nordic", "gulf"], eps: "0.8", status: "aggregated" },
+    { n: 145, when: "Aug 18 06:00", parts: ["alpine", "helvetia"], eps: "—", status: "quorum missed" },
+    { n: 144, when: "Aug 17 06:00", parts: ["alpine", "meridian", "helvetia", "nordic", "gulf"], eps: "0.8", status: "aggregated" }
+  ];
+
+  function fedDot(idx) {
+    var dot = document.createElement("span");
+    dot.className = "fed-dot fed-dot--" + (idx + 1);
+    dot.setAttribute("aria-hidden", "true");
+    return dot;
+  }
+
+  function fedIndex(key) {
+    for (var i = 0; i < FED_P.length; i++) {
+      if (FED_P[i].key === key) return i;
+    }
+    return 0;
+  }
+
+  function renderFederation() {
+    var body = root.querySelector("[data-fed-rounds]");
+    if (!body || body.childNodes.length) return;
+    FED_ROUNDS.forEach(function (r) {
+      var tr = document.createElement("tr");
+      var td1 = document.createElement("td");
+      td1.className = "is-mono";
+      td1.textContent = "#" + r.n;
+      var td2 = document.createElement("td");
+      td2.textContent = r.when;
+      var td3 = document.createElement("td");
+      r.parts.forEach(function (key) {
+        var i = fedIndex(key);
+        var chip = document.createElement("span");
+        chip.className = "fed-chip";
+        chip.appendChild(fedDot(i));
+        chip.appendChild(document.createTextNode(FED_P[i].name));
+        td3.appendChild(chip);
+      });
+      var td4 = document.createElement("td");
+      td4.className = "is-mono";
+      td4.textContent = r.eps;
+      var td5 = document.createElement("td");
+      var st = document.createElement("span");
+      st.className = "status-pill " + (r.status === "aggregated" ? "status-pill--ok" : "status-pill--progress");
+      st.textContent = r.status;
+      td5.appendChild(st);
+      [td1, td2, td3, td4, td5].forEach(function (td) { tr.appendChild(td); });
+      body.appendChild(tr);
+    });
+
+    var bars = root.querySelector("[data-fed-shapley]");
+    var max = FED_P[0].shapley;
+    FED_P.forEach(function (p, i) {
+      var row = document.createElement("div");
+      row.className = "fed-bar";
+      var name = document.createElement("span");
+      name.className = "fed-bar__name";
+      name.appendChild(fedDot(i));
+      name.appendChild(document.createTextNode(p.name));
+      var track = document.createElement("div");
+      track.className = "fed-bar__track";
+      var fill = document.createElement("div");
+      fill.className = "fed-bar__fill fed-bar__fill--" + (i + 1);
+      fill.style.width = ((p.shapley / max) * 100).toFixed(1) + "%";
+      track.appendChild(fill);
+      var val = document.createElement("span");
+      val.className = "fed-bar__val";
+      val.textContent = (p.shapley * 100).toFixed(0) + "%";
+      row.appendChild(name);
+      row.appendChild(track);
+      row.appendChild(val);
+      bars.appendChild(row);
+    });
+  }
 
   /* ------------------------------------------- api keys (Task 116) */
 

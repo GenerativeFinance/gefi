@@ -14,17 +14,47 @@ sitemap: false
 
 <section class="dash-panel" data-dash-panel="analytics" hidden>
   <h1 class="dash-panel__title">Analytics</h1>
-  <p class="dash-empty">Call volume, latency, and drift charts land with the Analytics redesign task. Nothing is hidden here — this tab has not been built yet.</p>
+  <div class="ana-grid">
+    <div class="ana-card">
+      <h2 class="dash-panel__subtitle">Inference calls (30d)</h2>
+      <div data-ana-volume></div>
+    </div>
+    <div class="ana-card">
+      <h2 class="dash-panel__subtitle">Latency — p99 solid, p50 dashed (ms)</h2>
+      <div data-ana-latency></div>
+    </div>
+  </div>
+  <div class="ana-card ana-card--wide">
+    <h2 class="dash-panel__subtitle">Model drift — live IR vs backtest</h2>
+    <p class="muted small">Fixed 0–1 axis; the shaded band is the acceptable range. A line leaving the band is a drift case, not a rescaled axis.</p>
+    <div data-ana-drift></div>
+    <ul class="ana-legend" data-ana-drift-legend role="list"></ul>
+  </div>
 </section>
 
 <section class="dash-panel" data-dash-panel="compliance" hidden>
   <h1 class="dash-panel__title">Compliance</h1>
-  <p class="dash-empty">The case list with SLA urgency lands with the Compliance redesign task.</p>
+  <p class="muted small">Open cases sorted by SLA urgency. Countdowns are relative to the sample snapshot.</p>
+  <table class="dash-table" data-comp-table>
+    <thead>
+      <tr><th>Case</th><th>Model</th><th>Jur.</th><th>Type</th><th>Opened</th><th>SLA</th></tr>
+    </thead>
+    <tbody data-comp-cases></tbody>
+  </table>
 </section>
 
 <section class="dash-panel" data-dash-panel="federation" hidden>
   <h1 class="dash-panel__title">Federation</h1>
-  <p class="dash-empty">Rounds and Shapley contribution views land with the Federation redesign task.</p>
+  <h2 class="dash-panel__subtitle">Training rounds</h2>
+  <table class="dash-table" data-fed-table>
+    <thead>
+      <tr><th>Round</th><th>When</th><th>Participants</th><th>&epsilon; spent</th><th>Status</th></tr>
+    </thead>
+    <tbody data-fed-rounds></tbody>
+  </table>
+  <h2 class="dash-panel__subtitle">Shapley contribution — last aggregated round</h2>
+  <p class="muted small">Colors match the participant chips in the rounds table above; the bar is each lender's marginal contribution to model quality.</p>
+  <div class="fed-bars" data-fed-shapley></div>
 </section>
 
 <section class="dash-panel" data-dash-panel="api-keys" hidden>
