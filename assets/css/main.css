@@ -2950,3 +2950,10 @@ p  { margin: 0 0 var(--space-4); }
 .app-gridcards--list { grid-template-columns: 1fr; }
 .app-gridcards--list .app-catcard { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 18px; }
 .app-gridcards--list .app-catcard .app-gridcard__footer { margin: 0 0 0 auto; }
+
+/* Task 215 — developers directory */
+.app-dv-head { display: flex; align-items: center; gap: 10px; }
+.app-dv-head .app-avatar { width: 40px; height: 40px; font-size: 13px; }
+.app-dv-head .app-chip { margin-left: auto; }
+a.app-chip { text-decoration: none; }
+a.app-chip:hover { border-color: var(--app-brand); color: var(--app-text); }

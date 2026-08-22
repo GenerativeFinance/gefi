@@ -73,7 +73,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 ### Marketplace & developer wing
 - [x] 213 — AI Model Marketplace (For You/Trending/Browse All) — done (cards from the REAL 92-model registry w/ risk/federated chips + sparklines + Details -> /models/<slug>/; For You empty state w/ exact reference copy -> preferences modal (wings + risk ceiling) -> filled recs, persisted; seeded Trending ranking; Browse All w/ live count, filters (17 high-risk), 12/page pagination, ?category= deep link from 214)
 - [x] 214 — Model Categories (wired to the real 92-model taxonomy) — done (28 family cards derived at BUILD TIME via the same group_by_exp as the catalogue; KPIs computed from the identical grouping so Total Models 92 = card sum 92; real subcategory chips + min entry price; Featured chip at >=8 models; name/models/price sort + grid/list toggle + empty state; Browse Models deep-links /models/?family= which now pre-selects the catalogue chip)
-- [ ] 215 — Developers directory
+- [x] 215 — Developers directory — done (6 seeded profiles; KPIs computed from the array and landing on the reference figures 6/5/60/$683,000; initials avatars, Verified chips on 5 of 6, specialties + top-model chips linking real /models/ pages; rating/models/revenue sort + specialty search + empty state; View Profile modal w/ kv rows, focus management, Escape close)
 - [ ] 216 — Developer Console: Overview + My Models
 - [ ] 217 — Developer Console: Training + Deployment + Monitoring
 - [ ] 218 — Developer Console: Collaboration + Bounty Board
