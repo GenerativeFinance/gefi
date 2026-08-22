@@ -2961,6 +2961,24 @@ a.app-chip:hover { border-color: var(--app-brand); color: var(--app-text); }
 /* Task 218 — block button */
 .app-btn--block { width: 100%; margin-top: 10px; }
 
+/* Task 226 — reports: dark category panels with colored left accents
+ * (the reference's pastel tints are illegible on the dark shell) */
+.app-rp-cat { border-left: 3px solid var(--app-border); }
+.app-rp-cat--brand { border-left-color: var(--app-brand); }
+.app-rp-cat--red { border-left-color: var(--app-red); }
+.app-rp-cat--amber { border-left-color: var(--app-amber); }
+.app-rp-cat--green { border-left-color: var(--app-green); }
+.app-rp-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 0; border-bottom: 1px solid var(--app-border);
+}
+.app-rp-row:last-child { border-bottom: 0; }
+.app-rp-row__main { flex: 1 1 200px; min-width: 0; }
+.app-rp-row__name { margin: 0; font-size: 13px; font-weight: 700; }
+.app-rp-row__desc { margin: 0; font-size: 12px; color: var(--app-muted); }
+.app-rp-row__date { font-size: 12px; color: var(--app-muted); }
+.app-btn--icon { padding: 7px 9px; line-height: 0; }
+
 /* Task 225 — bounty funding: difficulty chips (EXPERT red / ADVANCED
  * orange / INTERMEDIATE amber via existing class) + colored KPI sub-lines */
 .app-chip--expert { background: rgba(239, 68, 68, 0.14); color: var(--app-red); }
