@@ -52,7 +52,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 ## Checklist
 
 ### Foundation
-- [ ] 200 — App shell: layout, topbar, persona tab nav, trust strip, mega footer
+- [x] 200 — App shell: layout, topbar, persona tab nav, trust strip, mega footer — done (commit + canvas https://claude.ai/code/artifact/f97235b6-8185-4404-8ff7-edf6da15a752)
 - [ ] 201 — Canonical demo data module (`GeFi.DEMO`)
 - [ ] 202 — App component library: KPI card, segments, cards, chips, states
 
