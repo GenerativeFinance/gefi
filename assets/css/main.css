@@ -2961,6 +2961,21 @@ a.app-chip:hover { border-color: var(--app-brand); color: var(--app-text); }
 /* Task 218 — block button */
 .app-btn--block { width: 100%; margin-top: 10px; }
 
+/* Task 231 — zKML pipeline stepper + prover log */
+.app-zk-steps { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.app-zk-step {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--app-surface-2); border: 1px solid var(--app-border);
+  border-radius: 999px; padding: 7px 14px; font-size: 12px; font-weight: 600; color: var(--app-muted);
+}
+.app-zk-step--running { border-color: var(--app-brand); color: var(--app-text); }
+.app-zk-step--done { border-color: rgba(34, 197, 94, 0.5); color: var(--app-green); }
+.app-zk-step__arrow { color: var(--app-muted); font-size: 12px; }
+.app-zk-lane { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.app-zk-lane__name { flex: 0 0 84px; font-size: 12px; color: var(--app-muted); }
+.app-zk-log { height: 260px; overflow-y: auto; }
+.app-form input[type="range"] { accent-color: var(--app-brand); padding: 0; border: 0; background: transparent; }
+
 /* Task 230 — regulator sub-pages: communications split + accordion */
 .app-comm { display: grid; grid-template-columns: 280px 1fr; gap: 16px; align-items: start; }
 @media (max-width: 760px) { .app-comm { grid-template-columns: 1fr; } }
