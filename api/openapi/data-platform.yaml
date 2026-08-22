@@ -171,18 +171,99 @@ paths:
   /market-data/sources:
     get:
       operationId: get-market-data-sources
-      summary: "Market-data source catalog"
+      summary: "Market-data source catalog (task 308)"
       tags: [data-platform]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: Sources, with coverage, cadence and sample symbols.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            key: { type: string, example: us-stocks }
+                            name: { type: string }
+                            status: { type: string, enum: [Active, Limited, "Coming Soon"] }
+                            coverage: { type: number, description: "Percent of the listed universe; 0 when not yet available." }
+                            points: { type: string, example: "6.2M" }
+                            range: { type: string, example: "2020 — present" }
+                            freq: { type: string, example: "1 min" }
+                            symbols: { type: array, items: { type: string } }
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /market-data/sources/{key}/preview:
+    get:
+      operationId: get-market-data-sources-key-preview
+      summary: "Sample rows for a source (task 308)"
+      tags: [data-platform]
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Seeded preview rows — the same rows the page renders offline.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            t: { type: string, example: "t-3m" }
+                            sym: { type: string }
+                            px: { type: string }
+                            vol: { type: string }
+        '404':
+          description: No such source, or the source has no preview yet.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /market-data/sources/{key}/stream:
+    get:
+      operationId: get-market-data-sources-key-stream
+      summary: "Live preview ticks for a source (task 308)"
+      tags: [data-platform]
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: >
+            Event stream per the _envelope.yaml SSE convention:
+            `preview.row` frames, one sample row each.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            text/event-stream:
+              schema: { $ref: '_envelope.yaml#/components/schemas/SseEvent' }
         default:
           $ref: '_envelope.yaml#/components/responses/Error'

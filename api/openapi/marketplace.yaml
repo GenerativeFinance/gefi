@@ -1,12 +1,22 @@
 openapi: 3.0.3
 info:
   title: GeFi Marketplace, subscriptions & recommendations
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Model catalog + taxonomy, ratings, subscriptions with recurring billing, preferences-driven recommendations, trending ranking.
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Model catalog + taxonomy, ratings, subscriptions with a billing stub,
+    preferences-driven recommendations, trending ranking, developers
+    directory. Filled in by ledger task 306. The catalog derives from the
+    same GeFi.MODELS registry the site renders, so catalogue figures agree
+    everywhere. Envelope conventions come from _envelope.yaml.
+
+
+    BILLING GAP (documented, not implemented): subscriptions carry a plan,
+    a monthly fee and a next-renewal date, but no payment is taken and no
+    card is stored. A real billing provider (Stripe or similar) would own
+    payment methods, invoices, proration, dunning and tax; the endpoints
+    here model only the subscription lifecycle so the UI can be built
+    against a stable shape. /billing/invoices returns derived sample
+    statements, not receipts for money actually collected.
 servers:
   - url: /v1
     description: >
@@ -18,25 +28,123 @@ security:
 tags:
   - name: marketplace
     description: "Marketplace, subscriptions & recommendations"
+components:
+  schemas:
+    CatalogModel:
+      type: object
+      properties:
+        slug: { type: string, example: credit-oracle }
+        name: { type: string }
+        wing: { type: string, description: "Top-level family (the catalogue's taxonomy)." }
+        risk: { type: string, enum: [low, medium, high] }
+        federated: { type: boolean }
+        unit: { type: string, description: "Headline metric this model reports." }
+        monthly_fee: { type: number, description: "Subscription price in USD." }
+        series:
+          type: array
+          items: { type: number }
+          description: "Seeded 12-point trend for the card sparkline."
+    Category:
+      type: object
+      properties:
+        name: { type: string }
+        model_count: { type: integer }
+        entry_price: { type: number, description: "Cheapest monthly fee in the family." }
+        federated_count: { type: integer }
+    Developer:
+      type: object
+      properties:
+        name: { type: string }
+        handle: { type: string }
+        verified: { type: boolean }
+        rating: { type: number }
+        reviews: { type: integer }
+        location: { type: string }
+        models: { type: integer }
+        subscribers: { type: integer }
+        revenue: { type: number }
+        specialties: { type: array, items: { type: string } }
+        top: { type: array, items: { type: string } }
+        joined: { type: string }
+    RatingsSummary:
+      type: object
+      properties:
+        slug: { type: string }
+        average: { type: number }
+        count: { type: integer }
+        histogram:
+          type: object
+          description: "Star -> number of ratings."
+          additionalProperties: { type: integer }
+    Preferences:
+      type: object
+      properties:
+        wings: { type: array, items: { type: string }, description: "Families the user cares about; empty means no preference." }
+        risk: { type: string, enum: [low, medium, high], description: "Highest risk band to recommend." }
+    Subscription:
+      type: object
+      properties:
+        id: { type: string }
+        slug: { type: string }
+        plan: { type: string, enum: [standard, pro] }
+        monthly_fee: { type: number }
+        since: { type: string, format: date }
+        next_renewal: { type: string, format: date }
+        status: { type: string, enum: [active, cancelled] }
+    Invoice:
+      type: object
+      description: "Derived sample statement — no money is collected (see the billing gap above)."
+      properties:
+        id: { type: string }
+        subscription: { type: string }
+        amount_usd: { type: number }
+        period: { type: string, example: "2026-08" }
+        status: { type: string, enum: [sample] }
 paths:
   /models:
     get:
       operationId: get-models
-      summary: "Catalog with taxonomy filters (wing, risk, federated)"
+      summary: "Catalog with taxonomy filters, search, sort and pagination"
       tags: [marketplace]
       parameters:
+        - name: wing
+          in: query
+          description: "Filter by family."
+          schema: { type: string }
+        - name: risk
+          in: query
+          schema: { type: string, enum: [low, medium, high] }
+        - name: federated
+          in: query
+          schema: { type: string, enum: ["true", "false"] }
+        - name: q
+          in: query
+          description: "Free-text over name, slug and family."
+          schema: { type: string }
+        - name: max_price
+          in: query
+          description: "Only models at or below this monthly fee."
+          schema: { type: number }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [name, price, risk], default: name }
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Catalogue page, plus the unpaginated match count.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items: { type: array, items: { $ref: '#/components/schemas/CatalogModel' } }
+                      total: { type: integer, description: "Models matching the filters, before pagination." }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /models/{slug}:
     get:
       operationId: get-models-slug
@@ -46,41 +154,40 @@ paths:
         - name: slug
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Model.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/CatalogModel' } } }
+        '404':
+          description: No such model.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /models/{slug}/ratings:
     get:
       operationId: get-models-slug-ratings
-      summary: "Ratings"
+      summary: "Ratings summary and recent reviews"
       tags: [marketplace]
       parameters:
         - name: slug
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Ratings.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { summary: { $ref: '#/components/schemas/RatingsSummary' } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
     post:
       operationId: post-models-slug-ratings
       summary: "Rate a model"
@@ -89,19 +196,73 @@ paths:
         - name: slug
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stars]
+              properties:
+                stars: { type: integer, minimum: 1, maximum: 5 }
+                comment: { type: string }
+      responses:
+        '201':
+          description: Rating recorded.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+        '422':
+          description: Stars outside 1–5.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
+  /categories:
+    get:
+      operationId: get-categories
+      summary: "Families with real model counts and entry prices"
+      tags: [marketplace]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Categories; model_count across all items equals the catalogue size.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items: { type: array, items: { $ref: '#/components/schemas/Category' } }
+                      total_models: { type: integer, description: "Sum of model_count — the whole catalogue." }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
+  /developers:
+    get:
+      operationId: get-developers
+      summary: "Developers directory"
+      tags: [marketplace]
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: verified
+          in: query
+          schema: { type: string, enum: ["true", "false"] }
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Developers page.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/Developer' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /subscriptions:
     get:
       operationId: get-subscriptions
@@ -112,99 +273,119 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Subscriptions page.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/Subscription' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
     post:
       operationId: post-subscriptions
-      summary: "Subscribe (starts recurring billing)"
+      summary: "Subscribe to a model (billing stub — no payment is taken)"
       tags: [marketplace]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slug]
+              properties:
+                slug: { type: string }
+                plan: { type: string, enum: [standard, pro], default: standard }
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+        '201':
+          description: Subscribed.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Subscription' } } }
+        '404':
+          description: No such model.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        '409':
+          description: Already subscribed.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /subscriptions/{id}:
     delete:
       operationId: delete-subscriptions-id
-      summary: "Cancel a subscription"
+      summary: "Cancel a subscription (id or model slug)"
       tags: [marketplace]
       parameters:
         - name: id
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Cancelled.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+        '404':
+          description: No such subscription.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /billing/invoices:
     get:
       operationId: get-billing-invoices
-      summary: "Subscription invoices"
+      summary: "Subscription statements (sample only — see the billing gap)"
       tags: [marketplace]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Invoices page.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/Invoice' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /recommendations:
     get:
       operationId: get-recommendations
-      summary: "Personalized recommendations from stored preferences"
+      summary: "Recommendations derived from the stored preferences"
       tags: [marketplace]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Recommended models, best match first.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items: { type: array, items: { $ref: '#/components/schemas/CatalogModel' } }
+                      based_on: { $ref: '#/components/schemas/Preferences' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /trending:
     get:
       operationId: get-trending
-      summary: "Trending ranking"
+      summary: "Trending ranking (seeded, stable for a given catalogue)"
       tags: [marketplace]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Trending models.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/CatalogModel' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /preferences:
     get:
       operationId: get-preferences
@@ -212,25 +393,22 @@ paths:
       tags: [marketplace]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Preferences.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Preferences' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
     put:
       operationId: put-preferences
       summary: "Replace marketplace preferences"
       tags: [marketplace]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Preferences' }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Stored preferences.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Preferences' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }

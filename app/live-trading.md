@@ -8,8 +8,10 @@ active_tab: Live Trading
 permalink: /app/live-trading/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/live-trading.js
+app_scripts: [/assets/js/app/market.js, /assets/js/app/live-trading.js]
 ---
+
+<div data-lt-root>
 
 <p class="app-lt-pills">
   <span class="app-chip app-chip--active"><span class="fedp-live" style="width:8px;height:8px;box-shadow:none;"></span> Live</span>
@@ -109,3 +111,5 @@ app_script: /assets/js/app/live-trading.js
   <strong>Demo environment:</strong> orders fill against seeded sample data — <em>real money is not at risk in this demonstration</em>.
   <strong>Educational purpose:</strong> this interface exists to learn the workflow, not to trade.</p>
 </aside>
+
+</div>

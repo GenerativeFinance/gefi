@@ -2979,6 +2979,10 @@ a.app-chip:hover { border-color: var(--app-brand); color: var(--app-text); }
 .app-zk-log { height: 260px; overflow-y: auto; }
 .app-form input[type="range"] { accent-color: var(--app-brand); padding: 0; border: 0; background: transparent; }
 
+/* Task 309 — a controls row that sits above the thing it filters */
+.app-form--inline { flex-direction: row; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 16px; }
+.app-form--inline label { flex: 0 1 auto; }
+
 /* Task 230 — regulator sub-pages: communications split + accordion */
 .app-comm { display: grid; grid-template-columns: 280px 1fr; gap: 16px; align-items: start; }
 @media (max-width: 760px) { .app-comm { grid-template-columns: 1fr; } }

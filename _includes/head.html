@@ -17,3 +17,12 @@
 <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}?v={{ site.time | date: '%s' }}" />
 <meta name="generator" content="Jekyll {{ jekyll.version }}" />
 {% include config-script.html %}
+{%- comment -%}
+  Task 307: the deterministic sample scorer shared by the model demos and
+  the mock API server. Deferred and head-ordered, so it defines
+  GeFi.modelRuntime before the demo harness in the body runs. Only demo
+  pages need it (_layouts/model.html is deliberately untouched).
+{%- endcomment -%}
+{%- if page.demo -%}
+<script src="{{ '/assets/js/model-runtime.js' | relative_url }}" defer></script>
+{%- endif -%}

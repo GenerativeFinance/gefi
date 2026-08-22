@@ -10,32 +10,26 @@
     var fmt = GeFi.fmt;
     var app = GeFi.app;
 
-    var KEY = "gefi-app-dev-models";
-    function loadCustom() {
-      try {
-        var raw = sessionStorage.getItem(KEY);
-        if (raw) return JSON.parse(raw);
-      } catch (e) {}
-      return [];
-    }
-    function saveCustom(list) {
-      try {
-        sessionStorage.setItem(KEY, JSON.stringify(list));
-      } catch (e) {}
-    }
-    var custom = loadCustom();
+    /* Models come from the registry (hydrated live, seeded offline). A model
+     * created this session is appended locally and, when the API answered,
+     * carries the id the server gave it. */
+    var models = (D.devConsole.models || []).map(function (m) {
+      return Object.assign({}, m);
+    });
+    var createdHere = 0;
 
     function allModels() {
-      return D.devConsole.models.concat(custom);
+      return models;
     }
 
     /* KPI strip appears on every console page */
     var kpiEl = document.querySelector("[data-dc-kpis]");
-    if (kpiEl) {
+    function renderKpis() {
+      if (!kpiEl) return;
       var t = D.devConsole.totals;
       kpiEl.innerHTML = "";
       [
-        { label: "Total Models", value: String(t.models + custom.length), sub: custom.length ? custom.length + " created this session" : "across environments", tone: "" },
+        { label: "Total Models", value: String(t.models + createdHere), sub: createdHere ? createdHere + " created this session" : "across environments", tone: "" },
         { label: "Total Funding", value: fmt.moneyFull(t.funding), sub: "raised by your models", tone: "is-up" },
         { label: "Collaborators", value: String(t.collaborators), sub: "across projects", tone: "" },
         { label: "Deployments", value: String(t.deployments), sub: "production + staging", tone: "" }
@@ -57,11 +51,12 @@
         kpiEl.appendChild(card);
       });
     }
+    renderKpis();
 
     /* Overview: activity feed */
     var act = document.querySelector("[data-dc-activity]");
     if (act) {
-      D.devConsole.activityFeed.forEach(function (a) {
+      (D.devConsole.activityFeed || []).forEach(function (a) {
         var li = document.createElement("li");
         li.className = "app-activity__row";
         var main = document.createElement("div");
@@ -180,23 +175,53 @@
       modal.addEventListener("click", function (e) {
         if (e.target === modal || e.target.closest("[data-dm-modal-cancel]")) modal.hidden = true;
       });
+      var formError = document.querySelector("[data-dm-error]");
       document.querySelector("[data-dm-form]").addEventListener("submit", function (e) {
         e.preventDefault();
         var name = e.target.elements.name.value.trim();
-        if (!name) return;
-        custom.push({
-          name: name,
-          status: "Draft",
-          category: e.target.elements.category.value,
-          tests: 0,
-          collaborators: 1,
-          funded: 0,
-          goal: 0
-        });
-        saveCustom(custom);
-        modal.hidden = true;
-        e.target.reset();
-        renderModels();
+        var category = e.target.elements.category.value;
+        /* The registry's own rule, so a name refused here is refused there
+         * in the same words — and the other way round. */
+        var why = GeFi.devOps.validateModel({ name: name }, models);
+        if (why) {
+          formError.textContent = why;
+          return;
+        }
+        formError.textContent = "";
+        GeFi.api.post("/dev/models", { name: name, category: category }).then(
+          function (r) { addModel(r && r.id ? r : { name: name, category: category }); },
+          function (err) {
+            if (err && err.httpStatus === 422 && err.body && err.body.message) {
+              formError.textContent = err.body.message;
+              return;
+            }
+            if (err && err.httpStatus === 409 && err.body && err.body.message) {
+              formError.textContent = err.body.message;
+              return;
+            }
+            addModel({ name: name, category: category });
+          }
+        );
+
+        function addModel(r) {
+          models.push({
+            id: r.id || null,
+            name: r.name || name,
+            status: r.status || "Draft",
+            category: r.category || category,
+            tests: r.tests || 0,
+            collaborators: r.collaborators || 1,
+            funded: r.funded || 0,
+            goal: r.goal || 0
+          });
+          createdHere += 1;
+          modal.hidden = true;
+          e.target.reset();
+          renderKpis();
+          renderModels();
+          var root = document.querySelector("[data-dm-root]");
+          if (root) root.setAttribute("data-dm-last", r.id || "local");
+        }
       });
 
       renderModels();

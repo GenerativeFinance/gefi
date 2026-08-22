@@ -1,12 +1,20 @@
 openapi: 3.0.3
 info:
   title: GeFi Trading & market data
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Streaming quotes, order management (place/fill/cancel), positions, paper-trading engine, bots/strategies.
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Streaming quotes, order management (place/fill/cancel), positions,
+    paper-trading engine, bots/strategies. Filled in by ledger task 308.
+    The seeded price walk and the fill rules are the shared pure module
+    assets/js/app/market.js, used by both the trading page and the mock,
+    so a quote at a given tick is the same number on both sides and a
+    server-side fill agrees with an offline one. Envelope conventions come
+    from _envelope.yaml.
+
+
+    PAPER TRADING ONLY. No order reaches a venue, no money moves and no
+    position is real. Market orders fill at the current seeded price;
+    limit and stop orders fill only when the walk crosses their trigger.
 servers:
   - url: /v1
     description: >
@@ -18,77 +26,169 @@ security:
 tags:
   - name: trading
     description: "Trading & market data"
+components:
+  schemas:
+    Quote:
+      type: object
+      properties:
+        symbol: { type: string, example: AAPL }
+        price: { type: number }
+        tick: { type: integer, description: "Index into the seeded session walk." }
+        series:
+          type: array
+          items: { type: number }
+          description: "Recent prices ending at `tick`, for the session chart."
+    Order:
+      type: object
+      properties:
+        id: { type: string }
+        symbol: { type: string }
+        side: { type: string, enum: [buy, sell] }
+        type: { type: string, enum: [market, limit, stop] }
+        qty: { type: number }
+        limit: { type: number, nullable: true, description: "Trigger for limit/stop orders." }
+        price: { type: number, description: "Reference price when the order was placed." }
+        fill: { type: number, nullable: true, description: "Null until filled." }
+        status: { type: string, enum: [pending, filled, cancelled] }
+        tick: { type: integer }
+        date: { type: string, format: date }
+    Position:
+      type: object
+      properties:
+        symbol: { type: string }
+        qty: { type: number }
+        avg: { type: number }
+        last: { type: number }
+        pnl: { type: number, description: "Unrealised, at the current seeded price." }
+    Bot:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status: { type: string, enum: [running, stopped] }
 paths:
   /market-data/quotes:
     get:
       operationId: get-market-data-quotes
-      summary: "Snapshot quotes for symbols"
+      summary: "Snapshot quotes for symbols at a given tick"
       tags: [trading]
+      parameters:
+        - name: symbols
+          in: query
+          description: "Comma-separated. Defaults to the whole seeded universe."
+          schema: { type: string, example: "AAPL,MSFT,NVDA" }
+        - name: tick
+          in: query
+          description: "Point in the seeded session walk. Defaults to the server's current tick."
+          schema: { type: integer }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Quotes.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items: { type: array, items: { $ref: '#/components/schemas/Quote' } }
+                      tick: { type: integer }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /market-data/stream:
     get:
       operationId: get-market-data-stream
       summary: "Quote stream"
       tags: [trading]
+      parameters:
+        - name: symbols
+          in: query
+          schema: { type: string }
       responses:
         '200':
           description: >
-            Event stream per the _envelope.yaml SSE convention
-            (named events, monotonic ids, ping heartbeats).
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+            Event stream per the _envelope.yaml SSE convention: `quote.tick`
+            frames carrying one Quote each, advancing the shared session walk.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
           content:
             text/event-stream:
-              schema:
-                $ref: '_envelope.yaml#/components/schemas/SseEvent'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+              schema: { $ref: '_envelope.yaml#/components/schemas/SseEvent' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /orders:
-    post:
-      operationId: post-orders
-      summary: "Place an order"
-      tags: [trading]
-      parameters:
-        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
-      responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
     get:
       operationId: get-orders
       summary: "Order history with fills"
       tags: [trading]
       parameters:
+        - name: symbol
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, filled, cancelled] }
+        - name: side
+          in: query
+          schema: { type: string, enum: [buy, sell] }
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Orders page.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items: { type: array, items: { $ref: '#/components/schemas/Order' } }
+                      total: { type: integer }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
+    post:
+      operationId: post-orders
+      summary: "Place an order (paper only — nothing reaches a venue)"
+      tags: [trading]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [symbol, side, qty]
+              properties:
+                symbol: { type: string }
+                side: { type: string, enum: [buy, sell] }
+                type: { type: string, enum: [market, limit, stop], default: market }
+                qty: { type: number, minimum: 1 }
+                limit: { type: number, description: "Required for limit/stop orders." }
+                tick:
+                  type: integer
+                  description: >
+                    The point in the session walk the client was showing when
+                    the order was placed. Sent so the fill matches the price
+                    the user actually saw: client and server keep independent
+                    clocks, and without this a fill would print at whatever
+                    tick the server happened to be on. Omitted means "use the
+                    server's current tick".
+      responses:
+        '201':
+          description: >
+            Order accepted. A market order comes back already filled; a limit
+            or stop order stays pending until the walk crosses its trigger.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } }
+        '404':
+          description: Unknown symbol.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        '422':
+          description: Invalid quantity, or a limit/stop order without a trigger.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /orders/{id}:
     get:
       operationId: get-orders-id
@@ -98,18 +198,16 @@ paths:
         - name: id
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Order.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } }
+        '404':
+          description: No such order.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
     delete:
       operationId: delete-orders-id
       summary: "Cancel an open order"
@@ -118,71 +216,78 @@ paths:
         - name: id
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Cancelled.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } }
+        '404':
+          description: No such order.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        '409':
+          description: Already filled or cancelled.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /positions:
     get:
       operationId: get-positions
-      summary: "Open positions"
+      summary: "Open positions, derived from the opening book plus fills"
       tags: [trading]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Positions page.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/Position' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /paper/reset:
     post:
       operationId: post-paper-reset
-      summary: "Reset the paper-trading account"
+      summary: "Reset the paper account (orders cleared, walk rewound)"
       tags: [trading]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Reset.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  orders: { type: integer }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /bots:
     get:
       operationId: get-bots
-      summary: "Trading bots/strategies"
+      summary: "Trading bots/strategies (read-only seeded)"
       tags: [trading]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Bots page.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/Bot' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /bots/{id}/toggle:
     post:
       operationId: post-bots-id-toggle
@@ -192,16 +297,14 @@ paths:
         - name: id
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: New bot state.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Bot' } } }
+        '404':
+          description: No such bot.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }

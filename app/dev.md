@@ -10,7 +10,9 @@ sitemap: false
 robots: noindex
 primary_action: { label: "Create Model", url: "/app/dev-models/#new" }
 secondary_action: { label: "Export Data", url: "/app/dev/" }
-app_script: /assets/js/app/dev-console.js
+app_scripts:
+  - /assets/js/app/devops-math.js
+  - /assets/js/app/dev-console.js
 ---
 
 <div class="app-kpis" data-dc-kpis></div>

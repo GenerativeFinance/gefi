@@ -8,10 +8,14 @@ active_tab: Overview
 permalink: /app/dev-training/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/dev-ops.js
+app_scripts:
+  - /assets/js/app/devops-math.js
+  - /assets/js/app/dev-ops.js
 ---
 
 {% include app-devtabs.html active="Training" %}
+
+<div data-tj-root>
 
 <section class="app-panel">
   <div class="app-rowcard__head" style="margin-bottom:4px;">
@@ -28,25 +32,20 @@ app_script: /assets/js/app/dev-ops.js
     <p class="app-kpi__sub">Hyperparameters are validated before the job queues.</p>
     <form class="app-form" data-tj-form novalidate>
       <label>Model
-        <select name="model">
-          <option>Advanced Portfolio Optimizer</option>
-          <option>Real-time Risk Analyzer</option>
-          <option>Sentiment Trading Bot</option>
-        </select>
+        <select name="model" data-tj-models></select>
       </label>
       <label>Learning rate
-        <input type="number" name="lr" value="0.001" step="0.0001" min="0.00001" max="1">
+        <input type="number" name="lr" value="0.001" step="0.0001" data-tj-bound="lr">
       </label>
       <label>Batch size
-        <input type="number" name="batch" value="32" step="1" min="1" max="4096">
+        <input type="number" name="batch" value="32" step="1" data-tj-bound="batch">
       </label>
       <label>Epochs
-        <input type="number" name="epochs" value="100" step="1" min="1" max="10000">
+        <input type="number" name="epochs" value="100" step="1" data-tj-bound="epochs">
       </label>
       <label>Optimization method
-        <select name="method" required>
+        <select name="method" data-tj-methods required>
           <option value="">Select method…</option>
-          <option>AdamW</option><option>SGD + momentum</option><option>LAMB</option>
         </select>
       </label>
       <p class="app-kpi__sub" data-tj-error role="alert" style="color:var(--app-red);"></p>
@@ -56,4 +55,6 @@ app_script: /assets/js/app/dev-ops.js
       </div>
     </form>
   </div>
+</div>
+
 </div>

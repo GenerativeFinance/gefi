@@ -28,6 +28,18 @@
     var subs = loadJSON(SUB_KEY, []);
     var state = { q: "", category: "", risk: "", page: 0 };
 
+    /* Catalogue math (pricing, filtering, ranking, recommendations) is the
+     * shared GeFi.catalog module the mock server also runs, so the same
+     * filters return the same set whether or not the API answers. */
+    var C = GeFi.catalog;
+    var CATALOG = C.catalog();
+
+    /* Subscriptions round-trip through the API; offline the resolver
+     * answers locally and the button behaves identically. */
+    function subscribeRemote(slug) {
+      return GeFi.api.post("/subscriptions", { slug: slug, plan: "standard" });
+    }
+
     var wings = [];
     GeFi.MODELS.forEach(function (m) {
       if (wings.indexOf(m.wing) === -1) wings.push(m.wing);
@@ -43,15 +55,8 @@
       catSel.appendChild(opt);
     });
 
-    function riskRank(r) {
-      return r === "low" ? 0 : r === "medium" ? 1 : 2;
-    }
-
-    function matches(m) {
-      var q = state.q.toLowerCase();
-      return (!state.category || m.wing === state.category) &&
-        (!state.risk || m.risk === state.risk) &&
-        (!q || m.name.toLowerCase().indexOf(q) !== -1 || m.slug.indexOf(q) !== -1 || m.wing.toLowerCase().indexOf(q) !== -1);
+    function filtered() {
+      return C.filter(CATALOG, { wing: state.category, risk: state.risk, q: state.q });
     }
 
     function card(m) {
@@ -68,6 +73,10 @@
       var desc = document.createElement("p");
       desc.className = "app-gridcard__desc";
       desc.textContent = m.wing + " · headline " + m.unit;
+      var price = document.createElement("p");
+      price.className = "app-gridcard__desc mono";
+      price.setAttribute("data-mk-price", String(m.monthly_fee));
+      price.textContent = "$" + m.monthly_fee + "/month";
       var spark = document.createElement("div");
       spark.appendChild(GeFi.svg.sparkline(m.series, { label: m.name + " sample trend" }));
       var footer = document.createElement("div");
@@ -78,11 +87,16 @@
       subBtn.textContent = subDone ? "Subscribed ✓" : "Subscribe";
       subBtn.disabled = subDone;
       subBtn.addEventListener("click", function () {
+        /* Optimistic: flip at once, then confirm with the API. */
         subs.push(m.slug);
         saveJSON(SUB_KEY, subs);
         subBtn.textContent = "Subscribed ✓";
         subBtn.className = "app-btn app-btn--ghost";
         subBtn.disabled = true;
+        subscribeRemote(m.slug).then(
+          function (r) { subBtn.setAttribute("data-sub-id", (r && r.id) || "local"); },
+          function () { subBtn.setAttribute("data-sub-id", "local"); }
+        );
       });
       var details = document.createElement("a");
       details.className = "app-btn app-btn--ghost";
@@ -93,6 +107,7 @@
       c.appendChild(chips);
       c.appendChild(title);
       c.appendChild(desc);
+      c.appendChild(price);
       c.appendChild(spark);
       c.appendChild(footer);
       return c;
@@ -114,9 +129,7 @@
         return;
       }
       empty.hidden = true;
-      var recs = GeFi.MODELS.filter(function (m) {
-        return prefs.wings.indexOf(m.wing) !== -1 && riskRank(m.risk) <= riskRank(prefs.risk);
-      }).slice(0, 9);
+      var recs = C.recommend(CATALOG, prefs, 9);
       if (!recs.length) {
         empty.hidden = false;
         empty.appendChild(app.empty({
@@ -133,9 +146,7 @@
     function renderTrending() {
       var grid = document.querySelector("[data-mk-trending]");
       grid.innerHTML = "";
-      var ranked = GeFi.MODELS.slice().sort(function (a, b) {
-        return GeFi.seed.hash("trend|" + b.slug) % 1000 - GeFi.seed.hash("trend|" + a.slug) % 1000;
-      }).slice(0, 6);
+      var ranked = C.trending(CATALOG, 6);
       ranked.forEach(function (m, i) {
         var c = card(m);
         var flame = app.chip("high", "#" + (i + 1) + " trending");
@@ -150,8 +161,8 @@
       var empty = document.querySelector("[data-mk-browse-empty]");
       grid.innerHTML = "";
       empty.innerHTML = "";
-      var rows = GeFi.MODELS.filter(matches);
-      document.querySelector("[data-mk-count]").textContent = "— " + rows.length + " of " + GeFi.MODELS.length;
+      var rows = filtered();
+      document.querySelector("[data-mk-count]").textContent = "— " + rows.length + " of " + CATALOG.length;
       var pages = Math.max(1, Math.ceil(rows.length / PAGE));
       if (state.page >= pages) state.page = pages - 1;
       empty.hidden = rows.length > 0;
@@ -236,6 +247,7 @@
         );
         prefs = { wings: chosen, risk: prefRisk };
         saveJSON(PREF_KEY, prefs);
+        GeFi.api.put("/preferences", prefs).catch(function () {});
         modal.hidden = true;
         renderForYou();
       }

@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -83,10 +83,48 @@ const D = GeFi.DEMO;
 const MODELS = GeFi.MODELS;
 const seed = GeFi.seed;
 const RB = GeFi.rebalanceMath; /* shared with the client page (task 305) */
-if (!D || !MODELS || !seed || !RB) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath");
+const CAT = GeFi.catalog; /* shared with the marketplace pages (task 306) */
+const RUNTIME = GeFi.modelRuntime; /* shared with model-demo.js (task 307) */
+const MKT = GeFi.market; /* shared with the trading page (task 308) */
+const BT = GeFi.backtest; /* shared with the backtesting page (task 309) */
+const DO = GeFi.devOps; /* shared with the dev console pages (task 310) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps");
   process.exit(1);
 }
+
+/* Demo configs (task 307): the built model pages already embed each demo's
+ * config as JSON for the harness to read, so the mock reads the SAME blob
+ * rather than keeping a second copy that could drift. Without a build the
+ * map is simply empty and /run falls back to a slug-only config. */
+function loadDemoConfigs() {
+  const out = new Map();
+  const dir = path.join(ROOT, "_site", "models");
+  let slugs = [];
+  try {
+    slugs = fs.readdirSync(dir);
+  } catch (e) {
+    return out;
+  }
+  for (const slug of slugs) {
+    const file = path.join(dir, slug, "index.html");
+    let html;
+    try {
+      html = fs.readFileSync(file, "utf8");
+    } catch (e) {
+      continue;
+    }
+    const m = html.match(/data-demo-config[^>]*>([\s\S]*?)<\/script>/);
+    if (!m) continue;
+    try {
+      out.set(slug, JSON.parse(m[1]));
+    } catch (e) {
+      /* a page without a parseable demo config just has no demo */
+    }
+  }
+  return out;
+}
+const DEMO_CONFIGS = loadDemoConfigs();
 
 function series(key, n, base, spread) {
   const rand = seed.rng(seed.hash(key));
@@ -99,6 +137,7 @@ function fnvHex(str) {
 }
 
 /* --------------------------------------------------- contract route table */
+const IDEMPOTENT_ROUTES = new Set();
 function contractRoutes() {
   const dir = path.join(ROOT, "api", "openapi");
   const routes = new Set();
@@ -106,15 +145,29 @@ function contractRoutes() {
     if (!f.endsWith(".yaml") || f === "_envelope.yaml") continue;
     const lines = fs.readFileSync(path.join(dir, f), "utf8").split("\n");
     let current = null;
+    let currentOp = null;
     for (const line of lines) {
       const p = line.match(/^  (\/[^\s:]*):\s*$/);
       if (p) {
         current = p[1];
+        currentOp = null;
         continue;
       }
       const m = line.match(/^    (get|post|patch|put|delete):\s*$/);
-      if (m && current) routes.add(m[1].toUpperCase() + " " + current);
-      if (/^\S/.test(line) && line.trim() && !line.startsWith("paths:")) current = null;
+      if (m && current) {
+        currentOp = m[1].toUpperCase() + " " + current;
+        routes.add(currentOp);
+      }
+      /* Enforce the Idempotency-Key only where the contract says it is
+       * REQUIRED. A blanket rule would reject the shipped model-demo
+       * harness, which never sends one — the contract is the authority. */
+      if (currentOp && currentOp.startsWith("POST ") && line.includes("parameters/IdempotencyKey")) {
+        IDEMPOTENT_ROUTES.add(currentOp);
+      }
+      if (/^\S/.test(line) && line.trim() && !line.startsWith("paths:")) {
+        current = null;
+        currentOp = null;
+      }
     }
   }
   return [...routes].sort();
@@ -153,11 +206,30 @@ function freshState() {
     lastRebalance: "15 days ago",
     rebalanceSettings: { threshold_pct: 5, auto: false, frequency: "Quarterly", account_costs: true, tax_aware: true },
     ratings: {},
-    subscriptions: [{ id: "sub-1", slug: MODELS[1].slug, since: "2026-06-01" }],
+    subscriptions: [{ id: "sub-1", slug: MODELS[1].slug, plan: "standard", monthly_fee: GeFi.catalog.monthlyFee(MODELS[1]), since: "2026-06-01", next_renewal: "2026-09-22", status: "active" }],
     preferences: { wings: [], risk: "medium" },
+    /* Dev console (task 310). Jobs keep only what cannot be derived —
+     * accuracy, loss and duration come from the shared engine. */
     devModels: D.devConsole.models.map((m, i) => ({ id: "dm-" + (i + 1), ...m })),
-    trainingJobs: D.devConsole.jobs.map((j, i) => ({ id: "tj-" + (i + 1), ...j })),
-    deployments: D.devConsole.deployments.map((d, i) => ({ id: "dep-" + (i + 1), ...d })),
+    nextDevModelId: D.devConsole.models.length + 1,
+    trainingJobs: D.devConsole.jobs.map((j, i) => ({
+      id: "tj-" + (i + 1),
+      name: j.name,
+      status: j.status,
+      progress: j.progress,
+    })),
+    nextTrainingJobId: D.devConsole.jobs.length + 1,
+    deployments: D.devConsole.deployments.map((d, i) => ({
+      id: "dep-" + (i + 1),
+      name: d.name,
+      env: d.env,
+      status: d.status,
+      last: d.last,
+    })),
+    nextDeploymentId: D.devConsole.deployments.length + 1,
+    devActivity: D.devConsole.activityFeed.map((a) => ({ ...a })),
+    devRefresh: 0,
+    nextAlertRuleId: 1,
     alertRules: [],
     devAlertRules: [],
     threads: D.devConsole.messages.map((m, i) => ({ id: "th-" + (i + 1), title: m.who + " — " + m.text.slice(0, 40), messages: [m] })),
@@ -178,6 +250,22 @@ function freshState() {
       { id: "n-2", title: "Model audit passed", detail: "#MT-4521 closed with no findings", unread: true },
       { id: "n-3", title: "Dataset published", detail: "Options Surface passed its quality audit", unread: false },
     ],
+    /* Backtesting (task 309). The seeded runs are the history; new runs
+     * append and every metric is derived by the shared engine. */
+    backtests: (D.backtests || []).map((r) => ({
+      id: r.id,
+      model: r.model,
+      range: r.range,
+      spec: { model: r.model, range: r.range },
+      status: r.status,
+      progress: r.status === "completed" ? 100 : 0,
+    })),
+    nextBacktestId: 119,
+    optimizerRuns: [],
+    nextOptimizerId: 1,
+    metricsAsOf: {},
+    paperOrders: [],
+    tick: 0,
     verifications: [],
     anchors: [],
     apiKeys: [{ id: "key-1", label: "dashboard sample", prefix: "gefi_sk_9f2a", created: "2026-08-01" }],
@@ -414,98 +502,231 @@ on("PATCH /rebalance/settings", (p, q, b) => {
   return S.rebalanceSettings;
 });
 
-/* ---- marketplace ---- */
-const catalogRow = (m) => ({ slug: m.slug, name: m.name, wing: m.wing, risk: m.risk, federated: m.federated, unit: m.unit });
+/* ---- marketplace (task 306) — catalogue math via the SHARED module ---- */
+const FEE_OF = (slug) => {
+  const m = MODELS.find((x) => x.slug === slug);
+  return m ? CAT.monthlyFee(m) : 0;
+};
+const RENEWAL = "2026-09-22";
+
 on("GET /models", (p, q) => {
-  let rows = MODELS.map(catalogRow);
-  if (q.wing) rows = rows.filter((m) => m.wing === q.wing);
-  if (q.risk) rows = rows.filter((m) => m.risk === q.risk);
-  if (q.federated) rows = rows.filter((m) => String(m.federated) === q.federated);
-  return page(rows, q);
+  const rows = CAT.filter(CAT.catalog(), q);
+  const out = page(rows, q);
+  out.total = rows.length;
+  return out;
 });
 on("GET /models/{slug}", (p) => {
   const m = MODELS.find((x) => x.slug === p.slug);
-  return m ? { ...catalogRow(m), series: m.series } : notFound;
+  return m ? CAT.decorate(m) : notFound;
 });
-on("GET /models/{slug}/ratings", (p, q) => page(S.ratings[p.slug] || [{ user: "quantessence", stars: 5, comment: "Deterministic and well documented." }], q));
+on("GET /models/{slug}/ratings", (p, q) => {
+  const own = S.ratings[p.slug] || [];
+  const seeded = [{ user: "quantessence", stars: 5, comment: "Deterministic and well documented." }];
+  const out = page(own.concat(seeded), q);
+  out.summary = CAT.ratingsSummary(p.slug);
+  return out;
+});
 on("POST /models/{slug}/ratings", (p, q, b) => {
+  const stars = b && b.stars;
+  if (!(stars >= 1 && stars <= 5)) {
+    return { __status: 422, code: "validation_failed", message: "stars must be between 1 and 5.", details: [{ field: "stars", issue: "out of range" }] };
+  }
   S.ratings[p.slug] = S.ratings[p.slug] || [];
-  const r = { user: "you", stars: (b && b.stars) || 5, comment: (b && b.comment) || "" };
+  const r = { user: "you", stars: stars, comment: (b && b.comment) || "" };
   S.ratings[p.slug].push(r);
   return { __status: 201, ...r };
 });
+on("GET /categories", (p, q) => {
+  const cats = CAT.categories(CAT.catalog());
+  const out = page(cats, q);
+  out.total_models = cats.reduce((n, c) => n + c.model_count, 0);
+  return out;
+});
+on("GET /developers", (p, q) => {
+  let rows = D.developers.slice();
+  if (q.q) {
+    const needle = String(q.q).toLowerCase();
+    rows = rows.filter((d) => (d.name + " " + d.handle + " " + d.specialties.join(" ")).toLowerCase().includes(needle));
+  }
+  if (q.verified) rows = rows.filter((d) => String(d.verified) === q.verified);
+  return page(rows, q);
+});
 on("GET /subscriptions", (p, q) => page(S.subscriptions, q));
 on("POST /subscriptions", (p, q, b) => {
-  const sub = { id: "sub-" + (S.subscriptions.length + 1), slug: b && b.slug, since: "2026-08-22" };
+  const slug = b && b.slug;
+  if (!slug) return { __status: 422, code: "validation_failed", message: "slug is required.", details: [{ field: "slug", issue: "missing" }] };
+  if (!MODELS.some((m) => m.slug === slug)) return { __status: 404, code: "not_found", message: "No model with slug " + slug + "." };
+  if (S.subscriptions.some((s) => s.slug === slug && s.status !== "cancelled")) {
+    return { __status: 409, code: "conflict", message: "Already subscribed to " + slug + "." };
+  }
+  /* Billing stub: a plan and a fee, but no payment is taken (see the
+   * BILLING GAP note in api/openapi/marketplace.yaml). */
+  const sub = {
+    id: "sub-" + (S.subscriptions.length + 1),
+    slug: slug,
+    plan: (b && b.plan) || "standard",
+    monthly_fee: FEE_OF(slug),
+    since: "2026-08-22",
+    next_renewal: RENEWAL,
+    status: "active",
+  };
   S.subscriptions.push(sub);
   return { __status: 201, ...sub };
 });
 on("DELETE /subscriptions/{id}", (p) => {
+  /* Accept either the subscription id or the model slug — the UI knows
+   * the slug, and making the caller look up an id first buys nothing. */
   const before = S.subscriptions.length;
-  S.subscriptions = S.subscriptions.filter((s) => s.id !== p.id);
+  S.subscriptions = S.subscriptions.filter((s) => s.id !== p.id && s.slug !== p.id);
   return before === S.subscriptions.length ? notFound : { ok: true };
 });
-on("GET /billing/invoices", (p, q) => page(S.subscriptions.map((s, i) => ({ id: "inv-" + (i + 1), subscription: s.id, amount_usd: 49, period: "2026-08" })), q));
-on("GET /recommendations", () => ({ items: MODELS.filter((m) => !S.preferences.wings.length || S.preferences.wings.includes(m.wing)).slice(0, 6).map(catalogRow), next_cursor: null }));
-on("GET /trending", () => ({ items: MODELS.slice().sort((a, b) => seed.hash("tr|" + b.slug) - seed.hash("tr|" + a.slug)).slice(0, 8).map(catalogRow), next_cursor: null }));
+on("GET /billing/invoices", (p, q) =>
+  page(
+    S.subscriptions.map((s, i) => ({
+      id: "inv-" + (i + 1),
+      subscription: s.id,
+      amount_usd: s.monthly_fee != null ? s.monthly_fee : FEE_OF(s.slug),
+      period: "2026-08",
+      status: "sample",
+    })),
+    q
+  ));
+on("GET /recommendations", () => ({
+  items: CAT.recommend(CAT.catalog(), S.preferences, 6),
+  next_cursor: null,
+  based_on: S.preferences,
+}));
+on("GET /trending", () => ({ items: CAT.trending(CAT.catalog(), 8), next_cursor: null }));
 on("GET /preferences", () => S.preferences);
 on("PUT /preferences", (p, q, b) => {
   S.preferences = b || S.preferences;
   return S.preferences;
 });
 
-/* ---- models-runtime ---- */
+/* ---- models-runtime (task 307) — the SHARED scorer ---- */
+const RUN_JOBS = new Map();
+function demoCfg(slug) {
+  /* The page's own demo config when a build is present; otherwise just the
+   * slug, which still seeds deterministically. */
+  return DEMO_CONFIGS.get(slug) || { slug: slug };
+}
+function runFor(slug, body) {
+  /* model-demo.js posts { inputs: {...} } and seeds on that object, so the
+   * mock must seed on exactly the same value to match byte for byte. */
+  const inputs = body && body.inputs !== undefined ? body.inputs : body || {};
+  return RUNTIME.run(demoCfg(slug), inputs);
+}
 on("POST /models/{slug}/run", (p, q, b) => {
-  const m = MODELS.find((x) => x.slug === p.slug);
-  if (!m) return notFound;
-  const rand = seed.rng(seed.hash("run|" + p.slug + "|" + JSON.stringify(b || {})));
-  return { slug: p.slug, unit: m.unit, output: +(m.series[11] * (0.97 + rand() * 0.06)).toFixed(4), sample: true };
+  if (!MODELS.some((m) => m.slug === p.slug)) return notFound;
+  const result = runFor(p.slug, b);
+  if (q.async === "true") {
+    const job = { id: "run-" + (RUN_JOBS.size + 1), slug: p.slug, status: "completed", progress: 100, result: result };
+    RUN_JOBS.set(job.id, job);
+    return { __status: 202, ...job };
+  }
+  return result;
 });
-on("GET /models/{slug}/jobs/{job_id}", (p) => ({ id: p.job_id, slug: p.slug, status: "completed" }));
+on("GET /models/{slug}/jobs/{job_id}", (p) => RUN_JOBS.get(p.job_id) || notFound);
 on("GET /models/{slug}/metrics", (p) => {
   const m = MODELS.find((x) => x.slug === p.slug);
-  return m ? { slug: m.slug, unit: m.unit, series: m.series } : notFound;
+  return m ? { slug: m.slug, unit: m.unit, series: m.series, metrics_as_of: S.metricsAsOf[m.slug] || "2026-08-22" } : notFound;
 });
-on("POST /models/{slug}/metrics/refresh", (p) => ({ __status: 202, job_id: "mr-" + fnvHex("refresh|" + p.slug) }));
+on("POST /models/{slug}/metrics/refresh", (p) => {
+  if (!MODELS.some((m) => m.slug === p.slug)) return notFound;
+  S.metricsAsOf[p.slug] = "2026-08-22";
+  return { __status: 202, job_id: "mr-" + fnvHex("refresh|" + p.slug), metrics_as_of: S.metricsAsOf[p.slug] };
+});
 
-/* ---- trading ---- */
+/* ---- trading (task 308) — seeded walk + fills via the SHARED module ---- */
+function paperOrders() {
+  return S.paperOrders;
+}
+/* A limit/stop order fills as soon as the walk crosses its trigger. */
+function settlePending(tick) {
+  S.paperOrders.forEach((o) => {
+    if (o.status !== "pending") return;
+    const px = MKT.priceAt(o.symbol, tick);
+    if (px == null) return;
+    const fill = MKT.fillPrice(o, px);
+    if (fill != null) {
+      o.fill = fill;
+      o.status = "filled";
+      o.tick = tick;
+    }
+  });
+}
 on("GET /market-data/quotes", (p, q) => {
-  const syms = (q.symbols || "AAPL,MSFT,NVDA").split(",");
-  return { items: syms.map((s) => { const r = seed.rng(seed.hash("q|" + s)); return { symbol: s, price: +(40 + r() * 460).toFixed(2), ts: "2026-08-22T05:30:00Z" }; }), next_cursor: null };
+  const tick = q.tick != null && q.tick !== "" ? parseInt(q.tick, 10) : S.tick;
+  const syms = (q.symbols ? String(q.symbols).split(",") : MKT.symbols()).map((x) => x.trim().toUpperCase());
+  return {
+    items: syms
+      .filter((sym) => MKT.priceAt(sym, 0) != null)
+      .map((sym) => ({ symbol: sym, price: +MKT.priceAt(sym, tick).toFixed(2), tick: tick, series: MKT.seriesAt(sym, tick, 40).map((v) => +v.toFixed(2)) })),
+    next_cursor: null,
+    tick: tick,
+  };
 });
 on("POST /orders", (p, q, b) => {
-  /* Full shape — same fields as the seeded DEMO.orders rows, so a
-   * server-side fill renders identically to a sample one. */
-  const r = seed.rng(seed.hash("fill|" + (S.orders.length + 1)));
-  const px = +(40 + r() * 460).toFixed(2);
-  const o = {
-    id: "ORD-" + (9000 + S.orders.length),
-    strategy: (b && b.strategy) || "Manual",
-    symbol: (b && b.symbol) || "AAPL",
-    side: ((b && b.side) || "buy").toUpperCase(),
-    type: (b && b.type) || "market",
-    qty: (b && b.qty) || 1,
-    price: px,
-    fill: +(px * (1 + (r() - 0.5) * 0.002)).toFixed(2),
-    status: "filled",
-    pnl: +((r() - 0.42) * 220).toFixed(2),
+  const symbol = String((b && b.symbol) || "").toUpperCase();
+  if (MKT.priceAt(symbol, 0) == null) return { __status: 404, code: "not_found", message: "Unknown symbol " + (symbol || "(none)") + "." };
+  const qty = b && Number(b.qty);
+  if (!qty || qty < 1) return { __status: 422, code: "validation_failed", message: "qty must be at least 1.", details: [{ field: "qty", issue: "invalid" }] };
+  const type = ((b && b.type) || "market").toLowerCase();
+  const trigger = b && b.limit != null ? Number(b.limit) : null;
+  if ((type === "limit" || type === "stop") && trigger == null) {
+    return { __status: 422, code: "validation_failed", message: type + " orders need a limit price.", details: [{ field: "limit", issue: "missing" }] };
+  }
+  /* Fill at the tick the client was showing, so the price the user saw is
+   * the price they get; fall back to the server's tick when not sent. */
+  const atTick = b && b.tick != null ? Math.max(0, parseInt(b.tick, 10) || 0) : S.tick;
+  const px = MKT.priceAt(symbol, atTick);
+  const order = {
+    id: "ORD-" + (9000 + S.paperOrders.length + 1),
+    symbol: symbol,
+    side: ((b && b.side) || "buy").toLowerCase(),
+    type: type,
+    qty: qty,
+    limit: trigger,
+    price: +px.toFixed(2),
+    fill: null,
+    status: "pending",
+    tick: atTick,
     date: "2026-08-22",
   };
-  S.orders.unshift(o);
-  return { __status: 201, ...o };
+  const fill = MKT.fillPrice(order, px);
+  if (fill != null) {
+    order.fill = fill;
+    order.status = "filled";
+  }
+  S.paperOrders.unshift(order);
+  return { __status: 201, ...order };
 });
-on("GET /orders", (p, q) => page(S.orders, q));
-on("GET /orders/{id}", (p) => S.orders.find((o) => String(o.id) === p.id) || notFound);
+on("GET /orders", (p, q) => {
+  settlePending(S.tick);
+  let rows = paperOrders().concat(S.orders);
+  if (q.symbol) rows = rows.filter((o) => o.symbol === String(q.symbol).toUpperCase());
+  if (q.status) rows = rows.filter((o) => o.status === q.status);
+  if (q.side) rows = rows.filter((o) => String(o.side).toLowerCase() === String(q.side).toLowerCase());
+  const out = page(rows, q);
+  out.total = rows.length;
+  return out;
+});
+on("GET /orders/{id}", (p) => paperOrders().concat(S.orders).find((o) => String(o.id) === p.id) || notFound);
 on("DELETE /orders/{id}", (p) => {
-  const o = S.orders.find((x) => String(x.id) === p.id);
+  const o = paperOrders().concat(S.orders).find((x) => String(x.id) === p.id);
   if (!o) return notFound;
+  if (o.status !== "pending") return { __status: 409, code: "conflict", message: "Order is already " + o.status + "." };
   o.status = "cancelled";
   return o;
 });
-on("GET /positions", (p, q) => page(D.holdings.map((h) => ({ symbol: h.ticker, qty: h.shares, value: h.value })), q));
+on("GET /positions", (p, q) => {
+  settlePending(S.tick);
+  return page(MKT.positions(paperOrders(), S.tick), q);
+});
 on("POST /paper/reset", () => {
-  S.orders = D.orders.map((o) => ({ ...o }));
-  return { ok: true, orders: S.orders.length };
+  S.paperOrders = [];
+  S.tick = 0;
+  return { ok: true, orders: 0 };
 });
 const BOTS = [
   { id: "bot-1", name: "AI-Powered Grid Trading Bot", status: "running" },
@@ -520,57 +741,321 @@ on("POST /bots/{id}/toggle", (p) => {
   return b;
 });
 
-/* ---- backtesting ---- */
+/* ---- backtesting (task 309) ----
+ * Every figure comes from the shared engine, so a run the server computed
+ * and the same run simulated in the browser report the same numbers. */
+
+/* A stored run, flattened for the list and detail views. */
+function btRow(run) {
+  if (run.status !== "completed") {
+    return { id: run.id, model: run.model, range: run.range, rangeLabel: BT.span(run.spec).label, status: run.status, progress: run.progress || 0 };
+  }
+  const m = BT.metrics(run.model, run.spec);
+  return {
+    id: run.id,
+    model: run.model,
+    range: m.range,
+    rangeLabel: m.rangeLabel,
+    status: "completed",
+    sharpe: m.sharpe,
+    annualPct: m.annualPct,
+    drawdownPct: m.drawdownPct,
+    trades: m.trades,
+    winRatePct: m.winRatePct,
+  };
+}
+function btFind(id) {
+  return S.backtests.find((r) => r.id === id);
+}
+
 on("POST /backtests", (p, q, b) => {
-  const job = { id: "bt-" + (D.backtests.length + S.reports.length + 1), status: "queued", params: b || {} };
-  return { __status: 202, ...job };
+  const spec = { model: (b && b.model) || "", range: (b && b.range) || "1y", start: b && b.start, end: b && b.end };
+  const why = BT.validate(spec);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const run = { id: "BT-" + S.nextBacktestId++, model: spec.model, range: BT.span(spec).key, spec, status: "queued", progress: 0 };
+  S.backtests.unshift(run);
+  return { __status: 202, ...btRow(run) };
 });
-on("GET /backtests", (p, q) => page(D.backtests || [], q));
-on("GET /backtests/{id}", (p) => ({ id: p.id, status: "completed", sharpe: 1.34, return_pct: 12.5, max_drawdown_pct: -8.2 }));
-on("GET /backtests/{id}/results", (p) => ({ id: p.id, equity: series("bt|" + p.id, 60, 100, 12), trades: 148, stats: { sharpe: 1.34, win_rate: 0.56 } }));
-on("POST /optimizer/runs", () => ({ __status: 202, id: "opt-1", status: "queued" }));
-on("GET /optimizer/runs/{id}", (p) => ({ id: p.id, status: "completed", best: { lookback: 20, band: 2.0, sharpe: 1.51 } }));
+on("GET /backtests", (p, q) => {
+  let rows = S.backtests.map(btRow);
+  if (q.status) rows = rows.filter((r) => r.status === q.status);
+  return page(rows, q);
+});
+on("GET /backtests/{id}", (p) => {
+  const run = btFind(p.id);
+  if (!run) return notFound;
+  return btRow(run);
+});
+on("GET /backtests/{id}/results", (p, q) => {
+  const run = btFind(p.id);
+  if (!run) return notFound;
+  const limit = Math.min(200, Math.max(1, parseInt(q.trades, 10) || 20));
+  return {
+    id: run.id,
+    model: run.model,
+    range: run.range,
+    equity: BT.equity(run.model, run.spec),
+    stats: BT.metrics(run.model, run.spec),
+    tradeRows: BT.trades(run.model, run.spec, limit),
+  };
+});
+on("GET /backtests/compare", (p, q) => {
+  const ids = String(q.ids || "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (ids.length < 2) return { __status: 422, code: "validation_failed", message: "compare needs at least two run ids" };
+  const points = Math.min(400, Math.max(10, parseInt(q.points, 10) || 60));
+  const items = [];
+  for (const id of ids) {
+    const run = btFind(id);
+    if (!run) return { __status: 422, code: "validation_failed", message: "unknown run: " + id };
+    items.push({
+      id: run.id,
+      model: run.model,
+      range: run.range,
+      metrics: BT.metrics(run.model, run.spec),
+      equity: resample(BT.equity(run.model, run.spec), points),
+    });
+  }
+  return { points, items };
+});
+
+/* Curves of different lengths are put on one x-axis before they are drawn,
+ * so a 1y run and a 5y run overlay honestly instead of one being stretched. */
+function resample(values, n) {
+  if (values.length === n) return values.slice();
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    out.push(values[Math.round((i / (n - 1)) * (values.length - 1))]);
+  }
+  return out;
+}
+
+on("POST /optimizer/runs", (p, q, b) => {
+  const spec = { model: (b && b.model) || "", range: (b && b.range) || "1y", start: b && b.start, end: b && b.end };
+  const why = BT.validate(spec);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const grid = (b && b.grid) || BT.GRID;
+  if (!Object.keys(grid).length) return { __status: 422, code: "validation_failed", message: "grid must name at least one parameter" };
+  const result = BT.optimize(spec.model, spec, grid);
+  const run = { id: "OPT-" + S.nextOptimizerId++, status: "completed", ...result };
+  S.optimizerRuns.unshift(run);
+  return { __status: 202, ...run };
+});
+on("GET /optimizer/runs", (p, q) => page(S.optimizerRuns, q));
+on("GET /optimizer/runs/{id}", (p) => {
+  const run = S.optimizerRuns.find((r) => r.id === p.id);
+  if (!run) return notFound;
+  return run;
+});
 on("GET /historical-data/{symbol}", (p, q) => page(series("hist|" + p.symbol, 48, 100, 20).map((v, i) => ({ t: i, close: v })), q));
 
-/* ---- devconsole ---- */
-on("GET /dev/models", (p, q) => page(S.devModels, q));
+/* ---- devconsole (task 310) ----
+ * Lifecycle, hyperparameter bounds, the training progression and the
+ * telemetry all come from the shared engine, so the console pages and the
+ * server cannot disagree about what is allowed or what a job reports. */
+
+function devActivity(title, meta, tag) {
+  S.devActivity.unshift({ title, meta, tag });
+}
+
+/* A job's public shape: accuracy and loss are DERIVED from progress rather
+ * than stored, so they cannot drift away from the bar the user is watching. */
+function jobRow(j) {
+  const m = DO.jobMetrics(j.name, j.progress);
+  return {
+    id: j.id,
+    name: j.name,
+    status: j.status,
+    progress: j.progress,
+    accuracy: j.progress > 0 ? m.accuracy : 0,
+    loss: j.progress > 0 ? m.loss : 0,
+    duration: j.status === "completed" ? DO.jobDuration(j.name) : j.progress > 0 ? "running" : "0m",
+    params: j.params || null,
+  };
+}
+
+/* A stopped deployment is serving nothing, so its live fields read zero. */
+function deployRow(d) {
+  if (d.status !== "active") {
+    return { ...d, uptime: 0, requests: "0", latency: "0ms" };
+  }
+  const t = DO.telemetry(d.name, S.devRefresh, d.status);
+  return { ...d, uptime: t.uptime, requests: Math.round(t.requests / 1000) + "K", latency: t.response + "ms" };
+}
+
+on("GET /dev/models", (p, q) => {
+  let rows = S.devModels;
+  if (q.status) rows = rows.filter((m) => m.status === q.status);
+  return page(rows, q);
+});
 on("POST /dev/models", (p, q, b) => {
-  const m = { id: "dm-" + (S.devModels.length + 1), name: (b && b.name) || "New model", status: "Draft", category: (b && b.category) || "Misc", tests: 0, collaborators: 1, funded: 0, goal: 25000 };
+  const name = ((b && b.name) || "").trim();
+  const why = DO.validateModel({ name }, S.devModels);
+  if (why) {
+    return why === "name is required"
+      ? { __status: 422, code: "validation_failed", message: why }
+      : { __status: 409, code: "conflict", message: why };
+  }
+  const m = {
+    id: "dm-" + S.nextDevModelId++,
+    name,
+    status: "Draft",
+    category: (b && b.category) || "Misc",
+    tests: 0,
+    collaborators: 1,
+    funded: 0,
+    goal: b && b.goal != null ? b.goal : 0,
+  };
   S.devModels.push(m);
+  devActivity(name + " registered", "Model · just now", "model");
   return { __status: 201, ...m };
 });
+on("GET /dev/models/{id}", (p) => S.devModels.find((x) => x.id === p.id) || notFound);
 on("PATCH /dev/models/{id}", (p, q, b) => {
   const m = S.devModels.find((x) => x.id === p.id);
   if (!m) return notFound;
-  Object.assign(m, b || {});
+  const body = b || {};
+  if (body.status !== undefined && body.status !== m.status) {
+    const bad = DO.validateStage(m.status, body.status);
+    if (bad) return { __status: 422, code: "validation_failed", message: bad };
+    m.status = body.status;
+    devActivity(m.name + " promoted to " + m.status, "Model · just now", "model");
+  }
+  if (body.name !== undefined) m.name = body.name;
+  if (body.category !== undefined) m.category = body.category;
   return m;
 });
 on("DELETE /dev/models/{id}", (p) => {
   const m = S.devModels.find((x) => x.id === p.id);
   if (!m) return notFound;
-  if (m.status !== "Draft") return { __status: 409, code: "conflict", message: "Only draft models can be deleted" };
+  if (m.status !== "Draft") return { __status: 409, code: "conflict", message: "only draft models can be deleted; " + m.name + " is " + m.status };
   S.devModels = S.devModels.filter((x) => x.id !== p.id);
   return { ok: true };
 });
+
+on("GET /dev/hyperparameters", () => ({ params: DO.HYPERPARAMS, methods: DO.METHODS }));
 on("POST /dev/training-jobs", (p, q, b) => {
-  const j = { id: "tj-" + (S.trainingJobs.length + 1), name: (b && b.name) || "training run", status: "queued", progress: 0 };
-  S.trainingJobs.push(j);
-  return { __status: 202, ...j };
+  const spec = b || {};
+  const why = DO.validateJob(spec);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const j = {
+    id: "tj-" + S.nextTrainingJobId++,
+    name: DO.jobName(spec),
+    status: "queued",
+    progress: 0,
+    params: { lr: +spec.lr, batch: +spec.batch, epochs: +spec.epochs, method: spec.method },
+  };
+  S.trainingJobs.unshift(j);
+  return { __status: 202, ...jobRow(j) };
 });
-on("GET /dev/training-jobs", (p, q) => page(S.trainingJobs, q));
-on("GET /dev/deployments", (p, q) => page(S.deployments, q));
+on("GET /dev/training-jobs", (p, q) => {
+  let rows = S.trainingJobs.map(jobRow);
+  if (q.status) rows = rows.filter((j) => j.status === q.status);
+  return page(rows, q);
+});
+on("GET /dev/training-jobs/{id}", (p) => {
+  const j = S.trainingJobs.find((x) => x.id === p.id);
+  return j ? jobRow(j) : notFound;
+});
+on("POST /dev/training-jobs/{id}/pause", (p) => {
+  const j = S.trainingJobs.find((x) => x.id === p.id);
+  if (!j) return notFound;
+  if (j.status !== "running") return { __status: 409, code: "conflict", message: "job is " + j.status + ", not running" };
+  j.status = "paused";
+  return jobRow(j);
+});
+on("POST /dev/training-jobs/{id}/resume", (p) => {
+  const j = S.trainingJobs.find((x) => x.id === p.id);
+  if (!j) return notFound;
+  if (j.status !== "paused") return { __status: 409, code: "conflict", message: "job is " + j.status + ", not paused" };
+  j.status = "running";
+  return jobRow(j);
+});
+
+on("GET /dev/deployments", (p, q) => {
+  let rows = S.deployments.map(deployRow);
+  if (q.env) rows = rows.filter((d) => d.env === q.env);
+  return page(rows, q);
+});
+on("POST /dev/deployments", (p, q, b) => {
+  const name = ((b && b.name) || "").trim();
+  const env = (b && b.env) || "";
+  if (!name) return { __status: 422, code: "validation_failed", message: "name is required" };
+  if (DO.ENVIRONMENTS.indexOf(env) === -1) {
+    return { __status: 422, code: "validation_failed", message: "env must be one of " + DO.ENVIRONMENTS.join(", ") };
+  }
+  if (S.deployments.some((d) => d.name === name && d.env === env)) {
+    return { __status: 409, code: "conflict", message: name + " is already deployed to " + env };
+  }
+  const d = { id: "dep-" + S.nextDeploymentId++, name, env, status: "active", last: "2026-08-22" };
+  S.deployments.push(d);
+  devActivity(name + " deployed to " + env, "Deployment · just now", "deployment");
+  return { __status: 201, ...deployRow(d) };
+});
 on("POST /dev/deployments/{id}/toggle", (p) => {
   const d = S.deployments.find((x) => x.id === p.id);
   if (!d) return notFound;
   d.status = d.status === "active" ? "inactive" : "active";
-  return d;
+  devActivity(d.name + (d.status === "active" ? " started" : " stopped"), "Deployment · just now", "deployment");
+  return deployRow(d);
 });
-on("GET /dev/telemetry", () => ({ uptime_pct: 99.8, latency_ms: series("tel|lat", 24, 45, 12), error_rate: series("tel|err", 24, 0.4, 0.3) }));
+on("GET /dev/deployments/{id}/logs", (p, q) => {
+  const d = S.deployments.find((x) => x.id === p.id);
+  if (!d) return notFound;
+  return { id: d.id, lines: DO.logLines(d.name, Math.min(100, parseInt(q.limit, 10) || 8)) };
+});
+
+on("GET /dev/telemetry", (p, q) => {
+  const refresh = Math.max(0, parseInt(q.refresh, 10) || 0);
+  S.devRefresh = refresh;
+  const items = S.deployments.map((d) => {
+    const t = DO.telemetry(d.name, refresh, d.status);
+    return {
+      id: d.id,
+      name: d.name,
+      env: d.env,
+      status: d.status,
+      ...t,
+      latency_series: t.serving ? DO.seriesFor(d.name, "latency") : [],
+      error_series: t.serving ? DO.seriesFor(d.name, "errors") : [],
+    };
+  });
+  return { refresh, fleet: DO.fleet(S.deployments, refresh), items };
+});
+
+on("GET /dev/activity", (p, q) => page(S.devActivity, q));
+
+const ALERT_METRICS = ["accuracy", "response", "uptime", "errors"];
 on("GET /dev/alert-rules", (p, q) => page(S.devAlertRules, q));
 on("POST /dev/alert-rules", (p, q, b) => {
-  const r = { id: "dar-" + (S.devAlertRules.length + 1), metric: (b && b.metric) || "latency_ms", threshold: (b && b.threshold) || 100 };
+  const body = b || {};
+  if (ALERT_METRICS.indexOf(body.metric) === -1) {
+    return { __status: 422, code: "validation_failed", message: "metric must be one of " + ALERT_METRICS.join(", ") };
+  }
+  if (typeof body.threshold !== "number" || !isFinite(body.threshold)) {
+    return { __status: 422, code: "validation_failed", message: "threshold must be a number" };
+  }
+  const r = {
+    id: "dar-" + S.nextAlertRuleId++,
+    metric: body.metric,
+    comparator: body.comparator === "below" ? "below" : "above",
+    threshold: body.threshold,
+    deployment: body.deployment || null,
+    enabled: true,
+  };
   S.devAlertRules.push(r);
   return { __status: 201, ...r };
+});
+on("PATCH /dev/alert-rules/{id}", (p, q, b) => {
+  const r = S.devAlertRules.find((x) => x.id === p.id);
+  if (!r) return notFound;
+  Object.assign(r, b || {});
+  return r;
+});
+on("DELETE /dev/alert-rules/{id}", (p) => {
+  const r = S.devAlertRules.find((x) => x.id === p.id);
+  if (!r) return notFound;
+  S.devAlertRules = S.devAlertRules.filter((x) => x.id !== p.id);
+  return { ok: true };
 });
 
 /* ---- collab ---- */
@@ -634,6 +1119,29 @@ on("GET /revenue/summary", () => {
 });
 on("GET /revenue/payouts", (p, q) => page([{ period: "2026-07", amount: 186966, status: "settled" }, { period: "2026-08", amount: 224513, status: "scheduled" }], q));
 on("GET /market-data/sources", (p, q) => page(D.marketData.sources, q));
+/* Preview rows use the same seed key the market-data page uses offline,
+ * so the live table and the offline table show identical rows. */
+function previewRows(key, extra, n) {
+  const src = D.marketData.sources.find((s) => s.key === key);
+  if (!src) return null;
+  const rand = seed.rng(seed.hash("mdrows|" + key + "|" + extra));
+  const rows = [];
+  for (let i = 0; i < (n || 8); i++) {
+    const sym = src.symbols[Math.floor(rand() * src.symbols.length)];
+    rows.push({
+      t: "t-" + (extra > 0 ? "live" : (8 - i) + "m"),
+      sym: sym,
+      px: (40 + rand() * 460).toFixed(2),
+      vol: Math.round(1000 + rand() * 90000).toLocaleString("en-US"),
+    });
+  }
+  return rows;
+}
+on("GET /market-data/sources/{key}/preview", (p, q) => {
+  const rows = previewRows(p.key, 0, q.limit ? parseInt(q.limit, 10) : 8);
+  if (!rows) return notFound;
+  return page(rows, {});
+});
 
 /* ---- funding ---- */
 const fundingAll = () => S.fundingProjects.concat(S.fundingRequests);
@@ -851,30 +1359,111 @@ on("GET /gdpr/retention-jobs", (p, q) => page([{ job: "session-purge", last_run:
 /* ---- SSE endpoints ---- */
 const SSE = {
   "GET /market-data/stream": (req, res, p, q) => {
-    const syms = (q.symbols || "AAPL,MSFT,NVDA").split(",");
-    let tick = 0;
+    /* Advances the shared session walk, so a fill printed by the order
+     * endpoint and a quote printed here come from the same series. */
+    const syms = (q.symbols ? String(q.symbols).split(",") : MKT.symbols()).map((x) => x.trim().toUpperCase());
     return setInterval(() => {
-      tick += 1;
-      const s = syms[tick % syms.length];
-      const r = seed.rng(seed.hash("sse|" + s + "|" + tick));
-      sseSend(res, "quote.tick", tick, { symbol: s, price: +(40 + r() * 460).toFixed(2) });
+      S.tick += 1;
+      settlePending(S.tick);
+      syms.forEach((sym) => {
+        const px = MKT.priceAt(sym, S.tick);
+        if (px == null) return;
+        sseSend(res, "quote.tick", S.tick, { symbol: sym, price: +px.toFixed(2), tick: S.tick });
+      });
     }, 1000);
   },
   "GET /backtests/{id}/events": (req, res, p) => {
-    let pct = 0;
+    /* Steps come from the shared engine keyed on the run id, so a client
+     * that loses the stream and finishes the run locally walks through the
+     * same percentages instead of inventing its own. The run is marked
+     * completed server-side on the last frame, which is what makes it show
+     * up in the results table after a reload. */
+    const run = S.backtests.find((r) => r.id === p.id);
+    const steps = BT.steps(p.id);
+    let i = 0;
+    if (run && run.status === "queued") run.status = "running";
     return setInterval(() => {
-      pct = Math.min(100, pct + 20);
-      sseSend(res, pct < 100 ? "backtest.progress" : "backtest.completed", pct, { id: p.id, progress: pct });
-      if (pct >= 100) res.end();
-    }, 700);
+      if (i >= steps.length) return;
+      const pct = steps[i++];
+      if (run) run.progress = pct;
+      if (pct >= 100) {
+        if (run) {
+          run.status = "completed";
+          run.progress = 100;
+        }
+        sseSend(res, "backtest.completed", pct, { id: p.id, progress: 100, run: run ? btRow(run) : { id: p.id, progress: 100, status: "completed" } });
+        res.end();
+        return;
+      }
+      sseSend(res, "backtest.progress", pct, { id: p.id, progress: pct });
+    }, 500);
   },
   "GET /dev/training-jobs/{id}/logs": (req, res, p) => {
+    /* Log lines quote the same loss curve the progress frames report, so
+     * the log and the meter tell one story rather than two. */
+    const job = S.trainingJobs.find((x) => x.id === p.id);
+    const name = job ? job.name : p.id;
     let n = 0;
     return setInterval(() => {
       n += 1;
-      sseSend(res, "training.log", n, { id: p.id, line: "epoch " + n + " loss " + (0.2 / n).toFixed(4) });
+      const pct = Math.min(100, n * 12);
+      const m = DO.jobMetrics(name, pct);
+      sseSend(res, "training.log", n, {
+        id: p.id,
+        line: "epoch " + n + "  loss " + m.loss.toFixed(3) + "  acc " + m.accuracy.toFixed(1) + "%",
+      });
       if (n >= 8) res.end();
     }, 600);
+  },
+  "GET /dev/training-jobs/{id}/events": (req, res, p) => {
+    /* Steps come from the shared engine keyed on the job name, so a client
+     * that loses the stream and finishes locally walks the same sequence.
+     * A paused job stops emitting rather than closing, so a resume picks
+     * the stream back up where it left off. */
+    const job = S.trainingJobs.find((x) => x.id === p.id);
+    if (job && job.status === "queued") job.status = "running";
+    const name = job ? job.name : p.id;
+    const steps = DO.jobSteps(name);
+    let i = 0;
+    return setInterval(() => {
+      if (!job || job.status === "paused" || i >= steps.length) return;
+      const pct = steps[i++];
+      job.progress = pct;
+      const m = DO.jobMetrics(name, pct);
+      if (pct >= 100) {
+        job.status = "completed";
+        devActivity(job.name + " finished at " + m.accuracy + "% accuracy", "Training · just now", "test");
+        sseSend(res, "training.completed", pct, { id: p.id, progress: 100, accuracy: m.accuracy, loss: m.loss });
+        res.end();
+        return;
+      }
+      sseSend(res, "training.progress", pct, { id: p.id, progress: pct, accuracy: m.accuracy, loss: m.loss });
+    }, 500);
+  },
+  "GET /market-data/sources/{key}/stream": (req, res, p) => {
+    let n = 0;
+    return setInterval(() => {
+      n += 1;
+      const rows = previewRows(p.key, n, 1);
+      if (!rows) {
+        res.end();
+        return;
+      }
+      sseSend(res, "preview.row", n, rows[0]);
+    }, 1000);
+  },
+  "GET /models/{slug}/jobs/{job_id}/events": (req, res, p) => {
+    let pct = 0;
+    return setInterval(() => {
+      pct = Math.min(100, pct + 25);
+      if (pct < 100) {
+        sseSend(res, "run.progress", pct, { id: p.job_id, slug: p.slug, progress: pct });
+        return;
+      }
+      const job = RUN_JOBS.get(p.job_id);
+      sseSend(res, "run.completed", pct, { id: p.job_id, slug: p.slug, progress: 100, result: job ? job.result : null });
+      res.end();
+    }, 400);
   },
   "GET /zkml/verifications/{id}/events": (req, res, p) => {
     const v = S.verifications.find((x) => x.id === p.id);
@@ -1005,7 +1594,7 @@ const server = http.createServer((req, res) => {
     }
 
     /* idempotency: required on mutating POSTs, replayed within the process */
-    if (req.method === "POST") {
+    if (req.method === "POST" && IDEMPOTENT_ROUTES.has(matched)) {
       const key = req.headers["idempotency-key"];
       if (!key) {
         res.writeHead(400, { ...base, "Content-Type": "application/json" });
@@ -1035,7 +1624,9 @@ const server = http.createServer((req, res) => {
       delete out.__status;
     }
     const payload = JSON.stringify(status >= 400 ? { ...out, request_id: requestId } : out);
-    if (req.method === "POST") S.idempotency.set(req.headers["idempotency-key"], { status, body: payload });
+    if (req.method === "POST" && req.headers["idempotency-key"]) {
+      S.idempotency.set(req.headers["idempotency-key"], { status, body: payload });
+    }
     res.writeHead(status, { ...base, "Content-Type": "application/json" });
     res.end(payload);
   });

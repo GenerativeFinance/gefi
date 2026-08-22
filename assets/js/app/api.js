@@ -154,6 +154,9 @@
   api.patch = function (path, body) {
     return withFallback("PATCH", path, body);
   };
+  api.put = function (path, body) {
+    return withFallback("PUT", path, body);
+  };
   api.del = function (path) {
     return withFallback("DELETE", path);
   };
@@ -261,6 +264,18 @@
       ["/insights?limit=100", function (r) {
         D.insights = r.items;
       }],
+      ["/developers?limit=100", function (r) {
+        if (r.items && r.items.length) D.developers = r.items;
+      }],
+      ["/backtests?limit=100", function (r) {
+        if (r.items && r.items.length) D.backtests = r.items;
+      }],
+      ["/dev/models?limit=100", function (r) {
+        if (r.items && r.items.length) D.devConsole.models = r.items;
+      }],
+      ["/dev/activity?limit=100", function (r) {
+        if (r.items && r.items.length) D.devConsole.activityFeed = r.items;
+      }],
     ];
     return Promise.all(
       jobs.map(function (job) {
@@ -339,6 +354,36 @@
     api.register("/rebalance/proposals", function () {
       return { trades: [], trade_count: 0, total_value: 0 };
     });
+    /* Marketplace (task 306): offline the page already applied the change
+     * locally using the same shared catalogue module, so acknowledge. */
+    api.register("/subscriptions", function () {
+      return { id: "local", status: "active" };
+    });
+    api.register("/subscriptions/{id}", function () {
+      return { ok: true };
+    });
+    api.register("/preferences", function () {
+      return { wings: [], risk: "medium" };
+    });
+    api.register("/categories", function () {
+      var C = GeFi.catalog;
+      return C ? C.categories(C.catalog()) : [];
+    });
+    api.register("/developers", function () {
+      return D.developers;
+    });
+    /* Trading (task 308): offline the page fills with the SAME shared
+     * market module the server uses, so it just needs an acknowledgement
+     * that carries no server-side fill. */
+    api.register("/orders/{id}", function () {
+      return { ok: true };
+    });
+    api.register("/positions", function () {
+      return [];
+    });
+    api.register("/market-data/sources", function () {
+      return D.marketData.sources;
+    });
     api.register("/datasets", function () {
       return D.datasets;
     });
@@ -361,6 +406,33 @@
       return (GeFi.MODELS || []).map(function (m) {
         return { slug: m.slug, name: m.name, wing: m.wing, risk: m.risk, federated: m.federated, unit: m.unit };
       });
+    });
+    api.register("/backtests", function () {
+      return D.backtests;
+    });
+    api.register("/dev/models", function () {
+      return D.devConsole.models;
+    });
+    api.register("/dev/training-jobs", function () {
+      return D.devConsole.jobs;
+    });
+    api.register("/dev/deployments", function () {
+      return D.devConsole.deployments;
+    });
+    api.register("/dev/activity", function () {
+      return D.devConsole.activityFeed;
+    });
+    /* Offline the page already holds these rules in the shared module, so
+     * the resolver hands back the same object the endpoint would. */
+    api.register("/dev/hyperparameters", function () {
+      var ops = GeFi.devOps;
+      return ops ? { params: ops.HYPERPARAMS, methods: ops.METHODS } : {};
+    });
+    /* Offline the page assigns the run its own id and replays the same
+     * seeded step sequence; metrics are keyed on the model and window, not
+     * on the id, so the finished run reports identical numbers either way. */
+    api.register("/optimizer/runs", function () {
+      return { status: "queued" };
     });
     api.register("/models/{slug}/metrics", function (p) {
       var m = (GeFi.MODELS || []).filter(function (x) {

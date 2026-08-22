@@ -18,6 +18,7 @@
       sessionOrders = (JSON.parse(sessionStorage.getItem("gefi-app-orders-live") || "[]")).map(function (o, i) {
         return {
           id: "SES-" + (100 + i),
+          serverId: o.id || null,
           strategy: "Manual (this session)",
           symbol: o.symbol,
           side: o.side.toUpperCase(),
@@ -31,6 +32,17 @@
         };
       });
     } catch (e) {}
+    /* A fill placed while the API was answering is already in the ledger
+     * the server just sent us. Keep the server's record and drop the local
+     * echo, or the same trade is listed twice. Offline fills have no server
+     * id and stay. */
+    var inLedger = {};
+    (D.orders || []).forEach(function (o) {
+      inLedger[o.id] = true;
+    });
+    sessionOrders = sessionOrders.filter(function (o) {
+      return !(o.serverId && inLedger[o.serverId]);
+    });
     var ALL = sessionOrders.concat(D.orders);
 
     function filtered() {

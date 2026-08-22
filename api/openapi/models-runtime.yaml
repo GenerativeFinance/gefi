@@ -1,12 +1,25 @@
 openapi: 3.0.3
 info:
   title: GeFi Model runtime & inference
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Real inference behind /v1/models/{slug}/run (the one contract the site already ships), job queue for slow models, per-model metrics refresh.
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Inference behind POST /v1/models/{slug}/run — the one contract the site
+    already ships — plus model metadata/metrics and an async job variant for
+    long runs. Filled in by ledger task 307.
+
+
+    THE RUN SHAPE IS FIXED BY THE EXISTING HARNESS. assets/js/model-demo.js
+    already posts `{ inputs: {...} }` and expects a result
+    whose `kind` selects the renderer: score, curve, bars, table, waterfall
+    or text. That contract is documented here as-is; the mock produces it
+    with the very scorer the harness uses offline (the shared pure module
+    assets/js/model-runtime.js), so a given (slug, inputs) pair yields
+    identical output whether or not an API is answering.
+
+
+    `sample: true` marks output produced by that deterministic scorer rather
+    than a trained model. A real runtime would omit it and the demo would
+    drop its "Sample output" note accordingly.
 servers:
   - url: /v1
     description: >
@@ -18,76 +31,194 @@ security:
 tags:
   - name: models-runtime
     description: "Model runtime & inference"
+components:
+  schemas:
+    RunRequest:
+      type: object
+      required: [inputs]
+      description: >
+        Exactly what assets/js/model-demo.js posts today: the demo form under
+        an `inputs` key, one property per declared field using the field's own
+        name. Numbers and ranges arrive as numbers, checkboxes as booleans,
+        everything else as strings.
+      properties:
+        inputs:
+          type: object
+          additionalProperties: true
+      example:
+        inputs: { revenue: 2500000, amount: 350000, sector: "Manufacturing", audited: true }
+    Driver:
+      type: object
+      properties:
+        name: { type: string }
+        weight: { type: number, description: "Signed contribution, -1..1." }
+    Series:
+      type: object
+      properties:
+        name: { type: string }
+        values: { type: array, items: { type: number } }
+        kind: { type: string, enum: [area, line, dashed] }
+    RunResult:
+      type: object
+      required: [kind]
+      description: "`kind` selects the renderer; the other fields are per-kind."
+      properties:
+        kind: { type: string, enum: [score, curve, bars, table, waterfall, text] }
+        sample: { type: boolean, description: "True when produced by the deterministic sample scorer." }
+        value: { type: number, description: "score/waterfall: the headline number." }
+        label: { type: string }
+        drivers: { type: array, items: { $ref: '#/components/schemas/Driver' } }
+        series: { type: array, items: { $ref: '#/components/schemas/Series' } }
+        xLabels: { type: array, items: { type: string } }
+        bars:
+          type: array
+          items:
+            type: object
+            properties:
+              label: { type: string }
+              pct: { type: number, description: "Bars sum to 100." }
+        columns: { type: array, items: { type: string } }
+        rows:
+          type: array
+          items: { type: array, items: { type: string } }
+        base: { type: number, description: "waterfall: starting value before contributions." }
+        contribs:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              delta: { type: number }
+        text: { type: string, description: "text: the narrative output." }
+    Job:
+      type: object
+      properties:
+        id: { type: string }
+        slug: { type: string }
+        status: { type: string, enum: [queued, running, completed, failed] }
+        progress: { type: integer, description: "0–100." }
+        result: { $ref: '#/components/schemas/RunResult' }
+    ModelMetrics:
+      type: object
+      properties:
+        slug: { type: string }
+        unit: { type: string, description: "What the headline series measures." }
+        series: { type: array, items: { type: number } }
+        metrics_as_of: { type: string, format: date, description: "When these metrics were last recomputed." }
 paths:
   /models/{slug}/run:
     post:
       operationId: post-models-slug-run
-      summary: "Run inference (sync when fast; 202 + job when queued)"
+      summary: "Run inference (sync by default; async=true returns a job)"
       tags: [models-runtime]
       parameters:
         - name: slug
           in: path
           required: true
-          schema:
-            type: string
-        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+          schema: { type: string }
+        - name: async
+          in: query
+          description: "Queue the run instead of waiting; returns 202 and a job id."
+          schema: { type: string, enum: ["true", "false"] }
+        - name: Idempotency-Key
+          in: header
+          required: false
+          description: >
+            OPTIONAL here, unlike other mutating POSTs: the shipped demo
+            harness (assets/js/model-demo.js) does not send one, and this
+            contract documents what that harness actually does. A run is
+            deterministic for a given (slug, inputs) pair anyway, so a
+            replay is harmless. Clients that do send a key get the usual
+            replay semantics.
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RunRequest' }
       responses:
+        '200':
+          description: >
+            Inference result. The harness accepts either the RunResult
+            directly or an envelope `{ result: RunResult }`, and falls back
+            to rendering the payload as text if `kind` is missing — so a
+            response without `kind` degrades rather than breaking.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/RunResult' } } }
         '202':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Queued (async=true).
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Job' } } }
+        '404':
+          description: No such model.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /models/{slug}/jobs/{job_id}:
     get:
       operationId: get-models-slug-jobs-job_id
-      summary: "Inference job status/result"
+      summary: "Inference job status and result"
       tags: [models-runtime]
       parameters:
         - name: slug
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
         - name: job_id
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
-  /models/{slug}/metrics:
+          description: Job.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Job' } } }
+        '404':
+          description: No such job.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
+  /models/{slug}/jobs/{job_id}/events:
     get:
-      operationId: get-models-slug-metrics
-      summary: "Current model metrics (unit series the tiles chart)"
+      operationId: get-models-slug-jobs-job_id-events
+      summary: "Progress stream for a queued run"
       tags: [models-runtime]
       parameters:
         - name: slug
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
+        - name: job_id
+          in: path
+          required: true
+          schema: { type: string }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: >
+            Event stream per the _envelope.yaml SSE convention:
+            `run.progress` frames, then `run.completed` carrying the result.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            text/event-stream:
+              schema: { $ref: '_envelope.yaml#/components/schemas/SseEvent' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
+  /models/{slug}/metrics:
+    get:
+      operationId: get-models-slug-metrics
+      summary: "Current model metrics (the series the model tiles chart)"
+      tags: [models-runtime]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Metrics.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/ModelMetrics' } } }
+        '404':
+          description: No such model.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /models/{slug}/metrics/refresh:
     post:
       operationId: post-models-slug-metrics-refresh
@@ -97,16 +228,20 @@ paths:
         - name: slug
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
       responses:
         '202':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Refresh queued.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id: { type: string }
+                  metrics_as_of: { type: string, format: date }
+        '404':
+          description: No such model.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }

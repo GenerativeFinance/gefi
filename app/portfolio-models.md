@@ -9,7 +9,7 @@ permalink: /app/portfolio-models/
 sitemap: false
 robots: noindex
 primary_action: { label: "Browse Models", url: "/app/marketplace/" }
-app_script: /assets/js/app/portfolio-models.js
+app_scripts: [/assets/js/app/catalog.js, /assets/js/app/portfolio-models.js]
 ---
 
 <div class="app-kpis" data-pm-kpis></div>

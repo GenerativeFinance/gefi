@@ -8,7 +8,9 @@ active_tab: Overview
 permalink: /app/dev-models/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/dev-console.js
+app_scripts:
+  - /assets/js/app/devops-math.js
+  - /assets/js/app/dev-console.js
 ---
 
 <div class="app-kpis" data-dc-kpis></div>
@@ -26,6 +28,8 @@ app_script: /assets/js/app/dev-console.js
   </select>
   <button type="button" class="app-btn app-btn--primary" data-dm-new>Create Model</button>
 </div>
+
+<div data-dm-root>
 
 <div class="app-gridcards app-gridcards--two" data-dm-grid></div>
 <div data-dm-empty hidden></div>
@@ -47,10 +51,13 @@ app_script: /assets/js/app/dev-console.js
           <option>Blank scaffold</option><option>Time-series classifier</option><option>Portfolio optimiser</option>
         </select>
       </label>
+      <p class="app-kpi__sub" data-dm-error role="alert" style="color:var(--app-red);"></p>
       <div class="app-modal__actions">
         <button type="button" class="app-btn app-btn--ghost" data-dm-modal-cancel>Cancel</button>
         <button type="submit" class="app-btn app-btn--primary">Create draft</button>
       </div>
     </form>
   </div>
+</div>
+
 </div>

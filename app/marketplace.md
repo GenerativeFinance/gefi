@@ -8,7 +8,7 @@ active_tab: AI Marketplace
 permalink: /app/marketplace/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/marketplace.js
+app_scripts: [/assets/js/app/catalog.js, /assets/js/app/marketplace.js]
 ---
 
 <div class="app-filterbar">
