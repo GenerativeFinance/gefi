@@ -222,11 +222,16 @@
         subBtn.textContent = done ? "Subscribed ✓" : "Subscribe";
         subBtn.disabled = done;
         subBtn.addEventListener("click", function () {
+          /* Optimistic locally, then confirm through the contract. The
+           * recommended rows are curated by name, so map to a catalogue
+           * slug when one exists; otherwise the local state still holds. */
           st.subscribed.push(r.name);
           saveState(st);
           renderRecommended();
           renderActive();
           renderKpis();
+          var match = (GeFi.MODELS || []).filter(function (m) { return m.name === r.name; })[0];
+          if (match) GeFi.api.post("/subscriptions", { slug: match.slug, plan: "standard" }).catch(function () {});
         });
         var details = document.createElement("a");
         details.className = "app-btn app-btn--ghost";

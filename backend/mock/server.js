@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -83,8 +83,9 @@ const D = GeFi.DEMO;
 const MODELS = GeFi.MODELS;
 const seed = GeFi.seed;
 const RB = GeFi.rebalanceMath; /* shared with the client page (task 305) */
-if (!D || !MODELS || !seed || !RB) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath");
+const CAT = GeFi.catalog; /* shared with the marketplace pages (task 306) */
+if (!D || !MODELS || !seed || !RB || !CAT) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog");
   process.exit(1);
 }
 
@@ -153,7 +154,7 @@ function freshState() {
     lastRebalance: "15 days ago",
     rebalanceSettings: { threshold_pct: 5, auto: false, frequency: "Quarterly", account_costs: true, tax_aware: true },
     ratings: {},
-    subscriptions: [{ id: "sub-1", slug: MODELS[1].slug, since: "2026-06-01" }],
+    subscriptions: [{ id: "sub-1", slug: MODELS[1].slug, plan: "standard", monthly_fee: GeFi.catalog.monthlyFee(MODELS[1]), since: "2026-06-01", next_renewal: "2026-09-22", status: "active" }],
     preferences: { wings: [], risk: "medium" },
     devModels: D.devConsole.models.map((m, i) => ({ id: "dm-" + (i + 1), ...m })),
     trainingJobs: D.devConsole.jobs.map((j, i) => ({ id: "tj-" + (i + 1), ...j })),
@@ -414,40 +415,101 @@ on("PATCH /rebalance/settings", (p, q, b) => {
   return S.rebalanceSettings;
 });
 
-/* ---- marketplace ---- */
-const catalogRow = (m) => ({ slug: m.slug, name: m.name, wing: m.wing, risk: m.risk, federated: m.federated, unit: m.unit });
+/* ---- marketplace (task 306) — catalogue math via the SHARED module ---- */
+const FEE_OF = (slug) => {
+  const m = MODELS.find((x) => x.slug === slug);
+  return m ? CAT.monthlyFee(m) : 0;
+};
+const RENEWAL = "2026-09-22";
+
 on("GET /models", (p, q) => {
-  let rows = MODELS.map(catalogRow);
-  if (q.wing) rows = rows.filter((m) => m.wing === q.wing);
-  if (q.risk) rows = rows.filter((m) => m.risk === q.risk);
-  if (q.federated) rows = rows.filter((m) => String(m.federated) === q.federated);
-  return page(rows, q);
+  const rows = CAT.filter(CAT.catalog(), q);
+  const out = page(rows, q);
+  out.total = rows.length;
+  return out;
 });
 on("GET /models/{slug}", (p) => {
   const m = MODELS.find((x) => x.slug === p.slug);
-  return m ? { ...catalogRow(m), series: m.series } : notFound;
+  return m ? CAT.decorate(m) : notFound;
 });
-on("GET /models/{slug}/ratings", (p, q) => page(S.ratings[p.slug] || [{ user: "quantessence", stars: 5, comment: "Deterministic and well documented." }], q));
+on("GET /models/{slug}/ratings", (p, q) => {
+  const own = S.ratings[p.slug] || [];
+  const seeded = [{ user: "quantessence", stars: 5, comment: "Deterministic and well documented." }];
+  const out = page(own.concat(seeded), q);
+  out.summary = CAT.ratingsSummary(p.slug);
+  return out;
+});
 on("POST /models/{slug}/ratings", (p, q, b) => {
+  const stars = b && b.stars;
+  if (!(stars >= 1 && stars <= 5)) {
+    return { __status: 422, code: "validation_failed", message: "stars must be between 1 and 5.", details: [{ field: "stars", issue: "out of range" }] };
+  }
   S.ratings[p.slug] = S.ratings[p.slug] || [];
-  const r = { user: "you", stars: (b && b.stars) || 5, comment: (b && b.comment) || "" };
+  const r = { user: "you", stars: stars, comment: (b && b.comment) || "" };
   S.ratings[p.slug].push(r);
   return { __status: 201, ...r };
 });
+on("GET /categories", (p, q) => {
+  const cats = CAT.categories(CAT.catalog());
+  const out = page(cats, q);
+  out.total_models = cats.reduce((n, c) => n + c.model_count, 0);
+  return out;
+});
+on("GET /developers", (p, q) => {
+  let rows = D.developers.slice();
+  if (q.q) {
+    const needle = String(q.q).toLowerCase();
+    rows = rows.filter((d) => (d.name + " " + d.handle + " " + d.specialties.join(" ")).toLowerCase().includes(needle));
+  }
+  if (q.verified) rows = rows.filter((d) => String(d.verified) === q.verified);
+  return page(rows, q);
+});
 on("GET /subscriptions", (p, q) => page(S.subscriptions, q));
 on("POST /subscriptions", (p, q, b) => {
-  const sub = { id: "sub-" + (S.subscriptions.length + 1), slug: b && b.slug, since: "2026-08-22" };
+  const slug = b && b.slug;
+  if (!slug) return { __status: 422, code: "validation_failed", message: "slug is required.", details: [{ field: "slug", issue: "missing" }] };
+  if (!MODELS.some((m) => m.slug === slug)) return { __status: 404, code: "not_found", message: "No model with slug " + slug + "." };
+  if (S.subscriptions.some((s) => s.slug === slug && s.status !== "cancelled")) {
+    return { __status: 409, code: "conflict", message: "Already subscribed to " + slug + "." };
+  }
+  /* Billing stub: a plan and a fee, but no payment is taken (see the
+   * BILLING GAP note in api/openapi/marketplace.yaml). */
+  const sub = {
+    id: "sub-" + (S.subscriptions.length + 1),
+    slug: slug,
+    plan: (b && b.plan) || "standard",
+    monthly_fee: FEE_OF(slug),
+    since: "2026-08-22",
+    next_renewal: RENEWAL,
+    status: "active",
+  };
   S.subscriptions.push(sub);
   return { __status: 201, ...sub };
 });
 on("DELETE /subscriptions/{id}", (p) => {
+  /* Accept either the subscription id or the model slug — the UI knows
+   * the slug, and making the caller look up an id first buys nothing. */
   const before = S.subscriptions.length;
-  S.subscriptions = S.subscriptions.filter((s) => s.id !== p.id);
+  S.subscriptions = S.subscriptions.filter((s) => s.id !== p.id && s.slug !== p.id);
   return before === S.subscriptions.length ? notFound : { ok: true };
 });
-on("GET /billing/invoices", (p, q) => page(S.subscriptions.map((s, i) => ({ id: "inv-" + (i + 1), subscription: s.id, amount_usd: 49, period: "2026-08" })), q));
-on("GET /recommendations", () => ({ items: MODELS.filter((m) => !S.preferences.wings.length || S.preferences.wings.includes(m.wing)).slice(0, 6).map(catalogRow), next_cursor: null }));
-on("GET /trending", () => ({ items: MODELS.slice().sort((a, b) => seed.hash("tr|" + b.slug) - seed.hash("tr|" + a.slug)).slice(0, 8).map(catalogRow), next_cursor: null }));
+on("GET /billing/invoices", (p, q) =>
+  page(
+    S.subscriptions.map((s, i) => ({
+      id: "inv-" + (i + 1),
+      subscription: s.id,
+      amount_usd: s.monthly_fee != null ? s.monthly_fee : FEE_OF(s.slug),
+      period: "2026-08",
+      status: "sample",
+    })),
+    q
+  ));
+on("GET /recommendations", () => ({
+  items: CAT.recommend(CAT.catalog(), S.preferences, 6),
+  next_cursor: null,
+  based_on: S.preferences,
+}));
+on("GET /trending", () => ({ items: CAT.trending(CAT.catalog(), 8), next_cursor: null }));
 on("GET /preferences", () => S.preferences);
 on("PUT /preferences", (p, q, b) => {
   S.preferences = b || S.preferences;

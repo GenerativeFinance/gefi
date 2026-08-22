@@ -154,6 +154,9 @@
   api.patch = function (path, body) {
     return withFallback("PATCH", path, body);
   };
+  api.put = function (path, body) {
+    return withFallback("PUT", path, body);
+  };
   api.del = function (path) {
     return withFallback("DELETE", path);
   };
@@ -261,6 +264,9 @@
       ["/insights?limit=100", function (r) {
         D.insights = r.items;
       }],
+      ["/developers?limit=100", function (r) {
+        if (r.items && r.items.length) D.developers = r.items;
+      }],
     ];
     return Promise.all(
       jobs.map(function (job) {
@@ -338,6 +344,24 @@
     });
     api.register("/rebalance/proposals", function () {
       return { trades: [], trade_count: 0, total_value: 0 };
+    });
+    /* Marketplace (task 306): offline the page already applied the change
+     * locally using the same shared catalogue module, so acknowledge. */
+    api.register("/subscriptions", function () {
+      return { id: "local", status: "active" };
+    });
+    api.register("/subscriptions/{id}", function () {
+      return { ok: true };
+    });
+    api.register("/preferences", function () {
+      return { wings: [], risk: "medium" };
+    });
+    api.register("/categories", function () {
+      var C = GeFi.catalog;
+      return C ? C.categories(C.catalog()) : [];
+    });
+    api.register("/developers", function () {
+      return D.developers;
     });
     api.register("/datasets", function () {
       return D.datasets;
