@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -89,8 +89,9 @@ const MKT = GeFi.market; /* shared with the trading page (task 308) */
 const BT = GeFi.backtest; /* shared with the backtesting page (task 309) */
 const DO = GeFi.devOps; /* shared with the dev console pages (task 310) */
 const CO = GeFi.collab; /* shared with the collaboration pages (task 311) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab");
+const DP = GeFi.dataPlatform; /* shared with the provider pages (task 312) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform");
   process.exit(1);
 }
 
@@ -265,6 +266,14 @@ function freshState() {
     })),
     datasets: D.datasets.map((d) => ({ ...d })),
     datasetExtra: [],
+    nextDatasetId: 1,
+    /* Provider feed (task 312): derived from what the registry holds, so it
+     * cannot narrate events the data does not support. */
+    providerActivity: D.datasets.slice(0, 5).map((d, i) => ({
+      title: d.status === "processing" ? d.name + " is processing" : d.name + " " + (i % 2 ? "gained a subscriber" : "passed its quality audit"),
+      detail: d.category + " · " + d.subscribers + " subscribers",
+      when: ["2h ago", "6h ago", "yesterday", "2 days ago", "3 days ago"][i],
+    })),
     fundingProjects: D.fundingProjects.map((p) => ({ ...p })),
     fundingRequests: [],
     contributions: [],
@@ -1242,33 +1251,135 @@ on("POST /bounties/{id}/review", (p, q, body) => {
   return { bounty: bountyRow(b), submission: sub, reward };
 });
 
-/* ---- data-platform ---- */
+function providerActivity(title, detail) {
+  S.providerActivity.unshift({ title, detail, when: "just now" });
+}
+
+/* ---- data-platform (task 312) ----
+ * Quality scoring, pricing and revenue accounting come from the shared
+ * engine. Revenue is never stored: it is the sum of a dataset's line items,
+ * so every aggregate here is the sum of numbers a client can re-add. */
 const allDatasets = () => S.datasets.concat(S.datasetExtra);
-on("GET /datasets", (p, q) => page(allDatasets(), q));
-on("POST /datasets", (p, q, b) => {
-  const d = { id: "DS-NEW-" + (S.datasetExtra.length + 1), name: (b && b.name) || "New dataset", category: (b && b.category) || "Alternative", quality: 0, rows: "—", status: "processing", revenue: 0, downloads: 0, subscribers: 0 };
-  S.datasetExtra.push(d);
-  return { __status: 202, ...d };
+const liveDatasets = () => allDatasets().filter((d) => d.status !== "archived");
+
+on("GET /datasets", (p, q) => {
+  let rows = liveDatasets().map(DP.view);
+  if (q.status) rows = rows.filter((d) => d.status === q.status);
+  if (q.category) rows = rows.filter((d) => d.category === q.category);
+  return page(rows, q);
 });
-on("GET /datasets/{id}", (p) => allDatasets().find((d) => d.id === p.id) || notFound);
-on("POST /datasets/{id}/archive", (p) => {
+on("POST /datasets", (p, q, b) => {
+  const why = DP.validateUpload(b || {}, allDatasets());
+  if (why) {
+    return why.indexOf("already exists") > -1
+      ? { __status: 409, code: "conflict", message: why }
+      : { __status: 422, code: "validation_failed", message: why };
+  }
+  const d = {
+    id: "DS-NEW-" + S.nextDatasetId++,
+    name: String(b.name).trim(),
+    category: (b && b.category) || "Alternative",
+    rows: (b && b.rows) || "1M",
+    status: "processing",
+    downloads: 0,
+    subscribers: 0,
+  };
+  S.datasetExtra.push(d);
+  providerActivity(d.name + " is processing", d.category + " · ingestion started");
+  /* Stand-in for ingestion + the quality audit. Until this fires the
+   * dataset has no score and earns nothing, which is the honest state. */
+  setTimeout(() => {
+    if (d.status !== "processing") return;
+    d.status = "published";
+    providerActivity(d.name + " published", d.category + " · quality " + DP.quality(d.id, "published"));
+  }, 2000);
+  return { __status: 202, ...DP.view(d) };
+});
+on("GET /datasets/{id}", (p) => {
+  const d = allDatasets().find((x) => x.id === p.id);
+  return d ? DP.view(d) : notFound;
+});
+on("PATCH /datasets/{id}", (p, q, b) => {
   const d = allDatasets().find((x) => x.id === p.id);
   if (!d) return notFound;
+  if (b && b.name !== undefined) d.name = String(b.name).trim() || d.name;
+  if (b && b.category !== undefined) d.category = b.category;
+  return DP.view(d);
+});
+on("POST /datasets/{id}/archive", (p, q, b) => {
+  const d = allDatasets().find((x) => x.id === p.id);
+  if (!d) return notFound;
+  /* Typed confirmation, checked with the same rule the page applies. */
+  const why = DP.validateArchive(d, b && b.confirm);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
   d.status = "archived";
-  return d;
+  providerActivity(d.name + " archived", "existing subscribers keep read access");
+  return DP.view(d);
 });
 on("GET /datasets/{id}/quality", (p) => {
   const d = allDatasets().find((x) => x.id === p.id);
   if (!d) return notFound;
-  const r = seed.rng(seed.hash("dq|" + p.id));
-  return { id: d.id, quality: d.quality, completeness: +(90 + r() * 9).toFixed(1), freshness: +(85 + r() * 14).toFixed(1), lineage: "complete" };
+  const audited = d.status === "published";
+  return { id: d.id, status: d.status, quality: audited ? DP.quality(d.id, d.status) : null, audited };
 });
-on("GET /dataset-subscriptions", (p, q) => page(allDatasets().filter((d) => d.subscribers > 0).map((d) => ({ dataset: d.id, subscribers: d.subscribers })), q));
+on("GET /dataset-subscriptions", (p, q) =>
+  page(
+    liveDatasets()
+      .filter((d) => d.subscribers > 0)
+      .map((d) => ({
+        id: "dsub-" + d.id,
+        dataset: d.id,
+        subscriber: d.subscribers + " tenants",
+        monthly_fee: DP.terms(d.id).monthlyRate,
+        since: "2025-09-01",
+      })),
+    q
+  )
+);
 on("GET /revenue/summary", () => {
-  const t = allDatasets().reduce((n, d) => n + (d.revenue || 0), 0);
-  return { total_revenue: t, monthly_avg: Math.round(t / 12), datasets: allDatasets().length };
+  const rows = liveDatasets();
+  const t = DP.totals(rows);
+  /* The line items the totals are the sum of, so a client can check the
+   * arithmetic rather than take the headline on trust. */
+  const lineItems = [];
+  rows.forEach((d) => {
+    DP.lineItems(d).forEach((li) => lineItems.push({ dataset: d.id, ...li }));
+  });
+  return {
+    total_revenue: t.revenue,
+    monthly_revenue: t.monthly,
+    datasets: t.datasets,
+    published: t.published,
+    downloads: t.downloads,
+    subscribers: t.subscribers,
+    avg_quality: t.avgQuality,
+    months: DP.MONTHS,
+    monthly_series: DP.monthlySeries(t.revenue),
+    line_items: lineItems,
+  };
 });
-on("GET /revenue/payouts", (p, q) => page([{ period: "2026-07", amount: 186966, status: "settled" }, { period: "2026-08", amount: 224513, status: "scheduled" }], q));
+on("GET /revenue/payouts", (p, q) => {
+  const t = DP.totals(liveDatasets());
+  const series = DP.monthlySeries(t.revenue);
+  /* Each period's amount comes off the same series the summary returns, so
+   * the schedule and the chart cannot disagree. Nothing is settled. */
+  return page(
+    series.map((amount, i) => ({
+      period: "2025-" + String(9 + i).padStart(2, "0"),
+      amount,
+      datasets: t.published,
+      settled: false,
+    })).map((row, i) => {
+      const month = 9 + i;
+      const year = month > 12 ? 2026 : 2025;
+      const m = month > 12 ? month - 12 : month;
+      return { ...row, period: year + "-" + String(m).padStart(2, "0") };
+    }),
+    q
+  );
+});
+on("GET /provider/activity", (p, q) => page(S.providerActivity, q));
+
 on("GET /market-data/sources", (p, q) => page(D.marketData.sources, q));
 /* Preview rows use the same seed key the market-data page uses offline,
  * so the live table and the offline table show identical rows. */

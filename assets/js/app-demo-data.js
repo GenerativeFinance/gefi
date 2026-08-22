@@ -208,20 +208,22 @@
       funding: { status: "COMPLETED", raised: 600, backers: 5, by: "gulf-secure", duration: "2 weeks" } }
   ];
 
+  /* Datasets (task 312): only the ACTIVITY is stored — downloads and
+   * subscriber counts. Revenue and the quality score are derived from that
+   * activity by assets/js/app/dataplatform-math.js, so an aggregate anywhere
+   * in the app is the sum of line items a reader could add up themselves. */
   DEMO.datasets = (function () {
     var cats = ["Market Data", "Alternative", "Credit", "ESG", "Macro", "On-Chain"];
     var rand = GeFi.seed.rng(GeFi.seed.hash("demo|datasets"));
     var rows = [];
     for (var i = 0; i < 12; i++) {
-      var revenue = Math.round(30000 + rand() * 420000);
+      rand(); /* keep the seeded stream aligned with the original row order */
       rows.push({
         id: "DS-" + (7301 + i),
         name: ["Equities EOD Bundle", "Card Spend Aggregates", "SME Loan Performance", "ESG Controversies", "Freight Rates", "Stablecoin Flows", "Filings Corpus", "KYB Registry Deltas", "Options Surface", "Deposit Behavior", "Sanctions Deltas", "Macro Releases"][i],
         category: cats[i % cats.length],
-        quality: +(8.4 + rand() * 1.5).toFixed(1),
         rows: Math.round(2 + rand() * 96) + "M",
         status: i === 10 ? "processing" : i === 11 ? "draft" : "published",
-        revenue: i > 9 ? 0 : revenue,
         downloads: i > 9 ? 0 : Math.round(100 + rand() * 1800),
         subscribers: i > 9 ? 0 : Math.round(4 + rand() * 40)
       });

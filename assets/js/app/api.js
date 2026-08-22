@@ -385,7 +385,22 @@
       return D.marketData.sources;
     });
     api.register("/datasets", function () {
-      return D.datasets;
+      var dp = GeFi.dataPlatform;
+      /* Offline the registry still reports its derived quality and revenue,
+       * so the provider pages read the same numbers either way. */
+      return dp ? D.datasets.map(dp.view) : D.datasets;
+    });
+    api.register("/datasets/{id}", function (params) {
+      var dp = GeFi.dataPlatform;
+      var hit = D.datasets.filter(function (d) { return d.id === params.id; })[0];
+      if (!hit) return undefined;
+      return dp ? dp.view(hit) : hit;
+    });
+    api.register("/datasets/{id}/archive", function (params) {
+      return { id: params.id, status: "archived" };
+    });
+    api.register("/provider/activity", function () {
+      return [];
     });
     api.register("/funding/projects", function () {
       return D.fundingProjects;

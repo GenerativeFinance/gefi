@@ -8,7 +8,9 @@ active_tab: Overview
 permalink: /app/data-provider/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/data-provider.js
+app_scripts:
+  - /assets/js/app/dataplatform-math.js
+  - /assets/js/app/data-provider.js
 ---
 
 <div class="app-kpis" data-dpv-kpis></div>

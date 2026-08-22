@@ -10,50 +10,44 @@
     var fmt = GeFi.fmt;
     var app = GeFi.app;
 
-    var KEY = "gefi-app-datasets";
-    function load() {
-      try {
-        var raw = sessionStorage.getItem(KEY);
-        if (raw) return JSON.parse(raw);
-      } catch (e) {}
-      return { extra: [], archived: [] };
-    }
-    function save() {
-      try {
-        sessionStorage.setItem(KEY, JSON.stringify(st));
-      } catch (e) {}
-    }
-    var st = load();
+    var DP = GeFi.dataPlatform;
+
+    /* The registry, hydrated live and seeded offline. Only activity is
+     * stored — quality and revenue are DERIVED by the shared module, so no
+     * surface can show a figure the line items do not support. */
+    var registry = (D.datasets || []).map(function (d) {
+      return Object.assign({}, d);
+    });
 
     function allDatasets() {
-      return D.datasets.concat(st.extra).filter(function (d) {
-        return st.archived.indexOf(d.id) === -1;
-      });
+      return registry
+        .filter(function (d) { return d.status !== "archived"; })
+        .map(DP.view);
     }
     function totals() {
-      var t = { datasets: 0, revenue: 0, downloads: 0, subscribers: 0, quality: 0 };
-      allDatasets().forEach(function (d) {
-        t.datasets += 1;
-        t.revenue += d.revenue;
-        t.downloads += d.downloads;
-        t.subscribers += d.subscribers;
-        t.quality += d.quality;
-      });
-      t.avgQuality = t.datasets ? +(t.quality / t.datasets).toFixed(1) : 0;
-      return t;
+      return DP.totals(registry.filter(function (d) { return d.status !== "archived"; }));
     }
-    /* shared for tasks 221/222 */
-    GeFi.appProvider = { allDatasets: allDatasets, totals: totals };
+    /* shared for tasks 221/222 — one set of rows, one set of sums */
+    GeFi.appProvider = { allDatasets: allDatasets, totals: totals, refresh: refreshRegistry };
+
+    function refreshRegistry() {
+      return GeFi.api.get("/datasets?limit=100").then(function (r) {
+        if (!r || !r.items || !r.items.length || r.sample) return;
+        registry = r.items;
+      }, function () {});
+    }
 
     /* KPI strip on any provider page that has the container */
     var kpiEl = document.querySelector("[data-dpv-kpis]");
-    if (kpiEl) {
+    function renderKpis() {
+      if (!kpiEl) return;
       var t = totals();
+      kpiEl.innerHTML = "";
       [
-        { label: "Total Datasets", value: String(t.datasets), sub: "in the registry", tone: "" },
-        { label: "Total Revenue", value: fmt.moneyFull(t.revenue), sub: "lifetime, sample", tone: "is-up" },
-        { label: "Active Subscriptions", value: String(t.subscribers), sub: "models + tenants", tone: "" },
-        { label: "Avg Quality Score", value: String(t.avgQuality), sub: "of 10, audited", tone: "" }
+        { key: "datasets", label: "Total Datasets", value: String(t.datasets), sub: t.published + " published", tone: "" },
+        { key: "revenue", label: "Total Revenue", value: fmt.moneyFull(t.revenue), sub: "lifetime, sample", tone: "is-up" },
+        { key: "subscribers", label: "Active Subscriptions", value: String(t.subscribers), sub: "models + tenants", tone: "" },
+        { key: "quality", label: "Avg Quality Score", value: String(t.avgQuality), sub: "of 10, across audited datasets", tone: "" }
       ].forEach(function (k) {
         var card = document.createElement("div");
         card.className = "app-kpi";
@@ -62,6 +56,7 @@
         l.textContent = k.label;
         var v = document.createElement("p");
         v.className = "app-kpi__value";
+        v.setAttribute("data-dpv-kpi", k.key);
         v.textContent = k.value;
         var s = document.createElement("p");
         s.className = "app-kpi__sub " + k.tone;
@@ -72,6 +67,7 @@
         kpiEl.appendChild(card);
       });
     }
+    renderKpis();
 
     /* Overview activity — derived from dataset events, never a blank panel */
     var actEl = document.querySelector("[data-dpv-activity]");
@@ -189,35 +185,84 @@
       upModal.addEventListener("click", function (e) {
         if (e.target === upModal || e.target.closest("[data-ds-modal-cancel]")) upModal.hidden = true;
       });
+      var upError = document.querySelector("[data-ds-error]");
       document.querySelector("[data-ds-form]").addEventListener("submit", function (e) {
         e.preventDefault();
-        var name = e.target.elements.name.value.trim();
-        if (!name) return;
-        var d = {
-          id: "DS-NEW-" + (st.extra.length + 1),
-          name: name,
-          category: e.target.elements.category.value,
-          quality: 0,
-          rows: "—",
-          status: "processing",
-          revenue: 0,
-          downloads: 0,
-          subscribers: 0
+        var form = e.target;
+        var spec = {
+          name: form.elements.name.value.trim(),
+          category: form.elements.category.value,
+          rows: "1M"
         };
-        st.extra.push(d);
-        save();
-        upModal.hidden = true;
-        e.target.reset();
-        renderList();
-        statusLine.textContent = name + " is processing — it publishes when ingestion and the quality audit finish.";
-        setTimeout(function () {
-          d.status = "published";
-          d.quality = 8.6;
-          d.rows = "1M";
-          save();
+        /* Same rule the registry applies, so a name it would refuse is
+         * refused here in the same words. */
+        var why = DP.validateUpload(spec, registry);
+        if (why) {
+          upError.textContent = why;
+          return;
+        }
+        upError.textContent = "";
+        GeFi.api.post("/datasets", spec).then(
+          function (r) { begin(r && r.id ? r : null); },
+          function (err) {
+            var msg = err && err.body && err.body.message;
+            if (msg) {
+              upError.textContent = msg;
+              return;
+            }
+            begin(null);
+          }
+        );
+
+        function begin(server) {
+          var d = server || {
+            id: "DS-LOCAL-" + registry.length,
+            name: spec.name,
+            category: spec.category,
+            rows: spec.rows,
+            status: "processing",
+            downloads: 0,
+            subscribers: 0
+          };
+          registry.push(d);
+          upModal.hidden = true;
+          form.reset();
           renderList();
-          statusLine.textContent = name + " is published. Aggregates on Overview and Revenue update from the same rows.";
-        }, 2000);
+          renderKpis();
+          statusLine.textContent = d.name + " is processing — it publishes when ingestion and the quality audit finish.";
+          stamp("processing", d.id);
+
+          /* Ingestion finishes server-side too; poll for the transition when
+           * the API is answering rather than guessing at the timing. */
+          var deadline = 12;
+          var timer = setInterval(function () {
+            deadline -= 1;
+            if (deadline <= 0) {
+              clearInterval(timer);
+              return;
+            }
+            GeFi.api.get("/datasets/" + encodeURIComponent(d.id)).then(function (r) {
+              if (!r || r.status !== "published") return;
+              clearInterval(timer);
+              finish(r);
+            }, function () {
+              /* Offline nothing is ingesting, so publish locally on the
+               * same 2s beat the contract documents. */
+              if (deadline > 8) return;
+              clearInterval(timer);
+              d.status = "published";
+              finish(DP.view(d));
+            });
+          }, 500);
+
+          function finish(published) {
+            Object.assign(d, published);
+            renderList();
+            renderKpis();
+            statusLine.textContent = d.name + " is published. Aggregates on Overview and Revenue update from the same rows.";
+            stamp("published", d.id);
+          }
+        }
       });
 
       var archModal = document.querySelector("[data-ds-archive]");
@@ -228,19 +273,48 @@
         e.preventDefault();
         if (!archTarget) return;
         var typed = e.target.elements.confirm.value.trim();
-        if (typed !== archTarget.name) {
-          document.querySelector("[data-ds-archive-err]").textContent = "Name doesn't match — nothing archived.";
+        /* The registry demands an exact typed confirmation; applying the
+         * same rule here means the refusal reads the same either way. */
+        var why = DP.validateArchive(archTarget, typed);
+        if (why) {
+          document.querySelector("[data-ds-archive-err]").textContent = why;
           return;
         }
-        st.archived.push(archTarget.id);
-        save();
-        archModal.hidden = true;
-        renderList();
-        statusLine.textContent = archTarget.name + " archived — existing subscribers keep read access.";
-        archTarget = null;
+        var target = archTarget;
+        GeFi.api.post("/datasets/" + encodeURIComponent(target.id) + "/archive", { confirm: typed }).then(
+          function () { done(); },
+          function (err) {
+            var msg = err && err.body && err.body.message;
+            if (msg) {
+              document.querySelector("[data-ds-archive-err]").textContent = msg;
+              return;
+            }
+            done();
+          }
+        );
+
+        function done() {
+          var row = registry.filter(function (d) { return d.id === target.id; })[0];
+          if (row) row.status = "archived";
+          archModal.hidden = true;
+          renderList();
+          renderKpis();
+          statusLine.textContent = target.name + " archived — existing subscribers keep read access.";
+          stamp("archived", target.id);
+          archTarget = null;
+        }
       });
 
+      function stamp(kind, id) {
+        var root = document.querySelector("[data-ds-root]");
+        if (root) root.setAttribute("data-ds-" + kind, id);
+      }
+
       renderList();
+      refreshRegistry().then(function () {
+        renderList();
+        renderKpis();
+      });
     }
   });
 })(window, document);

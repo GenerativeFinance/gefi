@@ -8,7 +8,9 @@ active_tab: Overview
 permalink: /app/datasets/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/data-provider.js
+app_scripts:
+  - /assets/js/app/dataplatform-math.js
+  - /assets/js/app/data-provider.js
 ---
 
 {% include app-provtabs.html active="Datasets" %}
@@ -17,6 +19,8 @@ app_script: /assets/js/app/data-provider.js
   <h2 class="app-panel__title" style="margin:0;">Dataset Management</h2>
   <button type="button" class="app-btn app-btn--primary" style="margin-left:auto;" data-ds-upload>+ Upload Dataset</button>
 </div>
+
+<div data-ds-root>
 
 <div class="app-rowcards" data-ds-list></div>
 <p class="app-kpi__sub" data-ds-status role="status" aria-live="polite"></p>
@@ -43,6 +47,7 @@ app_script: /assets/js/app/data-provider.js
       <label>Monthly price (USD)
         <input type="number" name="price" value="500" min="0" step="50">
       </label>
+      <p class="app-kpi__sub" data-ds-error role="alert" style="color:var(--app-red);"></p>
       <div class="app-modal__actions">
         <button type="button" class="app-btn app-btn--ghost" data-ds-modal-cancel>Cancel</button>
         <button type="submit" class="app-btn app-btn--primary">Upload</button>
@@ -65,4 +70,6 @@ app_script: /assets/js/app/data-provider.js
       </div>
     </form>
   </div>
+</div>
+
 </div>

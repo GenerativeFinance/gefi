@@ -8,7 +8,7 @@ active_tab: Overview
 permalink: /app/data-insights/
 sitemap: false
 robots: noindex
-app_scripts: [/assets/js/app/data-provider.js, /assets/js/app/data-revenue.js]
+app_scripts: [/assets/js/app/dataplatform-math.js, /assets/js/app/data-provider.js, /assets/js/app/data-revenue.js]
 ---
 
 {% include app-provtabs.html active="Market Insights" %}
