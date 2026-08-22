@@ -99,7 +99,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 
 ### Cross-cutting
 - [ ] 232 — Consistency + accessibility sweep
-- [ ] 233 — Decision task: unify marketing site on the dark system?
+- [ ] 233 — Decision task: unify marketing site on the dark system? — AWAITING OWNER (not self-answered; both palettes are codified — design-system-v2 §1 dark app prefix + §6 light-mode token mapping — so either call is a mechanical follow-up)
 
 ### Backend workstream (300-series — what the UIs assume but the repo lacks)
 - [ ] 300 — API contract pack: envelope conventions + OpenAPI skeletons
