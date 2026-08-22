@@ -81,7 +81,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 - [x] 220 — Market Data — done (6 source cards w/ Active/Limited-ⓘ/Coming Soon chips, coverage/points/range/frequency stats, sample-symbol chips; Coming Soon unselectable w/ tooltip; selecting a card hash-routes to Preview w/ seeded rows; Start/Stop Stream adds 1 row/s w/ green Streaming pill and holds when stopped; Export copies SAMPLE-stamped CSV; KPIs computed)
 
 ### Data-provider wing
-- [ ] 221 — Data Provider Overview + Datasets
+- [x] 221 — Data Provider Overview + Datasets — done (provider link-tabs; KPI strip DERIVED from dataset rows so tabs can never disagree (12/$2,243,599/222/9.1); Recent Activity derived from dataset events (never blank, w/ designed empty state fallback); Datasets: 12 row-cards w/ status+quality chips, upload modal -> processing -> published in 2s persisted, Archive typed-confirm rejects wrong name; shared GeFi.appProvider aggregates for task 222)
 - [ ] 222 — Market Insights + Revenue tabs
 
 ### Funding wing
