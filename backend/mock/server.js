@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -90,8 +90,9 @@ const BT = GeFi.backtest; /* shared with the backtesting page (task 309) */
 const DO = GeFi.devOps; /* shared with the dev console pages (task 310) */
 const CO = GeFi.collab; /* shared with the collaboration pages (task 311) */
 const DP = GeFi.dataPlatform; /* shared with the provider pages (task 312) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform");
+const FU = GeFi.funding; /* shared with the funding pages (task 313) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding");
   process.exit(1);
 }
 
@@ -274,9 +275,11 @@ function freshState() {
       detail: d.category + " · " + d.subscribers + " subscribers",
       when: ["2h ago", "6h ago", "yesterday", "2 days ago", "3 days ago"][i],
     })),
-    fundingProjects: D.fundingProjects.map((p) => ({ ...p })),
+    fundingProjects: D.fundingProjects.map((p, i) => ({ id: "fp-" + (i + 1), ...p })),
     fundingRequests: [],
+    nextFundingId: 1,
     contributions: [],
+    nextContributionId: 1,
     enrollments: [],
     reports: [],
     customDefs: [],
@@ -1405,38 +1408,135 @@ on("GET /market-data/sources/{key}/preview", (p, q) => {
   return page(rows, {});
 });
 
-/* ---- funding ---- */
+/* ---- funding (task 313) ----
+ * Contribution rules and every hub aggregate come from the shared engine,
+ * so the hub's headline is the sum of what the tabs render, and a
+ * contribution the page refuses is refused here in the same words. */
 const fundingAll = () => S.fundingProjects.concat(S.fundingRequests);
+
+function projectRow(p) {
+  return {
+    id: p.id,
+    name: p.name,
+    kind: p.kind,
+    category: p.category,
+    risk: p.risk,
+    status: FU.statusOf(p),
+    goal: p.goal,
+    raised: p.raised,
+    remaining: FU.remaining(p),
+    progressPct: FU.progressPct(p),
+    backers: p.backers,
+    min: p.min,
+    roiPct: p.roiPct == null ? null : p.roiPct,
+    daysLeft: p.daysLeft,
+    by: p.by,
+    features: p.features || [],
+  };
+}
+function findProject(id) {
+  return fundingAll().find((x) => x.id === id || x.name === id);
+}
+
 on("GET /funding/projects", (p, q) => {
-  let rows = fundingAll();
+  let rows = fundingAll().map(projectRow);
   if (q.kind) rows = rows.filter((x) => x.kind === q.kind);
+  if (q.status) rows = rows.filter((x) => x.status === q.status);
+  if (q.risk) rows = rows.filter((x) => x.risk === q.risk);
   return page(rows, q);
 });
+on("GET /funding/projects/{id}", (p) => {
+  const proj = findProject(p.id);
+  return proj ? projectRow(proj) : notFound;
+});
 on("POST /funding/projects", (p, q, b) => {
-  const r = { kind: (b && b.kind) || "model", name: (b && b.name) || "New request", category: (b && b.category) || "Misc", risk: (b && b.risk) || "Medium", status: "submitted", goal: (b && b.goal) || 25000, raised: 0, backers: 0, daysLeft: 45, min: 100, features: [], by: "you" };
+  const spec = b || {};
+  const why = FU.validateRequest(spec, fundingAll());
+  if (why) {
+    return why.indexOf("already exists") > -1
+      ? { __status: 409, code: "conflict", message: why }
+      : { __status: 422, code: "validation_failed", message: why };
+  }
+  const r = {
+    id: "fp-new-" + S.nextFundingId++,
+    kind: spec.kind,
+    name: String(spec.name).trim(),
+    category: spec.category || "Misc",
+    risk: spec.risk || "Medium",
+    status: "submitted",
+    goal: +spec.goal,
+    raised: 0,
+    backers: 0,
+    roiPct: null,
+    daysLeft: 45,
+    min: spec.min || 100,
+    features: [],
+    by: "you",
+  };
   S.fundingRequests.push(r);
-  return { __status: 201, ...r };
+  return { __status: 201, ...projectRow(r) };
 });
 on("POST /funding/projects/{id}/approve", (p) => {
-  const r = S.fundingRequests[parseInt(p.id, 10)] || S.fundingRequests.find((x) => x.name === p.id);
-  if (!r) return notFound;
-  r.status = "approved";
-  return r;
+  const proj = findProject(p.id);
+  if (!proj) return notFound;
+  if (FU.statusOf(proj) !== "submitted") {
+    return { __status: 409, code: "conflict", message: proj.name + " is not awaiting approval" };
+  }
+  proj.status = "active";
+  return projectRow(proj);
 });
 on("POST /funding/projects/{id}/contributions", (p, q, b) => {
-  const proj = fundingAll().find((x) => x.name === p.id) || fundingAll()[parseInt(p.id, 10)];
+  const proj = findProject(p.id);
   if (!proj) return notFound;
-  const amount = (b && b.amount) || proj.min;
-  if (amount < proj.min) return { __status: 422, code: "validation_failed", message: "Below minimum contribution", details: [{ field: "amount", issue: "min " + proj.min }] };
-  proj.raised += amount;
-  proj.backers += 1;
-  if (proj.raised >= proj.goal) proj.status = "funded";
-  S.contributions.push({ project: proj.name, amount, escrow: proj.raised < proj.goal });
-  return { __status: 201, project: proj.name, amount, escrow: proj.raised < proj.goal, status: proj.status };
+  const amount = b && b.amount != null ? +b.amount : NaN;
+  const why = FU.validateContribution(projectRow(proj), amount);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  /* Apply through the shared engine so `funded` follows from the numbers
+   * rather than being set here and somewhere else too. */
+  const next = FU.applyContribution(proj, amount);
+  proj.raised = next.raised;
+  proj.backers = next.backers;
+  proj.status = next.status;
+  proj.daysLeft = next.daysLeft;
+  const c = {
+    id: "fc-" + S.nextContributionId++,
+    project: proj.id,
+    projectName: proj.name,
+    kind: proj.kind,
+    amount,
+    date: "2026-08-22",
+    settled: false, /* no money moved */
+  };
+  S.contributions.push(c);
+  return { __status: 201, contribution: c, project: projectRow(proj) };
 });
-on("GET /funding/projects/{id}/contributions", (p, q) => page(S.contributions.filter((c) => c.project === p.id), q));
-on("GET /funding/payouts", (p, q) => page(fundingAll().filter((x) => x.status === "funded").map((x) => ({ project: x.name, amount: x.raised, status: "released" })), q));
-on("GET /funding/roi", () => ({ items: fundingAll().filter((x) => x.roiPct != null).map((x) => ({ project: x.name, roi_pct: x.roiPct })), next_cursor: null }));
+on("GET /funding/projects/{id}/contributions", (p, q) => {
+  const proj = findProject(p.id);
+  if (!proj) return notFound;
+  return page(S.contributions.filter((c) => c.project === proj.id), q);
+});
+on("GET /funding/contributions", (p, q) => {
+  let rows = S.contributions;
+  if (q.kind) rows = rows.filter((c) => c.kind === q.kind);
+  return page(rows, q);
+});
+on("GET /funding/summary", () => FU.hubTotals(fundingAll().map(projectRow), S.bounties.map(bountyRow)));
+on("GET /funding/payouts", (p, q) =>
+  page(
+    fundingAll()
+      .filter((x) => FU.statusOf(x) === "funded")
+      .map((x) => ({ project: x.id, projectName: x.name, amount: x.raised, backers: x.backers, settled: false })),
+    q
+  )
+);
+on("GET /funding/roi", (p, q) =>
+  page(
+    fundingAll()
+      .filter((x) => x.roiPct != null)
+      .map((x) => ({ project: x.id, projectName: x.name, roiPct: x.roiPct, raised: x.raised, simulated: true })),
+    q
+  )
+);
 
 /* ---- learning ---- */
 on("GET /learning/catalog", (p, q) => page(D.learning.items.concat(D.learning.paths.map((x) => ({ type: "PATH", ...x }))), q));

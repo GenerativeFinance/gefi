@@ -405,6 +405,12 @@
     api.register("/funding/projects", function () {
       return D.fundingProjects;
     });
+    /* Offline the contribution resolves so the flow completes; the amount
+     * has already been checked against the same rules the service applies,
+     * and the page does the arithmetic itself when no server row comes back. */
+    api.register("/funding/projects/{id}/contributions", function () {
+      return {};
+    });
     api.register("/bounties", function () {
       return D.bounties;
     });

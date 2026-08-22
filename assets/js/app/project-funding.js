@@ -13,6 +13,7 @@
     var D = GeFi.DEMO;
     var fmt = GeFi.fmt;
     var app = GeFi.app;
+    var FU = GeFi.funding;
     var kind = root.getAttribute("data-pf-kind");
     var noun = kind === "bot" ? "bot" : "model";
 
@@ -48,22 +49,26 @@
     function list() {
       return D.fundingProjects.filter(function (p) { return p.kind === kind; }).concat(myRequests());
     }
+    /* A contribution is applied to the campaign ROW, exactly as the server
+     * applies it, rather than kept as a side list this page adds on top.
+     * The old overlay meant the funding hub — which reads the rows — showed
+     * a smaller total than this tab the moment anyone contributed.
+     * `st.contributions` survives only as the record for "My Contributions". */
     function contribsFor(name) {
       return st.contributions.filter(function (c) { return c.kind === kind && c.project === name; });
     }
     function effRaised(p) {
-      return p.raised + contribsFor(p.name).reduce(function (n, c) { return n + c.amount; }, 0);
+      return p.raised;
     }
     function isFunded(p) {
-      return effRaised(p) >= p.goal;
+      return FU.statusOf(p) === "funded";
     }
     function statusOf(p) {
       if (p.mine) return "submitted";
-      if (isFunded(p)) return "funded";
-      return p.status;
+      return FU.statusOf(p);
     }
     function backersOf(p) {
-      return p.backers + contribsFor(p.name).length;
+      return p.backers;
     }
 
     function renderKpis() {
@@ -321,17 +326,52 @@
     document.querySelector("[data-pf-form]").addEventListener("submit", function (e) {
       e.preventDefault();
       if (!modalTarget) return;
+      var target = modalTarget;
       var amount = parseInt(e.target.elements.amount.value, 10);
-      if (!amount || amount < modalTarget.min) {
-        modal.querySelector("[data-pf-modal-err]").textContent =
-          "Amount must be at least the " + fmt.moneyFull(modalTarget.min) + " minimum.";
+      /* The same rules the service applies: at least the minimum, at most
+       * what is still needed. Checking here means the refusal reads the
+       * same whether or not the API is reachable. */
+      var why = FU.validateContribution(target, amount);
+      if (why) {
+        modal.querySelector("[data-pf-modal-err]").textContent = why;
         return;
       }
-      st.contributions.push({ kind: kind, project: modalTarget.name, amount: amount, date: "2026-08-22" });
-      save();
-      modal.hidden = true;
-      modalTarget = null;
-      renderAll();
+      modal.querySelector("[data-pf-modal-err]").textContent = "";
+      GeFi.api.post("/funding/projects/" + encodeURIComponent(target.id || target.name) + "/contributions", { amount: amount }).then(
+        function (r) { apply(r && r.project ? r.project : null); },
+        function (err) {
+          var msg = err && err.body && err.body.message;
+          if (msg) {
+            modal.querySelector("[data-pf-modal-err]").textContent = msg;
+            return;
+          }
+          apply(null);
+        }
+      );
+
+      function apply(server) {
+        /* Take the server's row when it answered; otherwise apply the same
+         * arithmetic locally, so the outcome is identical either way. */
+        var next = server || FU.applyContribution(target, amount);
+        target.raised = next.raised;
+        target.backers = next.backers;
+        target.status = next.status;
+        if (next.daysLeft != null) target.daysLeft = next.daysLeft;
+        st.contributions.push({ kind: kind, project: target.name, amount: amount, date: "2026-08-22" });
+        save();
+        modal.hidden = true;
+        modalTarget = null;
+        renderAll();
+        var el = document.querySelector("[data-pf-root]");
+        if (el) el.setAttribute("data-pf-backed", target.name + ":" + target.raised);
+        if (GeFi.app.toast) {
+          GeFi.app.toast(
+            FU.statusOf(target) === "funded"
+              ? target.name + " reached its goal. No payment was taken — this is a sample workspace."
+              : "Backed " + target.name + " with " + fmt.moneyFull(amount) + ". No payment was taken."
+          );
+        }
+      }
     });
 
     /* Request Funding modal — opened by the pagehead "+ Request Funding"

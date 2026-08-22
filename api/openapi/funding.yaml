@@ -1,12 +1,37 @@
 openapi: 3.0.3
 info:
-  title: GeFi Funding services
-  version: 0.1.0
+  title: GeFi Funding
+  version: 0.2.0
   description: >
-    Projects (bot/model/bounty), contributions with escrow rules, approval workflow (SUBMITTED→APPROVED), payouts, ROI accounting.
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Crowdfunding for trading bots, AI models and bounties: campaign
+    listings, contributions, funding requests, and the payout and ROI
+    records that follow.
+
+
+    HUB FIGURES ARE COMPUTED FROM THE SAME ROWS. Every aggregate the funding
+    hub shows is derived from the project and bounty rows the individual
+    tabs render, so the hub cannot report a total the tabs do not add up to.
+    GET /funding/summary returns those aggregates alongside the counts they
+    were taken over.
+
+
+    NO MONEY MOVES. A contribution records an intent to back a campaign. No
+    payment is taken, no card is stored, and no funds are held or
+    transferred. The payout and ROI records describe what a funded campaign
+    would return; they are not statements of money paid, and every entry
+    carries `settled: false`. A real implementation would need a payment
+    provider, escrow, and — because these are investment-like offerings —
+    the securities and KYC treatment appropriate to the jurisdictions it
+    operates in. NONE OF THAT EXISTS HERE, AND NOTHING HERE IS AN OFFER OR
+    A SOLICITATION TO INVEST.
+
+
+    CONTRIBUTION RULES. At least the campaign's stated minimum; at most what
+    is still needed to reach the goal — an over-goal contribution is refused
+    rather than quietly accepted, because a campaign showing more than 100%
+    raised is either a bug or a different product. Reaching the goal flips
+    the campaign to `funded`, which is a fact about the numbers rather than
+    a flag someone has to set.
 servers:
   - url: /v1
     description: >
@@ -17,38 +42,139 @@ security:
   - apiKeyAuth: []
 tags:
   - name: funding
-    description: "Funding services"
+    description: "Funding"
 paths:
   /funding/projects:
     get:
       operationId: get-funding-projects
-      summary: "Funding campaigns (kind filter: bot|model|bounty)"
+      summary: "Funding campaigns"
       tags: [funding]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: kind
+          in: query
+          schema:
+            type: string
+            enum: [bot, model, bounty]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, funded, submitted, closed]
+        - name: risk
+          in: query
+          schema:
+            type: string
+            enum: [Low, Medium, High]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of campaigns.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Project'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
     post:
       operationId: post-funding-projects
-      summary: "Submit a funding request (status SUBMITTED)"
+      summary: "Request funding for a project"
+      description: >
+        Creates the campaign in `submitted`. It does not accept
+        contributions until it is approved.
       tags: [funding]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, kind, goal]
+              properties:
+                name:
+                  type: string
+                kind:
+                  type: string
+                  enum: [bot, model, bounty]
+                goal:
+                  type: number
+                  minimum: 1000
+                  maximum: 5000000
+                category:
+                  type: string
+                risk:
+                  type: string
+                  enum: [Low, Medium, High]
+                min:
+                  type: number
+                  description: Minimum contribution. Defaults to 100.
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: The submitted campaign.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '409':
+          description: A campaign with that name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: Missing name, unknown kind, or a goal outside the allowed range.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /funding/projects/{id}:
+    get:
+      operationId: get-funding-projects-id
+      summary: "One campaign"
+      tags: [funding]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The campaign.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          description: No such campaign.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -56,7 +182,12 @@ paths:
   /funding/projects/{id}/approve:
     post:
       operationId: post-funding-projects-id-approve
-      summary: "Approve a submitted request"
+      summary: "Approve a submitted campaign"
+      description: >
+        Stub. Moves `submitted` to `active` so the campaign can take
+        contributions. A real service would run diligence, disclosure and
+        the applicable regulatory checks before this; none of that happens
+        here.
       tags: [funding]
       parameters:
         - name: id
@@ -67,39 +198,34 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The approved campaign.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          description: No such campaign.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '409':
+          description: The campaign is not awaiting approval.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
   /funding/projects/{id}/contributions:
-    post:
-      operationId: post-funding-projects-id-contributions
-      summary: "Contribute (held in escrow until funded)"
-      tags: [funding]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
-      responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
     get:
       operationId: get-funding-projects-id-contributions
-      summary: "Contribution list"
+      summary: "Contributions to a campaign"
       tags: [funding]
       parameters:
         - name: id
@@ -111,10 +237,143 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of contributions.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Contribution'
+        '404':
+          description: No such campaign.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+    post:
+      operationId: post-funding-projects-id-contributions
+      summary: "Back a campaign"
+      description: >
+        Records an intent to back the campaign and updates `raised` and
+        `backers`. NO PAYMENT IS TAKEN. See CONTRIBUTION RULES above for
+        what is accepted; reaching the goal flips the campaign to `funded`
+        in the same response.
+      tags: [funding]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: number
+      responses:
+        '201':
+          description: The recorded contribution and the campaign it moved.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contribution:
+                    $ref: '#/components/schemas/Contribution'
+                  project:
+                    $ref: '#/components/schemas/Project'
+        '404':
+          description: No such campaign.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: >
+            Below the campaign's minimum, more than is still needed to reach
+            the goal, or the campaign is already funded. The message says
+            which.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /funding/contributions:
+    get:
+      operationId: get-funding-contributions
+      summary: "My contributions"
+      tags: [funding]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: kind
+          in: query
+          schema:
+            type: string
+            enum: [bot, model, bounty]
+      responses:
+        '200':
+          description: A page of contributions this account has made.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Contribution'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /funding/summary:
+    get:
+      operationId: get-funding-summary
+      summary: "Hub aggregates"
+      description: >
+        Every figure the funding hub shows, computed from the same project
+        and bounty rows the tabs render — see HUB FIGURES above.
+      tags: [funding]
+      responses:
+        '200':
+          description: The hub's figures and the counts they were taken over.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HubSummary'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -122,17 +381,31 @@ paths:
   /funding/payouts:
     get:
       operationId: get-funding-payouts
-      summary: "Payouts to funded projects"
+      summary: "Payout records"
+      description: >
+        What a funded campaign would return to its backers. NOT a record of
+        money sent — every entry carries `settled: false`.
       tags: [funding]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of payout records.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Payout'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -140,15 +413,160 @@ paths:
   /funding/roi:
     get:
       operationId: get-funding-roi
-      summary: "ROI accounting per backed project"
+      summary: "ROI records"
+      description: >
+        Simulated returns on funded campaigns. Read-only and seeded. NOT a
+        forecast, NOT a promise, and NOT evidence any campaign will return
+        anything.
       tags: [funding]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of ROI records.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RoiRecord'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
+components:
+  schemas:
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          example: fp-1
+        name:
+          type: string
+        kind:
+          type: string
+          enum: [bot, model, bounty]
+        category:
+          type: string
+        risk:
+          type: string
+          enum: [Low, Medium, High]
+        status:
+          type: string
+          enum: [active, funded, submitted, closed]
+          description: Derived — `funded` follows from raised reaching goal.
+        goal:
+          type: number
+        raised:
+          type: number
+        remaining:
+          type: number
+          description: What is still needed. The cap on a single contribution.
+        progressPct:
+          type: integer
+        backers:
+          type: integer
+        min:
+          type: number
+          description: Minimum accepted contribution.
+        roiPct:
+          type: number
+          nullable: true
+          description: Simulated. Not a forecast.
+        daysLeft:
+          type: integer
+        by:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+    Contribution:
+      type: object
+      description: An intent to back a campaign. No payment was taken.
+      properties:
+        id:
+          type: string
+        project:
+          type: string
+        projectName:
+          type: string
+        kind:
+          type: string
+        amount:
+          type: number
+        date:
+          type: string
+          format: date
+        settled:
+          type: boolean
+          description: Always false — no money moved.
+    HubSummary:
+      type: object
+      description: Computed from the project and bounty rows the tabs render.
+      properties:
+        total:
+          type: number
+          description: Campaign contributions plus bounty backing.
+        projectsRaised:
+          type: number
+        bountyRaised:
+          type: number
+        botRaised:
+          type: number
+        modelRaised:
+          type: number
+        activeBots:
+          type: integer
+        activeModels:
+          type: integer
+        activeProjects:
+          type: integer
+        activeBounties:
+          type: integer
+        backers:
+          type: integer
+        campaigns:
+          type: integer
+        avgProgress:
+          type: integer
+        funded:
+          type: integer
+    Payout:
+      type: object
+      description: What would be returned. Nothing is sent.
+      properties:
+        project:
+          type: string
+        projectName:
+          type: string
+        amount:
+          type: number
+        backers:
+          type: integer
+        settled:
+          type: boolean
+    RoiRecord:
+      type: object
+      properties:
+        project:
+          type: string
+        projectName:
+          type: string
+        roiPct:
+          type: number
+        raised:
+          type: number
+        simulated:
+          type: boolean
+          description: Always true.

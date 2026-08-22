@@ -8,7 +8,10 @@ active_tab: Funding Hub
 permalink: /app/funding/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/funding.js
+app_scripts:
+  - /assets/js/app/funding-math.js
+  - /assets/js/app/collab-math.js
+  - /assets/js/app/funding.js
 ---
 
 <div class="app-kpis" data-fh-kpis></div>

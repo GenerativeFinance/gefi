@@ -176,12 +176,18 @@
     return rows;
   })();
 
+  /* Funding campaigns (task 313). `status` is one of submitted / active /
+   * funded / closed — the same four the contract defines. One row used to
+   * say "approved", which behaved identically to "active" everywhere and so
+   * was a label without a meaning; a campaign is `funded` the moment raised
+   * reaches goal, which assets/js/app/funding-math.js derives rather than
+   * trusting a flag. */
   DEMO.fundingProjects = [
     { kind: "bot", name: "AI-Powered Grid Trading Bot", category: "Grid Trading", risk: "Medium", status: "active", goal: 50000, raised: 32500, backers: 41, roiPct: 14.2, daysLeft: 18, min: 100, features: ["Grid rebalancing", "Volatility bands", "Backtested 2y"], by: "quantessence" },
     { kind: "bot", name: "High-Frequency Arbitrage Bot", category: "Arbitrage", risk: "High", status: "active", goal: 75000, raised: 68250, backers: 55, roiPct: 22.6, daysLeft: 6, min: 250, features: ["Cross-venue", "Latency-aware", "Research only"], by: "meridian-labs" },
     { kind: "bot", name: "DeFi Yield Farming Optimizer", category: "DeFi", risk: "High", status: "funded", goal: 40000, raised: 40000, backers: 63, roiPct: 18.1, daysLeft: 0, min: 100, features: ["Protocol scoring", "Gas-aware"], by: "helios-quant" },
     { kind: "model", name: "Derivatives Pricing Model", category: "Pricing", risk: "Medium", status: "submitted", goal: 40000, raised: 2500, backers: 4, roiPct: 12.0, daysLeft: 41, min: 100, features: ["Vol surface", "American exercise"], by: "nordwind-am" },
-    { kind: "model", name: "Market Sentiment Analysis Engine", category: "NLP", risk: "Medium", status: "approved", goal: 30000, raised: 11200, backers: 19, roiPct: 15.5, daysLeft: 29, min: 100, features: ["Multi-lingual", "Streaming"], by: "atlas-nlp" },
+    { kind: "model", name: "Market Sentiment Analysis Engine", category: "NLP", risk: "Medium", status: "active", goal: 30000, raised: 11200, backers: 19, roiPct: 15.5, daysLeft: 29, min: 100, features: ["Multi-lingual", "Streaming"], by: "atlas-nlp" },
     { kind: "model", name: "Real-time Fraud Detection System", category: "Fraud", risk: "Low", status: "active", goal: 60000, raised: 44700, backers: 72, roiPct: 11.3, daysLeft: 12, min: 50, features: ["Graph features", "Sub-100ms"], by: "gulf-secure" }
   ];
 
