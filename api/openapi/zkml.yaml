@@ -1,12 +1,28 @@
 openapi: 3.0.3
 info:
   title: GeFi zKML proof pipeline
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Prover/verifier orchestration (shard proofs → aggregate → verify), proof records, optional on-chain anchoring, federated-learning coordinator.
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    zKML verification pipeline: create a verification, follow its stages
+    over SSE, fetch the proof record, and browse a model's verification
+    history.
+
+
+    A SIMULATION OF THE PIPELINE, NOT THE PIPELINE. No circuit is compiled,
+    no proof is generated, and nothing cryptographic happens here. The
+    stages, timings and "proof hash" are a deterministic simulation of the
+    prover pipeline described in the zKML deck: the hash is FNV-1a over the
+    model and shard count — a stable label for a run, NOT a cryptographic
+    commitment, and verifying nothing. The same model and shard count always
+    produce the same timings, log and hash, on the server and in the
+    browser alike, because both run the same shared plan.
+
+
+    STAGES. compile → shard → prove (one lane per shard, in parallel —
+    wall-clock follows the slowest lane, task time sums all of them) →
+    aggregate → verify. The event stream walks this timeline; the proof
+    record states both clocks.
+
 servers:
   - url: /v1
     description: >
@@ -22,33 +38,78 @@ paths:
   /zkml/verifications:
     post:
       operationId: post-zkml-verifications
-      summary: "Start a verification run (model, shard count)"
+      summary: "Create a verification"
+      description: >
+        Returns the verification with its full plan. The run is then
+        followed over /zkml/verifications/{id}/events.
       tags: [zkml]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [model]
+              properties:
+                model:
+                  type: string
+                  description: Model slug.
+                shards:
+                  type: integer
+                  minimum: 1
+                  maximum: 16
+                  default: 4
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: The verification, with its plan and proof record.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Verification'
+        '422':
+          description: Unknown model, or a shard count outside 1–16.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
     get:
       operationId: get-zkml-verifications
-      summary: "Verification runs"
+      summary: "Verification history"
+      description: Filter by model for one model's history.
       tags: [zkml]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: model
+          in: query
+          schema:
+            type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of verifications, newest first.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Verification'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -56,7 +117,7 @@ paths:
   /zkml/verifications/{id}:
     get:
       operationId: get-zkml-verifications-id
-      summary: "Run status: per-shard progress, aggregate, verdict"
+      summary: "One verification"
       tags: [zkml]
       parameters:
         - name: id
@@ -66,10 +127,20 @@ paths:
             type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The verification and its proof record.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Verification'
+        '404':
+          description: No such verification.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -77,7 +148,14 @@ paths:
   /zkml/verifications/{id}/events:
     get:
       operationId: get-zkml-verifications-id-events
-      summary: "Prover event stream"
+      summary: "Stage, log and progress events"
+      description: >
+        Walks the run's timeline: `zkml.stage` frames as each stage starts
+        and finishes, `zkml.log` lines for the prover output panel,
+        `zkml.shard_proved` per lane, then one `zkml.verified` carrying the
+        proof record, then the stream closes. The timeline is derived from
+        the shared plan, so a client that replays it locally walks the same
+        sequence.
       tags: [zkml]
       parameters:
         - name: id
@@ -104,7 +182,7 @@ paths:
   /zkml/proofs/{hash}:
     get:
       operationId: get-zkml-proofs-hash
-      summary: "Proof record by hash"
+      summary: "Look up a proof record by hash"
       tags: [zkml]
       parameters:
         - name: hash
@@ -112,12 +190,30 @@ paths:
           required: true
           schema:
             type: string
+          example: "0xdabc951a"
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The proof record and the verification that produced it.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hash:
+                    type: string
+                  verification:
+                    type: string
+                  record:
+                    $ref: '#/components/schemas/ProofRecord'
+        '404':
+          description: No verification produced that hash.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -125,16 +221,43 @@ paths:
   /zkml/anchors:
     post:
       operationId: post-zkml-anchors
-      summary: "Anchor a proof on-chain (optional)"
+      summary: "Anchor a proof hash (stub)"
+      description: >
+        Records an intent to anchor. NOTHING IS WRITTEN TO ANY CHAIN — the
+        returned transaction id is a sample label, not a transaction.
       tags: [zkml]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hash]
+              properties:
+                hash:
+                  type: string
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: The recorded anchor intent.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  hash:
+                    type: string
+                  chain:
+                    type: string
+                  tx:
+                    type: string
+                    description: A sample label. No transaction exists.
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -142,18 +265,83 @@ paths:
   /federation/rounds:
     get:
       operationId: get-federation-rounds
-      summary: "Federated-learning coordinator rounds"
+      summary: "Federated training rounds"
       tags: [zkml]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of rounds.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            round:
+                              type: integer
+                            participants:
+                              type: integer
+                            status:
+                              type: string
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
+components:
+  schemas:
+    ProofRecord:
+      type: object
+      description: >
+        The hash is FNV-1a over the inputs — a stable label, not a
+        cryptographic commitment.
+      properties:
+        model:
+          type: string
+        shards:
+          type: integer
+        hash:
+          type: string
+          example: "0xdabc951a"
+        wall_secs:
+          type: number
+          description: Follows the slowest prove lane.
+        task_secs:
+          type: number
+          description: Sums every lane.
+        lanes_secs:
+          type: array
+          items:
+            type: number
+        verified:
+          type: boolean
+    Verification:
+      type: object
+      properties:
+        id:
+          type: string
+          example: zk-1
+        model:
+          type: string
+        shards:
+          type: integer
+        status:
+          type: string
+          enum: [running, completed]
+        verdict:
+          type: string
+          enum: [verified]
+        record:
+          $ref: '#/components/schemas/ProofRecord'
+        created:
+          type: string

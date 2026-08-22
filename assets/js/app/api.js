@@ -486,6 +486,11 @@
     api.register("/alert-rules", function () {
       return {};
     });
+    api.register("/zkml/verifications", function () {
+      /* Offline nothing stores runs; the page keeps its last run in
+       * sessionStorage and the history panel says so. */
+      return [];
+    });
     api.register("/learning/catalog", function () {
       return D.learning.items;
     });

@@ -51,7 +51,7 @@ check reports         POST /reports/generate      "d.status==='pending' && d.id"
 check regulator       GET  "/regulator/entities/MT-4521" "d.kind==='model_audit' && d.record.org==='Meridian Bank'"
 check notifications   GET  /notifications         "Array.isArray(d.items) && d.items[0].unread!==undefined"
 check insights        GET  /sentiment             "d.sentimentPct===75"
-check zkml            POST /zkml/verifications    "d.verdict==='verified' && /^0x[0-9a-f]{8}\$/.test(d.hash)" '{"model":"accretion-dilution","shards":4}'
+check zkml            POST /zkml/verifications    "d.verdict==='verified' && /^0x[0-9a-f]{8}\$/.test(d.record.hash) && d.record.wall_secs>0 && d.record.lanes_secs.length===4" '{"model":"accretion-dilution","shards":4}'
 check platform        GET  /audit-chain/run-42    "Array.isArray(d.chain) && d.chain.length===4 && d.chain[1].prev===d.chain[0].hash"
 
 # envelope behaviors

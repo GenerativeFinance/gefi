@@ -5,15 +5,6 @@
 (function (window, document) {
   "use strict";
 
-  function fnv1a(str) {
-    var h = 0x811c9dc5;
-    for (var i = 0; i < str.length; i++) {
-      h ^= str.charCodeAt(i);
-      h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
-    }
-    return ("00000000" + h.toString(16)).slice(-8);
-  }
-
   window.GeFi.api.page(function () {
     var GeFi = window.GeFi;
     if (!GeFi || !GeFi.DEMO || !GeFi.MODELS) return;
@@ -62,28 +53,11 @@
       fedEl.appendChild(a);
     });
 
-    /* ---- pipeline plan (seeded, deterministic) ---- */
+    /* ---- pipeline plan — the ONE shared implementation (task 319).
+     * The mock runs the same function, so the timings, the log and the
+     * proof hash are identical on both sides by construction. */
     function plan(modelSlug, shards) {
-      var rand = GeFi.seed.rng(GeFi.seed.hash("zkml|" + modelSlug + "|" + shards));
-      var p = {
-        model: modelSlug,
-        shards: shards,
-        compile: 2 + Math.round(rand() * 2),          /* ticks */
-        create: 1 + Math.round(rand()),
-        lanes: [],
-        aggregate: 2 + Math.round(rand()),
-        verify: 1 + Math.round(rand()),
-        hash: fnv1a(modelSlug + "|" + shards)
-      };
-      for (var i = 0; i < shards; i++) {
-        p.lanes.push(3 + Math.round(rand() * 4));
-      }
-      var maxLane = Math.max.apply(null, p.lanes);
-      var laneSum = p.lanes.reduce(function (n, x) { return n + x; }, 0);
-      /* one tick ≈ 15 "seconds" of prover time in the fiction */
-      p.wallSecs = (p.compile + p.create + maxLane + p.aggregate + p.verify) * 15;
-      p.taskSecs = (p.compile + p.create + laneSum + p.aggregate + p.verify) * 15;
-      return p;
+      return GeFi.zkml.plan(modelSlug, shards);
     }
 
     /* ---- rendering ---- */
@@ -217,6 +191,22 @@
     function run(modelSlug, shards) {
       if (timer) clearInterval(timer);
       var p = plan(modelSlug, shards);
+      /* Record the verification server-side so the history survives a
+       * reload; the animation below walks the SAME shared plan, and the
+       * summary is checked against the record the server returns. */
+      var root = document.querySelector("[data-zk-root]");
+      GeFi.api.post("/zkml/verifications", { model: modelSlug, shards: shards }).then(
+        function (r) {
+          if (root) {
+            root.setAttribute("data-zk-server-id", (r && r.id) || "local");
+            root.setAttribute("data-zk-server-hash", (r && r.record && r.record.hash) || "");
+          }
+          refreshHistory();
+        },
+        function () {
+          if (root) root.setAttribute("data-zk-server-id", "local");
+        }
+      );
       var tick = 0;
       var laneStart = p.compile + p.create;
       var maxLane = Math.max.apply(null, p.lanes);
@@ -264,6 +254,7 @@
           save(p);
           runBtn.disabled = false;
           runBtn.textContent = "Run verification";
+          if (root) root.setAttribute("data-zk-done", "0x" + p.hash);
         }
       }, 220);
     }
@@ -272,6 +263,44 @@
       e.preventDefault();
       run(modelSel.value, parseInt(shardsInput.value, 10));
     });
+
+    /* ---- verification history (server-persisted in live mode) ---- */
+    var historyEl = document.querySelector("[data-zk-history]");
+    function refreshHistory() {
+      if (!historyEl) return;
+      GeFi.api.get("/zkml/verifications?limit=20").then(function (r) {
+        if (!r || !r.items) return;
+        historyEl.innerHTML = "";
+        if (!r.items.length) {
+          var none = document.createElement("p");
+          none.className = "app-kpi__sub";
+          none.textContent = r.sample
+            ? "No verifications recorded — runs are stored when the API is answering."
+            : "No verifications yet.";
+          historyEl.appendChild(none);
+          return;
+        }
+        r.items.forEach(function (v) {
+          var li = document.createElement("div");
+          li.className = "app-holding";
+          li.setAttribute("data-zk-history-row", v.id);
+          var main = document.createElement("div");
+          main.className = "app-holding__main";
+          var name = document.createElement("p");
+          name.className = "app-holding__name mono";
+          name.textContent = (v.record && v.record.hash) || "";
+          var sub = document.createElement("p");
+          sub.className = "app-holding__sub";
+          sub.textContent = v.model + " · " + v.shards + " shards · wall " + (v.record ? v.record.wall_secs : "—") + "s";
+          main.appendChild(name);
+          main.appendChild(sub);
+          li.appendChild(main);
+          li.appendChild(app.chip("ok", "verified"));
+          historyEl.appendChild(li);
+        });
+      }, function () {});
+    }
+    refreshHistory();
 
     /* ---- initial state ---- */
     var saved = load();

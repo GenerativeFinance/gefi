@@ -8,8 +8,12 @@ active_tab: Overview
 permalink: /app/zkml/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/zkml.js
+app_scripts:
+  - /assets/js/app/zkml-math.js
+  - /assets/js/app/zkml.js
 ---
+
+<div data-zk-root>
 
 <div class="app-gridcards" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
   <div class="app-gridcard">
@@ -65,3 +69,11 @@ app_script: /assets/js/app/zkml.js
   <p class="app-kpi__sub">Models trained federated can also be verified per participant. These catalogue models run federated today:</p>
   <div class="app-gridcard__tags" data-zk-federated></div>
 </section>
+
+<section class="app-panel" style="margin-top:16px;">
+  <h2 class="app-panel__title">Verification history</h2>
+  <p class="app-kpi__sub">Runs recorded by the service. Each hash is a deterministic label for its inputs — not a cryptographic commitment.</p>
+  <div data-zk-history></div>
+</section>
+
+</div>

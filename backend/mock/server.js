@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js", "assets/js/app/reports-math.js", "assets/js/app/regulator-math.js", "assets/js/app/notify-math.js", "assets/js/app/insights-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js", "assets/js/app/reports-math.js", "assets/js/app/regulator-math.js", "assets/js/app/notify-math.js", "assets/js/app/insights-math.js", "assets/js/app/zkml-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -96,8 +96,9 @@ const RP = GeFi.reports; /* shared with the report pages (task 315) */
 const RG = GeFi.regulator; /* shared with the regulator pages (task 316) */
 const NT = GeFi.notify; /* shared with the app shell (task 317) */
 const IM = GeFi.insightsMath; /* shared with the insight panels (task 318) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE || !RP || !RG || !NT || !IM) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning/reports/regulator/notify/insightsMath");
+const ZK = GeFi.zkml; /* shared with the zKML page (task 319) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE || !RP || !RG || !NT || !IM || !ZK) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning/reports/regulator/notify/insightsMath/zkml");
   process.exit(1);
 }
 
@@ -330,6 +331,7 @@ function freshState() {
     paperOrders: [],
     tick: 0,
     verifications: [],
+    nextVerificationId: 1,
     anchors: [],
     apiKeys: [{ id: "key-1", label: "dashboard sample", prefix: "gefi_sk_9f2a", created: "2026-08-01" }],
     idempotency: new Map(),
@@ -2169,30 +2171,61 @@ on("GET /sentiment", () => D.reports.market);
 on("GET /predictions", () => ({ items: [{ subject: "Fed decision", prediction: D.reports.market.fed.prediction, probability_pct: D.reports.market.fed.probability }], next_cursor: null }));
 on("POST /narratives", (p, q, b) => ({ __status: 201, report_id: b && b.report_id, narrative: "Sample narrative: portfolio $142,500, YTD +8.6%, Sharpe 1.34. Deterministic mock output." }));
 
-/* ---- zkml ---- */
-function zkPlan(model, shards) {
-  const rand = seed.rng(seed.hash("zkml|" + model + "|" + shards));
-  const lanes = [];
-  for (let i = 0; i < shards; i++) lanes.push(3 + Math.round(rand() * 4));
-  const compile = 2 + Math.round(rand() * 2);
-  const wall = (compile + 1 + Math.max(...lanes) + 2 + 1) * 15;
-  return { model, shards, lanes: lanes.map((t) => t * 15), wall_secs: wall, hash: "0x" + fnvHex(model + "|" + shards) };
+/* ---- zkml (task 319) ----
+ * The plan, the hash and the event timeline all come from the shared
+ * engine — the page and this server previously seeded the same key but
+ * drew in a DIFFERENT ORDER, so the "same" verification produced different
+ * shard timings on each side. One function now, one answer. */
+
+function zkRow(v) {
+  return {
+    id: v.id,
+    model: v.model,
+    shards: v.shards,
+    status: v.status,
+    verdict: v.status === "completed" ? "verified" : null,
+    record: ZK.record(v.plan),
+    created: v.created,
+  };
 }
+
 on("POST /zkml/verifications", (p, q, b) => {
-  const model = (b && b.model) || MODELS[0].slug;
-  const shards = (b && b.shards) || 4;
-  const v = { id: "zk-" + (S.verifications.length + 1), status: "completed", verdict: "verified", ...zkPlan(model, shards) };
-  S.verifications.push(v);
-  return { __status: 201, ...v };
+  const spec = { model: b && b.model, shards: b && b.shards != null ? b.shards : 4 };
+  const why = ZK.validate(spec, MODELS);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const v = {
+    id: "zk-" + S.nextVerificationId++,
+    model: spec.model,
+    shards: +spec.shards,
+    status: "completed",
+    plan: ZK.plan(spec.model, +spec.shards),
+    created: "2026-08-22",
+  };
+  S.verifications.unshift(v);
+  return { __status: 201, ...zkRow(v) };
 });
-on("GET /zkml/verifications", (p, q) => page(S.verifications, q));
-on("GET /zkml/verifications/{id}", (p) => S.verifications.find((v) => v.id === p.id) || notFound);
+on("GET /zkml/verifications", (p, q) => {
+  let rows = S.verifications;
+  if (q.model) rows = rows.filter((v) => v.model === q.model);
+  return page(rows.map(zkRow), q);
+});
+on("GET /zkml/verifications/{id}", (p) => {
+  const v = S.verifications.find((x) => x.id === p.id);
+  return v ? zkRow(v) : notFound;
+});
 on("GET /zkml/proofs/{hash}", (p) => {
-  const v = S.verifications.find((x) => x.hash === (p.hash.startsWith("0x") ? p.hash : "0x" + p.hash));
-  return v ? { hash: v.hash, verification: v.id, verdict: v.verdict } : notFound;
+  const want = p.hash.startsWith("0x") ? p.hash : "0x" + p.hash;
+  const v = S.verifications.find((x) => "0x" + x.plan.hash === want);
+  return v ? { hash: want, verification: v.id, record: ZK.record(v.plan) } : notFound;
 });
 on("POST /zkml/anchors", (p, q, b) => {
-  const a = { id: "anchor-" + (S.anchors.length + 1), hash: b && b.hash, chain: "sample-l2", tx: "0x" + fnvHex("tx|" + ((b && b.hash) || "")) + fnvHex("tx2|" + ((b && b.hash) || "")) };
+  const a = {
+    id: "anchor-" + (S.anchors.length + 1),
+    hash: b && b.hash,
+    chain: "sample-l2",
+    /* A sample label, not a transaction — nothing touches any chain. */
+    tx: "0x" + ZK.fnv1a("tx|" + ((b && b.hash) || "")) + ZK.fnv1a("tx2|" + ((b && b.hash) || "")),
+  };
   S.anchors.push(a);
   return { __status: 201, ...a };
 });
@@ -2384,17 +2417,26 @@ const SSE = {
     }, 400);
   },
   "GET /zkml/verifications/{id}/events": (req, res, p) => {
+    /* Walks the shared timeline tick by tick, so the stepper and the log
+     * panel a client drives from this stream match what the same client
+     * would replay locally. */
     const v = S.verifications.find((x) => x.id === p.id);
-    let shard = -1;
+    if (!v) {
+      sseSend(res, "zkml.error", 0, { id: p.id, message: "no such verification" });
+      res.end();
+      return null;
+    }
+    const events = ZK.timeline(v.plan);
+    let tick = -1;
+    let sent = 0;
     return setInterval(() => {
-      shard += 1;
-      if (!v || shard >= v.shards) {
-        sseSend(res, "zkml.verified", shard, { id: p.id, verdict: "verified" });
-        res.end();
-        return;
-      }
-      sseSend(res, "zkml.shard_proved", shard, { id: p.id, shard, task_secs: v.lanes[shard] });
-    }, 500);
+      tick += 1;
+      events.filter((e) => e.tick === tick).forEach((e) => {
+        sent += 1;
+        sseSend(res, e.event, sent, { id: p.id, ...e.data });
+      });
+      if (tick >= events[events.length - 1].tick) res.end();
+    }, 220);
   },
 };
 function sseSend(res, event, id, data) {
