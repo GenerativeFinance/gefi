@@ -2935,3 +2935,7 @@ p  { margin: 0 0 var(--space-4); }
 }
 .app-lt-notice p { margin: 0; }
 .app-lt-notice .is-risk { color: var(--app-red); font-weight: 700; }
+
+/* Task 211 — order history pager */
+.app-oh-pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.app-oh-pager__btns { display: flex; gap: 8px; }
