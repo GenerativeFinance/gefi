@@ -66,7 +66,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 - [x] 209 — Rebalancing & Actions — done (live target sliders w/ current/drift sublabels; total-allocation guard disables Execute at !=100% w/ amber message; drift/actions/value KPIs recompute live; threshold slider, auto toggle, Monthly/Quarterly/Annually segments, cost toggles all persisted; confirm modal executes: current:=target, drift 0, "just now", survives reload)
 
 ### Trading wing
-- [ ] 210 — Live Trading
+- [x] 210 — Live Trading — done (ONE segmented level Trade/Orders/Positions/History; seeded 2s price ticker + session chart; order form relabels Buy/Sell+symbol, 400ms mock fill -> orders/positions/history w/ chips; positions aggregate fills onto seeded AAPL start; safety notice verbatim incl. "real money is not at risk in this demonstration"; orders persist sessionStorage)
 - [ ] 211 — Order History + Activity feed
 - [ ] 212 — Backtesting Environment
 

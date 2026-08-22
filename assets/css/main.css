@@ -2916,3 +2916,22 @@ p  { margin: 0 0 var(--space-4); }
 .app-rb-dot.is-buy { background: var(--app-green); }
 .app-rb-dot.is-sell { background: var(--app-red); }
 .app-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Task 210 — live trading */
+.app-lt-pills { display: flex; gap: 8px; margin: 0 0 16px; }
+.app-form { display: flex; flex-direction: column; gap: 12px; }
+.app-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--app-muted); font-weight: 600; }
+.app-form input, .app-form select {
+  font: inherit; font-size: 14px; color: var(--app-text);
+  background: var(--app-bg); border: 1px solid var(--app-border); border-radius: 8px;
+  padding: 9px 12px;
+}
+.app-btn.is-sell { border-color: var(--app-red); color: var(--app-red); }
+.app-lt-notice {
+  margin-top: 20px; padding: 16px 18px;
+  border: 1px solid rgba(245, 158, 11, 0.4); border-left: 3px solid var(--app-amber);
+  border-radius: 12px; background: rgba(245, 158, 11, 0.06);
+  font-size: 13px; line-height: 1.7;
+}
+.app-lt-notice p { margin: 0; }
+.app-lt-notice .is-risk { color: var(--app-red); font-weight: 700; }
