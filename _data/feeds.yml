@@ -1,0 +1,57 @@
+# Data-Feed Catalog (Task 122). Customer-facing view of the feature store:
+# each feed is a definition-registry namespace with freshness, jurisdiction
+# enforcement, and per-lookup lineage. Sample catalogue — figures match the
+# demo dataset used across the preview.
+- slug: equities-eod
+  name: Equities EOD Reference
+  description: End-of-day prices, corporate actions, and identifiers for US, EU, and UK listed equities.
+  freshness: "T+1 · 02:00 UTC"
+  jurisdictions: [US, EU, UK]
+  fields: [close_px, adj_close, volume, corp_action_flag, figi]
+  lineage:
+    - { model: Portfolio Optimiser, slug: portfolio-optimiser, use: "covariance estimation inputs" }
+    - { model: Breakout Signal Engine, slug: breakout-signal-engine, use: "entry/exit level detection" }
+    - { model: Cross-Sectional Mean Reversion, slug: cross-sectional-mean-reversion, use: "universe ranking" }
+- slug: filings-text
+  name: Regulatory Filings Text
+  description: Full-text 10-K/10-Q/8-K plus EU and UK annual reports, parsed and section-tagged.
+  freshness: "intraday · <15 min from EDGAR"
+  jurisdictions: [US, EU, UK]
+  fields: [section_text, filing_type, filer_cik, section_tag, tone_offsets]
+  lineage:
+    - { model: Sentiment from Filings, slug: sentiment-from-filings, use: "primary corpus" }
+    - { model: Disclosure Drafter, slug: disclosure-drafter, use: "style and checklist reference" }
+- slug: loan-tape-fed
+  name: Federated Loan Tape
+  description: SME credit performance features contributed by 14 partner lenders — federated, never pooled.
+  freshness: "per training round · daily 06:00 UTC"
+  jurisdictions: [EU, UK]
+  fields: [dpd_bucket, utilization, dscr_bucket, restructure_flag]
+  lineage:
+    - { model: Credit Oracle, slug: credit-oracle, use: "federated training rounds" }
+- slug: sanctions-lists
+  name: Sanctions & Watchlists
+  description: OFAC, UK OFSI, EU, and UN consolidated lists with entity resolution and delta feeds.
+  freshness: "on publication · <30 min"
+  jurisdictions: [US, EU, UK, UAE]
+  fields: [entity_name, list_source, program, match_aliases, delta_op]
+  lineage:
+    - { model: Trade Finance Doc AI, slug: trade-finance-doc-ai, use: "screening reports" }
+    - { model: Fraud Graph, slug: fraud-graph, use: "counterparty risk edges" }
+- slug: onchain-stables
+  name: On-Chain Stablecoin Flows
+  description: Venue-level mint/burn/transfer flows and peg dispersion for major stablecoins.
+  freshness: "real-time · block-follow"
+  jurisdictions: [US, EU, UAE]
+  fields: [venue, mint_burn_net, peg_bp_spread, whale_transfer_flag]
+  lineage:
+    - { model: Stablecoin Depeg Monitor, slug: stablecoin-depeg-monitor, use: "dispersion signal" }
+- slug: macro-nowcast-inputs
+  name: Macro Nowcast Inputs
+  description: High-frequency macro series — shipping, payrolls proxies, card spend aggregates — aligned to release calendars.
+  freshness: "per source · same-day"
+  jurisdictions: [US, EU]
+  fields: [series_id, value, release_lag_days, revision_no]
+  lineage:
+    - { model: Macro Nowcast, slug: macro-nowcast, use: "nowcast factor inputs" }
+    - { model: Commodities Flow Nowcast, slug: commodities-flow-nowcast, use: "freight sub-index" }

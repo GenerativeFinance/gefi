@@ -1,0 +1,95 @@
+openapi: 3.0.3
+info:
+  title: GeFi Learning
+  version: 0.1.0
+  description: >
+    Content catalog, enrollment, progress, certificates.
+    Skeleton contract (ledger task 300) — paths stubbed, request/response
+    schemas land with the owning 300-series task. Envelope conventions
+    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+servers:
+  - url: /v1
+    description: >
+      Resolved against site.api.base_url (empty today). The task-301 mock
+      server serves this contract locally and stamps X-GeFi-Sample: true.
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+tags:
+  - name: learning
+    description: "Learning"
+paths:
+  /learning/catalog:
+    get:
+      operationId: get-learning-catalog
+      summary: "Courses, tutorials, webinars, paths"
+      tags: [learning]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /learning/enrollments:
+    post:
+      operationId: post-learning-enrollments
+      summary: "Enroll in an item or path"
+      tags: [learning]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /learning/progress/{enrollment_id}:
+    patch:
+      operationId: patch-learning-progress-enrollment_id
+      summary: "Update progress percent"
+      tags: [learning]
+      parameters:
+        - name: enrollment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /learning/certificates:
+    get:
+      operationId: get-learning-certificates
+      summary: "Earned certificates"
+      tags: [learning]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'

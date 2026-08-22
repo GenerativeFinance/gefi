@@ -1,0 +1,17 @@
+GeFi — Federation round 148 aggregated
+
+Your institution's gradient contribution to Credit Oracle was
+aggregated this morning. Borrower-level data never left your
+environment; only the differentially-private gradients were pooled.
+
+Round:                #148
+Participants:         5 of 5 lenders
+Privacy budget spent: epsilon 0.8
+Your Shapley share:   27%
+Model version:        2026.08.2
+
+View round detail: https://gefi.io/dashboard/#federation
+
+Quorum for the next round is 4 of 5 participants. If you need to pause
+contributions ahead of a data audit, do it from the federation console
+— mid-round exits are not counted against you.

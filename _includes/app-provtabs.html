@@ -1,0 +1,8 @@
+{%- comment -%} Data-provider in-page tabs — real links. {%- endcomment -%}
+<nav class="app-segments app-segments--links" aria-label="Data provider sections">
+  {%- assign ptabs = "Overview:/app/data-provider/|Datasets:/app/datasets/|Market Insights:/app/data-insights/|Revenue:/app/data-revenue/" | split: "|" -%}
+  {%- for pt in ptabs -%}
+    {%- assign parts = pt | split: ":" -%}
+    <a class="app-segment{% if parts[0] == include.active %} app-segment--active{% endif %}" href="{{ parts[1] | relative_url }}"{% if parts[0] == include.active %} aria-current="page"{% endif %}>{{ parts[0] }}</a>
+  {%- endfor -%}
+</nav>

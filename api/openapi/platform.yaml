@@ -1,0 +1,169 @@
+openapi: 3.0.3
+info:
+  title: GeFi Platform cross-cutting
+  version: 0.1.0
+  description: >
+    API key management, rate limits, audit hash chain (trust-center verifier), global search, i18n strings, GDPR retention jobs.
+    Skeleton contract (ledger task 300) — paths stubbed, request/response
+    schemas land with the owning 300-series task. Envelope conventions
+    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+servers:
+  - url: /v1
+    description: >
+      Resolved against site.api.base_url (empty today). The task-301 mock
+      server serves this contract locally and stamps X-GeFi-Sample: true.
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+tags:
+  - name: platform
+    description: "Platform cross-cutting"
+paths:
+  /api-keys:
+    get:
+      operationId: get-api-keys
+      summary: "API keys"
+      tags: [platform]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+    post:
+      operationId: post-api-keys
+      summary: "Issue a key"
+      tags: [platform]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /api-keys/{id}:
+    delete:
+      operationId: delete-api-keys-id
+      summary: "Revoke a key"
+      tags: [platform]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /rate-limits:
+    get:
+      operationId: get-rate-limits
+      summary: "Published limits + current usage"
+      tags: [platform]
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /audit-chain/{run_id}:
+    get:
+      operationId: get-audit-chain-run_id
+      summary: "Audit hash-chain segment for the trust-center verifier"
+      tags: [platform]
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /search:
+    get:
+      operationId: get-search
+      summary: "Global search across models, datasets, docs"
+      tags: [platform]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /i18n/{locale}:
+    get:
+      operationId: get-i18n-locale
+      summary: "UI strings for a locale"
+      tags: [platform]
+      parameters:
+        - name: locale
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /gdpr/retention-jobs:
+    get:
+      operationId: get-gdpr-retention-jobs
+      summary: "Retention job runs backing the footer's claims"
+      tags: [platform]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'

@@ -1,0 +1,230 @@
+openapi: 3.0.3
+info:
+  title: GeFi Regulator portal
+  version: 0.1.0
+  description: >
+    Audit workflows (model/dataset), issue tracking with SLA clocks, communications threads, standards registry, cross-entity ids (#MT/#DS/#ML/#CS).
+    Skeleton contract (ledger task 300) — paths stubbed, request/response
+    schemas land with the owning 300-series task. Envelope conventions
+    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+servers:
+  - url: /v1
+    description: >
+      Resolved against site.api.base_url (empty today). The task-301 mock
+      server serves this contract locally and stamps X-GeFi-Sample: true.
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+tags:
+  - name: regulator
+    description: "Regulator portal"
+paths:
+  /regulator/audits/model:
+    get:
+      operationId: get-regulator-audits-model
+      summary: "Model audits"
+      tags: [regulator]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /regulator/audits/dataset:
+    get:
+      operationId: get-regulator-audits-dataset
+      summary: "Dataset audits"
+      tags: [regulator]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /regulator/audits/{id}:
+    get:
+      operationId: get-regulator-audits-id
+      summary: "Audit detail with findings timeline"
+      tags: [regulator]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /regulator/audits:
+    post:
+      operationId: post-regulator-audits
+      summary: "Schedule an audit"
+      tags: [regulator]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /regulator/issues:
+    get:
+      operationId: get-regulator-issues
+      summary: "Issues with SLA clocks"
+      tags: [regulator]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+    post:
+      operationId: post-regulator-issues
+      summary: "File an issue"
+      tags: [regulator]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /regulator/issues/{id}/resolve:
+    post:
+      operationId: post-regulator-issues-id-resolve
+      summary: "Resolve an issue (moves overview counts)"
+      tags: [regulator]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /regulator/threads:
+    get:
+      operationId: get-regulator-threads
+      summary: "Communication threads"
+      tags: [regulator]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /regulator/threads/{id}/messages:
+    post:
+      operationId: post-regulator-threads-id-messages
+      summary: "Send a supervisory message"
+      tags: [regulator]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /regulator/standards:
+    get:
+      operationId: get-regulator-standards
+      summary: "Standards registry with requirements"
+      tags: [regulator]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /regulator/entities/{ref}:
+    get:
+      operationId: get-regulator-entities-ref
+      summary: "Resolve a cross-entity id (#MT/#DS/#ML/#CS) to its record"
+      tags: [regulator]
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'

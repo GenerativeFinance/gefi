@@ -1,0 +1,8 @@
+{%- comment -%} Developer console in-page tabs — real links. {%- endcomment -%}
+<nav class="app-segments app-segments--links" aria-label="Developer console sections">
+  {%- assign devtabs = "Overview:/app/dev/|My Models:/app/dev-models/|Training:/app/dev-training/|Deployment:/app/dev-deploy/|Collaboration:/app/dev-collab/|Monitoring:/app/dev-monitoring/" | split: "|" -%}
+  {%- for dt in devtabs -%}
+    {%- assign parts = dt | split: ":" -%}
+    <a class="app-segment{% if parts[0] == include.active %} app-segment--active{% endif %}" href="{{ parts[1] | relative_url }}"{% if parts[0] == include.active %} aria-current="page"{% endif %}>{{ parts[0] }}</a>
+  {%- endfor -%}
+</nav>

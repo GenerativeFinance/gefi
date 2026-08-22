@@ -6,6 +6,19 @@ lead: Sales, partnerships, model requests, security disclosures, and press.
 permalink: /contact/
 ---
 
+<div class="contact-fork" data-contact-fork>
+  <a class="contact-fork__card contact-fork__card--demo" href="/demo/" data-fork="demo">
+    <p class="contact-fork__head">Book a demo</p>
+    <p class="contact-fork__body">30 minutes, live, on a model and jurisdiction you care about. Three fields and you're booked.</p>
+    <p class="contact-fork__meta">Slots this week &middot; response within one business hour during European market hours</p>
+  </a>
+  <a class="contact-fork__card" href="#send-us-a-message" data-fork="ask">
+    <p class="contact-fork__head">Ask us anything</p>
+    <p class="contact-fork__body">Product, partnerships, press, security, or something that fits no box — the open form below.</p>
+    <p class="contact-fork__meta">Answered next business day</p>
+  </a>
+</div>
+
 <ul class="contact-grid feature-grid" role="list">
   <li class="feature-card contact-card">
     <span class="feature-card__icon" aria-hidden="true">💼</span>

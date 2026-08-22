@@ -1,0 +1,88 @@
+# Persona nav sets for the dark app shell (UI-FOLLOWUP-LEDGER task 200).
+# Source: tasks/design-system-v2.md §2. A page picks `persona:` and
+# `active_tab:` in front matter; tabs render as plain links (no-JS safe).
+# `icon` names map to the SVG symbols in _includes/app-tabs.html.
+investor:
+  icon: trend
+  tabs:
+    - { label: Overview, icon: home, url: "/app/" }
+    - { label: Portfolio, icon: clock, url: "/app/holdings/" }
+    - { label: AI Marketplace, icon: grid, url: "/app/marketplace/" }
+    - { label: Trading, icon: trend, url: "/app/live-trading/" }
+    - { label: Reports, icon: doc, url: "/app/reports/" }
+    - { label: Funding, icon: coin, url: "/app/funding/" }
+    - { label: Learning, icon: book, url: "/app/learning/" }
+portfolio:
+  icon: trend
+  tabs:
+    - { label: Overview, icon: home, url: "/app/" }
+    - { label: Portfolio, icon: clock, url: "/app/ai-portfolio/" }
+    - { label: AI Models, icon: bot, url: "/app/portfolio-models/" }
+    - { label: Rebalancing, icon: scales, url: "/app/rebalance/" }
+    - { label: Performance, icon: trend, url: "/app/performance/" }
+trader:
+  icon: trend
+  tabs:
+    - { label: Overview, icon: home, url: "/app/" }
+    - { label: Live Trading, icon: trend, url: "/app/live-trading/" }
+    - { label: Trading Bots, icon: bot, url: "/app/bot-funding/" }
+    - { label: Order History, icon: doc, url: "/app/order-history/" }
+    - { label: Strategies, icon: grid, url: "/app/backtesting/" }
+developer:
+  icon: code
+  tabs:
+    - { label: Overview, icon: home, url: "/app/dev/" }
+    - { label: Backtesting, icon: clock, url: "/app/backtesting/" }
+    - { label: AI Marketplace, icon: grid, url: "/app/marketplace/" }
+    - { label: Market Data, icon: trend, url: "/app/market-data/" }
+    - { label: Bounties, icon: target, url: "/app/bounties/" }
+    - { label: Learning, icon: book, url: "/app/learning/" }
+marketplace:
+  icon: trend
+  tabs:
+    - { label: Overview, icon: home, url: "/app/" }
+    - { label: AI Marketplace, icon: grid, url: "/app/marketplace/" }
+    - { label: Categories, icon: layers, url: "/app/categories/" }
+    - { label: My Subscriptions, icon: doc, url: "/app/portfolio-models/" }
+    - { label: Developers, icon: users, url: "/app/developers/" }
+funding:
+  icon: trend
+  tabs:
+    - { label: Overview, icon: home, url: "/app/" }
+    - { label: Funding Hub, icon: coin, url: "/app/funding/" }
+    - { label: Bot Funding, icon: bot, url: "/app/bot-funding/" }
+    - { label: AI Model Funding, icon: grid, url: "/app/model-funding/" }
+    - { label: Bounty Funding, icon: target, url: "/app/bounty-funding/" }
+regulator:
+  icon: shield
+  tabs:
+    - { label: Overview, icon: home, url: "/app/regulator/" }
+    - { label: Model Audits, icon: doc, url: "/app/reg-model-audits/" }
+    - { label: Dataset Audits, icon: layers, url: "/app/reg-dataset-audits/" }
+    - { label: Compliance Issues, icon: alert, url: "/app/reg-issues/" }
+    - { label: Communications, icon: chat, url: "/app/reg-communications/" }
+    - { label: Standards, icon: book, url: "/app/reg-standards/" }
+reports:
+  icon: trend
+  tabs:
+    - { label: Overview, icon: home, url: "/app/" }
+    - { label: Reports, icon: doc, url: "/app/reports/" }
+    - { label: Risk Analysis, icon: alert, url: "/app/risk-reports/" }
+    - { label: Compliance, icon: shield, url: "/app/compliance-reports/" }
+    - { label: Custom Reports, icon: grid, url: "/app/custom-reports/" }
+learning:
+  icon: trend
+  tabs:
+    - { label: Overview, icon: home, url: "/app/" }
+    - { label: Learning, icon: book, url: "/app/learning/" }
+    - { label: Tutorials, icon: doc, url: "/app/learning/" }
+    - { label: Webinars, icon: chat, url: "/app/learning/" }
+    - { label: Documentation, icon: layers, url: "/docs/" }
+    - { label: Community, icon: users, url: "/app/learning/" }
+data-provider:
+  icon: trend
+  tabs:
+    - { label: Overview, icon: home, url: "/app/data-provider/" }
+    - { label: Portfolio, icon: clock, url: "/app/holdings/" }
+    - { label: AI Marketplace, icon: grid, url: "/app/marketplace/" }
+    - { label: Collaboration, icon: users, url: "/app/dev-collab/" }

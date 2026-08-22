@@ -25,13 +25,38 @@ layout: default
   {%- if page.lead -%}
     <p class="lead">{{ page.lead }}</p>
   {%- endif -%}
-  {%- if byline -%}
+  {%- assign author_id = page.author | default: site.author.name -%}
+  {%- assign author = site.data.authors[author_id] -%}
+  {%- if author -%}
+  <aside class="author-card">
+    {%- if author.photo -%}
+      <img class="author-card__avatar" src="{{ author.photo | relative_url }}" alt="" width="48" height="48">
+    {%- else -%}
+      <span class="author-card__avatar author-card__avatar--initials" aria-hidden="true">{{ author.initials }}</span>
+    {%- endif -%}
+    <div>
+      <p class="author-card__name">{{ author.name }} <span class="author-card__title">&middot; {{ author.title }}</span></p>
+      <p class="author-card__cred">{{ author.credential }}</p>
+    </div>
+  </aside>
+  {%- elsif byline -%}
     <p class="byline">By {{ byline }}</p>
   {%- endif -%}
 
   <div class="prose">
     {{ content }}
   </div>
+
+  {%- if page.cites and page.cites.size > 0 -%}
+  <aside class="post-cites">
+    <p class="post-cites__head">Cited in this post</p>
+    <ul class="post-cites__list" role="list">
+      {%- for c in page.cites -%}
+      <li><a href="{{ c.url | relative_url }}">{{ c.title }}</a><span class="muted small"> — {{ c.kind }}</span></li>
+      {%- endfor -%}
+    </ul>
+  </aside>
+  {%- endif -%}
 
   <hr />
   <div class="post-share">

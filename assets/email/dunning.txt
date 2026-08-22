@@ -1,0 +1,19 @@
+GeFi — We could not process your payment
+
+The charge for your Pro subscription was declined by your bank.
+We will retry automatically, but updating your payment method now
+avoids any interruption.
+
+Amount due:          $149.00
+Attempt:             1 of 3
+Next retry:          Aug 24, 2026
+Access paused after: Sep 4, 2026
+
+Update payment method: https://gefi.io/dashboard/
+
+If the card on file has expired or was replaced, this is almost always
+the fix. Nothing is deleted while access is paused — your models and
+settings stay intact.
+
+Already updated your card? You can ignore this email — the next retry
+will pick it up.

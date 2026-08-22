@@ -1,0 +1,14 @@
+GeFi — Payment received, thank you
+
+Your subscription payment went through. This email is your receipt;
+no action is needed.
+
+Invoice:         INV-2026-08-1042
+Plan:            Pro — Credit Oracle
+Billing period:  Aug 21 - Sep 20, 2026
+Payment method:  Visa ..4242
+Total paid:      $149.00
+
+View invoice: https://gefi.io/dashboard/
+
+Prices are billed in USD. VAT invoices are available from the billing page.

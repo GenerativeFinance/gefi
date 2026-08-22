@@ -319,3 +319,5 @@ exclude:
   - .cache/
   - tasks/
   - SESSION-HANDOFF.md
+  - api/
+  - backend/

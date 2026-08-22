@@ -1,0 +1,112 @@
+openapi: 3.0.3
+info:
+  title: GeFi Model runtime & inference
+  version: 0.1.0
+  description: >
+    Real inference behind /v1/models/{slug}/run (the one contract the site already ships), job queue for slow models, per-model metrics refresh.
+    Skeleton contract (ledger task 300) — paths stubbed, request/response
+    schemas land with the owning 300-series task. Envelope conventions
+    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+servers:
+  - url: /v1
+    description: >
+      Resolved against site.api.base_url (empty today). The task-301 mock
+      server serves this contract locally and stamps X-GeFi-Sample: true.
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+tags:
+  - name: models-runtime
+    description: "Model runtime & inference"
+paths:
+  /models/{slug}/run:
+    post:
+      operationId: post-models-slug-run
+      summary: "Run inference (sync when fast; 202 + job when queued)"
+      tags: [models-runtime]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '202':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /models/{slug}/jobs/{job_id}:
+    get:
+      operationId: get-models-slug-jobs-job_id
+      summary: "Inference job status/result"
+      tags: [models-runtime]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /models/{slug}/metrics:
+    get:
+      operationId: get-models-slug-metrics
+      summary: "Current model metrics (unit series the tiles chart)"
+      tags: [models-runtime]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /models/{slug}/metrics/refresh:
+    post:
+      operationId: post-models-slug-metrics-refresh
+      summary: "Queue a metrics refresh"
+      tags: [models-runtime]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '202':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'

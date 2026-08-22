@@ -1,0 +1,88 @@
+{%- comment -%} Shared Bot/Model funding body (task 224). include.kind = "bot" | "model";
+include.noun = "bot" | "model" (used in copy). No assigns — include vars only (Liquid
+assigns are template-global and clobber the caller). {%- endcomment -%}
+<div data-pf-root data-pf-kind="{{ include.kind }}">
+
+  <div class="app-kpis" data-pf-kpis></div>
+
+  <div data-segment-scope>
+    <div class="app-segments" data-app-segments aria-label="Funding request views">
+      <button type="button" class="app-segment" data-segment="browse">Browse Requests</button>
+      <button type="button" class="app-segment" data-segment="contributions">My Contributions</button>
+      <button type="button" class="app-segment" data-segment="requests">My Requests</button>
+    </div>
+
+    <div data-segment-panel="browse">
+      <div class="app-filterbar">
+        <input type="search" placeholder="Search funding requests..." aria-label="Search funding requests" data-pf-search>
+        <select aria-label="Category" data-pf-category><option value="">All Categories</option></select>
+        <select aria-label="Risk" data-pf-risk>
+          <option value="">All Risk Levels</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+      </div>
+      <div class="app-gridcards app-gridcards--two" data-pf-grid></div>
+      <div data-pf-empty hidden></div>
+    </div>
+
+    <div data-segment-panel="contributions" hidden>
+      <h2 class="app-panel__title">My Contributions</h2>
+      <div data-pf-contribs></div>
+      <div data-pf-contribs-empty hidden></div>
+    </div>
+
+    <div data-segment-panel="requests" hidden>
+      <h2 class="app-panel__title">My Requests</h2>
+      <div data-pf-requests></div>
+      <div data-pf-requests-empty hidden></div>
+    </div>
+  </div>
+
+  <div class="app-modal" data-pf-modal hidden>
+    <div class="app-modal__card" role="dialog" aria-modal="true" aria-labelledby="pf-modal-title">
+      <h2 id="pf-modal-title" class="app-panel__title">Contribute to <span data-pf-modal-name></span></h2>
+      <form class="app-form" data-pf-form>
+        <label>Amount (USD)
+          <input type="number" name="amount" inputmode="numeric" min="0" step="1" required>
+        </label>
+        <p class="app-kpi__sub" data-pf-modal-min></p>
+        <p class="app-kpi__sub is-down" data-pf-modal-err role="alert"></p>
+        <div class="app-modal__actions">
+          <button type="button" class="app-btn app-btn--ghost" data-pf-modal-cancel>Cancel</button>
+          <button type="submit" class="app-btn app-btn--primary">Confirm Contribution</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="app-modal" data-pf-request hidden>
+    <div class="app-modal__card" role="dialog" aria-modal="true" aria-labelledby="pf-request-title">
+      <h2 id="pf-request-title" class="app-panel__title">Request funding for a {{ include.noun }}</h2>
+      <form class="app-form" data-pf-request-form>
+        <label>{{ include.noun | capitalize }} name
+          <input type="text" name="name" required maxlength="80" placeholder="e.g. Adaptive Momentum {{ include.noun | capitalize }}">
+        </label>
+        <label>Category
+          <select name="category" data-pf-request-cats></select>
+        </label>
+        <label>Funding goal (USD)
+          <input type="number" name="goal" inputmode="numeric" min="1000" step="500" value="25000" required>
+        </label>
+        <label>Risk level
+          <select name="risk">
+            <option>Low</option>
+            <option selected>Medium</option>
+            <option>High</option>
+          </select>
+        </label>
+        <div class="app-modal__actions">
+          <button type="button" class="app-btn app-btn--ghost" data-pf-request-cancel>Cancel</button>
+          <button type="submit" class="app-btn app-btn--primary">Submit Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>

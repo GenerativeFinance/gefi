@@ -1,0 +1,150 @@
+openapi: 3.0.3
+info:
+  title: GeFi API — shared envelope
+  version: 0.1.0
+  description: >
+    Conventions every GeFi service contract reuses (ledger task 300).
+    Fixed once here; service files reference these components instead of
+    redeclaring them. Nothing in this file is servable on its own.
+tags: []
+paths: {}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Session token from POST /auth/session. Browser surfaces use this.
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-GeFi-Api-Key
+      description: >
+        Programmatic access. Keys are issued and revoked in the dashboard
+        (platform service); scopes mirror persona RBAC.
+
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Page size. Servers clamp to 100.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+    Cursor:
+      name: cursor
+      in: query
+      description: >
+        Opaque cursor from a previous response's `next_cursor`. Omit for
+        the first page. Cursors are stable across retries but not across
+        resource mutations.
+      schema:
+        type: string
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: >
+        REQUIRED on every mutating POST (orders, contributions, report
+        generation, verification runs…). A UUID minted by the client; the
+        server replays the original response for a repeated key within 24h
+        instead of double-executing.
+      schema:
+        type: string
+        format: uuid
+
+  headers:
+    XGeFiSample:
+      description: >
+        `true` when the response was served from the deterministic sample
+        dataset (mock server, or a live service falling back). Clients keep
+        their "sample data" labelling whenever this header is present —
+        the same rule the UI applies to `GeFi.DEMO` today.
+      schema:
+        type: boolean
+    XRequestId:
+      description: Echoes the request id used in error objects and audit logs.
+      schema:
+        type: string
+
+  schemas:
+    Error:
+      type: object
+      required: [code, message, request_id]
+      properties:
+        code:
+          type: string
+          description: Stable machine-readable code, e.g. `not_found`, `rate_limited`, `validation_failed`.
+        message:
+          type: string
+          description: Human-readable summary. Never includes secrets or PII.
+        details:
+          type: array
+          description: Optional per-field or per-item specifics.
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              issue:
+                type: string
+        request_id:
+          type: string
+          description: Correlates with X-Request-Id and the audit chain.
+    Page:
+      type: object
+      description: Wrapper for every list response.
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {}
+        next_cursor:
+          type: string
+          nullable: true
+          description: Pass as `cursor` to fetch the next page; null on the last page.
+    SseEvent:
+      type: object
+      description: >
+        SSE framing convention (documented here; streams are declared per
+        service with `content: text/event-stream`). Each frame:
+        `event:` is `<resource>.<verb>` (e.g. `backtest.progress`,
+        `order.filled`, `zkml.shard_proved`); `id:` is monotonic so clients
+        resume with `Last-Event-ID`; `data:` is one JSON object matching
+        the service's event schema. Servers send a `: ping` comment every
+        15s as a heartbeat; clients reconnect with backoff on close.
+      properties:
+        event:
+          type: string
+        id:
+          type: string
+        data:
+          type: object
+
+  responses:
+    Error:
+      description: >
+        Any non-2xx outcome. The error envelope is uniform across services.
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    RateLimited:
+      description: >
+        Rate limit exceeded (platform service publishes the limits).
+        `Retry-After` says when to try again.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until the bucket refills.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

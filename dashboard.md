@@ -14,17 +14,74 @@ sitemap: false
 
 <section class="dash-panel" data-dash-panel="analytics" hidden>
   <h1 class="dash-panel__title">Analytics</h1>
-  <p class="dash-empty">Call volume, latency, and drift charts land with the Analytics redesign task. Nothing is hidden here — this tab has not been built yet.</p>
+  <div class="ana-grid">
+    <div class="ana-card">
+      <h2 class="dash-panel__subtitle">Inference calls (30d)</h2>
+      <div data-ana-volume></div>
+    </div>
+    <div class="ana-card">
+      <h2 class="dash-panel__subtitle">Latency — p99 solid, p50 dashed (ms)</h2>
+      <div data-ana-latency></div>
+    </div>
+  </div>
+  <div class="ana-card ana-card--wide">
+    <h2 class="dash-panel__subtitle">Model drift — live IR vs backtest</h2>
+    <p class="muted small">Fixed 0–1 axis; the shaded band is the acceptable range. A line leaving the band is a drift case, not a rescaled axis.</p>
+    <div data-ana-drift></div>
+    <ul class="ana-legend" data-ana-drift-legend role="list"></ul>
+  </div>
 </section>
 
 <section class="dash-panel" data-dash-panel="compliance" hidden>
   <h1 class="dash-panel__title">Compliance</h1>
-  <p class="dash-empty">The case list with SLA urgency lands with the Compliance redesign task.</p>
+  <p class="muted small">Open cases sorted by SLA urgency. Countdowns are relative to the sample snapshot.</p>
+  <table class="dash-table" data-comp-table>
+    <thead>
+      <tr><th>Case</th><th>Model</th><th>Jur.</th><th>Type</th><th>Opened</th><th>SLA</th></tr>
+    </thead>
+    <tbody data-comp-cases></tbody>
+  </table>
 </section>
 
 <section class="dash-panel" data-dash-panel="federation" hidden>
-  <h1 class="dash-panel__title">Federation</h1>
-  <p class="dash-empty">Rounds and Shapley contribution views land with the Federation redesign task.</p>
+  <div class="dash-panel__head">
+    <h1 class="dash-panel__title">Federation</h1>
+    <div class="fed-viewtoggle" role="group" aria-label="Federation view">
+      <button type="button" class="filter-chip is-active" data-fed-view-btn="operator">Operator view</button>
+      <button type="button" class="filter-chip" data-fed-view-btn="participant">Participant view</button>
+    </div>
+  </div>
+
+  <div data-fed-operator>
+  <h2 class="dash-panel__subtitle">Training rounds</h2>
+  <table class="dash-table" data-fed-table>
+    <thead>
+      <tr><th>Round</th><th>When</th><th>Participants</th><th>&epsilon; spent</th><th>Status</th></tr>
+    </thead>
+    <tbody data-fed-rounds></tbody>
+  </table>
+  <h2 class="dash-panel__subtitle">Shapley contribution — last aggregated round</h2>
+  <p class="muted small">Colors match the participant chips in the rounds table above; the bar is each lender's marginal contribution to model quality.</p>
+  <div class="fed-bars" data-fed-shapley></div>
+  </div>
+
+  <div data-fed-participant hidden>
+    <p class="muted small">Your institution's standing in the <strong>credit-oracle</strong> federation — Alpine Credit Union's seat, not the operator's.</p>
+    <div class="fedp-grid">
+      <div class="fedp-card" data-fedp-node></div>
+      <div class="fedp-card" data-fedp-attest></div>
+    </div>
+    <h2 class="dash-panel__subtitle">Round participation &amp; earnings</h2>
+    <table class="dash-table" data-fedp-table>
+      <thead>
+        <tr><th>Round</th><th>Date</th><th>Participated</th><th>Shapley share</th><th>Earnings</th><th>Payout</th></tr>
+      </thead>
+      <tbody data-fedp-earnings></tbody>
+    </table>
+    <h2 class="dash-panel__subtitle">Data lineage — features your node served</h2>
+    <p class="muted small">Exactly which feature groups left your node as differentially-private gradients. Raw rows never leave; this is the complete list.</p>
+    <div data-fedp-lineage></div>
+  </div>
 </section>
 
 <section class="dash-panel" data-dash-panel="api-keys" hidden>
@@ -89,19 +146,72 @@ sitemap: false
   <p class="muted small">Delivery preferences are stored locally in this preview; in production they configure the notification service per tenant.</p>
 </section>
 
+<section class="dash-panel dash-panel--sandbox" data-dash-panel="sandbox" hidden>
+  <div class="dash-panel__head">
+    <h1 class="dash-panel__title">Paper-trading sandbox</h1>
+    <div class="sbx-actions">
+      <button type="button" class="btn btn-ghost" data-sbx-export>Copy CSV</button>
+      <button type="button" class="btn btn-ghost" data-sbx-reset>Reset sandbox</button>
+    </div>
+  </div>
+  <div class="sbx-banner" role="note">
+    <strong>SIMULATED.</strong> This sandbox replays model signals against
+    sample market data. No orders are placed, no live results are shown, and
+    every export is stamped simulated.
+  </div>
+  <h2 class="dash-panel__subtitle">Models in this run</h2>
+  <div class="sbx-picker" data-sbx-picker></div>
+  <p class="dash-empty" data-sbx-empty hidden>Pick at least one trading model to simulate.</p>
+  <div class="sbx-chart" data-sbx-chart></div>
+  <div class="sbx-stats" data-sbx-stats></div>
+  <p class="muted small" data-sbx-status role="status" aria-live="polite"></p>
+</section>
+
 <section class="dash-panel" data-dash-panel="tenants" hidden>
-  <h1 class="dash-panel__title">Tenants</h1>
-  <p class="dash-empty">The sortable tenant table lands with the admin-tabs task.</p>
+  <div class="dash-panel__head">
+    <h1 class="dash-panel__title">Tenants</h1>
+    <div class="ten-filters">
+      <select data-ten-plan aria-label="Filter by plan">
+        <option value="">All plans</option>
+        <option value="Enterprise">Enterprise</option>
+        <option value="Pro">Pro</option>
+        <option value="Starter">Starter</option>
+      </select>
+      <select data-ten-region aria-label="Filter by region">
+        <option value="">All regions</option>
+        <option value="EU">EU</option>
+        <option value="US">US</option>
+        <option value="MENA">MENA</option>
+      </select>
+    </div>
+  </div>
+  <table class="dash-table" data-ten-table>
+    <thead>
+      <tr>
+        <th><button type="button" class="ten-sort" data-ten-sort="name">Tenant</button></th>
+        <th><button type="button" class="ten-sort" data-ten-sort="plan">Plan</button></th>
+        <th><button type="button" class="ten-sort" data-ten-sort="region">Region</button></th>
+        <th><button type="button" class="ten-sort" data-ten-sort="models">Models</button></th>
+        <th><button type="button" class="ten-sort" data-ten-sort="calls">Calls (30d)</button></th>
+        <th><button type="button" class="ten-sort" data-ten-sort="mrr">MRR</button></th>
+      </tr>
+    </thead>
+    <tbody data-ten-body></tbody>
+  </table>
+  <p class="dash-empty" data-ten-empty hidden>No tenants match this plan/region filter.</p>
 </section>
 
 <section class="dash-panel" data-dash-panel="approvals" hidden>
   <h1 class="dash-panel__title">Approvals</h1>
-  <p class="dash-empty">The approval queue with risk-class rationale lands with the admin-tabs task.</p>
+  <p class="muted small">Model versions queued for release. Open a row's rationale before the actions unlock — an approval you have not read is not an approval.</p>
+  <div class="apr-list" data-apr-list></div>
 </section>
 
 <section class="dash-panel" data-dash-panel="system" hidden>
   <h1 class="dash-panel__title">System</h1>
-  <p class="dash-empty">The region status map lands with the admin-tabs task.</p>
+  <p class="muted small">Serving regions with live status. A degraded region shows amber, an outage red.</p>
+  <div data-sys-map></div>
+  <ul class="sys-detail" data-sys-detail role="list"></ul>
 </section>
 
 <section class="dash-panel" data-dash-panel="dev-models" hidden>

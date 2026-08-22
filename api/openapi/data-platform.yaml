@@ -1,0 +1,188 @@
+openapi: 3.0.3
+info:
+  title: GeFi Data platform
+  version: 0.1.0
+  description: >
+    Dataset registry, upload/ingest pipeline with quality scoring, dataset subscriptions, revenue accounting and payouts, market-data source catalog.
+    Skeleton contract (ledger task 300) — paths stubbed, request/response
+    schemas land with the owning 300-series task. Envelope conventions
+    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+servers:
+  - url: /v1
+    description: >
+      Resolved against site.api.base_url (empty today). The task-301 mock
+      server serves this contract locally and stamps X-GeFi-Sample: true.
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+tags:
+  - name: data-platform
+    description: "Data platform"
+paths:
+  /datasets:
+    get:
+      operationId: get-datasets
+      summary: "Dataset registry"
+      tags: [data-platform]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+    post:
+      operationId: post-datasets
+      summary: "Register a dataset (starts ingest)"
+      tags: [data-platform]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /datasets/{id}:
+    get:
+      operationId: get-datasets-id
+      summary: "Dataset detail with quality score"
+      tags: [data-platform]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /datasets/{id}/archive:
+    post:
+      operationId: post-datasets-id-archive
+      summary: "Archive (subscribers keep read access)"
+      tags: [data-platform]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /datasets/{id}/quality:
+    get:
+      operationId: get-datasets-id-quality
+      summary: "Quality-audit breakdown"
+      tags: [data-platform]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /dataset-subscriptions:
+    get:
+      operationId: get-dataset-subscriptions
+      summary: "Subscriptions to caller's datasets"
+      tags: [data-platform]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /revenue/summary:
+    get:
+      operationId: get-revenue-summary
+      summary: "Revenue aggregates (derives from dataset rows)"
+      tags: [data-platform]
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /revenue/payouts:
+    get:
+      operationId: get-revenue-payouts
+      summary: "Payout statements"
+      tags: [data-platform]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /market-data/sources:
+    get:
+      operationId: get-market-data-sources
+      summary: "Market-data source catalog"
+      tags: [data-platform]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stubbed — schema lands with the owning service task.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'

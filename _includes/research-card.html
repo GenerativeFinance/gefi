@@ -6,10 +6,18 @@
 {%- else -%}
   {%- assign read_time = 1 -%}
 {%- endif -%}
-{%- if r.lead -%}
-  {%- assign excerpt_text = r.lead -%}
+{%- assign r_type = r.type | default: "Note" -%}
+{%- comment -%} Methodology pieces earn a longer excerpt (Task 105). {%- endcomment -%}
+{%- if r_type == "Methodology" -%}
+  {%- assign excerpt_len = 300 -%}
 {%- else -%}
-  {%- assign excerpt_text = r.content | strip_html | strip_newlines | truncate: 160 -%}
+  {%- assign excerpt_len = 160 -%}
+{%- endif -%}
+{%- if r.lead -%}
+  {%- assign excerpt_text = r.lead | append: " " | append: r.content | strip_html | strip_newlines | truncate: excerpt_len -%}
+  {%- if r_type != "Methodology" -%}{%- assign excerpt_text = r.lead -%}{%- endif -%}
+{%- else -%}
+  {%- assign excerpt_text = r.content | strip_html | strip_newlines | truncate: excerpt_len -%}
 {%- endif -%}
 {%- assign card_tags = "" | split: "" -%}
 {%- if r.topic -%}{%- assign card_tags = card_tags | push: r.topic -%}{%- endif -%}
@@ -19,11 +27,20 @@
 {%- for t in card_tags -%}
   {%- assign tag_slugs = tag_slugs | append: t | downcase | append: "|" -%}
 {%- endfor -%}
-<a class="post-card" href="{{ r.url | relative_url }}" data-tags="{{ tag_slugs }}">
+<a class="post-card{% if r_type == "Methodology" %} post-card--methodology{% endif %}" href="{{ r.url | relative_url }}" data-tags="{{ tag_slugs }}">
   <p class="eyebrow">
-    <span class="badge badge--compliance">Research</span>
+    {%- if r_type == "Methodology" -%}
+      <span class="badge badge--federated">Methodology</span>
+    {%- elsif r_type == "Whitepaper" -%}
+      <span class="badge badge--compliance">Whitepaper</span>
+    {%- else -%}
+      <span class="badge">Note</span>
+    {%- endif -%}
     {%- if r.date -%}
       &middot; <time datetime="{{ r.date | date_to_xmlschema }}">{{ r.date | date: "%b %-d, %Y" }}</time>
+    {%- endif -%}
+    {%- if r_type == "Methodology" -%}
+      <span class="badge badge--readtime">{{ read_time }} min</span>
     {%- endif -%}
   </p>
   <h3>{{ r.title }}</h3>

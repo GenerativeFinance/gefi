@@ -1,0 +1,52 @@
+---
+layout: null
+---
+<!doctype html>
+<html lang="{{ site.lang | default: 'en' }}" class="no-js">
+  <head>
+    <script>document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/, "js");</script>
+    {%- include head.html -%}
+  </head>
+  <body class="app-shell">
+    <a class="skip-link" href="#app-main">Skip to content</a>
+
+    {%- assign persona = page.persona | default: "investor" -%}
+    {%- include app-topbar.html persona=persona -%}
+    {%- include app-tabs.html persona=persona active=page.active_tab -%}
+
+    <div class="app-pagehead">
+      <div class="app-pagehead__text">
+        <h1>{{ page.heading | default: page.title }}</h1>
+        {%- if page.subtitle -%}
+        <p class="app-pagehead__sub">{{ page.subtitle }}</p>
+        {%- endif -%}
+      </div>
+      {%- if page.primary_action -%}
+      <div class="app-pagehead__actions">
+        {%- if page.secondary_action -%}
+        <a class="app-btn app-btn--ghost" href="{{ page.secondary_action.url | relative_url }}">{{ page.secondary_action.label }}</a>
+        {%- endif -%}
+        <a class="app-btn app-btn--primary" href="{{ page.primary_action.url | relative_url }}">{{ page.primary_action.label }}</a>
+      </div>
+      {%- endif -%}
+    </div>
+
+    <main id="app-main" class="app-main">
+      {{ content }}
+    </main>
+
+    {%- include app-trust.html -%}
+    {%- include app-footer.html -%}
+
+    <script src="{{ '/assets/js/dashboard.js' | relative_url }}" defer></script>
+    <script src="{{ '/assets/js/app-demo-data.js' | relative_url }}" defer></script>
+    <script src="{{ '/assets/js/app/components.js' | relative_url }}" defer></script>
+    <script src="{{ '/assets/js/app/hero.js' | relative_url }}" defer></script>
+    {%- if page.app_script -%}
+    <script src="{{ page.app_script | relative_url }}" defer></script>
+    {%- endif -%}
+    {%- for s in page.app_scripts -%}
+    <script src="{{ s | relative_url }}" defer></script>
+    {%- endfor -%}
+  </body>
+</html>

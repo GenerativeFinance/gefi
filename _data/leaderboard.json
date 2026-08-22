@@ -1,0 +1,497 @@
+{
+  "generated": "2026-08-21",
+  "categories": [
+    {
+      "name": "Venture & Growth Capital",
+      "models": [
+        {
+          "slug": "waterfall-distribution",
+          "name": "Waterfall Distribution Engine",
+          "metric": "Common share %",
+          "value": 28,
+          "direction": "higher is better",
+          "score": 133.3,
+          "verified": true,
+          "proof": "run_7d03ed88",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "vc-method-valuation",
+          "name": "VC Method Valuation",
+          "metric": "Implied pre-money",
+          "value": 29,
+          "direction": "higher is better",
+          "score": 61.1,
+          "verified": true,
+          "proof": "run_9faf9524",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "safe-note-conversion",
+          "name": "SAFE & Note Conversion",
+          "metric": "Conversion %",
+          "value": 12.3,
+          "direction": "higher is better",
+          "score": 50,
+          "verified": true,
+          "proof": "run_9dae18a8",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "vc-portfolio-tracker",
+          "name": "VC Portfolio Tracker",
+          "metric": "TVPI",
+          "value": 2.65,
+          "direction": "higher is better",
+          "score": 39.5,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "follow-on-advisor",
+          "name": "Follow-On Advisor",
+          "metric": "Reserve efficiency",
+          "value": 0.79,
+          "direction": "higher is better",
+          "score": 27.4,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "ipo-model",
+          "name": "IPO Model",
+          "metric": "Implied multiple",
+          "value": 7.9,
+          "direction": "higher is better",
+          "score": 27.4,
+          "verified": true,
+          "proof": "run_e66f3b2f",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "growth-equity-model",
+          "name": "Growth Equity Model",
+          "metric": "Investor MOIC",
+          "value": 2.65,
+          "direction": "higher is better",
+          "score": 26.2,
+          "verified": true,
+          "proof": "run_8cbed340",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "cap-table-manager",
+          "name": "Cap Table Manager",
+          "metric": "Founder %",
+          "value": 43,
+          "direction": "higher is better",
+          "score": -30.6,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "startup-financial-model",
+          "name": "Startup Financial Model",
+          "metric": "Runway months",
+          "value": 14,
+          "direction": "higher is better",
+          "score": -33.3,
+          "verified": true,
+          "proof": "run_a542f122",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "startup-runway-tracker",
+          "name": "Startup Runway Tracker",
+          "metric": "Runway months",
+          "value": 12,
+          "direction": "higher is better",
+          "score": -33.3,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        }
+      ]
+    },
+    {
+      "name": "M&A & Corporate Transactions",
+      "models": [
+        {
+          "slug": "accretion-dilution",
+          "name": "Accretion / Dilution",
+          "metric": "Yr1 accretion %",
+          "value": 2.9,
+          "direction": "higher is better",
+          "score": 625,
+          "verified": true,
+          "proof": "run_d2e463c8",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "merger-model",
+          "name": "Merger Model",
+          "metric": "Accretion %",
+          "value": 2.9,
+          "direction": "higher is better",
+          "score": 141.7,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "mbo-model",
+          "name": "MBO Model",
+          "metric": "Mgmt effective %",
+          "value": 14,
+          "direction": "higher is better",
+          "score": 25,
+          "verified": true,
+          "proof": "run_9d33329",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "lbo-model",
+          "name": "LBO Model",
+          "metric": "Sponsor IRR %",
+          "value": 22.2,
+          "direction": "higher is better",
+          "score": 22,
+          "verified": true,
+          "proof": "run_55845b9a",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "spin-off-model",
+          "name": "Spin-Off Model",
+          "metric": "Stranded cost %",
+          "value": 3.3,
+          "direction": "lower is better",
+          "score": 21.4,
+          "verified": true,
+          "proof": "run_fdd46f6b",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "carve-out-model",
+          "name": "Carve-Out Model",
+          "metric": "Standalone EBITDA %",
+          "value": 13.5,
+          "direction": "higher is better",
+          "score": 14.4,
+          "verified": true,
+          "proof": "run_2f0fffdb",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "purchase-price-allocation",
+          "name": "Purchase Price Allocation",
+          "metric": "Goodwill share %",
+          "value": 40,
+          "direction": "higher is better",
+          "score": -13,
+          "verified": true,
+          "proof": "run_348c7dd9",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "recapitalization-model",
+          "name": "Recapitalization",
+          "metric": "Headroom %",
+          "value": 14,
+          "direction": "higher is better",
+          "score": -36.4,
+          "verified": true,
+          "proof": "run_71dcacd6",
+          "as_of": "2026-08-14"
+        }
+      ]
+    },
+    {
+      "name": "Relative-Value & Arbitrage",
+      "models": [
+        {
+          "slug": "fixed-income-arbitrage-engine",
+          "name": "Fixed Income Arbitrage Engine",
+          "metric": "Basis (bp)",
+          "value": 3.9,
+          "direction": "higher is better",
+          "score": 21.9,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "options-vol-arb-engine",
+          "name": "Options Volatility Arbitrage Engine",
+          "metric": "Mispricing (vol pts)",
+          "value": 1.9,
+          "direction": "higher is better",
+          "score": 18.7,
+          "verified": true,
+          "proof": "run_41bfee6a",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "calendar-spread-optimizer",
+          "name": "Calendar Spread Optimizer",
+          "metric": "Roll yield %",
+          "value": 2,
+          "direction": "higher is better",
+          "score": 11.1,
+          "verified": true,
+          "proof": "run_dc7486a5",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "statistical-arbitrage-engine",
+          "name": "Statistical Arbitrage Engine",
+          "metric": "Sharpe (sim.)",
+          "value": 0.75,
+          "direction": "higher is better",
+          "score": 10.3,
+          "verified": true,
+          "proof": "run_2b96bb0d",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "merger-arbitrage-tracker",
+          "name": "Merger Arbitrage Tracker",
+          "metric": "Completion prob.",
+          "value": 0.88,
+          "direction": "higher is better",
+          "score": 2.3,
+          "verified": true,
+          "proof": "run_69ee71d6",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "fx-triangular-arbitrage-scanner",
+          "name": "FX Triangular Arbitrage Scanner",
+          "metric": "Net-viable windows/day",
+          "value": 2,
+          "direction": "higher is better",
+          "score": 0,
+          "verified": true,
+          "proof": "run_f5c4c580",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "pairs-trading-engine",
+          "name": "Pairs Trading Engine",
+          "metric": "Median half-life (d)",
+          "value": 13,
+          "direction": "higher is better",
+          "score": -7.1,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "convertible-arbitrage-modeler",
+          "name": "Convertible Arbitrage Modeler",
+          "metric": "Vol gap (pts)",
+          "value": 2.6,
+          "direction": "lower is better",
+          "score": -23.8,
+          "verified": true,
+          "proof": "run_d5cfd2bb",
+          "as_of": "2026-08-14"
+        }
+      ]
+    },
+    {
+      "name": "Directional Strategies",
+      "models": [
+        {
+          "slug": "global-macro-signal-engine",
+          "name": "Global Macro Signal Engine",
+          "metric": "Sharpe (sim.)",
+          "value": 0.63,
+          "direction": "higher is better",
+          "score": 43.2,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "cross-sectional-mean-reversion",
+          "name": "Cross-Sectional Mean Reversion",
+          "metric": "Sharpe (sim.)",
+          "value": 0.7,
+          "direction": "higher is better",
+          "score": 34.6,
+          "verified": true,
+          "proof": "run_c47cbd56",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "carry-trade-optimizer",
+          "name": "Carry Trade Optimizer",
+          "metric": "Adj. carry",
+          "value": 0.68,
+          "direction": "higher is better",
+          "score": 33.3,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "trend-following-engine",
+          "name": "Trend Following Engine",
+          "metric": "Sharpe (sim.)",
+          "value": 0.77,
+          "direction": "higher is better",
+          "score": 26.2,
+          "verified": true,
+          "proof": "run_c5cc33a5",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "reversal-detector",
+          "name": "Reversal Detector",
+          "metric": "Accuracy",
+          "value": 0.39,
+          "direction": "higher is better",
+          "score": 25.8,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "breakout-signal-engine",
+          "name": "Breakout Signal Engine",
+          "metric": "Hit rate",
+          "value": 0.46,
+          "direction": "higher is better",
+          "score": 21.1,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        }
+      ]
+    },
+    {
+      "name": "Generative AI",
+      "models": [
+        {
+          "slug": "disclosure-drafter",
+          "name": "Disclosure Drafter",
+          "metric": "Checklist coverage",
+          "value": 0.98,
+          "direction": "higher is better",
+          "score": 8.9,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "scenario-narrative-engine",
+          "name": "Scenario Narrative Engine",
+          "metric": "Consistent claims",
+          "value": 1,
+          "direction": "higher is better",
+          "score": 5.3,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "gefi-copilot",
+          "name": "GeFi Copilot",
+          "metric": "Grounded claims",
+          "value": 0.98,
+          "direction": "higher is better",
+          "score": 4.3,
+          "verified": true,
+          "proof": "run_4102002f",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "ic-credit-memo-generator",
+          "name": "IC & Credit Memo Generator",
+          "metric": "Grounded figures",
+          "value": 1,
+          "direction": "higher is better",
+          "score": 4.2,
+          "verified": true,
+          "proof": "run_16f0d38",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "board-lp-report-generator",
+          "name": "Board & LP Report Generator",
+          "metric": "Reconciled figures",
+          "value": 1,
+          "direction": "higher is better",
+          "score": 3.1,
+          "verified": true,
+          "proof": "run_b613e66d",
+          "as_of": "2026-08-14"
+        }
+      ]
+    },
+    {
+      "name": "Investing & Macro",
+      "models": [
+        {
+          "slug": "yield-curve-forecaster",
+          "name": "Yield-Curve Forecaster",
+          "metric": "10y RMSE bp",
+          "value": 21,
+          "direction": "lower is better",
+          "score": 22.2,
+          "verified": true,
+          "proof": "run_88179fbf",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "portfolio-optimiser",
+          "name": "Portfolio Optimiser",
+          "metric": "Sharpe",
+          "value": 1.24,
+          "direction": "higher is better",
+          "score": 21.6,
+          "verified": true,
+          "proof": "run_4d8e2958",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "macro-nowcast",
+          "name": "Macro Nowcast",
+          "metric": "RMSE",
+          "value": 0.33,
+          "direction": "lower is better",
+          "score": 21.4,
+          "verified": true,
+          "proof": "run_a7d50bf7",
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "commodities-flow-nowcast",
+          "name": "Commodities Flow Nowcast",
+          "metric": "Flow RMSE %",
+          "value": 7.4,
+          "direction": "lower is better",
+          "score": 18.7,
+          "verified": false,
+          "proof": null,
+          "as_of": "2026-08-14"
+        },
+        {
+          "slug": "sentiment-from-filings",
+          "name": "Sentiment from Filings",
+          "metric": "F1",
+          "value": 0.79,
+          "direction": "higher is better",
+          "score": 16.2,
+          "verified": true,
+          "proof": "run_c3d323e0",
+          "as_of": "2026-08-14"
+        }
+      ]
+    }
+  ]
+}

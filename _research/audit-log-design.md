@@ -1,5 +1,6 @@
 ---
 title: How the GeFi audit log works
+type: Methodology
 topic: Audit infrastructure
 date: 2026-04-08
 slug: audit-log-design

@@ -113,6 +113,24 @@
         });
         if (match) sel.value = topic;
       });
+
+      /* Land a ?topic= link on the right fork (Task 108): demo-shaped
+       * topics highlight "Book a demo"; everything else highlights the
+       * open form and scrolls to it. */
+      var fork = document.querySelector("[data-contact-fork]");
+      if (fork) {
+        var wantsDemo = topic === "sales" || topic === "enterprise";
+        fork.querySelectorAll("[data-fork]").forEach(function (card) {
+          card.classList.toggle(
+            "is-suggested",
+            (card.getAttribute("data-fork") === "demo") === wantsDemo
+          );
+        });
+        if (!wantsDemo) {
+          var form = document.querySelector("[data-form='contact']");
+          if (form) form.scrollIntoView({ block: "center" });
+        }
+      }
     }
   } catch (e) {
     /* URLSearchParams unavailable — skip silently. */

@@ -40,6 +40,27 @@ GeFi is built on the assumption that all three of these are permanent.
 - **Per-jurisdiction lawyer directory.** Every market we operate in has a
   named local counsel; we publish the list on the [trust page](/compliance/#counsel).
 
+## Where we are
+
+<ol class="about-timeline" role="list">
+  <li class="about-timeline__item">
+    <span class="about-timeline__when">2025 Q3</span>
+    <span class="about-timeline__what">Founded; audit-log spec drafted and published</span>
+  </li>
+  <li class="about-timeline__item">
+    <span class="about-timeline__when">2026 Q1</span>
+    <span class="about-timeline__what">First federated round — Credit Oracle, 14 partner lenders</span>
+  </li>
+  <li class="about-timeline__item">
+    <span class="about-timeline__when">2026 Q2</span>
+    <span class="about-timeline__what">First regulator engagement — EU conformity pre-assessment, high-risk credit scoring</span>
+  </li>
+  <li class="about-timeline__item">
+    <span class="about-timeline__when">2026 Q3</span>
+    <span class="about-timeline__what">Catalogue reaches 92 models across 28 families</span>
+  </li>
+</ol>
+
 ## Team
 
 We're a small, distributed team across the EU, UK, and UAE. Every other role

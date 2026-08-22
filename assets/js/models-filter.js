@@ -112,5 +112,21 @@
     });
   }
 
+  /* Deep link: /models/?family=<name> pre-selects that category chip
+   * (used by the app categories page, Task 214). */
+  try {
+    var fam = new URLSearchParams(window.location.search).get("family");
+    if (fam) {
+      var chip = root.querySelector(".filter-chip[data-filter='category'][data-value='" + fam.toLowerCase() + "']");
+      if (chip) {
+        state.category = fam.toLowerCase();
+        root.querySelectorAll(".filter-chip[data-filter='category']").forEach(function (s) {
+          s.classList.toggle("is-active", s === chip);
+        });
+        chip.scrollIntoView({ block: "center" });
+      }
+    }
+  } catch (e) {}
+
   apply();
 })();
