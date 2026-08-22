@@ -270,6 +270,12 @@
       ["/backtests?limit=100", function (r) {
         if (r.items && r.items.length) D.backtests = r.items;
       }],
+      ["/dev/models?limit=100", function (r) {
+        if (r.items && r.items.length) D.devConsole.models = r.items;
+      }],
+      ["/dev/activity?limit=100", function (r) {
+        if (r.items && r.items.length) D.devConsole.activityFeed = r.items;
+      }],
     ];
     return Promise.all(
       jobs.map(function (job) {
@@ -403,6 +409,24 @@
     });
     api.register("/backtests", function () {
       return D.backtests;
+    });
+    api.register("/dev/models", function () {
+      return D.devConsole.models;
+    });
+    api.register("/dev/training-jobs", function () {
+      return D.devConsole.jobs;
+    });
+    api.register("/dev/deployments", function () {
+      return D.devConsole.deployments;
+    });
+    api.register("/dev/activity", function () {
+      return D.devConsole.activityFeed;
+    });
+    /* Offline the page already holds these rules in the shared module, so
+     * the resolver hands back the same object the endpoint would. */
+    api.register("/dev/hyperparameters", function () {
+      var ops = GeFi.devOps;
+      return ops ? { params: ops.HYPERPARAMS, methods: ops.METHODS } : {};
     });
     /* Offline the page assigns the run its own id and replays the same
      * seeded step sequence; metrics are keyed on the model and window, not

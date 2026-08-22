@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -87,8 +87,9 @@ const CAT = GeFi.catalog; /* shared with the marketplace pages (task 306) */
 const RUNTIME = GeFi.modelRuntime; /* shared with model-demo.js (task 307) */
 const MKT = GeFi.market; /* shared with the trading page (task 308) */
 const BT = GeFi.backtest; /* shared with the backtesting page (task 309) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest");
+const DO = GeFi.devOps; /* shared with the dev console pages (task 310) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps");
   process.exit(1);
 }
 
@@ -207,9 +208,28 @@ function freshState() {
     ratings: {},
     subscriptions: [{ id: "sub-1", slug: MODELS[1].slug, plan: "standard", monthly_fee: GeFi.catalog.monthlyFee(MODELS[1]), since: "2026-06-01", next_renewal: "2026-09-22", status: "active" }],
     preferences: { wings: [], risk: "medium" },
+    /* Dev console (task 310). Jobs keep only what cannot be derived —
+     * accuracy, loss and duration come from the shared engine. */
     devModels: D.devConsole.models.map((m, i) => ({ id: "dm-" + (i + 1), ...m })),
-    trainingJobs: D.devConsole.jobs.map((j, i) => ({ id: "tj-" + (i + 1), ...j })),
-    deployments: D.devConsole.deployments.map((d, i) => ({ id: "dep-" + (i + 1), ...d })),
+    nextDevModelId: D.devConsole.models.length + 1,
+    trainingJobs: D.devConsole.jobs.map((j, i) => ({
+      id: "tj-" + (i + 1),
+      name: j.name,
+      status: j.status,
+      progress: j.progress,
+    })),
+    nextTrainingJobId: D.devConsole.jobs.length + 1,
+    deployments: D.devConsole.deployments.map((d, i) => ({
+      id: "dep-" + (i + 1),
+      name: d.name,
+      env: d.env,
+      status: d.status,
+      last: d.last,
+    })),
+    nextDeploymentId: D.devConsole.deployments.length + 1,
+    devActivity: D.devConsole.activityFeed.map((a) => ({ ...a })),
+    devRefresh: 0,
+    nextAlertRuleId: 1,
     alertRules: [],
     devAlertRules: [],
     threads: D.devConsole.messages.map((m, i) => ({ id: "th-" + (i + 1), title: m.who + " — " + m.text.slice(0, 40), messages: [m] })),
@@ -828,45 +848,214 @@ on("GET /optimizer/runs/{id}", (p) => {
 });
 on("GET /historical-data/{symbol}", (p, q) => page(series("hist|" + p.symbol, 48, 100, 20).map((v, i) => ({ t: i, close: v })), q));
 
-/* ---- devconsole ---- */
-on("GET /dev/models", (p, q) => page(S.devModels, q));
+/* ---- devconsole (task 310) ----
+ * Lifecycle, hyperparameter bounds, the training progression and the
+ * telemetry all come from the shared engine, so the console pages and the
+ * server cannot disagree about what is allowed or what a job reports. */
+
+function devActivity(title, meta, tag) {
+  S.devActivity.unshift({ title, meta, tag });
+}
+
+/* A job's public shape: accuracy and loss are DERIVED from progress rather
+ * than stored, so they cannot drift away from the bar the user is watching. */
+function jobRow(j) {
+  const m = DO.jobMetrics(j.name, j.progress);
+  return {
+    id: j.id,
+    name: j.name,
+    status: j.status,
+    progress: j.progress,
+    accuracy: j.progress > 0 ? m.accuracy : 0,
+    loss: j.progress > 0 ? m.loss : 0,
+    duration: j.status === "completed" ? DO.jobDuration(j.name) : j.progress > 0 ? "running" : "0m",
+    params: j.params || null,
+  };
+}
+
+/* A stopped deployment is serving nothing, so its live fields read zero. */
+function deployRow(d) {
+  if (d.status !== "active") {
+    return { ...d, uptime: 0, requests: "0", latency: "0ms" };
+  }
+  const t = DO.telemetry(d.name, S.devRefresh, d.status);
+  return { ...d, uptime: t.uptime, requests: Math.round(t.requests / 1000) + "K", latency: t.response + "ms" };
+}
+
+on("GET /dev/models", (p, q) => {
+  let rows = S.devModels;
+  if (q.status) rows = rows.filter((m) => m.status === q.status);
+  return page(rows, q);
+});
 on("POST /dev/models", (p, q, b) => {
-  const m = { id: "dm-" + (S.devModels.length + 1), name: (b && b.name) || "New model", status: "Draft", category: (b && b.category) || "Misc", tests: 0, collaborators: 1, funded: 0, goal: 25000 };
+  const name = ((b && b.name) || "").trim();
+  const why = DO.validateModel({ name }, S.devModels);
+  if (why) {
+    return why === "name is required"
+      ? { __status: 422, code: "validation_failed", message: why }
+      : { __status: 409, code: "conflict", message: why };
+  }
+  const m = {
+    id: "dm-" + S.nextDevModelId++,
+    name,
+    status: "Draft",
+    category: (b && b.category) || "Misc",
+    tests: 0,
+    collaborators: 1,
+    funded: 0,
+    goal: b && b.goal != null ? b.goal : 0,
+  };
   S.devModels.push(m);
+  devActivity(name + " registered", "Model · just now", "model");
   return { __status: 201, ...m };
 });
+on("GET /dev/models/{id}", (p) => S.devModels.find((x) => x.id === p.id) || notFound);
 on("PATCH /dev/models/{id}", (p, q, b) => {
   const m = S.devModels.find((x) => x.id === p.id);
   if (!m) return notFound;
-  Object.assign(m, b || {});
+  const body = b || {};
+  if (body.status !== undefined && body.status !== m.status) {
+    const bad = DO.validateStage(m.status, body.status);
+    if (bad) return { __status: 422, code: "validation_failed", message: bad };
+    m.status = body.status;
+    devActivity(m.name + " promoted to " + m.status, "Model · just now", "model");
+  }
+  if (body.name !== undefined) m.name = body.name;
+  if (body.category !== undefined) m.category = body.category;
   return m;
 });
 on("DELETE /dev/models/{id}", (p) => {
   const m = S.devModels.find((x) => x.id === p.id);
   if (!m) return notFound;
-  if (m.status !== "Draft") return { __status: 409, code: "conflict", message: "Only draft models can be deleted" };
+  if (m.status !== "Draft") return { __status: 409, code: "conflict", message: "only draft models can be deleted; " + m.name + " is " + m.status };
   S.devModels = S.devModels.filter((x) => x.id !== p.id);
   return { ok: true };
 });
+
+on("GET /dev/hyperparameters", () => ({ params: DO.HYPERPARAMS, methods: DO.METHODS }));
 on("POST /dev/training-jobs", (p, q, b) => {
-  const j = { id: "tj-" + (S.trainingJobs.length + 1), name: (b && b.name) || "training run", status: "queued", progress: 0 };
-  S.trainingJobs.push(j);
-  return { __status: 202, ...j };
+  const spec = b || {};
+  const why = DO.validateJob(spec);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const j = {
+    id: "tj-" + S.nextTrainingJobId++,
+    name: DO.jobName(spec),
+    status: "queued",
+    progress: 0,
+    params: { lr: +spec.lr, batch: +spec.batch, epochs: +spec.epochs, method: spec.method },
+  };
+  S.trainingJobs.unshift(j);
+  return { __status: 202, ...jobRow(j) };
 });
-on("GET /dev/training-jobs", (p, q) => page(S.trainingJobs, q));
-on("GET /dev/deployments", (p, q) => page(S.deployments, q));
+on("GET /dev/training-jobs", (p, q) => {
+  let rows = S.trainingJobs.map(jobRow);
+  if (q.status) rows = rows.filter((j) => j.status === q.status);
+  return page(rows, q);
+});
+on("GET /dev/training-jobs/{id}", (p) => {
+  const j = S.trainingJobs.find((x) => x.id === p.id);
+  return j ? jobRow(j) : notFound;
+});
+on("POST /dev/training-jobs/{id}/pause", (p) => {
+  const j = S.trainingJobs.find((x) => x.id === p.id);
+  if (!j) return notFound;
+  if (j.status !== "running") return { __status: 409, code: "conflict", message: "job is " + j.status + ", not running" };
+  j.status = "paused";
+  return jobRow(j);
+});
+on("POST /dev/training-jobs/{id}/resume", (p) => {
+  const j = S.trainingJobs.find((x) => x.id === p.id);
+  if (!j) return notFound;
+  if (j.status !== "paused") return { __status: 409, code: "conflict", message: "job is " + j.status + ", not paused" };
+  j.status = "running";
+  return jobRow(j);
+});
+
+on("GET /dev/deployments", (p, q) => {
+  let rows = S.deployments.map(deployRow);
+  if (q.env) rows = rows.filter((d) => d.env === q.env);
+  return page(rows, q);
+});
+on("POST /dev/deployments", (p, q, b) => {
+  const name = ((b && b.name) || "").trim();
+  const env = (b && b.env) || "";
+  if (!name) return { __status: 422, code: "validation_failed", message: "name is required" };
+  if (DO.ENVIRONMENTS.indexOf(env) === -1) {
+    return { __status: 422, code: "validation_failed", message: "env must be one of " + DO.ENVIRONMENTS.join(", ") };
+  }
+  if (S.deployments.some((d) => d.name === name && d.env === env)) {
+    return { __status: 409, code: "conflict", message: name + " is already deployed to " + env };
+  }
+  const d = { id: "dep-" + S.nextDeploymentId++, name, env, status: "active", last: "2026-08-22" };
+  S.deployments.push(d);
+  devActivity(name + " deployed to " + env, "Deployment · just now", "deployment");
+  return { __status: 201, ...deployRow(d) };
+});
 on("POST /dev/deployments/{id}/toggle", (p) => {
   const d = S.deployments.find((x) => x.id === p.id);
   if (!d) return notFound;
   d.status = d.status === "active" ? "inactive" : "active";
-  return d;
+  devActivity(d.name + (d.status === "active" ? " started" : " stopped"), "Deployment · just now", "deployment");
+  return deployRow(d);
 });
-on("GET /dev/telemetry", () => ({ uptime_pct: 99.8, latency_ms: series("tel|lat", 24, 45, 12), error_rate: series("tel|err", 24, 0.4, 0.3) }));
+on("GET /dev/deployments/{id}/logs", (p, q) => {
+  const d = S.deployments.find((x) => x.id === p.id);
+  if (!d) return notFound;
+  return { id: d.id, lines: DO.logLines(d.name, Math.min(100, parseInt(q.limit, 10) || 8)) };
+});
+
+on("GET /dev/telemetry", (p, q) => {
+  const refresh = Math.max(0, parseInt(q.refresh, 10) || 0);
+  S.devRefresh = refresh;
+  const items = S.deployments.map((d) => {
+    const t = DO.telemetry(d.name, refresh, d.status);
+    return {
+      id: d.id,
+      name: d.name,
+      env: d.env,
+      status: d.status,
+      ...t,
+      latency_series: t.serving ? DO.seriesFor(d.name, "latency") : [],
+      error_series: t.serving ? DO.seriesFor(d.name, "errors") : [],
+    };
+  });
+  return { refresh, fleet: DO.fleet(S.deployments, refresh), items };
+});
+
+on("GET /dev/activity", (p, q) => page(S.devActivity, q));
+
+const ALERT_METRICS = ["accuracy", "response", "uptime", "errors"];
 on("GET /dev/alert-rules", (p, q) => page(S.devAlertRules, q));
 on("POST /dev/alert-rules", (p, q, b) => {
-  const r = { id: "dar-" + (S.devAlertRules.length + 1), metric: (b && b.metric) || "latency_ms", threshold: (b && b.threshold) || 100 };
+  const body = b || {};
+  if (ALERT_METRICS.indexOf(body.metric) === -1) {
+    return { __status: 422, code: "validation_failed", message: "metric must be one of " + ALERT_METRICS.join(", ") };
+  }
+  if (typeof body.threshold !== "number" || !isFinite(body.threshold)) {
+    return { __status: 422, code: "validation_failed", message: "threshold must be a number" };
+  }
+  const r = {
+    id: "dar-" + S.nextAlertRuleId++,
+    metric: body.metric,
+    comparator: body.comparator === "below" ? "below" : "above",
+    threshold: body.threshold,
+    deployment: body.deployment || null,
+    enabled: true,
+  };
   S.devAlertRules.push(r);
   return { __status: 201, ...r };
+});
+on("PATCH /dev/alert-rules/{id}", (p, q, b) => {
+  const r = S.devAlertRules.find((x) => x.id === p.id);
+  if (!r) return notFound;
+  Object.assign(r, b || {});
+  return r;
+});
+on("DELETE /dev/alert-rules/{id}", (p) => {
+  const r = S.devAlertRules.find((x) => x.id === p.id);
+  if (!r) return notFound;
+  S.devAlertRules = S.devAlertRules.filter((x) => x.id !== p.id);
+  return { ok: true };
 });
 
 /* ---- collab ---- */
@@ -1210,12 +1399,46 @@ const SSE = {
     }, 500);
   },
   "GET /dev/training-jobs/{id}/logs": (req, res, p) => {
+    /* Log lines quote the same loss curve the progress frames report, so
+     * the log and the meter tell one story rather than two. */
+    const job = S.trainingJobs.find((x) => x.id === p.id);
+    const name = job ? job.name : p.id;
     let n = 0;
     return setInterval(() => {
       n += 1;
-      sseSend(res, "training.log", n, { id: p.id, line: "epoch " + n + " loss " + (0.2 / n).toFixed(4) });
+      const pct = Math.min(100, n * 12);
+      const m = DO.jobMetrics(name, pct);
+      sseSend(res, "training.log", n, {
+        id: p.id,
+        line: "epoch " + n + "  loss " + m.loss.toFixed(3) + "  acc " + m.accuracy.toFixed(1) + "%",
+      });
       if (n >= 8) res.end();
     }, 600);
+  },
+  "GET /dev/training-jobs/{id}/events": (req, res, p) => {
+    /* Steps come from the shared engine keyed on the job name, so a client
+     * that loses the stream and finishes locally walks the same sequence.
+     * A paused job stops emitting rather than closing, so a resume picks
+     * the stream back up where it left off. */
+    const job = S.trainingJobs.find((x) => x.id === p.id);
+    if (job && job.status === "queued") job.status = "running";
+    const name = job ? job.name : p.id;
+    const steps = DO.jobSteps(name);
+    let i = 0;
+    return setInterval(() => {
+      if (!job || job.status === "paused" || i >= steps.length) return;
+      const pct = steps[i++];
+      job.progress = pct;
+      const m = DO.jobMetrics(name, pct);
+      if (pct >= 100) {
+        job.status = "completed";
+        devActivity(job.name + " finished at " + m.accuracy + "% accuracy", "Training · just now", "test");
+        sseSend(res, "training.completed", pct, { id: p.id, progress: 100, accuracy: m.accuracy, loss: m.loss });
+        res.end();
+        return;
+      }
+      sseSend(res, "training.progress", pct, { id: p.id, progress: pct, accuracy: m.accuracy, loss: m.loss });
+    }, 500);
   },
   "GET /market-data/sources/{key}/stream": (req, res, p) => {
     let n = 0;

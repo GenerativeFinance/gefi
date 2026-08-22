@@ -1,12 +1,24 @@
 openapi: 3.0.3
 info:
-  title: GeFi Developer console ops
-  version: 0.1.0
+  title: GeFi Developer Console
+  version: 0.2.0
   description: >
-    Model CRUD, training jobs (queue, progress, logs, hyperparameters), deployments (envs, start/stop), ops telemetry (uptime, latency, error rate) and alert rules.
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Model registry, training jobs, deployments, operational telemetry and
+    alert rules for the developer console.
+
+
+    SIMULATED OPERATIONS. Nothing here provisions real compute. A training
+    job is a seeded progression, not a training run: accuracy and loss are
+    derived from how far along it is, so the same job reports the same
+    numbers at the same step wherever it is being watched. Deployment
+    telemetry is likewise seeded per deployment, so no two deployments show
+    identical figures, and a deployment that is stopped reports zeroes
+    rather than the numbers it had when it was last serving — it is not
+    handling requests, and the console should not imply it is.
+
+
+    Model lifecycle is Draft → Testing → Approved → Deployed. A model
+    advances one stage at a time; the server rejects a jump.
 servers:
   - url: /v1
     description: >
@@ -17,46 +29,95 @@ security:
   - apiKeyAuth: []
 tags:
   - name: devconsole
-    description: "Developer console ops"
+    description: "Developer console"
 paths:
   /dev/models:
     get:
       operationId: get-dev-models
-      summary: "Developer's models"
+      summary: "Models in the registry"
       tags: [devconsole]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: status
+          in: query
+          description: Filter by lifecycle stage.
+          schema:
+            type: string
+            enum: [Draft, Testing, Approved, Deployed]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of models.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DevModel'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
     post:
       operationId: post-dev-models
-      summary: "Create a model"
+      summary: "Register a model"
+      description: New models always start at Draft; the stage cannot be chosen.
       tags: [devconsole]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                category:
+                  type: string
+                goal:
+                  type: number
+                  description: Funding target, if the model is seeking one.
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: Created, at Draft.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevModel'
+        '409':
+          description: A model with that name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: Missing or blank name.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
   /dev/models/{id}:
-    patch:
-      operationId: patch-dev-models-id
-      summary: "Update a model"
+    get:
+      operationId: get-dev-models-id
+      summary: "One model"
       tags: [devconsole]
       parameters:
         - name: id
@@ -66,17 +127,81 @@ paths:
             type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The model.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevModel'
+        '404':
+          description: No such model.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+    patch:
+      operationId: patch-dev-models-id
+      summary: "Edit a model, or advance its stage"
+      description: >
+        Setting `status` advances the lifecycle by exactly one stage. A jump
+        (Draft straight to Deployed) is refused, as is moving backwards.
+      tags: [devconsole]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                category:
+                  type: string
+                status:
+                  type: string
+                  enum: [Draft, Testing, Approved, Deployed]
+      responses:
+        '200':
+          description: The updated model.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevModel'
+        '404':
+          description: No such model.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: The requested stage is not the next one.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
     delete:
       operationId: delete-dev-models-id
-      summary: "Delete a draft model"
+      summary: "Remove a draft model"
+      description: Only Draft models can be deleted; anything further along is refused.
       tags: [devconsole]
       parameters:
         - name: id
@@ -86,10 +211,29 @@ paths:
             type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: Deleted.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '404':
+          description: No such model.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '409':
+          description: The model is past Draft.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -97,16 +241,35 @@ paths:
   /dev/training-jobs:
     post:
       operationId: post-dev-training-jobs
-      summary: "Queue a training job (hyperparameters in body)"
+      summary: "Queue a training job"
+      description: >
+        Hyperparameters are validated against the published bounds
+        (GET /dev/hyperparameters) before the job is accepted.
       tags: [devconsole]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainingRequest'
       responses:
         '202':
-          description: Stubbed — schema lands with the owning service task.
+          description: Queued, running from the next progress frame.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingJob'
+        '422':
+          description: A hyperparameter is out of range, or the method is unknown.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -118,12 +281,209 @@ paths:
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [queued, running, paused, completed]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of jobs.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TrainingJob'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /dev/hyperparameters:
+    get:
+      operationId: get-dev-hyperparameters
+      summary: "Accepted hyperparameter bounds and methods"
+      description: >
+        The bounds the server validates against. Clients render their own
+        input limits from this rather than hardcoding a second copy that
+        could drift.
+      tags: [devconsole]
+      responses:
+        '200':
+          description: Bounds and the list of optimization methods.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  params:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        label:
+                          type: string
+                        min:
+                          type: number
+                        max:
+                          type: number
+                        kind:
+                          type: string
+                          enum: [int, float]
+                  methods:
+                    type: array
+                    items:
+                      type: string
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /dev/training-jobs/{id}:
+    get:
+      operationId: get-dev-training-jobs-id
+      summary: "One training job"
+      tags: [devconsole]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The job.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingJob'
+        '404':
+          description: No such job.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /dev/training-jobs/{id}/pause:
+    post:
+      operationId: post-dev-training-jobs-id-pause
+      summary: "Pause a running job"
+      tags: [devconsole]
+      responses:
+        '200':
+          description: The paused job.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingJob'
+        '404':
+          description: No such job.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '409':
+          description: The job is not running.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+  /dev/training-jobs/{id}/resume:
+    post:
+      operationId: post-dev-training-jobs-id-resume
+      summary: "Resume a paused job"
+      description: >
+        Resumes from the percentage it stopped at, not from zero — the
+        progression is a function of the step, so no work is repeated.
+      tags: [devconsole]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The resumed job.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingJob'
+        '404':
+          description: No such job.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '409':
+          description: The job is not paused.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /dev/training-jobs/{id}/events:
+    get:
+      operationId: get-dev-training-jobs-id-events
+      summary: "Training progress"
+      description: >
+        Emits `training.progress` frames carrying percentage, accuracy and
+        loss, then one `training.completed`. Stops emitting while the job is
+        paused rather than closing, so a resume picks the stream back up.
+      tags: [devconsole]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >
+            Event stream per the _envelope.yaml SSE convention
+            (named events, monotonic ids, ping heartbeats).
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            text/event-stream:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/SseEvent'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -131,7 +491,7 @@ paths:
   /dev/training-jobs/{id}/logs:
     get:
       operationId: get-dev-training-jobs-id-logs
-      summary: "Live training logs"
+      summary: "Training log lines"
       tags: [devconsole]
       parameters:
         - name: id
@@ -158,17 +518,81 @@ paths:
   /dev/deployments:
     get:
       operationId: get-dev-deployments
-      summary: "Deployments across envs"
+      summary: "Deployments"
+      description: >
+        A stopped deployment reports zeroed live fields — it is serving
+        nothing, and the numbers it had while up would be misleading.
       tags: [devconsole]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: env
+          in: query
+          schema:
+            type: string
+            enum: [Development, Staging, Production]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of deployments.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Deployment'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+    post:
+      operationId: post-dev-deployments
+      summary: "Deploy a model to an environment"
+      tags: [devconsole]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, env]
+              properties:
+                name:
+                  type: string
+                env:
+                  type: string
+                  enum: [Development, Staging, Production]
+      responses:
+        '201':
+          description: Created and serving.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '409':
+          description: That name is already deployed to that environment.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: Missing name, or an unknown environment.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -176,7 +600,7 @@ paths:
   /dev/deployments/{id}/toggle:
     post:
       operationId: post-dev-deployments-id-toggle
-      summary: "Start/stop a deployment"
+      summary: "Start or stop a deployment"
       tags: [devconsole]
       parameters:
         - name: id
@@ -184,13 +608,24 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: >
+            The deployment in its new state. Stopping zeroes uptime,
+            requests and latency in the same response.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '404':
+          description: No such deployment.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -198,14 +633,113 @@ paths:
   /dev/telemetry:
     get:
       operationId: get-dev-telemetry
-      summary: "Uptime, latency, error-rate series"
+      summary: "Operational telemetry"
+      description: >
+        Per-deployment metrics plus a fleet rollup measured FROM them, so
+        the headline health figure and the individual meters cannot
+        disagree. Only deployments that are serving contribute.
       tags: [devconsole]
+      parameters:
+        - name: refresh
+          in: query
+          description: >
+            Bumping this returns the next sample. Metrics are seeded on the
+            deployment and this counter, so a refresh moves every meter and
+            two deployments never read the same.
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: Telemetry for every deployment, plus the fleet rollup.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  refresh:
+                    type: integer
+                  fleet:
+                    $ref: '#/components/schemas/Fleet'
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Telemetry'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /dev/deployments/{id}/logs:
+    get:
+      operationId: get-dev-deployments-id-logs
+      summary: "Recent log lines for a deployment"
+      tags: [devconsole]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Recent lines, oldest first.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  lines:
+                    type: array
+                    items:
+                      type: string
+        '404':
+          description: No such deployment.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /dev/activity:
+    get:
+      operationId: get-dev-activity
+      summary: "Console activity feed"
+      description: >
+        Seeded history plus anything this session did — a model registered,
+        a job finished, a deployment stopped — newest first.
+      tags: [devconsole]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of activity entries.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Activity'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -220,10 +754,21 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of rules.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AlertRule'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -234,13 +779,279 @@ paths:
       tags: [devconsole]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [metric, threshold]
+              properties:
+                metric:
+                  type: string
+                  enum: [accuracy, response, uptime, errors]
+                comparator:
+                  type: string
+                  enum: [above, below]
+                  default: above
+                threshold:
+                  type: number
+                deployment:
+                  type: string
+                  description: Scope to one deployment, or omit for all.
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: The created rule.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertRule'
+        '422':
+          description: Unknown metric, or a non-numeric threshold.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
+  /dev/alert-rules/{id}:
+    patch:
+      operationId: patch-dev-alert-rules-id
+      summary: "Edit a rule"
+      tags: [devconsole]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metric:
+                  type: string
+                comparator:
+                  type: string
+                threshold:
+                  type: number
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: The updated rule.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertRule'
+        '404':
+          description: No such rule.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+    delete:
+      operationId: delete-dev-alert-rules-id
+      summary: "Remove a rule"
+      tags: [devconsole]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '404':
+          description: No such rule.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+components:
+  schemas:
+    DevModel:
+      type: object
+      properties:
+        id:
+          type: string
+          example: dm-1
+        name:
+          type: string
+        status:
+          type: string
+          enum: [Draft, Testing, Approved, Deployed]
+        category:
+          type: string
+        tests:
+          type: integer
+        collaborators:
+          type: integer
+        funded:
+          type: number
+        goal:
+          type: number
+    TrainingRequest:
+      type: object
+      required: [model, lr, batch, epochs, method]
+      properties:
+        model:
+          type: string
+        lr:
+          type: number
+          description: Learning rate, within the published bounds.
+        batch:
+          type: integer
+        epochs:
+          type: integer
+        method:
+          type: string
+    TrainingJob:
+      type: object
+      properties:
+        id:
+          type: string
+          example: tj-4
+        name:
+          type: string
+          description: Derived from the model and method, identically on both sides.
+        status:
+          type: string
+          enum: [queued, running, paused, completed]
+        progress:
+          type: integer
+        accuracy:
+          type: number
+          description: Derived from progress, not stored independently.
+        loss:
+          type: number
+        duration:
+          type: string
+        params:
+          type: object
+          description: The hyperparameters the job was created with.
+    Deployment:
+      type: object
+      properties:
+        id:
+          type: string
+          example: dep-1
+        name:
+          type: string
+        env:
+          type: string
+          enum: [Development, Staging, Production]
+        status:
+          type: string
+          enum: [active, inactive]
+        uptime:
+          type: number
+          description: Zero while stopped.
+        requests:
+          type: string
+          description: Human-readable count. "0" while stopped.
+        latency:
+          type: string
+          description: '"0ms" while stopped.'
+        last:
+          type: string
+          format: date
+    Telemetry:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        env:
+          type: string
+        status:
+          type: string
+        serving:
+          type: boolean
+        accuracy:
+          type: number
+        response:
+          type: integer
+          description: Milliseconds.
+        uptime:
+          type: number
+        errors:
+          type: number
+          description: Percent.
+        requests:
+          type: integer
+        latency_series:
+          type: array
+          items:
+            type: number
+        error_series:
+          type: array
+          items:
+            type: number
+    Fleet:
+      type: object
+      description: Measured from the serving deployments, never stated independently.
+      properties:
+        health:
+          type: number
+        response:
+          type: integer
+        active:
+          type: integer
+        total:
+          type: integer
+    Activity:
+      type: object
+      properties:
+        title:
+          type: string
+        meta:
+          type: string
+        tag:
+          type: string
+    AlertRule:
+      type: object
+      properties:
+        id:
+          type: string
+        metric:
+          type: string
+        comparator:
+          type: string
+        threshold:
+          type: number
+        deployment:
+          type: string
+        enabled:
+          type: boolean

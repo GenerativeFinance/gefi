@@ -424,15 +424,22 @@
       { name: "Sentiment Trading Bot", status: "Approved", category: "NLP", tests: 96, collaborators: 3, funded: 22500, goal: 30000 },
       { name: "Macro Regime Classifier", status: "Draft", category: "Macro", tests: 12, collaborators: 2, funded: 0, goal: 25000 }
     ],
+    /* Training jobs (task 310): only what cannot be derived is stored.
+     * Accuracy, loss and duration come from assets/js/app/devops-math.js so
+     * the figures on a card always match the progress bar beside them. */
     jobs: [
-      { name: "optimizer-v3 hyperband sweep", duration: "2h 15m", status: "completed", accuracy: 94.8, loss: 0.041, progress: 100 },
-      { name: "risk-analyzer fine-tune", duration: "48m", status: "running", accuracy: 91.2, loss: 0.067, progress: 75 },
-      { name: "sentiment-bot distillation", duration: "0m", status: "queued", accuracy: 0, loss: 0, progress: 0 }
+      { name: "optimizer-v3 hyperband sweep", status: "completed", progress: 100 },
+      { name: "risk-analyzer fine-tune", status: "running", progress: 75 },
+      { name: "sentiment-bot distillation", status: "queued", progress: 0 }
     ],
+    /* Deployments (task 310): uptime, requests and latency are telemetry,
+     * so they are measured by the shared module rather than stored here —
+     * a stopped deployment then cannot keep reporting the numbers it had
+     * while it was up. */
     deployments: [
-      { name: "portfolio-optimizer", env: "Production", status: "active", uptime: 99.8, requests: "412K", latency: "43ms", last: "2026-08-18" },
-      { name: "risk-analyzer", env: "Staging", status: "active", uptime: 99.1, requests: "38K", latency: "51ms", last: "2026-08-20" },
-      { name: "sentiment-bot", env: "Development", status: "inactive", uptime: 0, requests: "0", latency: "0ms", last: "2026-08-11" }
+      { name: "portfolio-optimizer", env: "Production", status: "active", last: "2026-08-18" },
+      { name: "risk-analyzer", env: "Staging", status: "active", last: "2026-08-20" },
+      { name: "sentiment-bot", env: "Development", status: "inactive", last: "2026-08-11" }
     ],
     team: [
       { name: "Ana Marques", role: "ML Engineer", kind: "Owner" },

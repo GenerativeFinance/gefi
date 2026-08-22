@@ -8,7 +8,9 @@ active_tab: Overview
 permalink: /app/dev-monitoring/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/dev-ops.js
+app_scripts:
+  - /assets/js/app/devops-math.js
+  - /assets/js/app/dev-ops.js
 ---
 
 {% include app-devtabs.html active="Monitoring" %}
