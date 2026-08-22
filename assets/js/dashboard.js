@@ -824,6 +824,7 @@
   }
 
   function renderFederation() {
+    applyFedView();
     var body = root.querySelector("[data-fed-rounds]");
     if (!body || body.childNodes.length) return;
     FED_ROUNDS.forEach(function (r) {
@@ -1128,6 +1129,165 @@
       detail.appendChild(li);
     });
   }
+
+  /* ------------------- federated participant console (Task 124) */
+
+  var FED_VIEW_KEY = "gefi-dash-fed-view";
+
+  function loadFedView() {
+    try {
+      var v = sessionStorage.getItem(FED_VIEW_KEY);
+      if (v === "participant" || v === "operator") return v;
+    } catch (e) {}
+    return "operator";
+  }
+
+  /* Alpine Credit Union's seat — the FED_P[0] participant. */
+  var FEDP_ROUNDS = [
+    { n: 148, date: "Aug 21", took: true, share: 27, usdc: 1420, paid: false },
+    { n: 147, date: "Aug 20", took: true, share: 29, usdc: 1510, paid: true },
+    { n: 146, date: "Aug 19", took: true, share: 24, usdc: 1260, paid: true },
+    { n: 145, date: "Aug 18", took: true, share: 0, usdc: 0, paid: null },
+    { n: 144, date: "Aug 17", took: true, share: 26, usdc: 1380, paid: true },
+    { n: 143, date: "Aug 16", took: false, share: 0, usdc: 0, paid: null }
+  ];
+
+  var FEDP_LINEAGE = [
+    { group: "Loan performance", features: ["days_past_due", "utilization", "restructure_flag", "chargeoff_history"] },
+    { group: "Applicant financials", features: ["revenue_band", "dscr_bucket", "leverage_ratio", "liquidity_months"] },
+    { group: "Behavioral", features: ["payment_regularity", "overdraft_days", "seasonality_index"] }
+  ];
+
+  function fedpKv(rows) {
+    var dl = document.createElement("dl");
+    dl.className = "fedp-kv";
+    rows.forEach(function (r) {
+      var div = document.createElement("div");
+      var dt = document.createElement("dt");
+      dt.textContent = r[0];
+      var dd = document.createElement("dd");
+      if (r[1] instanceof Node) {
+        dd.appendChild(r[1]);
+      } else {
+        dd.textContent = r[1];
+      }
+      div.appendChild(dt);
+      div.appendChild(dd);
+      dl.appendChild(div);
+    });
+    return dl;
+  }
+
+  function renderFedParticipant() {
+    var node = root.querySelector("[data-fedp-node]");
+    if (!node || node.childNodes.length) return;
+
+    var h = document.createElement("h3");
+    h.className = "fedp-card__title";
+    var dot = document.createElement("span");
+    dot.className = "fedp-live";
+    dot.setAttribute("aria-hidden", "true");
+    h.appendChild(dot);
+    h.appendChild(document.createTextNode("Node agent — connected"));
+    node.appendChild(h);
+    node.appendChild(fedpKv([
+      ["Last heartbeat", "42s ago"],
+      ["Agent version", "node-agent 1.14.2"],
+      ["Region", "EU — on-prem Zurich"],
+      ["Next round eligibility", "Round #149, quorum 4 of 5"]
+    ]));
+
+    var att = root.querySelector("[data-fedp-attest]");
+    var h2 = document.createElement("h3");
+    h2.className = "fedp-card__title";
+    h2.textContent = "Attestation";
+    att.appendChild(h2);
+    var badge = document.createElement("span");
+    badge.className = "fedp-attest fedp-attest--ok";
+    badge.textContent = "AWS Nitro — attested";
+    att.appendChild(badge);
+    att.appendChild(fedpKv([
+      ["Enclave measurement", "PCR0 9f31…c2ae"],
+      ["Expires", "renews in 4d 12h"],
+      ["Fallback", "SGX and stub modes supported; stub nodes earn no rewards"]
+    ]));
+
+    var body = root.querySelector("[data-fedp-earnings]");
+    FEDP_ROUNDS.forEach(function (r) {
+      var tr = document.createElement("tr");
+      function td(content, mono) {
+        var el = document.createElement("td");
+        if (mono) el.className = "is-mono";
+        if (content instanceof Node) {
+          el.appendChild(content);
+        } else {
+          el.textContent = content;
+        }
+        tr.appendChild(el);
+      }
+      td("#" + r.n, true);
+      td(r.date);
+      td(r.took ? "yes" : "missed", true);
+      td(r.share ? r.share + "%" : "—", true);
+      td(r.usdc ? r.usdc.toLocaleString("en-US") + " USDC" : "—", true);
+      var pill;
+      if (r.paid === true) {
+        pill = document.createElement("span");
+        pill.className = "status-pill status-pill--ok";
+        pill.textContent = "paid";
+      } else if (r.paid === false) {
+        pill = document.createElement("span");
+        pill.className = "status-pill status-pill--progress";
+        pill.textContent = "pending";
+      } else {
+        pill = document.createTextNode("—");
+      }
+      td(pill);
+      body.appendChild(tr);
+    });
+
+    var lin = root.querySelector("[data-fedp-lineage]");
+    FEDP_LINEAGE.forEach(function (g) {
+      var block = document.createElement("div");
+      block.className = "fedp-lineage";
+      var name = document.createElement("p");
+      name.className = "fedp-lineage__group";
+      name.textContent = g.group + " (" + g.features.length + ")";
+      block.appendChild(name);
+      var row = document.createElement("div");
+      row.className = "fedp-lineage__chips";
+      g.features.forEach(function (f) {
+        var chip = document.createElement("code");
+        chip.className = "fedp-feature";
+        chip.textContent = f;
+        row.appendChild(chip);
+      });
+      block.appendChild(row);
+      lin.appendChild(block);
+    });
+  }
+
+  function applyFedView() {
+    var view = loadFedView();
+    var op = root.querySelector("[data-fed-operator]");
+    var pa = root.querySelector("[data-fed-participant]");
+    if (!op || !pa) return;
+    op.hidden = view !== "operator";
+    pa.hidden = view !== "participant";
+    root.querySelectorAll("[data-fed-view-btn]").forEach(function (b) {
+      b.classList.toggle("is-active", b.getAttribute("data-fed-view-btn") === view);
+    });
+    if (view === "participant") renderFedParticipant();
+  }
+
+  root.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-fed-view-btn]");
+    if (!btn) return;
+    try {
+      sessionStorage.setItem(FED_VIEW_KEY, btn.getAttribute("data-fed-view-btn"));
+    } catch (err) {}
+    applyFedView();
+  });
 
   /* ------------------------------------ paper-trading sandbox (Task 120) */
 

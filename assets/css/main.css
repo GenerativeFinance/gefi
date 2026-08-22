@@ -2303,3 +2303,29 @@ p  { margin: 0 0 var(--space-4); }
 .lb-badge--self { border: 1px dashed var(--color-border); color: var(--color-muted); background: transparent; }
 .lb-method { max-width: 720px; margin-top: var(--space-7); padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
 .lb-method h2 { font-size: 1.125rem; margin-top: 0; }
+
+/* Task 124 — federated participant console */
+.fed-viewtoggle { display: flex; gap: var(--space-2); }
+.fedp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4); }
+@media (max-width: 860px) { .fedp-grid { grid-template-columns: 1fr; } }
+.fedp-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); }
+.fedp-card__title { display: flex; align-items: center; gap: 8px; margin: 0 0 var(--space-3); font-size: 1rem; }
+.fedp-live { width: 10px; height: 10px; border-radius: 50%; background: var(--color-profit); box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15); }
+.fedp-kv { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.fedp-kv div { display: flex; justify-content: space-between; gap: var(--space-3); align-items: baseline; }
+.fedp-kv dt { color: var(--color-muted); font-size: 0.8125rem; }
+.fedp-kv dd { margin: 0; font-family: var(--font-mono); font-size: 0.8125rem; text-align: right; }
+.fedp-attest {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 999px; font-size: 0.8125rem; font-weight: 700;
+  margin-bottom: var(--space-3);
+}
+.fedp-attest--ok { background: rgba(22, 163, 74, 0.12); color: var(--color-profit); }
+.fedp-lineage { margin-bottom: var(--space-4); }
+.fedp-lineage__group { margin: 0 0 6px; font-weight: 600; font-size: 0.875rem; }
+.fedp-lineage__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fedp-feature {
+  font-family: var(--font-mono); font-size: 0.75rem;
+  padding: 3px 9px; border-radius: 6px;
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+}

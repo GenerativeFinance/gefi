@@ -44,7 +44,15 @@ sitemap: false
 </section>
 
 <section class="dash-panel" data-dash-panel="federation" hidden>
-  <h1 class="dash-panel__title">Federation</h1>
+  <div class="dash-panel__head">
+    <h1 class="dash-panel__title">Federation</h1>
+    <div class="fed-viewtoggle" role="group" aria-label="Federation view">
+      <button type="button" class="filter-chip is-active" data-fed-view-btn="operator">Operator view</button>
+      <button type="button" class="filter-chip" data-fed-view-btn="participant">Participant view</button>
+    </div>
+  </div>
+
+  <div data-fed-operator>
   <h2 class="dash-panel__subtitle">Training rounds</h2>
   <table class="dash-table" data-fed-table>
     <thead>
@@ -55,6 +63,25 @@ sitemap: false
   <h2 class="dash-panel__subtitle">Shapley contribution — last aggregated round</h2>
   <p class="muted small">Colors match the participant chips in the rounds table above; the bar is each lender's marginal contribution to model quality.</p>
   <div class="fed-bars" data-fed-shapley></div>
+  </div>
+
+  <div data-fed-participant hidden>
+    <p class="muted small">Your institution's standing in the <strong>credit-oracle</strong> federation — Alpine Credit Union's seat, not the operator's.</p>
+    <div class="fedp-grid">
+      <div class="fedp-card" data-fedp-node></div>
+      <div class="fedp-card" data-fedp-attest></div>
+    </div>
+    <h2 class="dash-panel__subtitle">Round participation &amp; earnings</h2>
+    <table class="dash-table" data-fedp-table>
+      <thead>
+        <tr><th>Round</th><th>Date</th><th>Participated</th><th>Shapley share</th><th>Earnings</th><th>Payout</th></tr>
+      </thead>
+      <tbody data-fedp-earnings></tbody>
+    </table>
+    <h2 class="dash-panel__subtitle">Data lineage — features your node served</h2>
+    <p class="muted small">Exactly which feature groups left your node as differentially-private gradients. Raw rows never leave; this is the complete list.</p>
+    <div data-fedp-lineage></div>
+  </div>
 </section>
 
 <section class="dash-panel" data-dash-panel="api-keys" hidden>
