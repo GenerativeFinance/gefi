@@ -41,7 +41,7 @@ check rebalance       GET  /rebalance/drift       "Array.isArray(d.items) && d.i
 check marketplace     GET  "/models?limit=5"      "Array.isArray(d.items) && d.items.length===5 && d.next_cursor"
 check models-runtime  POST /models/accretion-dilution/run "d.sample===true && typeof d.kind==='string' && (d.series||d.value!==undefined||d.rows||d.bars||d.text)" '{"inputs":{"revenue":100}}'
 check trading         POST /orders                "d.status==='filled' && d.id"                        '{"symbol":"NVDA","side":"buy","qty":2}'
-check backtesting     GET  /backtests/bt-1/results "Array.isArray(d.equity) && d.stats.sharpe"
+check backtesting     GET  /backtests/BT-118/results "Array.isArray(d.equity) && d.equity[0]===100 && typeof d.stats.sharpe==='number' && typeof d.stats.drawdownPct==='number' && Array.isArray(d.tradeRows) && d.tradeRows[0].result"
 check devconsole      GET  /dev/models            "Array.isArray(d.items) && d.items[0].id"
 check collab          GET  /bounties              "Array.isArray(d.items) && d.items[0].reward"
 check data-platform   GET  /revenue/summary       "typeof d.total_revenue==='number' && d.datasets===12"

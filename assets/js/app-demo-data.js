@@ -461,10 +461,15 @@
     { name: "SecureInvest Tech", handle: "@secureinvest", verified: false, rating: 4.2, reviews: 41, location: "Austin", models: 8, subscribers: 730, revenue: 39000, specialties: ["Treasury", "Payments"], top: ["Cross-Border Router", "Debt Schedule"], joined: "Feb 2024" }
   ];
 
+  /* Run history for the backtesting page (task 309). Only the run is stored —
+   * every metric is derived from the shared engine in assets/js/app/backtest-math.js,
+   * so the table, the analysis chart and the comparison overlay cannot drift
+   * apart. These are runs of the models the environment actually offers, so
+   * any row here can be re-run from the dropdown. */
   DEMO.backtests = [
-    { id: "BT-118", model: "Breakout Signal Engine", range: "2y", sharpe: 1.87, annualPct: 14.2, drawdownPct: -9.1, trades: 412, status: "completed" },
-    { id: "BT-117", model: "Cross-Sectional Mean Reversion", range: "1y", sharpe: 1.35, annualPct: 10.8, drawdownPct: -6.4, trades: 388, status: "completed" },
-    { id: "BT-116", model: "Carry Trade Optimizer", range: "2y", sharpe: 1.12, annualPct: 8.9, drawdownPct: -11.2, trades: 205, status: "completed" }
+    { id: "BT-118", model: "Sentiment Trading Bot", range: "2y", status: "completed" },
+    { id: "BT-117", model: "Advanced Portfolio Optimizer", range: "5y", status: "completed" },
+    { id: "BT-116", model: "Real-time Risk Analyzer", range: "2y", status: "completed" }
   ];
 
   DEMO.reports = {

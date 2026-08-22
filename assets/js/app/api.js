@@ -267,6 +267,9 @@
       ["/developers?limit=100", function (r) {
         if (r.items && r.items.length) D.developers = r.items;
       }],
+      ["/backtests?limit=100", function (r) {
+        if (r.items && r.items.length) D.backtests = r.items;
+      }],
     ];
     return Promise.all(
       jobs.map(function (job) {
@@ -397,6 +400,15 @@
       return (GeFi.MODELS || []).map(function (m) {
         return { slug: m.slug, name: m.name, wing: m.wing, risk: m.risk, federated: m.federated, unit: m.unit };
       });
+    });
+    api.register("/backtests", function () {
+      return D.backtests;
+    });
+    /* Offline the page assigns the run its own id and replays the same
+     * seeded step sequence; metrics are keyed on the model and window, not
+     * on the id, so the finished run reports identical numbers either way. */
+    api.register("/optimizer/runs", function () {
+      return { status: "queued" };
     });
     api.register("/models/{slug}/metrics", function (p) {
       var m = (GeFi.MODELS || []).filter(function (x) {

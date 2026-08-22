@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -86,8 +86,9 @@ const RB = GeFi.rebalanceMath; /* shared with the client page (task 305) */
 const CAT = GeFi.catalog; /* shared with the marketplace pages (task 306) */
 const RUNTIME = GeFi.modelRuntime; /* shared with model-demo.js (task 307) */
 const MKT = GeFi.market; /* shared with the trading page (task 308) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market");
+const BT = GeFi.backtest; /* shared with the backtesting page (task 309) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest");
   process.exit(1);
 }
 
@@ -229,6 +230,19 @@ function freshState() {
       { id: "n-2", title: "Model audit passed", detail: "#MT-4521 closed with no findings", unread: true },
       { id: "n-3", title: "Dataset published", detail: "Options Surface passed its quality audit", unread: false },
     ],
+    /* Backtesting (task 309). The seeded runs are the history; new runs
+     * append and every metric is derived by the shared engine. */
+    backtests: (D.backtests || []).map((r) => ({
+      id: r.id,
+      model: r.model,
+      range: r.range,
+      spec: { model: r.model, range: r.range },
+      status: r.status,
+      progress: r.status === "completed" ? 100 : 0,
+    })),
+    nextBacktestId: 119,
+    optimizerRuns: [],
+    nextOptimizerId: 1,
     metricsAsOf: {},
     paperOrders: [],
     tick: 0,
@@ -707,16 +721,111 @@ on("POST /bots/{id}/toggle", (p) => {
   return b;
 });
 
-/* ---- backtesting ---- */
+/* ---- backtesting (task 309) ----
+ * Every figure comes from the shared engine, so a run the server computed
+ * and the same run simulated in the browser report the same numbers. */
+
+/* A stored run, flattened for the list and detail views. */
+function btRow(run) {
+  if (run.status !== "completed") {
+    return { id: run.id, model: run.model, range: run.range, rangeLabel: BT.span(run.spec).label, status: run.status, progress: run.progress || 0 };
+  }
+  const m = BT.metrics(run.model, run.spec);
+  return {
+    id: run.id,
+    model: run.model,
+    range: m.range,
+    rangeLabel: m.rangeLabel,
+    status: "completed",
+    sharpe: m.sharpe,
+    annualPct: m.annualPct,
+    drawdownPct: m.drawdownPct,
+    trades: m.trades,
+    winRatePct: m.winRatePct,
+  };
+}
+function btFind(id) {
+  return S.backtests.find((r) => r.id === id);
+}
+
 on("POST /backtests", (p, q, b) => {
-  const job = { id: "bt-" + (D.backtests.length + S.reports.length + 1), status: "queued", params: b || {} };
-  return { __status: 202, ...job };
+  const spec = { model: (b && b.model) || "", range: (b && b.range) || "1y", start: b && b.start, end: b && b.end };
+  const why = BT.validate(spec);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const run = { id: "BT-" + S.nextBacktestId++, model: spec.model, range: BT.span(spec).key, spec, status: "queued", progress: 0 };
+  S.backtests.unshift(run);
+  return { __status: 202, ...btRow(run) };
 });
-on("GET /backtests", (p, q) => page(D.backtests || [], q));
-on("GET /backtests/{id}", (p) => ({ id: p.id, status: "completed", sharpe: 1.34, return_pct: 12.5, max_drawdown_pct: -8.2 }));
-on("GET /backtests/{id}/results", (p) => ({ id: p.id, equity: series("bt|" + p.id, 60, 100, 12), trades: 148, stats: { sharpe: 1.34, win_rate: 0.56 } }));
-on("POST /optimizer/runs", () => ({ __status: 202, id: "opt-1", status: "queued" }));
-on("GET /optimizer/runs/{id}", (p) => ({ id: p.id, status: "completed", best: { lookback: 20, band: 2.0, sharpe: 1.51 } }));
+on("GET /backtests", (p, q) => {
+  let rows = S.backtests.map(btRow);
+  if (q.status) rows = rows.filter((r) => r.status === q.status);
+  return page(rows, q);
+});
+on("GET /backtests/{id}", (p) => {
+  const run = btFind(p.id);
+  if (!run) return notFound;
+  return btRow(run);
+});
+on("GET /backtests/{id}/results", (p, q) => {
+  const run = btFind(p.id);
+  if (!run) return notFound;
+  const limit = Math.min(200, Math.max(1, parseInt(q.trades, 10) || 20));
+  return {
+    id: run.id,
+    model: run.model,
+    range: run.range,
+    equity: BT.equity(run.model, run.spec),
+    stats: BT.metrics(run.model, run.spec),
+    tradeRows: BT.trades(run.model, run.spec, limit),
+  };
+});
+on("GET /backtests/compare", (p, q) => {
+  const ids = String(q.ids || "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (ids.length < 2) return { __status: 422, code: "validation_failed", message: "compare needs at least two run ids" };
+  const points = Math.min(400, Math.max(10, parseInt(q.points, 10) || 60));
+  const items = [];
+  for (const id of ids) {
+    const run = btFind(id);
+    if (!run) return { __status: 422, code: "validation_failed", message: "unknown run: " + id };
+    items.push({
+      id: run.id,
+      model: run.model,
+      range: run.range,
+      metrics: BT.metrics(run.model, run.spec),
+      equity: resample(BT.equity(run.model, run.spec), points),
+    });
+  }
+  return { points, items };
+});
+
+/* Curves of different lengths are put on one x-axis before they are drawn,
+ * so a 1y run and a 5y run overlay honestly instead of one being stretched. */
+function resample(values, n) {
+  if (values.length === n) return values.slice();
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    out.push(values[Math.round((i / (n - 1)) * (values.length - 1))]);
+  }
+  return out;
+}
+
+on("POST /optimizer/runs", (p, q, b) => {
+  const spec = { model: (b && b.model) || "", range: (b && b.range) || "1y", start: b && b.start, end: b && b.end };
+  const why = BT.validate(spec);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const grid = (b && b.grid) || BT.GRID;
+  if (!Object.keys(grid).length) return { __status: 422, code: "validation_failed", message: "grid must name at least one parameter" };
+  const result = BT.optimize(spec.model, spec, grid);
+  const run = { id: "OPT-" + S.nextOptimizerId++, status: "completed", ...result };
+  S.optimizerRuns.unshift(run);
+  return { __status: 202, ...run };
+});
+on("GET /optimizer/runs", (p, q) => page(S.optimizerRuns, q));
+on("GET /optimizer/runs/{id}", (p) => {
+  const run = S.optimizerRuns.find((r) => r.id === p.id);
+  if (!run) return notFound;
+  return run;
+});
 on("GET /historical-data/{symbol}", (p, q) => page(series("hist|" + p.symbol, 48, 100, 20).map((v, i) => ({ t: i, close: v })), q));
 
 /* ---- devconsole ---- */
@@ -1075,12 +1184,30 @@ const SSE = {
     }, 1000);
   },
   "GET /backtests/{id}/events": (req, res, p) => {
-    let pct = 0;
+    /* Steps come from the shared engine keyed on the run id, so a client
+     * that loses the stream and finishes the run locally walks through the
+     * same percentages instead of inventing its own. The run is marked
+     * completed server-side on the last frame, which is what makes it show
+     * up in the results table after a reload. */
+    const run = S.backtests.find((r) => r.id === p.id);
+    const steps = BT.steps(p.id);
+    let i = 0;
+    if (run && run.status === "queued") run.status = "running";
     return setInterval(() => {
-      pct = Math.min(100, pct + 20);
-      sseSend(res, pct < 100 ? "backtest.progress" : "backtest.completed", pct, { id: p.id, progress: pct });
-      if (pct >= 100) res.end();
-    }, 700);
+      if (i >= steps.length) return;
+      const pct = steps[i++];
+      if (run) run.progress = pct;
+      if (pct >= 100) {
+        if (run) {
+          run.status = "completed";
+          run.progress = 100;
+        }
+        sseSend(res, "backtest.completed", pct, { id: p.id, progress: 100, run: run ? btRow(run) : { id: p.id, progress: 100, status: "completed" } });
+        res.end();
+        return;
+      }
+      sseSend(res, "backtest.progress", pct, { id: p.id, progress: pct });
+    }, 500);
   },
   "GET /dev/training-jobs/{id}/logs": (req, res, p) => {
     let n = 0;

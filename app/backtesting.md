@@ -8,8 +8,12 @@ active_tab: Backtesting
 permalink: /app/backtesting/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/backtesting.js
+app_scripts:
+  - /assets/js/app/backtest-math.js
+  - /assets/js/app/backtesting.js
 ---
+
+<div data-bt-root>
 
 <div class="app-kpis" data-bt-kpis></div>
 
@@ -55,7 +59,20 @@ app_script: /assets/js/app/backtesting.js
   </div>
 
   <div data-segment-panel="optimizer" hidden>
-    <div data-bt-optimizer-empty></div>
+    <section class="app-panel">
+      <h2 class="app-panel__title">Parameter sweep</h2>
+      <p class="app-kpi__sub" style="margin:0 0 12px;">Scores every combination against the same engine the backtests use. Deterministic — the same grid always picks the same winner.</p>
+      <form class="app-form app-form--inline" data-bt-opt-form>
+        <label>Model
+          <select name="model" data-bt-opt-model></select>
+        </label>
+        <label>Range
+          <select name="range" data-bt-opt-range></select>
+        </label>
+        <button type="submit" class="app-btn app-btn--primary">Run sweep</button>
+      </form>
+      <div data-bt-opt-result></div>
+    </section>
   </div>
 
   <div data-segment-panel="results" hidden>
@@ -70,11 +87,24 @@ app_script: /assets/js/app/backtesting.js
   </div>
 
   <div data-segment-panel="analysis" hidden>
-    <div data-bt-analysis-empty></div>
+    <section class="app-panel">
+      <h2 class="app-panel__title">Run analysis</h2>
+      <form class="app-form app-form--inline" data-bt-analysis-form>
+        <label>Run
+          <select name="run" data-bt-analysis-run></select>
+        </label>
+      </form>
+      <div data-bt-analysis-body></div>
+    </section>
   </div>
 
   <div data-segment-panel="comparison" hidden>
-    <div data-bt-comparison-empty></div>
+    <section class="app-panel">
+      <h2 class="app-panel__title">Compare runs</h2>
+      <p class="app-kpi__sub" style="margin:0 0 12px;">Pick two or more completed runs. Curves are resampled onto a shared axis, so windows of different lengths line up honestly.</p>
+      <div class="app-lt-pills" data-bt-compare-picks></div>
+      <div data-bt-compare-body></div>
+    </section>
   </div>
 </div>
 
@@ -86,16 +116,29 @@ app_script: /assets/js/app/backtesting.js
         <select name="model" data-bt-model-select></select>
       </label>
       <label>Range
-        <select name="range">
+        <select name="range" data-bt-range>
           <option value="1y">Last 1 Year</option>
           <option value="2y" selected>Last 2 Years</option>
+          <option value="5y">Last 5 Years</option>
           <option value="custom">Custom Range</option>
         </select>
       </label>
+      <div data-bt-custom hidden>
+        <label>Start
+          <input type="date" name="start" data-bt-min value="2021-01-01" />
+        </label>
+        <label>End
+          <input type="date" name="end" data-bt-min value="2023-01-01" />
+        </label>
+        <p class="app-kpi__sub" data-bt-coverage style="margin:4px 0 0;"></p>
+      </div>
+      <p class="app-kpi__sub" data-bt-form-error hidden style="color:var(--app-down);margin:4px 0 0;"></p>
       <div class="app-modal__actions">
         <button type="button" class="app-btn app-btn--ghost" data-bt-modal-cancel>Cancel</button>
         <button type="submit" class="app-btn app-btn--primary">Start backtest</button>
       </div>
     </form>
   </div>
+</div>
+
 </div>

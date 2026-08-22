@@ -1,12 +1,27 @@
 openapi: 3.0.3
 info:
   title: GeFi Backtesting
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Backtest job runner with progress events, results store, optimizer, historical data store (2020 onward).
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Backtest job runner with progress events, results store, parameter
+    optimizer and a historical bar store.
+
+
+    SIMULATED RESULTS ONLY. Every figure this service returns comes from a
+    seeded simulation, not from executing a strategy against recorded market
+    data. The equity curve is generated first and every headline metric —
+    Sharpe, annualised return, maximum drawdown, win rate — is measured off
+    that one curve, so the results table, the analysis chart and the
+    comparison overlay always describe the same run. A model is given a true
+    annualised Sharpe and the drift is solved backwards from it, which is why
+    a one-year window reports a noisy estimate and a five-year window
+    converges: that sampling error is deliberate and is what a real backtest
+    of the same length would show. None of this is investment advice and none
+    of it is evidence a strategy works.
+
+
+    Historical coverage starts at 2020-01-01. A custom window that begins
+    before then is rejected rather than silently clamped.
 servers:
   - url: /v1
     description: >
@@ -23,15 +38,38 @@ paths:
     post:
       operationId: post-backtests
       summary: "Queue a backtest job"
+      description: >
+        Accepts the job and returns it in `queued` state with the id the
+        progress stream is keyed on. The run does not complete synchronously;
+        follow /backtests/{id}/events, or poll /backtests/{id}.
       tags: [backtesting]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BacktestRequest'
       responses:
         '202':
-          description: Stubbed — schema lands with the owning service task.
+          description: Job accepted and queued.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Backtest'
+        '422':
+          description: >
+            The request cannot be run — an unknown model, an unsupported
+            range, or a custom window that is malformed, inverted, or starts
+            before coverage begins. The message names which.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -39,16 +77,36 @@ paths:
     get:
       operationId: get-backtests
       summary: "Backtest jobs"
+      description: >
+        Newest first. Runs still in flight carry `progress`; completed runs
+        carry the full metric set.
       tags: [backtesting]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: status
+          in: query
+          description: Filter by lifecycle state.
+          schema:
+            type: string
+            enum: [queued, running, completed]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of backtest runs.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Backtest'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -66,10 +124,20 @@ paths:
             type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The run, with metrics once it has completed.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Backtest'
+        '404':
+          description: No such run.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -78,6 +146,12 @@ paths:
     get:
       operationId: get-backtests-id-events
       summary: "Progress events"
+      description: >
+        Emits `backtest.progress` frames carrying the run's percentage, then
+        one `backtest.completed` frame with the finished run, then closes.
+        The percentage sequence is derived from the run id, so a client that
+        loses the stream and simulates locally steps through the same numbers
+        rather than inventing its own.
       tags: [backtesting]
       parameters:
         - name: id
@@ -105,6 +179,9 @@ paths:
     get:
       operationId: get-backtests-id-results
       summary: "Full results (equity curve, trades, stats)"
+      description: >
+        The equity curve the metrics were measured from, plus a per-trade
+        breakdown whose win rate matches the headline figure.
       tags: [backtesting]
       parameters:
         - name: id
@@ -112,12 +189,95 @@ paths:
           required: true
           schema:
             type: string
+        - name: trades
+          in: query
+          description: How many trade rows to return.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 20
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: Results for a completed run.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BacktestResults'
+        '404':
+          description: No such run.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /backtests/compare:
+    get:
+      operationId: get-backtests-compare
+      summary: "Overlay several runs"
+      description: >
+        Returns one entry per requested run — its metrics and its equity
+        curve, resampled to a common length so the curves can be drawn on
+        one pair of axes.
+      tags: [backtesting]
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          description: Comma-separated run ids, two or more.
+          schema:
+            type: string
+          example: BT-118,BT-117
+        - name: points
+          in: query
+          description: Length each curve is resampled to.
+          schema:
+            type: integer
+            minimum: 10
+            maximum: 400
+            default: 60
+      responses:
+        '200':
+          description: One series per run, on a shared x-axis.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  points:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        model:
+                          type: string
+                        range:
+                          type: string
+                        metrics:
+                          $ref: '#/components/schemas/Metrics'
+                        equity:
+                          type: array
+                          items:
+                            type: number
+        '422':
+          description: Fewer than two ids, or an id that does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -126,15 +286,85 @@ paths:
     post:
       operationId: post-optimizer-runs
       summary: "Queue a parameter-sweep optimization"
+      description: >
+        Scores every combination in the grid against the same engine the
+        backtests use and returns them ranked, best first. Deterministic, so
+        the winning parameter set is the same on every call.
       tags: [backtesting]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [model]
+              properties:
+                model:
+                  type: string
+                range:
+                  type: string
+                  default: "1y"
+                start:
+                  type: string
+                  format: date
+                end:
+                  type: string
+                  format: date
+                grid:
+                  type: object
+                  description: >
+                    Parameter name to the list of values to try. Omitted, the
+                    server's default grid is used and echoed back.
+                  additionalProperties:
+                    type: array
+                    items:
+                      type: number
       responses:
         '202':
-          description: Stubbed — schema lands with the owning service task.
+          description: Sweep accepted; results included since it is deterministic.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptimizerRun'
+        '422':
+          description: Unknown model, bad range, or an empty grid.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+    get:
+      operationId: get-optimizer-runs
+      summary: "Optimizer runs"
+      tags: [backtesting]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of sweeps.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/OptimizerRun'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -152,10 +382,20 @@ paths:
             type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The sweep, ranked best first.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptimizerRun'
+        '404':
+          description: No such sweep.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -163,7 +403,7 @@ paths:
   /historical-data/{symbol}:
     get:
       operationId: get-historical-data-symbol
-      summary: "Historical bars (2020\u2192)"
+      summary: "Historical bars (2020→)"
       tags: [backtesting]
       parameters:
         - name: symbol
@@ -175,11 +415,185 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of bars, oldest first.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Bar'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
+components:
+  schemas:
+    BacktestRequest:
+      type: object
+      required: [model]
+      properties:
+        model:
+          type: string
+          description: Must be one of the models the service exposes.
+          example: Sentiment Trading Bot
+        range:
+          type: string
+          description: >
+            A preset window, or `custom` with start and end supplied.
+          enum: ["1y", "2y", "5y", custom]
+          default: "1y"
+        start:
+          type: string
+          format: date
+          description: Required when range is custom. Not before 2020-01-01.
+        end:
+          type: string
+          format: date
+          description: Required when range is custom. Must be after start.
+    Metrics:
+      type: object
+      description: >
+        All measured off one equity curve, so they cannot contradict
+        each other.
+      properties:
+        sharpe:
+          type: number
+          description: Realised annualised Sharpe over this window.
+        annualPct:
+          type: number
+          description: Annualised return, percent.
+        totalPct:
+          type: number
+          description: Total return over the window, percent.
+        drawdownPct:
+          type: number
+          description: Worst peak-to-trough fall, percent, negative.
+        trades:
+          type: integer
+        winRatePct:
+          type: number
+        years:
+          type: number
+        range:
+          type: string
+        rangeLabel:
+          type: string
+    Backtest:
+      type: object
+      properties:
+        id:
+          type: string
+          example: BT-119
+        model:
+          type: string
+        range:
+          type: string
+          description: The preset key, or the custom window as start..end.
+        rangeLabel:
+          type: string
+        status:
+          type: string
+          enum: [queued, running, completed]
+        progress:
+          type: integer
+          description: Percent complete. Present while the run is in flight.
+        sharpe:
+          type: number
+        annualPct:
+          type: number
+        drawdownPct:
+          type: number
+        trades:
+          type: integer
+        winRatePct:
+          type: number
+    BacktestResults:
+      type: object
+      properties:
+        id:
+          type: string
+        model:
+          type: string
+        range:
+          type: string
+        equity:
+          type: array
+          description: Equity curve indexed from 100 at the window's start.
+          items:
+            type: number
+        stats:
+          $ref: '#/components/schemas/Metrics'
+        tradeRows:
+          type: array
+          items:
+            type: object
+            properties:
+              n:
+                type: integer
+              step:
+                type: integer
+                description: Index into the equity curve where the trade opened.
+              entry:
+                type: number
+              pnlPct:
+                type: number
+              result:
+                type: string
+                enum: [win, loss]
+    OptimizerRun:
+      type: object
+      properties:
+        id:
+          type: string
+          example: OPT-1
+        model:
+          type: string
+        range:
+          type: string
+        status:
+          type: string
+          enum: [completed]
+        evaluated:
+          type: integer
+        grid:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: number
+        best:
+          $ref: '#/components/schemas/OptimizerRow'
+        rows:
+          type: array
+          description: Every combination, ranked by Sharpe, best first.
+          items:
+            $ref: '#/components/schemas/OptimizerRow'
+    OptimizerRow:
+      type: object
+      properties:
+        params:
+          type: object
+          additionalProperties:
+            type: number
+        sharpe:
+          type: number
+        annualPct:
+          type: number
+        drawdownPct:
+          type: number
+    Bar:
+      type: object
+      properties:
+        t:
+          type: integer
+          description: Step index from the start of coverage.
+        close:
+          type: number
