@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js", "assets/js/app/reports-math.js", "assets/js/app/regulator-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js", "assets/js/app/reports-math.js", "assets/js/app/regulator-math.js", "assets/js/app/notify-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -94,8 +94,9 @@ const FU = GeFi.funding; /* shared with the funding pages (task 313) */
 const LE = GeFi.learning; /* shared with the learning page (task 314) */
 const RP = GeFi.reports; /* shared with the report pages (task 315) */
 const RG = GeFi.regulator; /* shared with the regulator pages (task 316) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE || !RP || !RG) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning/reports/regulator");
+const NT = GeFi.notify; /* shared with the app shell (task 317) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE || !RP || !RG || !NT) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning/reports/regulator/notify");
   process.exit(1);
 }
 
@@ -303,10 +304,14 @@ function freshState() {
     regIssuesExtra: [],
     regActivity: D.regulator.activity.map((a) => ({ ...a })),
     notifications: [
-      { id: "n-1", title: "Rebalance executed", detail: "Portfolio Optimiser moved 3.2% into bonds", unread: true },
-      { id: "n-2", title: "Model audit passed", detail: "#MT-4521 closed with no findings", unread: true },
-      { id: "n-3", title: "Dataset published", detail: "Options Surface passed its quality audit", unread: false },
+      { id: "n-1", kind: "system", title: "Rebalance executed", detail: "Portfolio Optimiser moved 3.2% into bonds", unread: true, when: "2h ago" },
+      { id: "n-2", kind: "compliance", title: "Model audit passed", detail: "#MT-4521 closed with no findings", unread: true, when: "5h ago" },
+      { id: "n-3", kind: "dataset", title: "Dataset published", detail: "Options Surface passed its quality audit", unread: false, when: "yesterday" },
     ],
+    nextNotificationId: 4,
+    nextAlertRuleId2: 1,
+    deliveryPrefs: { in_app: true, email: false, push: false },
+    notifyWatchers: [],
     /* Backtesting (task 309). The seeded runs are the history; new runs
      * append and every metric is derived by the shared engine. */
     backtests: (D.backtests || []).map((r) => ({
@@ -756,6 +761,9 @@ on("POST /orders", (p, q, b) => {
     order.status = "filled";
   }
   S.paperOrders.unshift(order);
+  if (order.status === "filled") {
+    notify("order", { side: order.side, qty: order.qty, symbol: order.symbol, fill: order.fill });
+  }
   return { __status: 201, ...order };
 });
 on("GET /orders", (p, q) => {
@@ -1311,6 +1319,7 @@ on("POST /datasets", (p, q, b) => {
     if (d.status !== "processing") return;
     d.status = "published";
     providerActivity(d.name + " published", d.category + " · quality " + DP.quality(d.id, "published"));
+    notify("dataset", { name: d.name });
   }, 2000);
   return { __status: 202, ...DP.view(d) };
 });
@@ -1514,6 +1523,7 @@ on("POST /funding/projects/{id}/contributions", (p, q, b) => {
   proj.backers = next.backers;
   proj.status = next.status;
   proj.daysLeft = next.daysLeft;
+  if (FU.statusOf(proj) === "funded") notify("funding", { name: proj.name });
   const c = {
     id: "fc-" + S.nextContributionId++,
     project: proj.id,
@@ -1871,6 +1881,7 @@ on("POST /regulator/issues/{id}/resolve", (p) => {
     return { __status: 409, code: "conflict", message: i.title + " is already resolved" };
   }
   S.issuesResolved.push(p.id);
+  notify("compliance", { id: i.id, title: i.title });
   /* Return the recomputed overview so the caller does not have to guess how
    * the headline moved. */
   return { id: p.id, status: "resolved", overview: regOverview() };
@@ -1934,28 +1945,104 @@ on("GET /regulator/entities/{ref}", (p) => {
   return notFound;
 });
 
-/* ---- notifications ---- */
-on("GET /notifications", (p, q) => page(S.notifications, q));
+/* Raise a notification from a mutation. Anything watching the stream is
+ * told immediately, so a bell in another tab lights without a reload. */
+function notify(kind, detail) {
+  const n = NT.fromEvent(kind, detail);
+  n.id = "n-" + S.nextNotificationId++;
+  n.when = "just now";
+  S.notifications.unshift(n);
+  S.notifyWatchers.forEach((fn) => {
+    try {
+      fn(n);
+    } catch (e) {}
+  });
+  return n;
+}
+
+/* ---- notifications & alerts (task 317) ----
+ * Notifications are RAISED BY MUTATIONS this service performs, not invented
+ * on a timer: an order filling, a training job finishing, an issue being
+ * resolved. The shape comes from the shared engine, so a notification the
+ * service raises and one raised locally read identically. */
+
+on("GET /notifications", (p, q) => {
+  let rows = S.notifications;
+  const unread = NT.unreadCount(rows);
+  if (q.unread === "true") rows = rows.filter((n) => n.unread);
+  if (q.kind) rows = rows.filter((n) => n.kind === q.kind);
+  const out = page(rows, q);
+  /* Unread across everything, not just this page. */
+  out.unread = unread;
+  return out;
+});
 on("POST /notifications/read", (p, q, b) => {
   const ids = (b && b.ids) || S.notifications.map((n) => n.id);
+  let marked = 0;
   S.notifications.forEach((n) => {
-    if (ids.includes(n.id)) n.unread = false;
+    if (ids.includes(n.id) && n.unread) {
+      n.unread = false;
+      marked += 1;
+    }
   });
-  return { ok: true, unread: S.notifications.filter((n) => n.unread).length };
+  return { marked, unread: NT.unreadCount(S.notifications) };
 });
-on("GET /alerts", (p, q) => page(D.activity.map((a, i) => ({ id: "al-" + i, title: a.title, detail: a.detail, when: a.when })), q));
-on("GET /alert-rules", (p, q) => page(S.alertRules, q));
+on("GET /alerts", (p, q) => page(S.notifications.filter((n) => n.kind === "alert"), q));
+
+on("GET /alert-rules", (p, q) => {
+  let rows = S.alertRules;
+  if (q.entity) rows = rows.filter((r) => r.entity === q.entity);
+  return page(rows, q);
+});
 on("POST /alert-rules", (p, q, b) => {
-  const r = { id: "ar-" + (S.alertRules.length + 1), symbol: (b && b.symbol) || "AAPL", condition: (b && b.condition) || "above", value: (b && b.value) || 200 };
-  S.alertRules.push(r);
-  return { __status: 201, ...r };
+  const spec = b || {};
+  const why = NT.validateRule(spec);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const rule = {
+    id: "ar-" + S.nextAlertRuleId2++,
+    entity: String(spec.entity).trim(),
+    metric: spec.metric,
+    comparator: spec.comparator,
+    threshold: +spec.threshold,
+    channel: spec.channel || "in_app",
+    enabled: true,
+  };
+  rule.description = NT.describeRule(rule);
+  const clash = S.alertRules.some(
+    (r) => r.entity === rule.entity && r.metric === rule.metric &&
+      r.comparator === rule.comparator && r.threshold === rule.threshold
+  );
+  if (clash) {
+    return { __status: 409, code: "conflict", message: "a rule for " + rule.description + " already exists" };
+  }
+  S.alertRules.push(rule);
+  return { __status: 201, ...rule };
+});
+on("PATCH /alert-rules/{id}", (p, q, b) => {
+  const r = S.alertRules.find((x) => x.id === p.id);
+  if (!r) return notFound;
+  Object.assign(r, b || {});
+  r.description = NT.describeRule(r);
+  return r;
 });
 on("DELETE /alert-rules/{id}", (p) => {
   const before = S.alertRules.length;
-  S.alertRules = S.alertRules.filter((r) => r.id !== p.id);
+  S.alertRules = S.alertRules.filter((x) => x.id !== p.id);
   return before === S.alertRules.length ? notFound : { ok: true };
 });
-on("GET /delivery/channels", () => ({ email: { address: "alex@sample.gefi", verified: true }, push: { enabled: false } }));
+
+on("GET /delivery/channels", () => ({
+  items: NT.CHANNELS.map((c) => ({
+    channel: c,
+    enabled: S.deliveryPrefs[c] !== false,
+    /* Only in-app actually reaches anyone. Saying so here means a client
+     * can label the rest honestly instead of implying mail is going out. */
+    delivers: NT.DELIVERING.indexOf(c) > -1,
+    note: NT.DELIVERING.indexOf(c) > -1
+      ? "Delivered in the app."
+      : "Preference recorded only — nothing is sent and no address or device is verified.",
+  })),
+}));
 
 /* ---- insights ---- */
 on("GET /insights", (p, q) => page(D.insights, q));
@@ -2047,6 +2134,24 @@ const SSE = {
       });
     }, 1000);
   },
+  "GET /notifications/stream": (req, res) => {
+    /* Pushes each notification as it is raised. The watcher is registered
+     * for the life of the connection and removed when it closes. */
+    let n = 0;
+    const watcher = (item) => {
+      n += 1;
+      sseSend(res, "notification.created", n, item);
+    };
+    S.notifyWatchers.push(watcher);
+    const drop = () => {
+      S.notifyWatchers = S.notifyWatchers.filter((w) => w !== watcher);
+    };
+    req.on("close", drop);
+    /* Heartbeat keeps the connection from being reaped mid-idle. */
+    return setInterval(() => {
+      sseSend(res, "ping", n, { t: n });
+    }, 15000);
+  },
   "GET /reports/{id}/events": (req, res, p) => {
     /* Emits once the report has actually generated, so a client that
      * follows the stream cannot show it as ready early. */
@@ -2127,6 +2232,7 @@ const SSE = {
       if (pct >= 100) {
         job.status = "completed";
         devActivity(job.name + " finished at " + m.accuracy + "% accuracy", "Training · just now", "test");
+        notify("training", { name: job.name, accuracy: m.accuracy });
         sseSend(res, "training.completed", pct, { id: p.id, progress: 100, accuracy: m.accuracy, loss: m.loss });
         res.end();
         return;

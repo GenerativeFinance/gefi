@@ -11,6 +11,8 @@ robots: noindex
 app_script: /assets/js/app/insights.js
 ---
 
+<div data-in-root>
+
 {% include app-hero.html %}
 {% include app-subtabs.html active="Analytics" %}
 
@@ -23,4 +25,6 @@ app_script: /assets/js/app/insights.js
     <h2 class="app-panel__title">Risk Metrics</h2>
     <dl class="app-kv" data-an-risk></dl>
   </section>
+</div>
+
 </div>

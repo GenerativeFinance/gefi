@@ -461,6 +461,25 @@
     api.register("/regulator/activity", function () {
       return D.regulator.activity;
     });
+    /* The bell's seeded state, mirroring the mock's opening notifications
+     * so the badge reads the same offline. */
+    api.register("/notifications", function () {
+      return {
+        items: [
+          { id: "n-1", kind: "system", title: "Rebalance executed", detail: "Portfolio Optimiser moved 3.2% into bonds", unread: true, when: "2h ago" },
+          { id: "n-2", kind: "compliance", title: "Model audit passed", detail: "#MT-4521 closed with no findings", unread: true, when: "5h ago" },
+          { id: "n-3", kind: "dataset", title: "Dataset published", detail: "Options Surface passed its quality audit", unread: false, when: "yesterday" }
+        ],
+        next_cursor: null,
+        unread: 2
+      };
+    });
+    api.register("/notifications/read", function () {
+      return { marked: 0, unread: 0 };
+    });
+    api.register("/alert-rules", function () {
+      return {};
+    });
     api.register("/learning/catalog", function () {
       return D.learning.items;
     });

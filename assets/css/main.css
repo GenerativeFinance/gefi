@@ -2503,9 +2503,43 @@ p  { margin: 0 0 var(--space-4); }
 .app-iconbtn:hover { border-color: var(--app-brand); color: var(--app-text); background: var(--app-surface-2); }
 .app-iconbtn--lang { width: auto; padding: 0 12px; }
 .app-iconbtn--bell { position: relative; }
+/* Task 317 — the dot carries the unread count, and is hidden when there is
+   nothing unread. It used to be permanently lit, which told nobody anything. */
 .app-iconbtn__dot {
-  position: absolute; top: 4px; right: 5px; width: 8px; height: 8px;
-  border-radius: 50%; background: var(--app-red); border: 1.5px solid var(--app-bg);
+  position: absolute; top: 1px; right: 0; min-width: 15px; height: 15px;
+  padding: 0 3px; box-sizing: border-box;
+  border-radius: 8px; background: var(--app-red); border: 1.5px solid var(--app-bg);
+  font-size: 9px; font-weight: 700; line-height: 12px; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.app-iconbtn__dot[hidden] { display: none; }
+.app-iconbtn--bell { position: relative; }
+
+.app-notifpanel {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 50;
+  width: min(340px, calc(100vw - 24px));
+  background: var(--app-surface); border: 1px solid var(--app-border);
+  border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.28);
+  overflow: hidden;
+}
+.app-notifpanel__head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px; border-bottom: 1px solid var(--app-border);
+}
+.app-notifpanel__title { margin: 0; font-size: 13px; font-weight: 700; flex: 1; }
+.app-notifpanel__head .app-btn { padding: 4px 8px; font-size: 11px; }
+.app-notifpanel__list { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; }
+.app-notifpanel__item {
+  padding: 10px 14px; border-bottom: 1px solid var(--app-border);
+  border-left: 3px solid transparent;
+}
+.app-notifpanel__item.is-unread { border-left-color: var(--app-brand); background: var(--app-surface-2); }
+.app-notifpanel__itemtitle { margin: 0; font-size: 13px; font-weight: 600; }
+.app-notifpanel__itemdetail { margin: 2px 0 0; font-size: 12px; color: var(--app-muted); line-height: 1.5; }
+.app-notifpanel__empty { padding: 18px 14px; font-size: 13px; color: var(--app-muted); }
+.app-notifpanel__note {
+  margin: 0; padding: 10px 14px; font-size: 11px; line-height: 1.5;
+  color: var(--app-muted); background: var(--app-surface-2);
 }
 .app-avatar {
   width: 34px; height: 34px; border-radius: 50%;
