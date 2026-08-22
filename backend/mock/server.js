@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js", "assets/js/app/reports-math.js", "assets/js/app/regulator-math.js", "assets/js/app/notify-math.js", "assets/js/app/insights-math.js", "assets/js/app/zkml-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js", "assets/js/app/reports-math.js", "assets/js/app/regulator-math.js", "assets/js/app/notify-math.js", "assets/js/app/insights-math.js", "assets/js/app/zkml-math.js", "assets/js/app/platform-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -97,8 +97,9 @@ const RG = GeFi.regulator; /* shared with the regulator pages (task 316) */
 const NT = GeFi.notify; /* shared with the app shell (task 317) */
 const IM = GeFi.insightsMath; /* shared with the insight panels (task 318) */
 const ZK = GeFi.zkml; /* shared with the zKML page (task 319) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE || !RP || !RG || !NT || !IM || !ZK) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning/reports/regulator/notify/insightsMath/zkml");
+const PL = GeFi.platform; /* shared with the app shell (task 320) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE || !RP || !RG || !NT || !IM || !ZK || !PL) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning/reports/regulator/notify/insightsMath/zkml/platform");
   process.exit(1);
 }
 
@@ -334,6 +335,8 @@ function freshState() {
     nextVerificationId: 1,
     anchors: [],
     apiKeys: [{ id: "key-1", label: "dashboard sample", prefix: "gefi_sk_9f2a", created: "2026-08-01" }],
+    gdprJobs: [],
+    rateRemaining: 600,
     idempotency: new Map(),
   };
 }
@@ -2232,41 +2235,66 @@ on("POST /zkml/anchors", (p, q, b) => {
 on("GET /federation/rounds", (p, q) => page([1, 2, 3].map((n) => ({ round: n, participants: 3, status: n < 3 ? "aggregated" : "running" })), q));
 
 /* ---- platform ---- */
-on("GET /api-keys", (p, q) => page(S.apiKeys, q));
+on("GET /api-keys", (p, q) => page(S.apiKeys.map(PL.maskKey), q));
 on("POST /api-keys", (p, q, b) => {
-  const k = { id: "key-" + (S.apiKeys.length + 1), label: (b && b.label) || "new key", prefix: "gefi_sk_" + fnvHex("key|" + S.apiKeys.length).slice(0, 4), created: "2026-08-22" };
-  S.apiKeys.push(k);
-  return { __status: 201, ...k, secret_once: k.prefix + "_" + fnvHex("secret|" + k.id) };
-});
-on("DELETE /api-keys/{id}", (p) => {
-  const before = S.apiKeys.length;
-  S.apiKeys = S.apiKeys.filter((k) => k.id !== p.id);
-  return before === S.apiKeys.length ? notFound : { ok: true };
-});
-on("GET /rate-limits", () => ({ per_minute: 600, remaining: 597, reset_secs: 42 }));
-on("GET /audit-chain/{run_id}", (p) => {
-  const rand = seed.rng(seed.hash("chain|" + p.run_id));
-  let prev = fnvHex("genesis|" + p.run_id);
-  const chain = [];
-  for (let i = 0; i < 4; i++) {
-    const h = fnvHex(prev + "|" + i + "|" + Math.floor(rand() * 1e6));
-    chain.push({ index: i, prev, hash: h });
-    prev = h;
+  const why = PL.validateKeyLabel(b && b.label, S.apiKeys);
+  if (why) {
+    return why.indexOf("already exists") > -1
+      ? { __status: 409, code: "conflict", message: why }
+      : { __status: 422, code: "validation_failed", message: why };
   }
-  return { run_id: p.run_id, chain };
+  const k = {
+    id: "key-" + (S.apiKeys.length + 1),
+    label: String(b.label).trim(),
+    prefix: "gefi_sk_" + PL.fnv1a("key|" + S.apiKeys.length).slice(0, 4),
+    created: "2026-08-22",
+  };
+  S.apiKeys.push(k);
+  /* The one and only time the secret appears. Every later listing masks
+   * it, which is the property that makes it a secret. */
+  return { __status: 201, ...PL.maskKey(k), secret_once: k.prefix + "_" + PL.fnv1a("secret|" + k.id) + PL.fnv1a("secret2|" + k.id) };
+});
+on("DELETE /api-keys/{id}", (p, q, b) => {
+  const k = S.apiKeys.find((x) => x.id === p.id);
+  if (!k) return notFound;
+  const why = PL.validateRevoke(k, (b && b.confirm) || q.confirm);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  S.apiKeys = S.apiKeys.filter((x) => x.id !== p.id);
+  return { ok: true, revoked: k.id };
+});
+on("GET /rate-limits", () => ({ per_minute: 600, remaining: S.rateRemaining == null ? 600 : S.rateRemaining, reset_secs: 60 }));
+on("GET /audit-chain/{run_id}", (p) => PL.runRecord(p.run_id));
+on("GET /audit-chain/{run_id}/segment", (p, q) => {
+  const c = PL.chain(p.run_id);
+  const from = Math.max(0, parseInt(q.from, 10) || 0);
+  const to = Math.min(c.length, parseInt(q.to, 10) || c.length);
+  if (from >= to) return { __status: 422, code: "validation_failed", message: "from must be before to" };
+  return { run_id: p.run_id, from, to, links: c.slice(from, to) };
 });
 on("GET /search", (p, q) => {
-  const needle = (q.q || "").toLowerCase();
-  const hits = [];
-  MODELS.forEach((m) => {
-    if (m.name.toLowerCase().includes(needle)) hits.push({ kind: "model", ref: m.slug, name: m.name });
-  });
-  allDatasets().forEach((d) => {
-    if (d.name.toLowerCase().includes(needle)) hits.push({ kind: "dataset", ref: d.id, name: d.name });
-  });
-  return page(hits, q);
+  /* Grouped results from the shared engine — the same function the shell
+   * runs offline, so the two cannot group or rank differently. */
+  return PL.search(q.q, { models: MODELS, datasets: liveDatasets(), orders: paperOrders().concat(S.orders) });
 });
-on("GET /i18n/{locale}", (p) => ({ locale: p.locale, strings: { "app.title": "GeFi", "app.sample": "Sample data" } }));
+on("GET /i18n/{locale}", (p) => {
+  const b = PL.bundle(p.locale);
+  return b || notFound;
+});
+on("POST /gdpr/exports", (p, q, b) => {
+  const job = { id: "gdpr-exp-" + (S.gdprJobs.length + 1), kind: "export", status: "recorded", note: "Recorded stub — no export is assembled and nothing is emailed. A real implementation gathers the account's data within the statutory window." };
+  S.gdprJobs.push(job);
+  return { __status: 202, ...job };
+});
+on("POST /gdpr/deletions", (p, q, b) => {
+  const typed = b && b.confirm;
+  if (typed !== "DELETE") {
+    return { __status: 422, code: "validation_failed", message: 'type DELETE to confirm — nothing was deleted' };
+  }
+  const job = { id: "gdpr-del-" + (S.gdprJobs.length + 1), kind: "deletion", status: "recorded", note: "Recorded stub — no data is deleted here. A real implementation erases within the statutory window and confirms." };
+  S.gdprJobs.push(job);
+  return { __status: 202, ...job };
+});
+on("GET /gdpr/requests", (p, q) => page(S.gdprJobs, q));
 on("GET /gdpr/retention-jobs", (p, q) => page([{ job: "session-purge", last_run: "2026-08-21", status: "succeeded" }, { job: "audit-archive", last_run: "2026-08-20", status: "succeeded" }], q));
 
 /* ---- SSE endpoints ---- */
@@ -2453,7 +2481,7 @@ function corsHeaders(req) {
     "Access-Control-Allow-Origin": ok ? origin : "http://localhost:8099",
     "Access-Control-Allow-Methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS",
     "Access-Control-Allow-Headers": "Authorization,Content-Type,Idempotency-Key,X-GeFi-Api-Key,Last-Event-ID",
-    "Access-Control-Expose-Headers": "X-GeFi-Sample,X-Request-Id,Retry-After",
+    "Access-Control-Expose-Headers": "X-GeFi-Sample,X-Request-Id,Retry-After,X-RateLimit-Limit,X-RateLimit-Remaining,X-RateLimit-Reset",
   };
 }
 
@@ -2486,7 +2514,18 @@ const server = http.createServer((req, res) => {
   const requestId = "req_" + crypto.randomBytes(6).toString("hex");
   const url = new URL(req.url, "http://localhost");
   const q = Object.fromEntries(url.searchParams);
-  const base = { "X-GeFi-Sample": "true", "X-Request-Id": requestId, ...corsHeaders(req) };
+  /* Rate-limit headers on every response (task 320). The window is a
+   * fixture — nothing is actually limited — but the headers give clients
+   * something real to parse. */
+  S.rateRemaining = Math.max(0, (S.rateRemaining == null ? 600 : S.rateRemaining) - 1) || 600;
+  const base = {
+    "X-GeFi-Sample": "true",
+    "X-Request-Id": requestId,
+    "X-RateLimit-Limit": "600",
+    "X-RateLimit-Remaining": String(S.rateRemaining),
+    "X-RateLimit-Reset": "60",
+    ...corsHeaders(req),
+  };
 
   if (req.method === "OPTIONS") {
     res.writeHead(204, base);

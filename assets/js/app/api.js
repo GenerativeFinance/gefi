@@ -486,6 +486,13 @@
     api.register("/alert-rules", function () {
       return {};
     });
+    api.register("/search", function () {
+      /* The path arrives without its query here; the shell falls back to
+       * calling the engine directly, so this exists only to keep /search
+       * out of the unresolvable set. */
+      var pl = GeFi.platform;
+      return pl ? pl.search("") : {};
+    });
     api.register("/zkml/verifications", function () {
       /* Offline nothing stores runs; the page keeps its last run in
        * sessionStorage and the history panel says so. */

@@ -2494,6 +2494,7 @@ p  { margin: 0 0 var(--space-4); }
 .app-topbar__word { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: var(--app-text); }
 .app-topbar__spacer { flex: 1; }
 .app-iconbtn {
+  position: relative;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   background: transparent; border: 1px solid var(--app-border); border-radius: 8px;
   width: 36px; height: 36px; color: var(--app-muted); cursor: pointer;
@@ -3040,6 +3041,33 @@ a.app-chip:hover { border-color: var(--app-brand); color: var(--app-text); }
   .app-toast { animation: app-toast-in .18s ease-out; }
   @keyframes app-toast-in { from { opacity: 0; transform: translateY(6px); } }
 }
+
+/* Task 320 — the top-bar search panel */
+.app-searchpanel {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 50;
+  width: min(380px, calc(100vw - 24px));
+  background: var(--app-surface); border: 1px solid var(--app-border);
+  border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.28);
+  padding: 10px; box-sizing: border-box;
+}
+.app-searchpanel__input {
+  width: 100%; box-sizing: border-box; font: inherit; font-size: 14px;
+  color: var(--app-text); background: var(--app-bg);
+  border: 1px solid var(--app-border); border-radius: 8px; padding: 9px 12px;
+}
+.app-searchpanel__list { max-height: 340px; overflow-y: auto; margin-top: 8px; }
+.app-searchpanel__group {
+  margin: 10px 4px 4px; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em; color: var(--app-muted);
+}
+.app-searchpanel__hit {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  padding: 7px 8px; border-radius: 8px; text-decoration: none;
+  color: var(--app-text); font-size: 13px;
+}
+.app-searchpanel__hit:hover, .app-searchpanel__hit:focus { background: var(--app-surface-2); }
+.app-searchpanel__meta { font-size: 11px; color: var(--app-muted); white-space: nowrap; }
+.app-searchpanel__hint { margin: 10px 4px; font-size: 12px; color: var(--app-muted); }
 
 /* Task 309 — a controls row that sits above the thing it filters */
 .app-form--inline { flex-direction: row; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 16px; }
