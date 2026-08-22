@@ -1,0 +1,21 @@
+GeFi — Model alerts, Aug 21
+
+A summary of alerts on models you subscribe to. Critical alerts were
+also sent individually at the time they fired.
+
+CRITICAL - liquidity-stress-engine:
+  LCR projection crossed the covenant floor in the severe scenario
+  for tenant acme-bank.
+
+WARN - sentiment-from-filings:
+  Live IR drifting from backtest baseline — 0.61 vs 0.78 over the
+  trailing 60 days.
+
+WARN - stablecoin-depeg-monitor:
+  Cross-venue peg dispersion widening on USDT — 18bp spread between
+  venues.
+
+Open the alert center: https://gefi.io/dashboard/#alerts
+
+You receive this digest daily at 07:00 UTC. Tune per-model severity
+thresholds or switch to weekly from notification preferences.

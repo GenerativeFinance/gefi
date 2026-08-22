@@ -1,0 +1,15 @@
+GeFi — Verification approved
+
+Our review of your submitted documents is complete. Your workspace now
+has full access to subscriptions, live API keys, and payouts.
+
+Case:          KYC-88213
+Submitted:     Aug 19, 2026
+Decision:      Approved
+Tier unlocked: Tier 2 — full platform
+
+Open your dashboard: https://gefi.io/dashboard/
+
+If anything about your legal entity changes — name, jurisdiction,
+ownership — re-verification may be required under our compliance
+obligations.
