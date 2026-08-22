@@ -279,6 +279,12 @@
       { icon: "doc", title: "Model Bias Assessment Initiated", detail: "Model #ML-3456 · Gulf Invest", when: "1 day ago", org: "Gulf Invest", severity: "medium" },
       { icon: "chat", title: "Compliance Reminder Sent", detail: "Case #CS-9912 · Helios Capital", when: "1 day ago", org: "Helios Capital", severity: "low" },
       { icon: "ok", title: "Security Vulnerability Fixed", detail: "Node agent 1.14.2 rollout", when: "2 days ago", org: "Platform", severity: "medium" }
+    ],
+    insights: [
+      { tone: "blue", kind: "Improvement", title: "Audit turnaround is speeding up", body: "Average resolution fell to 4.8 days — automation of evidence collection is paying off across model audits." },
+      { tone: "amber", kind: "Needs attention", title: "Three critical issues share one root cause", body: "All three open critical issues trace to stale consent records in dataset #DS-8834 — remediating the source closes them together." },
+      { tone: "green", kind: "Best practice", title: "Meridian Bank's audit pack is a template", body: "Their pre-assembled lineage + bias evidence cut the GDPR audit to two days. Recommend it as the standard submission format." },
+      { tone: "purple", kind: "Trend", title: "Bias assessments are the fastest-growing audit type", body: "Requests doubled quarter over quarter as credit-scoring models come under the EU AI Act's high-risk regime." }
     ]
   };
 
