@@ -8,7 +8,9 @@ active_tab: Portfolio
 permalink: /app/insights/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/insights.js
+app_scripts:
+  - /assets/js/app/insights-math.js
+  - /assets/js/app/insights.js
 ---
 
 <div data-in-root>

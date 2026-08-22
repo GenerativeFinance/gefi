@@ -261,8 +261,8 @@
       ["/bounties?limit=100", function (r) {
         D.bounties = r.items;
       }],
-      ["/insights?limit=100", function (r) {
-        D.insights = r.items;
+      ["/insights?surface=portfolio&limit=100", function (r) {
+        if (r.items && r.items.length) D.insights = r.items;
       }],
       ["/developers?limit=100", function (r) {
         if (r.items && r.items.length) D.developers = r.items;
@@ -415,7 +415,13 @@
       return D.bounties;
     });
     api.register("/insights", function () {
-      return D.insights;
+      var im = GeFi.insightsMath;
+      /* Offline the same module assembles the same canonical sets. */
+      return im ? im.all(D) : D.insights;
+    });
+    api.register("/insights/generate", function () {
+      var im = GeFi.insightsMath;
+      return { surface: "portfolio", source: "seeded", items: im ? im.surfaces(D).portfolio : D.insights };
     });
     api.register("/sentiment", function () {
       return D.reports.market;

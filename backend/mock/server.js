@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js", "assets/js/app/reports-math.js", "assets/js/app/regulator-math.js", "assets/js/app/notify-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js", "assets/js/app/reports-math.js", "assets/js/app/regulator-math.js", "assets/js/app/notify-math.js", "assets/js/app/insights-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -95,8 +95,9 @@ const LE = GeFi.learning; /* shared with the learning page (task 314) */
 const RP = GeFi.reports; /* shared with the report pages (task 315) */
 const RG = GeFi.regulator; /* shared with the regulator pages (task 316) */
 const NT = GeFi.notify; /* shared with the app shell (task 317) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE || !RP || !RG || !NT) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning/reports/regulator/notify");
+const IM = GeFi.insightsMath; /* shared with the insight panels (task 318) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE || !RP || !RG || !NT || !IM) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning/reports/regulator/notify/insightsMath");
   process.exit(1);
 }
 
@@ -2044,9 +2045,126 @@ on("GET /delivery/channels", () => ({
   })),
 }));
 
-/* ---- insights ---- */
-on("GET /insights", (p, q) => page(D.insights, q));
-on("POST /insights/generate", () => ({ __status: 202, job_id: "ins-1", note: "deterministic sample generator (Claude API behind a flag)" }));
+/* ---- insights (task 318) ----
+ * The seeded sets come from the shared engine and are the product. A live
+ * Claude generator is an OPTIONAL add-on behind GEFI_INSIGHTS_CLAUDE=1 +
+ * ANTHROPIC_API_KEY: temperature 0, strict JSON validated below, output
+ * labelled generated:true, and ANY failure falls back to the seeded set.
+ * No key ships in this repository. */
+
+const INSIGHTS_LIVE = process.env.GEFI_INSIGHTS_CLAUDE === "1" && !!process.env.ANTHROPIC_API_KEY;
+
+function insightsFor(surface) {
+  const by = IM.surfaces(D);
+  return surface ? by[surface] || [] : IM.all(D);
+}
+
+/* Validate one generated insight against the contract's schema. Anything
+ * that fails is grounds to discard the whole batch and fall back. */
+function validInsight(x) {
+  return (
+    x && typeof x.title === "string" && x.title.length > 0 && x.title.length <= 80 &&
+    typeof x.body === "string" && x.body.length > 0 && x.body.length <= 280 &&
+    ["Bullish", "Neutral", "Bearish"].includes(x.sentiment) &&
+    Number.isFinite(x.confidence) && x.confidence >= 0 && x.confidence <= 100 &&
+    ["High", "Medium", "Low"].includes(x.impact)
+  );
+}
+
+function claudeInsights(surface) {
+  return new Promise((resolve, reject) => {
+    let template;
+    try {
+      template = fs.readFileSync(path.join(__dirname, "prompts", "insights.txt"), "utf8");
+    } catch (e) {
+      reject(new Error("prompt template missing"));
+      return;
+    }
+    const seeded = insightsFor(surface);
+    const prompt = template
+      .replace(/{{surface}}/g, surface)
+      .replace(/{{count}}/g, String(seeded.length || 3))
+      .replace(/{{context}}/g, JSON.stringify(seeded.map((i) => ({ title: i.title, body: i.body })), null, 1));
+    const body = JSON.stringify({
+      model: "claude-sonnet-5",
+      max_tokens: 1024,
+      temperature: 0,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const req = require("https").request(
+      {
+        hostname: "api.anthropic.com",
+        path: "/v1/messages",
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "content-length": Buffer.byteLength(body),
+        },
+        timeout: 15000,
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (c) => (data += c));
+        res.on("end", () => {
+          try {
+            const parsed = JSON.parse(data);
+            const text = parsed.content && parsed.content[0] && parsed.content[0].text;
+            const arr = JSON.parse(String(text).replace(/^[^\[]*/, "").replace(/[^\]]*$/, ""));
+            if (!Array.isArray(arr) || !arr.length || !arr.every(validInsight)) {
+              reject(new Error("schema validation failed"));
+              return;
+            }
+            resolve(
+              arr.map((x, i) => ({
+                id: "ins-" + surface + "-gen-" + (i + 1),
+                surface,
+                title: x.title,
+                body: x.body,
+                sentiment: x.sentiment,
+                confidence: Math.round(x.confidence),
+                impact: x.impact,
+                /* The label a client must render: this text came from a
+                 * model, not from an author. */
+                generated: true,
+              }))
+            );
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }
+    );
+    req.on("error", reject);
+    req.on("timeout", () => req.destroy(new Error("timeout")));
+    req.write(body);
+    req.end();
+  });
+}
+
+on("GET /insights", (p, q) => {
+  if (q.surface && IM.SURFACES.indexOf(q.surface) === -1) {
+    return { __status: 422, code: "validation_failed", message: "surface must be one of " + IM.SURFACES.join(", ") };
+  }
+  return page(insightsFor(q.surface), q);
+});
+on("GET /insights/{id}", (p) => IM.all(D).find((i) => i.id === p.id) || notFound);
+on("POST /insights/generate", async (p, q, b) => {
+  const surface = (b && b.surface) || "portfolio";
+  const why = IM.validateGenerate({ surface });
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  if (INSIGHTS_LIVE) {
+    try {
+      const items = await claudeInsights(surface);
+      return { surface, source: "claude", items };
+    } catch (e) {
+      /* Fall through: a generator failure must never surface as an error —
+       * the seeded set is always there. */
+    }
+  }
+  return { surface, source: "seeded", items: insightsFor(surface) };
+});
 on("GET /sentiment", () => D.reports.market);
 on("GET /predictions", () => ({ items: [{ subject: "Fed decision", prediction: D.reports.market.fed.prediction, probability_pct: D.reports.market.fed.probability }], next_cursor: null }));
 on("POST /narratives", (p, q, b) => ({ __status: 201, report_id: b && b.report_id, narrative: "Sample narrative: portfolio $142,500, YTD +8.6%, Sharpe 1.34. Deterministic mock output." }));
@@ -2417,18 +2535,29 @@ const server = http.createServer((req, res) => {
       res.end(JSON.stringify({ code: "internal", message: String(e && e.message), request_id: requestId }));
       return;
     }
-    let status = 200;
-    if (out && out.__status) {
-      status = out.__status;
-      out = { ...out };
-      delete out.__status;
-    }
-    const payload = JSON.stringify(status >= 400 ? { ...out, request_id: requestId } : out);
-    if (req.method === "POST" && req.headers["idempotency-key"]) {
-      S.idempotency.set(req.headers["idempotency-key"], { status, body: payload });
-    }
-    res.writeHead(status, { ...base, "Content-Type": "application/json" });
-    res.end(payload);
+    /* A handler may be async (e.g. the optional live insight generator);
+     * settle it before serialising, and treat a rejection like a throw. */
+    Promise.resolve(out).then(
+      (settled) => {
+        let result = settled;
+        let status = 200;
+        if (result && result.__status) {
+          status = result.__status;
+          result = { ...result };
+          delete result.__status;
+        }
+        const payload = JSON.stringify(status >= 400 ? { ...result, request_id: requestId } : result);
+        if (req.method === "POST" && req.headers["idempotency-key"]) {
+          S.idempotency.set(req.headers["idempotency-key"], { status, body: payload });
+        }
+        res.writeHead(status, { ...base, "Content-Type": "application/json" });
+        res.end(payload);
+      },
+      (e) => {
+        res.writeHead(500, { ...base, "Content-Type": "application/json" });
+        res.end(JSON.stringify({ code: "internal", message: String(e && e.message), request_id: requestId }));
+      }
+    );
   });
 });
 

@@ -1,12 +1,32 @@
 openapi: 3.0.3
 info:
   title: GeFi AI insights
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Insight, sentiment and prediction generation with confidence scores; report narratives (Claude API behind a flag; deterministic sample otherwise).
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Short, structured insights for the portfolio, market, regulator and
+    provider panels, plus sentiment, predictions and report narratives.
+
+
+    SEEDED BY DEFAULT. The insight sets are deterministic and derived from
+    the demonstration dataset; the same surface always shows the same
+    insights, live or offline. Every insight carries `generated: false`.
+
+
+    THE OPTIONAL LIVE GENERATOR. When the server is started with
+    GEFI_INSIGHTS_CLAUDE=1 and an ANTHROPIC_API_KEY in its environment,
+    POST /insights/generate calls the Claude API (model claude-sonnet-5,
+    temperature 0, strict JSON output validated against the insight schema;
+    the prompt template lives in backend/mock/prompts/insights.txt). Its
+    output is returned with `generated: true` — the label a client MUST
+    render so a reader can tell an authored insight from a generated one —
+    and ANY failure (no key, network, refusal, malformed output) falls back
+    to the seeded set rather than surfacing an error. No key ships in this
+    repository.
+
+
+    NOT ADVICE. Insights describe sample data. They are not research, not a
+    recommendation, and not a basis for any investment decision.
+
 servers:
   - url: /v1
     description: >
@@ -22,17 +42,65 @@ paths:
   /insights:
     get:
       operationId: get-insights
-      summary: "Current insights with confidence + impact"
+      summary: "Insights"
+      description: All surfaces, or one via `surface`.
       tags: [insights]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: surface
+          in: query
+          schema:
+            type: string
+            enum: [portfolio, market, regulator, provider]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of insights.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Insight'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /insights/{id}:
+    get:
+      operationId: get-insights-id
+      summary: "One insight"
+      tags: [insights]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The insight.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Insight'
+        '404':
+          description: No such insight.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -40,16 +108,52 @@ paths:
   /insights/generate:
     post:
       operationId: post-insights-generate
-      summary: "Generate insights (flagged: Claude API or deterministic sample)"
+      summary: "Generate insights for a surface"
+      description: >
+        Returns the surface's insights. Seeded by default; with the live
+        generator enabled (see THE OPTIONAL LIVE GENERATOR above) the items
+        come back with `generated: true`, and any failure falls back to the
+        seeded set. `source` says which path produced the response.
       tags: [insights]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                surface:
+                  type: string
+                  enum: [portfolio, market, regulator, provider]
+                  default: portfolio
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The insights, labelled by how they were produced.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  surface:
+                    type: string
+                  source:
+                    type: string
+                    enum: [seeded, claude]
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Insight'
+        '422':
+          description: Unknown surface.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -57,14 +161,29 @@ paths:
   /sentiment:
     get:
       operationId: get-sentiment
-      summary: "Market sentiment gauge"
+      summary: "Market sentiment block"
       tags: [insights]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The sentiment figures the market panels render.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sentimentPct:
+                    type: number
+                  sentimentLabel:
+                    type: string
+                  usd:
+                    type: object
+                  gdp:
+                    type: object
+                  fed:
+                    type: object
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -72,14 +191,33 @@ paths:
   /predictions:
     get:
       operationId: get-predictions
-      summary: "Model predictions (e.g. Fed decision probability)"
+      summary: "Model predictions"
+      description: Sample predictions with stated probabilities. Not forecasts.
       tags: [insights]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of predictions.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            subject:
+                              type: string
+                            prediction:
+                              type: string
+                            probability_pct:
+                              type: number
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -87,17 +225,62 @@ paths:
   /narratives:
     post:
       operationId: post-narratives
-      summary: "Generate a report narrative for a report id"
+      summary: "Report narrative"
+      description: Deterministic sample narrative for a report id.
       tags: [insights]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                report_id:
+                  type: string
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: The narrative.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  report_id:
+                    type: string
+                  narrative:
+                    type: string
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
+components:
+  schemas:
+    Insight:
+      type: object
+      properties:
+        id:
+          type: string
+        surface:
+          type: string
+          enum: [portfolio, market, regulator, provider]
+        title:
+          type: string
+        body:
+          type: string
+        sentiment:
+          type: string
+        confidence:
+          type: number
+        impact:
+          type: string
+        generated:
+          type: boolean
+          description: >
+            True only when the live generator produced it. Clients MUST
+            render this label so a reader can tell an authored insight from
+            a generated one.

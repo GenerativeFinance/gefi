@@ -77,6 +77,13 @@
         head.appendChild(sentiment);
         head.appendChild(conf);
         head.appendChild(impact);
+        if (ins.generated) {
+          /* The reader must be able to tell an authored insight from a
+           * generated one — the contract makes this label mandatory. */
+          var gen = app.chip("info", "AI-generated");
+          gen.setAttribute("data-in-generated", ins.title);
+          head.appendChild(gen);
+        }
         var body = document.createElement("p");
         body.className = "app-gridcard__desc";
         body.textContent = ins.body;
