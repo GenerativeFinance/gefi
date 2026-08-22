@@ -85,7 +85,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 - [x] 222 — Market Insights + Revenue tabs — done (/app/data-insights/ + /app/data-revenue/ sharing data-revenue.js; Revenue KPIs derived from GeFi.appProvider.totals() so they equal Overview verbatim ($2,243,599 / 222 subs, Playwright-asserted string equality); revenue-by-dataset allocbars sorted desc, shares sum 100.0%; seeded monthly area chart whose 12 months sum exactly to total revenue, last month = next payout ($224,513); insights: adoption +15.3%, impact 8.7/10, $2,300,000 value, 156 models, 3 trend rows w/ text-labelled impact chips; Generate Report modal stamped SAMPLE quoting the same totals, close round-trip)
 
 ### Funding wing
-- [ ] 223 — Funding Hub dashboard
+- [x] 223 — Funding Hub dashboard — done (/app/funding/; all figures aggregate DEMO.fundingProjects+DEMO.bounties: Total Funding $207,400 = card totals bot $140,750 + model $58,400 + bounty $8,250 (Playwright-asserted sum equality), Active 5 (3 models · 2 bots), Avg Goal Progress 62%, Contributors 260 = backers+submitters — reference's contradictory $2.54M/$0-with-+12% dropped per §5.6; anchor segments Dashboard|Bot|Model|Bounty routing to 224/225 URLs; 3 summary gridcards w/ Total Raised/Active rows + block CTAs; Recently Funded = only campaigns actually at 100% (1 row, Funded chip, green meter) w/ honest count note instead of the reference's padded three)
 - [ ] 224 — Bot Funding + AI Model Funding
 - [ ] 225 — Bounty Funding
 
