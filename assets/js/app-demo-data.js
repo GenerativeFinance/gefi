@@ -191,12 +191,21 @@
      * its goal IS the reward, raised counts toward paying it out. */
     { id: "B-201", title: "Real-time Options Flow Analyzer", status: "OPEN", difficulty: "ADVANCED", reward: 2500, deadline: "2026-09-15", category: "Derivatives", submissions: 3, skills: ["Python", "Options", "Streaming"],
       funding: { status: "ACTIVE", raised: 1800, backers: 12, by: "quantessence", duration: "6 weeks" } },
-    { id: "B-202", title: "ESG Scoring Algorithm", status: "CLAIMED", difficulty: "INTERMEDIATE", reward: 1500, deadline: "2026-09-01", category: "ESG", submissions: 1, skills: ["NLP", "ESG data"],
+    { id: "B-202", title: "ESG Scoring Algorithm", status: "CLAIMED", difficulty: "INTERMEDIATE", reward: 1500, deadline: "2026-09-01", category: "ESG", submissions: 1, skills: ["NLP", "ESG data"], claimedBy: "atlas-nlp",
       funding: { status: "COMPLETED", raised: 1500, backers: 9, by: "atlas-nlp", duration: "4 weeks" } },
-    { id: "B-203", title: "Cross-Chain Bridge Risk Monitor", status: "IN PROGRESS", difficulty: "EXPERT", reward: 3250, deadline: "2026-09-28", category: "DeFi", submissions: 2, skills: ["Solidity", "Risk", "Graph"],
+    { id: "B-203", title: "Cross-Chain Bridge Risk Monitor", status: "IN PROGRESS", difficulty: "EXPERT", reward: 3250, deadline: "2026-09-28", category: "DeFi", submissions: 2, skills: ["Solidity", "Risk", "Graph"], claimedBy: "helios-quant",
       funding: { status: "APPROVED", raised: 2100, backers: 15, by: "helios-quant", duration: "8 weeks" } },
     { id: "B-204", title: "Earnings Call Tone Tracker", status: "OPEN", difficulty: "INTERMEDIATE", reward: 1000, deadline: "2026-09-10", category: "NLP", submissions: 0, skills: ["ASR", "NLP"],
-      funding: { status: "SUBMITTED", raised: 0, backers: 0, by: "gulf-secure", duration: "3 weeks" } }
+      funding: { status: "SUBMITTED", raised: 0, backers: 0, by: "gulf-secure", duration: "3 weeks" } },
+    /* Finished work stays on the board (task 311). The board's KPIs are
+     * counted from these rows rather than stated as round numbers, so
+     * "Completed" and "Active Developers" mean something checkable. */
+    { id: "B-198", title: "Municipal Bond Spread Scanner", status: "COMPLETED", difficulty: "INTERMEDIATE", reward: 1750, deadline: "2026-07-30", category: "Fixed Income", submissions: 4, skills: ["Python", "Fixed Income"], claimedBy: "atlas-nlp",
+      funding: { status: "COMPLETED", raised: 1750, backers: 11, by: "atlas-nlp", duration: "5 weeks" } },
+    { id: "B-199", title: "Liquidity Fragmentation Map", status: "COMPLETED", difficulty: "ADVANCED", reward: 2250, deadline: "2026-08-05", category: "Microstructure", submissions: 6, skills: ["C++", "Microstructure"], claimedBy: "helios-quant",
+      funding: { status: "COMPLETED", raised: 2250, backers: 18, by: "helios-quant", duration: "7 weeks" } },
+    { id: "B-200", title: "Sanctions Screening Recall Test", status: "COMPLETED", difficulty: "BEGINNER", reward: 600, deadline: "2026-08-12", category: "Compliance", submissions: 2, skills: ["NLP", "Compliance"], claimedBy: "gulf-secure",
+      funding: { status: "COMPLETED", raised: 600, backers: 5, by: "gulf-secure", duration: "2 weeks" } }
   ];
 
   DEMO.datasets = (function () {

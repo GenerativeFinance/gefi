@@ -410,6 +410,33 @@
     api.register("/backtests", function () {
       return D.backtests;
     });
+    api.register("/teams", function () {
+      return [{ id: "team-1", name: "Optimizer squad", members: D.devConsole.team.length }];
+    });
+    /* Offline the board's mutations resolve locally so the flows still
+     * complete. The one-active-claim rule is applied by the page from the
+     * shared module before it ever gets here, so a claim that would be
+     * refused live is refused offline for the same reason. */
+    api.register("/bounties/{id}/claim", function (params) {
+      return { id: params.id, status: "CLAIMED", claimedBy: "you" };
+    });
+    api.register("/bounties/{id}/release", function (params) {
+      return { id: params.id, status: "OPEN", claimedBy: null };
+    });
+    api.register("/teams/{id}/invites", function () {
+      return { kind: "Invited" };
+    });
+    api.register("/teams/{id}/members", function () {
+      return D.devConsole.team;
+    });
+    api.register("/threads", function () {
+      return D.devConsole.messages.map(function (m, i) {
+        return { id: "th-" + (i + 1), title: m.who + " — " + m.text.slice(0, 40), messages: 1 };
+      });
+    });
+    api.register("/threads/{id}/messages", function () {
+      return D.devConsole.messages;
+    });
     api.register("/dev/models", function () {
       return D.devConsole.models;
     });

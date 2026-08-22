@@ -8,10 +8,14 @@ active_tab: Overview
 permalink: /app/dev-collab/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/collab.js
+app_scripts:
+  - /assets/js/app/collab-math.js
+  - /assets/js/app/collab.js
 ---
 
 {% include app-devtabs.html active="Collaboration" %}
+
+<div data-cl-root>
 
 <div class="app-ov-charts">
   <section class="app-panel">
@@ -45,10 +49,16 @@ app_script: /assets/js/app/collab.js
           <option>ML Engineer</option><option>Quant Researcher</option><option>Data Engineer</option><option>Compliance Reviewer</option>
         </select>
       </label>
+      <label>Email <span class="app-kpi__sub" style="font-weight:400;">(optional — nothing is sent)</span>
+        <input type="email" name="email" maxlength="120" placeholder="name@example.com">
+      </label>
+      <p class="app-kpi__sub" data-cl-invite-error role="alert" style="color:var(--app-red);"></p>
       <div class="app-modal__actions">
         <button type="button" class="app-btn app-btn--ghost" data-cl-modal-cancel>Cancel</button>
         <button type="submit" class="app-btn app-btn--primary">Send invite</button>
       </div>
     </form>
   </div>
+</div>
+
 </div>

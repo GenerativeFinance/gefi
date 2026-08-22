@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -88,8 +88,9 @@ const RUNTIME = GeFi.modelRuntime; /* shared with model-demo.js (task 307) */
 const MKT = GeFi.market; /* shared with the trading page (task 308) */
 const BT = GeFi.backtest; /* shared with the backtesting page (task 309) */
 const DO = GeFi.devOps; /* shared with the dev console pages (task 310) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps");
+const CO = GeFi.collab; /* shared with the collaboration pages (task 311) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab");
   process.exit(1);
 }
 
@@ -232,8 +233,36 @@ function freshState() {
     nextAlertRuleId: 1,
     alertRules: [],
     devAlertRules: [],
-    threads: D.devConsole.messages.map((m, i) => ({ id: "th-" + (i + 1), title: m.who + " — " + m.text.slice(0, 40), messages: [m] })),
-    bounties: D.bounties.map((b) => ({ ...b, claims: [], submissions: [] })),
+    threads: D.devConsole.messages.map((m, i) => ({
+      id: "th-" + (i + 1),
+      title: m.who + " — " + m.text.slice(0, 40),
+      messages: [{ id: "msg-" + (i + 1), who: m.who, when: m.when, text: m.text }],
+    })),
+    /* Collab & bounties (task 311). Submissions are rows, not a count —
+     * the count is derived, so a submitted piece of work and the number on
+     * the card cannot drift apart. */
+    teams: [{
+      id: "team-1",
+      name: "Optimizer squad",
+      members: D.devConsole.team.map((m, i) => ({ id: "mem-" + (i + 1), name: m.name, role: m.role, kind: m.kind, email: null })),
+    }],
+    nextMemberId: D.devConsole.team.length + 1,
+    nextMessageId: D.devConsole.messages.length + 1,
+    nextSubmissionId: 1,
+    rewards: [],
+    bounties: D.bounties.map((b) => ({
+      ...b,
+      claimedBy: b.claimedBy || null,
+      submissionList: Array.from({ length: b.submissions || 0 }, (_, i) => ({
+        id: b.id + "-s" + (i + 1),
+        bounty: b.id,
+        by: b.claimedBy || "a developer",
+        summary: "sample submission " + (i + 1),
+        url: null,
+        status: b.status === "COMPLETED" && i === 0 ? "accepted" : "pending",
+        note: null,
+      })),
+    })),
     datasets: D.datasets.map((d) => ({ ...d })),
     datasetExtra: [],
     fundingProjects: D.fundingProjects.map((p) => ({ ...p })),
@@ -1058,37 +1087,159 @@ on("DELETE /dev/alert-rules/{id}", (p) => {
   return { ok: true };
 });
 
-/* ---- collab ---- */
-on("GET /teams", (p, q) => page([{ id: "team-1", name: "Optimizer squad", members: D.devConsole.team.length }], q));
-on("POST /teams/{id}/invites", (p, q, b) => ({ __status: 201, team: p.id, email: (b && b.email) || "invitee@sample.gefi", status: "sent" }));
+/* ---- collab & bounties (task 311) ----
+ * Claim rules, board figures and filtering all come from the shared engine,
+ * so the page refuses a claim for the same reason and in the same words the
+ * server would. */
+
+/* Who the mock treats as the caller. A real service reads this from the
+ * session; here it is a single sample identity, which is enough to make the
+ * one-active-claim rule mean something. */
+const ME = "you";
+
+function bountyRow(b) {
+  return {
+    id: b.id,
+    title: b.title,
+    status: b.status,
+    difficulty: b.difficulty,
+    reward: b.reward,
+    deadline: b.deadline,
+    category: b.category,
+    submissions: b.submissionList.length,
+    skills: b.skills,
+    claimedBy: b.claimedBy || null,
+    funding: b.funding,
+  };
+}
+
+on("GET /teams", (p, q) => page(S.teams.map((t) => ({ id: t.id, name: t.name, members: t.members.length })), q));
+on("GET /teams/{id}/members", (p, q) => {
+  const t = S.teams.find((x) => x.id === p.id);
+  if (!t) return notFound;
+  return page(t.members, q);
+});
+on("POST /teams/{id}/invites", (p, q, b) => {
+  const t = S.teams.find((x) => x.id === p.id);
+  if (!t) return notFound;
+  const why = CO.validateInvite(b || {}, t.members);
+  if (why) {
+    return why.endsWith("already on the team")
+      ? { __status: 409, code: "conflict", message: why }
+      : { __status: 422, code: "validation_failed", message: why };
+  }
+  const m = {
+    id: "mem-" + S.nextMemberId++,
+    name: String(b.name).trim(),
+    role: (b && b.role) || "Collaborator",
+    kind: "Invited",
+    email: (b && b.email) || null,
+  };
+  t.members.push(m);
+  return { __status: 201, ...m };
+});
+on("POST /teams/{id}/invites/{inviteId}/accept", (p) => {
+  const t = S.teams.find((x) => x.id === p.id);
+  if (!t) return notFound;
+  const m = t.members.find((x) => x.id === p.inviteId);
+  if (!m) return notFound;
+  if (m.kind !== "Invited") return { __status: 409, code: "conflict", message: m.name + " has already accepted" };
+  m.kind = "Collaborator";
+  return m;
+});
+
 on("GET /threads", (p, q) => page(S.threads.map((t) => ({ id: t.id, title: t.title, messages: t.messages.length })), q));
+on("GET /threads/{id}/messages", (p, q) => {
+  const t = S.threads.find((x) => x.id === p.id);
+  if (!t) return notFound;
+  return page(t.messages, q);
+});
 on("POST /threads/{id}/messages", (p, q, b) => {
   const t = S.threads.find((x) => x.id === p.id);
   if (!t) return notFound;
-  const m = { who: "you", when: "just now", text: (b && b.text) || "" };
-  t.messages.push(m);
+  const why = CO.validateMessage(b && b.text);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const m = { id: "msg-" + S.nextMessageId++, who: "You", when: "just now", text: String(b.text).trim() };
+  t.messages.unshift(m);
   return { __status: 201, ...m };
 });
-on("GET /bounties", (p, q) => page(S.bounties, q));
+
+on("GET /bounties", (p, q) => {
+  const rows = S.bounties.map(bountyRow);
+  /* Stats come from the WHOLE board, never the filtered slice, so the
+   * headline figures do not move as the reader types in the search box. */
+  const stats = CO.boardStats(rows);
+  const out = page(CO.filter(rows, { q: q.q, status: q.status, difficulty: q.difficulty }), q);
+  out.stats = stats;
+  return out;
+});
+on("GET /bounties/{id}", (p) => {
+  const b = S.bounties.find((x) => x.id === p.id);
+  return b ? bountyRow(b) : notFound;
+});
 on("POST /bounties/{id}/claim", (p) => {
   const b = S.bounties.find((x) => x.id === p.id);
   if (!b) return notFound;
-  b.claims.push({ who: "you", when: "2026-08-22" });
-  b.status = "CLAIMED";
-  return b;
+  const why = CO.canClaim(bountyRow(b), S.bounties.map(bountyRow), ME);
+  if (why) return { __status: 409, code: "conflict", message: why };
+  b.status = CO.CLAIMED;
+  b.claimedBy = ME;
+  return bountyRow(b);
+});
+on("POST /bounties/{id}/release", (p) => {
+  const b = S.bounties.find((x) => x.id === p.id);
+  if (!b) return notFound;
+  if (b.claimedBy !== ME) return { __status: 409, code: "conflict", message: "you do not hold the claim on " + b.title };
+  b.status = CO.OPEN;
+  b.claimedBy = null;
+  return bountyRow(b);
+});
+on("GET /bounties/{id}/submissions", (p, q) => {
+  const b = S.bounties.find((x) => x.id === p.id);
+  if (!b) return notFound;
+  return page(b.submissionList, q);
 });
 on("POST /bounties/{id}/submissions", (p, q, body) => {
   const b = S.bounties.find((x) => x.id === p.id);
   if (!b) return notFound;
-  b.submissions.push({ who: "you", url: (body && body.url) || "", when: "2026-08-22" });
-  return { __status: 201, submissions: b.submissions.length };
+  const why = CO.canSubmit(bountyRow(b), ME);
+  if (why) return { __status: 409, code: "conflict", message: why };
+  if (!body || !String(body.summary || "").trim()) {
+    return { __status: 422, code: "validation_failed", message: "summary is required" };
+  }
+  const sub = {
+    id: "sub-" + S.nextSubmissionId++,
+    bounty: b.id,
+    by: ME,
+    summary: String(body.summary).trim(),
+    url: (body && body.url) || null,
+    status: "pending",
+    note: null,
+  };
+  b.submissionList.push(sub);
+  if (b.status === CO.CLAIMED) b.status = CO.IN_PROGRESS;
+  return { __status: 201, ...sub };
 });
 on("POST /bounties/{id}/review", (p, q, body) => {
   const b = S.bounties.find((x) => x.id === p.id);
   if (!b) return notFound;
-  const accept = !body || body.accept !== false;
-  if (accept) b.status = "COMPLETED";
-  return { id: b.id, status: b.status, reward_paid: accept ? b.reward : 0 };
+  const verdict = body && body.verdict;
+  if (verdict !== "accepted" && verdict !== "rejected") {
+    return { __status: 422, code: "validation_failed", message: "verdict must be accepted or rejected" };
+  }
+  const sub = b.submissionList.find((x) => x.id === (body && body.submission));
+  if (!sub) return notFound;
+  sub.status = verdict;
+  sub.note = (body && body.note) || null;
+  let reward = null;
+  if (verdict === "accepted") {
+    b.status = CO.COMPLETED;
+    /* A record that it was completed and for how much. Nothing is paid —
+     * `settled` is false because no money moved and none will. */
+    reward = { bounty: b.id, to: b.claimedBy || ME, amount: b.reward, settled: false };
+    S.rewards.push(reward);
+  }
+  return { bounty: bountyRow(b), submission: sub, reward };
 });
 
 /* ---- data-platform ---- */

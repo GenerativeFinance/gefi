@@ -2979,6 +2979,34 @@ a.app-chip:hover { border-color: var(--app-brand); color: var(--app-text); }
 .app-zk-log { height: 260px; overflow-y: auto; }
 .app-form input[type="range"] { accent-color: var(--app-brand); padding: 0; border: 0; background: transparent; }
 
+/* Task 311 — transient messages for outcomes with no home on the page */
+.app-toasts {
+  position: fixed; right: 16px; bottom: 16px; z-index: 60;
+  display: flex; flex-direction: column; gap: 8px;
+  max-width: min(380px, calc(100vw - 32px));
+}
+.app-toast {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--app-border); border-left-width: 3px;
+  background: var(--app-surface); color: var(--app-text);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  font-size: 13px; line-height: 1.5;
+}
+.app-toast--error { border-left-color: var(--app-red); }
+.app-toast--info { border-left-color: var(--app-brand); }
+.app-toast__text { margin: 0; flex: 1; }
+.app-toast__close {
+  font: inherit; font-size: 18px; line-height: 1;
+  background: none; border: 0; cursor: pointer; padding: 0;
+  color: var(--app-muted);
+}
+.app-toast__close:hover { color: var(--app-text); }
+@media (prefers-reduced-motion: no-preference) {
+  .app-toast { animation: app-toast-in .18s ease-out; }
+  @keyframes app-toast-in { from { opacity: 0; transform: translateY(6px); } }
+}
+
 /* Task 309 — a controls row that sits above the thing it filters */
 .app-form--inline { flex-direction: row; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 16px; }
 .app-form--inline label { flex: 0 1 auto; }
