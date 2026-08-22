@@ -2957,3 +2957,6 @@ p  { margin: 0 0 var(--space-4); }
 .app-dv-head .app-chip { margin-left: auto; }
 a.app-chip { text-decoration: none; }
 a.app-chip:hover { border-color: var(--app-brand); color: var(--app-text); }
+
+/* Task 218 — block button */
+.app-btn--block { width: 100%; margin-top: 10px; }
