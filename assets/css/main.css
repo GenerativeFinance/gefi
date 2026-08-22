@@ -2437,3 +2437,22 @@ p  { margin: 0 0 var(--space-4); }
 .contact-fork__body { margin: 0; font-size: 0.9375rem; color: var(--color-muted); line-height: 1.55; }
 .contact-fork__meta { margin: 0; font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-brand-strong); }
 .contact-fork__card:not(.contact-fork__card--demo) .contact-fork__meta { color: var(--color-muted); }
+
+/* Task 114 — 404 inside the system */
+.notfound { padding: 96px 0; text-align: center; }
+.notfound__links { justify-content: center; margin-top: var(--space-5); }
+.notfound__links .badge { font-size: 0.875rem; padding: 8px 18px; }
+.notfound__links a.badge:hover { border-color: var(--color-brand); text-decoration: none; }
+
+/* Task 122 — data-feed catalog */
+.feed-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.feed-card { display: flex; flex-direction: column; gap: var(--space-3); }
+.feed-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.feed-card__head h3 { margin: 0; font-size: 1.0625rem; }
+.feed-card__fresh { white-space: nowrap; flex: 0 0 auto; }
+.feed-card__fieldshead { margin: 0; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-muted); }
+.feed-card__fields { display: flex; flex-wrap: wrap; gap: 6px; }
+.feed-card__lineage summary { cursor: pointer; font-size: 0.875rem; font-weight: 600; color: var(--color-brand-strong); }
+.feed-card__lineage ul { margin: var(--space-2) 0; padding-left: var(--space-4); font-size: 0.875rem; display: flex; flex-direction: column; gap: 4px; }
+.feed-card__cta { display: flex; gap: var(--space-2); margin-top: auto; }
+.feed-card__cta .btn { flex: 1; text-align: center; }
