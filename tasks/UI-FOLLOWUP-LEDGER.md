@@ -61,7 +61,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 - [x] 204 — Holdings · Transactions · Watchlist tabs — done (three pages under /app/, shared app-hero include + hero.js hydration + app-subtabs link bar with truthful active state and Portfolio nav tab; holdings row-cards w/ TSLA red arrow+label, transactions filterable table w/ designed empty state, watchlist sparklines + star toggle persisted in sessionStorage; DEMO gains transactions/watchlist)
 - [x] 205 — Analytics · Insights tabs — done (Performance Analysis 5 rows asserting Sharpe 1.42 + Risk Metrics 4 rows from DEMO.risk; insight row-cards w/ labelled sentiment chips, confidence pills, colored impact; Set Alert persists to sessionStorage gefi-app-alerts)
 - [x] 206 — Portfolio Performance (Overview/Returns/Allocation/Risk Analysis) — done (4 hash-routed segments, one dataset: value line + donut; grouped monthly bars w/ 2 negative months + top performers; 5 color-coded allocation bars; 5 benchmark row-cards w/ 4 Good badges; GeFi.app gains donut/donutLegend/groupedBars, overview.js refactored onto them; segments now follow hashchange)
-- [ ] 207 — AI Portfolio (split panel)
+- [x] 207 — AI Portfolio (split panel) — done (overview kv card + risk distribution bars + Moderate chip left; strategy rows summing exactly to $142,500 + Rebalance/Manual/Report actions + 94.2% confidence gauge right; sample report modal w/ Escape close; canonical figures replace the reference's contradictory $247,580)
 - [ ] 208 — Portfolio AI Models (Active/Recommended/Settings)
 - [ ] 209 — Rebalancing & Actions
 
