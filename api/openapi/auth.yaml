@@ -1,12 +1,12 @@
 openapi: 3.0.3
 info:
   title: GeFi Auth & identity
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Sessions, profiles, personas/roles (investor, developer, data provider, regulator, admin), RBAC, orgs; avatar, language and theme persistence.
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Sessions, profiles, personas/roles (investor, developer, data-provider,
+    regulator, admin), RBAC, orgs; avatar, language and theme persistence.
+    Filled in by ledger task 303 — request/response schemas below; envelope
+    conventions (pagination, errors, idempotency) come from _envelope.yaml.
 servers:
   - url: /v1
     description: >
@@ -18,24 +18,83 @@ security:
 tags:
   - name: auth
     description: "Auth & identity"
+components:
+  schemas:
+    Persona:
+      type: string
+      enum: [investor, developer, data-provider, regulator, admin]
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        persona: { $ref: '#/components/schemas/Persona' }
+        language: { type: string, example: en }
+        theme: { type: string, enum: [dark, light] }
+        avatar: { type: string, nullable: true, description: "Data URI or asset URL" }
+    AuthResult:
+      type: object
+      properties:
+        token: { type: string, description: "Opaque bearer token (JWT-shaped, not a real JWT in the mock)" }
+        refresh_token: { type: string }
+        user: { $ref: '#/components/schemas/User' }
+    Session:
+      type: object
+      properties:
+        id: { type: string }
+        device: { type: string, example: "Chrome on macOS" }
+        ip: { type: string, example: "203.0.113.4" }
+        created: { type: string, format: date }
+        current: { type: boolean }
+    PersonaGrant:
+      type: object
+      properties:
+        persona: { $ref: '#/components/schemas/Persona' }
+        granted: { type: boolean }
+  requestBodies:
+    Register:
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email, password, persona]
+            properties:
+              name: { type: string }
+              email: { type: string }
+              password: { type: string, minLength: 8 }
+              persona: { $ref: '#/components/schemas/Persona' }
+    Login:
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email, password]
+            properties:
+              email: { type: string }
+              password: { type: string }
 paths:
   /auth/register:
     post:
       operationId: post-auth-register
-      summary: "Create an account"
+      summary: "Create an account (auto-issues a session — no separate login step)"
       tags: [auth]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody: { $ref: '#/components/requestBodies/Register' }
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: Account created, session issued.
           headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+            X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResult' }
+        '409':
+          description: Email already registered.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /auth/session:
     post:
       operationId: post-auth-session
@@ -43,30 +102,91 @@ paths:
       tags: [auth]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody: { $ref: '#/components/requestBodies/Login' }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: Signed in.
           headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+            X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResult' }
+        '401':
+          description: Unknown email or wrong password.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
     delete:
       operationId: delete-auth-session
-      summary: "Sign out"
+      summary: "Sign out (revokes the caller's current session)"
       tags: [auth]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Signed out.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
+  /auth/session/refresh:
+    post:
+      operationId: post-auth-session-refresh
+      summary: "Exchange a refresh token for a new bearer token"
+      tags: [auth]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties: { refresh_token: { type: string } }
+      responses:
+        '200':
+          description: New token issued.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/AuthResult' } } }
+        '401':
+          description: Refresh token invalid or expired.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
+  /auth/sessions:
+    get:
+      operationId: get-auth-sessions
+      summary: "Active sessions for the current user (Settings → Active Sessions)"
+      tags: [auth]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Session list.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/Session' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
+  /auth/sessions/{id}:
+    delete:
+      operationId: delete-auth-sessions-id
+      summary: "Revoke a session (including, optionally, the caller's own)"
+      tags: [auth]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Session revoked.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+        '404':
+          description: No such session.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /me:
     get:
       operationId: get-me
@@ -74,28 +194,30 @@ paths:
       tags: [auth]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Profile.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/User' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
     patch:
       operationId: patch-me
-      summary: "Update profile / preferences"
+      summary: "Update profile / preferences (name, language, theme, avatar)"
       tags: [auth]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                language: { type: string }
+                theme: { type: string, enum: [dark, light] }
+                avatar: { type: string, nullable: true }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Updated profile.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/User' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /me/personas:
     get:
       operationId: get-me-personas
@@ -103,14 +225,16 @@ paths:
       tags: [auth]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Persona grants.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/PersonaGrant' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /orgs:
     get:
       operationId: get-orgs
@@ -121,14 +245,10 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Org list.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Page' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /orgs/{org_id}/members:
     get:
       operationId: get-orgs-org_id-members
@@ -138,17 +258,12 @@ paths:
         - name: org_id
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Member list.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Page' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }

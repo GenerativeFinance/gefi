@@ -2512,7 +2512,10 @@ p  { margin: 0 0 var(--space-4); }
   background: var(--app-border); border: 1px solid #2E3247;
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 600; margin-left: 4px;
+  color: var(--app-text); text-decoration: none; overflow: hidden;
 }
+a.app-avatar:hover, a.app-avatar:focus-visible { border-color: var(--app-brand); text-decoration: none; color: var(--app-text); }
+.app-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 /* persona tab nav */
 .app-tabs {
@@ -3113,3 +3116,52 @@ a.app-chip:hover { border-color: var(--app-brand); color: var(--app-text); }
 }
 .gefi-mode-badge--sample { background: rgba(245, 158, 11, 0.12); color: var(--app-amber); border-color: rgba(245, 158, 11, 0.4); }
 .gefi-mode-badge--live { background: rgba(34, 197, 94, 0.12); color: var(--app-green); border-color: rgba(34, 197, 94, 0.4); }
+
+/* Task 303 — auth screens (sign in / sign up) + settings */
+.app-auth-wrap { display: flex; justify-content: center; padding: 20px 0 40px; }
+.app-auth-card {
+  width: 100%; max-width: 420px;
+  background: var(--app-surface); border: 1px solid var(--app-border);
+  border-radius: 16px; padding: 28px 26px; display: flex; flex-direction: column; gap: 4px;
+}
+.app-auth-card--wide { max-width: 560px; }
+.app-auth-demo {
+  font-size: 12px; line-height: 1.6; color: var(--app-muted);
+  background: var(--app-surface-2); border: 1px solid var(--app-border);
+  border-radius: 10px; padding: 10px 12px; margin: 0 0 16px;
+}
+.app-auth-pwrow { position: relative; display: flex; }
+.app-auth-pwrow input { flex: 1; padding-right: 40px !important; }
+.app-auth-pwtoggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  background: transparent; border: 0; color: var(--app-muted); cursor: pointer; padding: 6px;
+  display: flex;
+}
+.app-auth-pwtoggle:hover { color: var(--app-text); }
+.app-auth-strength { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.app-auth-strength__track { flex: 1; height: 4px; border-radius: 999px; background: var(--app-surface-2); overflow: hidden; }
+.app-auth-strength__fill { display: block; height: 100%; width: 0%; background: var(--app-red); transition: width .2s, background-color .2s; }
+.app-auth-strength__label { font-size: 11px; color: var(--app-muted); white-space: nowrap; }
+.app-auth-divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; font-size: 11px; color: var(--app-muted); }
+.app-auth-divider::before, .app-auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--app-border); }
+.app-auth-sso { display: flex; flex-direction: column; gap: 8px; }
+.app-auth-switch { text-align: center; font-size: 13px; color: var(--app-muted); margin: 18px 0 0; }
+.app-auth-switch a { color: var(--app-brand-2); }
+.app-auth-personas { border: 0; padding: 0; margin: 0 0 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.app-auth-personas legend { padding: 0; margin-bottom: 8px; }
+.app-auth-persona {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left;
+  background: var(--app-surface-2); border: 1px solid var(--app-border); border-radius: 12px;
+  padding: 14px; cursor: pointer; color: var(--app-text); font: inherit;
+}
+.app-auth-persona strong { font-size: 13px; }
+.app-auth-persona span { font-size: 11px; color: var(--app-muted); line-height: 1.4; }
+.app-auth-persona[aria-pressed="true"] { border-color: var(--app-brand); background: rgba(109, 91, 255, 0.1); }
+
+.app-settings-avatar { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+.app-settings-avatar__img { width: 64px; height: 64px; font-size: 20px; flex: 0 0 auto; }
+.app-settings-upload { position: relative; overflow: hidden; display: inline-block; margin-right: 8px; }
+.app-settings-danger { border-color: rgba(239, 68, 68, 0.35); }
+.app-settings-danger .app-fh-row { align-items: center; }
+.app-settings-danger__btn { color: var(--app-red); border-color: rgba(239, 68, 68, 0.4); }
+.app-settings-danger__btn:hover { border-color: var(--app-red); background: rgba(239, 68, 68, 0.1); }

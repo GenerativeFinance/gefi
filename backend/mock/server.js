@@ -119,11 +119,27 @@ function contractRoutes() {
   return [...routes].sort();
 }
 
+/* Seeded demo accounts (task 303) — one per persona, fixed password.
+ * Sign-in with an unknown email registers a fresh guest account instead
+ * of failing, so the mock never dead-ends a curious user; a KNOWN seeded
+ * email with the wrong password is the one deterministic 401 path. */
+var DEMO_PASSWORD = "demo1234";
+var SEED_USERS = [
+  { id: "seed-investor", name: "Alex Deme", email: "investor@demo.gefi", persona: "investor", language: "en", theme: "dark", avatar: null, _password: DEMO_PASSWORD },
+  { id: "seed-developer", name: "Jordan Rivas", email: "developer@demo.gefi", persona: "developer", language: "en", theme: "dark", avatar: null, _password: DEMO_PASSWORD },
+  { id: "seed-provider", name: "Sam Okoye", email: "provider@demo.gefi", persona: "data-provider", language: "en", theme: "dark", avatar: null, _password: DEMO_PASSWORD },
+  { id: "seed-regulator", name: "Priya Nair", email: "regulator@demo.gefi", persona: "regulator", language: "en", theme: "dark", avatar: null, _password: DEMO_PASSWORD },
+  { id: "seed-admin", name: "Morgan Blake", email: "admin@demo.gefi", persona: "admin", language: "en", theme: "dark", avatar: null, _password: DEMO_PASSWORD },
+];
+
 /* ------------------------------------------------------- in-memory state */
 function freshState() {
   return {
-    profile: { name: "Alex Deme", email: "alex@sample.gefi", persona: "investor", language: "en", theme: "dark", avatar: null },
-    users: [],
+    profile: null, /* set on sign-in/register; GET /me 401s until then */
+    users: SEED_USERS.map((u) => ({ ...u })),
+    sessions: [],
+    tokens: new Map(), /* token -> { userId, refreshToken } */
+    refreshTokens: new Map(), /* refreshToken -> userId */
     watchlist: D.watchlist.map((w) => ({ ...w })),
     orders: D.orders.map((o) => ({ ...o })),
     proposals: [],
@@ -177,18 +193,117 @@ const page = (items, q) => {
 };
 const notFound = { __status: 404, code: "not_found", message: "No such resource" };
 
-/* ---- auth ---- */
+/* ---- auth (task 303) ---- */
+function sanitizeUser(u) {
+  if (!u) return null;
+  var out = {};
+  Object.keys(u).forEach(function (k) { if (k !== "_password") out[k] = u[k]; });
+  return out;
+}
+function findUser(email) {
+  var e = String(email || "").toLowerCase();
+  return S.users.find((u) => u.email.toLowerCase() === e);
+}
+function issueSession(user, device) {
+  const tok = "gefi_" + Buffer.from(JSON.stringify({ typ: "sampleJWT" })).toString("base64url") +
+    "." + Buffer.from(JSON.stringify({ sub: user.id, persona: user.persona })).toString("base64url") +
+    "." + fnvHex("sig|" + user.id + "|" + S.sessions.length);
+  const refresh = "rt_" + fnvHex("refresh|" + user.id + "|" + S.sessions.length) + fnvHex("r2|" + S.sessions.length);
+  S.tokens.set(tok, { userId: user.id });
+  S.refreshTokens.set(refresh, user.id);
+  S.sessions.forEach((s) => { if (s.userId === user.id) s.current = false; });
+  const rand = seed.rng(seed.hash("session|" + user.id + "|" + S.sessions.length));
+  S.sessions.push({
+    id: "sess-" + (S.sessions.length + 1),
+    userId: user.id,
+    token: tok,
+    device: device || ["Chrome on macOS", "Safari on iOS", "Firefox on Windows", "Edge on Windows"][Math.floor(rand() * 4)],
+    ip: "203.0.113." + (10 + Math.floor(rand() * 240)),
+    created: "2026-08-22",
+    current: true,
+  });
+  S.profile = user;
+  return { token: tok, refresh_token: refresh, user: sanitizeUser(user) };
+}
 on("POST /auth/register", (p, q, b) => {
-  const user = { id: "u-" + (S.users.length + 1), email: (b && b.email) || "new@sample.gefi" };
+  const email = b && b.email;
+  const password = (b && b.password) || "";
+  if (!email || password.length < 8) {
+    return { __status: 422, code: "validation_failed", message: "Email and an 8+ character password are required.", details: [{ field: "password", issue: "min length 8" }] };
+  }
+  if (findUser(email)) {
+    return { __status: 409, code: "conflict", message: "An account with that email already exists." };
+  }
+  const user = {
+    id: "u-" + (S.users.length + 1),
+    name: (b && b.name) || email.split("@")[0],
+    email: email,
+    persona: (b && b.persona) || "investor",
+    language: "en",
+    theme: "dark",
+    avatar: null,
+    _password: password,
+  };
   S.users.push(user);
-  return { __status: 201, user };
+  return { __status: 201, ...issueSession(user, "New account") };
 });
-on("POST /auth/session", (p, q, b) => ({ token: "sample-" + fnvHex("token|" + ((b && b.email) || "anon")), user: S.profile }));
-on("DELETE /auth/session", () => ({ ok: true }));
-on("GET /me", () => S.profile);
+on("POST /auth/session", (p, q, b) => {
+  const email = b && b.email;
+  const password = (b && b.password) || "";
+  if (!email) return { __status: 422, code: "validation_failed", message: "Email is required." };
+  var user = findUser(email);
+  if (user) {
+    if (user._password !== password) {
+      return { __status: 401, code: "invalid_credentials", message: "Wrong password for " + email + "." };
+    }
+  } else {
+    /* Unknown email never dead-ends the mock: it becomes a fresh guest,
+     * so any email/password combo "just works" on first use. */
+    user = { id: "u-" + (S.users.length + 1), name: email.split("@")[0], email: email, persona: "investor", language: "en", theme: "dark", avatar: null, _password: password };
+    S.users.push(user);
+  }
+  return issueSession(user);
+});
+on("DELETE /auth/session", () => {
+  const cur = S.sessions.find((s) => s.current);
+  if (cur) {
+    S.tokens.delete(cur.token);
+    cur.current = false;
+  }
+  S.profile = null;
+  return { ok: true };
+});
+on("POST /auth/session/refresh", (p, q, b) => {
+  const rt = b && b.refresh_token;
+  const userId = S.refreshTokens.get(rt);
+  if (!userId) return { __status: 401, code: "invalid_credentials", message: "Refresh token is invalid or expired." };
+  const user = S.users.find((u) => u.id === userId);
+  if (!user) return { __status: 401, code: "invalid_credentials", message: "Account no longer exists." };
+  S.refreshTokens.delete(rt);
+  return issueSession(user, "Refreshed session");
+});
+on("GET /auth/sessions", (p, q) => {
+  const mine = S.profile ? S.sessions.filter((s) => s.userId === S.profile.id) : [];
+  return page(mine.map((s) => ({ id: s.id, device: s.device, ip: s.ip, created: s.created, current: s.current })), q);
+});
+on("DELETE /auth/sessions/{id}", (p) => {
+  const sess = S.sessions.find((s) => s.id === p.id);
+  if (!sess) return { __status: 404, code: "not_found", message: "No such session." };
+  S.tokens.delete(sess.token);
+  S.sessions = S.sessions.filter((s) => s.id !== p.id);
+  if (sess.current && S.profile && S.profile.id === sess.userId) S.profile = null;
+  return { ok: true };
+});
+on("GET /me", () => {
+  if (!S.profile) return { __status: 401, code: "invalid_credentials", message: "Not signed in." };
+  return sanitizeUser(S.profile);
+});
 on("PATCH /me", (p, q, b) => {
+  if (!S.profile) return { __status: 401, code: "invalid_credentials", message: "Not signed in." };
   Object.assign(S.profile, b || {});
-  return S.profile;
+  const stored = S.users.find((u) => u.id === S.profile.id);
+  if (stored) Object.assign(stored, b || {});
+  return sanitizeUser(S.profile);
 });
 on("GET /me/personas", () => ({
   items: ["investor", "portfolio", "trader", "developer", "marketplace", "funding", "regulator", "reports", "learning", "data-provider"].map((k) => ({ persona: k, granted: true })),

@@ -192,4 +192,46 @@
   document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll("[data-app-segments]").forEach(app.segments);
   });
+
+  /* Topbar avatar (task 303) — reflects whoever is signed in, on every
+   * /app/ page, from the profile the sign-in flow stored locally. No
+   * network call: this only needs to feel instant. */
+  var USER_KEY = "gefi-app-user";
+  function initials(name) {
+    var parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "?";
+    return (parts[0][0] + (parts[1] ? parts[1][0] : parts[0][1] || "")).toUpperCase();
+  }
+  app.currentUser = function () {
+    try {
+      var raw = sessionStorage.getItem(USER_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return null;
+  };
+  app.setCurrentUser = function (user) {
+    try {
+      if (user) sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+      else sessionStorage.removeItem(USER_KEY);
+    } catch (e) {}
+    hydrateAvatar();
+  };
+  function hydrateAvatar() {
+    var el = document.querySelector("[data-app-avatar]");
+    if (!el) return;
+    var u = app.currentUser();
+    if (!u) return;
+    if (u.avatar) {
+      el.innerHTML = "";
+      var img = document.createElement("img");
+      img.src = u.avatar;
+      img.alt = "";
+      el.appendChild(img);
+    } else {
+      el.textContent = initials(u.name);
+    }
+    el.setAttribute("aria-label", "Account settings — signed in as " + u.name);
+    el.title = u.name + " (" + u.persona + ")";
+  }
+  document.addEventListener("DOMContentLoaded", hydrateAvatar);
 })(window, document);

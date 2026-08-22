@@ -79,11 +79,20 @@
       fetch(base + "/v1" + path, opts).then(
         function (res) {
           clearTimeout(timer);
-          if (!res.ok) {
-            reject(new Error("http " + res.status));
-            return;
-          }
-          res.json().then(resolve, reject);
+          res.json().catch(function () { return null; }).then(function (json) {
+            if (!res.ok) {
+              /* Reachable server, real answer: a 401/404/422/... is not
+               * "the API is down" — tag it so callers see the actual
+               * error instead of silently falling back to sample data
+               * (a wrong password must never look like a success). */
+              var e = new Error("http " + res.status);
+              e.httpStatus = res.status;
+              e.body = json;
+              reject(e);
+              return;
+            }
+            resolve(json);
+          });
         },
         function (err) {
           clearTimeout(timer);
@@ -93,8 +102,10 @@
     });
   }
   function request(method, path, body) {
-    /* 2s budget, one retry */
-    return once(method, path, body).catch(function () {
+    /* 2s budget, one retry — but never retry a real HTTP error (same
+     * credentials would just fail the same way again). */
+    return once(method, path, body).catch(function (err) {
+      if (err && err.httpStatus) return Promise.reject(err);
       return once(method, path, body);
     });
   }
@@ -125,12 +136,35 @@
     return undefined;
   }
 
+  function withFallback(method, path, body) {
+    return request(method, path, body).then(
+      function (data) {
+        return data;
+      },
+      function (err) {
+        if (err && err.httpStatus) return Promise.reject(err);
+        var r = fallbackFor(path);
+        if (r === undefined) throw err;
+        var out = Object.assign({}, typeof r === "object" ? r : { ok: true });
+        out.sample = true;
+        return out;
+      }
+    );
+  }
+  api.patch = function (path, body) {
+    return withFallback("PATCH", path, body);
+  };
+  api.del = function (path) {
+    return withFallback("DELETE", path);
+  };
+
   api.get = function (path) {
     return request("GET", path).then(
       function (data) {
         return data;
       },
       function (err) {
+        if (err && err.httpStatus) return Promise.reject(err);
         var r = fallbackFor(path);
         if (r === undefined) throw err;
         var out = Array.isArray(r) ? { items: r, next_cursor: null } : Object.assign({}, r);
@@ -145,6 +179,7 @@
         return data;
       },
       function (err) {
+        if (err && err.httpStatus) return Promise.reject(err);
         var r = fallbackFor(path);
         if (r === undefined) throw err;
         var out = Object.assign({}, typeof r === "object" ? r : { ok: true });
@@ -309,6 +344,25 @@
     });
     api.register("/compliance/evaluations", function () {
       return D.complianceReports;
+    });
+
+    /* Auth (task 303) — offline sign-in/sign-up always succeeds as the
+     * seeded sample investor, exactly as the code prompt specifies:
+     * "fallback mode signs in as the seeded demo user". */
+    var SAMPLE_USER = { id: "sample-investor", name: "Alex Deme", email: "investor@demo.gefi", persona: "investor", language: "en", theme: "dark", avatar: null };
+    var authFallback = function () {
+      return { token: "sample-token", refresh_token: "sample-refresh", user: Object.assign({}, SAMPLE_USER) };
+    };
+    api.register("/auth/session", authFallback);
+    api.register("/auth/register", authFallback);
+    api.register("/me", function () {
+      return Object.assign({}, GeFi.app.currentUser() || SAMPLE_USER);
+    });
+    api.register("/auth/sessions", function () {
+      return [{ id: "sample-sess-1", device: "This browser (sample)", ip: "—", created: "2026-08-22", current: true }];
+    });
+    api.register("/auth/sessions/{id}", function () {
+      return { ok: true };
     });
   })();
 
