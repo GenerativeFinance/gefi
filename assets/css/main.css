@@ -3095,3 +3095,11 @@ a.app-chip:hover { border-color: var(--app-brand); color: var(--app-text); }
 }
 .app-fh-row:last-of-type { border-bottom: 0; }
 .app-fh-row .app-rowcard__collabel { margin: 0; }
+
+/* Task 232 — AA contrast: chip foregrounds lightened to clear 4.5:1 on
+ * their tinted backgrounds (audit measured red 4.25, blue 4.24, brand
+ * 4.06 against the composited chip tint over --app-surface). */
+.app-chip--critical, .app-chip--violation, .app-chip--cancelled, .app-chip--expert,
+.app-chip--sell, .app-chip--sev-critical { color: #F87171; }
+.app-chip--info, .app-chip--claimed, .app-chip--buy { color: #60A5FA; }
+.app-chip--deployed, .app-chip--featured { color: #9A8EFF; }
