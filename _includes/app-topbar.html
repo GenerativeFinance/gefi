@@ -7,6 +7,9 @@
     <span class="app-topbar__word">GeFi</span>
   </a>
   <div class="app-topbar__spacer"></div>
+  {%- if include.bare -%}
+  </header>
+  {%- else -%}
   <span class="app-iconbtn" title="{{ include.persona | capitalize }} workspace" aria-hidden="true">
     {%- case nav.icon -%}
     {%- when "code" -%}
@@ -31,5 +34,6 @@
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
     <span>Language</span>
   </button>
-  <span class="app-avatar" aria-label="Account">JL</span>
+  <a class="app-avatar" href="/app/settings/" aria-label="Account settings" data-app-avatar>JL</a>
 </header>
+  {%- endif -%}

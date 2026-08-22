@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -82,8 +82,9 @@ const GeFi = loadGeFi();
 const D = GeFi.DEMO;
 const MODELS = GeFi.MODELS;
 const seed = GeFi.seed;
-if (!D || !MODELS || !seed) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed");
+const RB = GeFi.rebalanceMath; /* shared with the client page (task 305) */
+if (!D || !MODELS || !seed || !RB) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath");
   process.exit(1);
 }
 
@@ -119,16 +120,38 @@ function contractRoutes() {
   return [...routes].sort();
 }
 
+/* Seeded demo accounts (task 303) — one per persona, fixed password.
+ * Sign-in with an unknown email registers a fresh guest account instead
+ * of failing, so the mock never dead-ends a curious user; a KNOWN seeded
+ * email with the wrong password is the one deterministic 401 path. */
+var DEMO_PASSWORD = "demo1234";
+var SEED_USERS = [
+  { id: "seed-investor", name: "Alex Deme", email: "investor@demo.gefi", persona: "investor", language: "en", theme: "dark", avatar: null, _password: DEMO_PASSWORD },
+  { id: "seed-developer", name: "Jordan Rivas", email: "developer@demo.gefi", persona: "developer", language: "en", theme: "dark", avatar: null, _password: DEMO_PASSWORD },
+  { id: "seed-provider", name: "Sam Okoye", email: "provider@demo.gefi", persona: "data-provider", language: "en", theme: "dark", avatar: null, _password: DEMO_PASSWORD },
+  { id: "seed-regulator", name: "Priya Nair", email: "regulator@demo.gefi", persona: "regulator", language: "en", theme: "dark", avatar: null, _password: DEMO_PASSWORD },
+  { id: "seed-admin", name: "Morgan Blake", email: "admin@demo.gefi", persona: "admin", language: "en", theme: "dark", avatar: null, _password: DEMO_PASSWORD },
+];
+
 /* ------------------------------------------------------- in-memory state */
 function freshState() {
   return {
-    profile: { name: "Alex Deme", email: "alex@sample.gefi", persona: "investor", language: "en", theme: "dark", avatar: null },
-    users: [],
+    profile: null, /* set on sign-in/register; GET /me 401s until then */
+    users: SEED_USERS.map((u) => ({ ...u })),
+    sessions: [],
+    tokens: new Map(), /* token -> { userId, refreshToken } */
+    refreshTokens: new Map(), /* refreshToken -> userId */
     watchlist: D.watchlist.map((w) => ({ ...w })),
     orders: D.orders.map((o) => ({ ...o })),
     proposals: [],
     executions: [],
-    rebalanceSettings: { band_pct: 5, cadence: "monthly", auto_execute: false },
+    /* Rebalance state (task 305): targets come from the canonical
+     * allocation; current weights start slightly drifted, exactly as the
+     * client page's defaults do, so both sides start from one story. */
+    rebalanceTargets: D.allocation.reduce((acc, a) => { acc[a.name] = a.pct; return acc; }, {}),
+    rebalanceCurrent: { Stocks: 48, Bonds: 22, "Real Estate": 15, Commodities: 10, Cash: 5 },
+    lastRebalance: "15 days ago",
+    rebalanceSettings: { threshold_pct: 5, auto: false, frequency: "Quarterly", account_costs: true, tax_aware: true },
     ratings: {},
     subscriptions: [{ id: "sub-1", slug: MODELS[1].slug, since: "2026-06-01" }],
     preferences: { wings: [], risk: "medium" },
@@ -177,18 +200,117 @@ const page = (items, q) => {
 };
 const notFound = { __status: 404, code: "not_found", message: "No such resource" };
 
-/* ---- auth ---- */
+/* ---- auth (task 303) ---- */
+function sanitizeUser(u) {
+  if (!u) return null;
+  var out = {};
+  Object.keys(u).forEach(function (k) { if (k !== "_password") out[k] = u[k]; });
+  return out;
+}
+function findUser(email) {
+  var e = String(email || "").toLowerCase();
+  return S.users.find((u) => u.email.toLowerCase() === e);
+}
+function issueSession(user, device) {
+  const tok = "gefi_" + Buffer.from(JSON.stringify({ typ: "sampleJWT" })).toString("base64url") +
+    "." + Buffer.from(JSON.stringify({ sub: user.id, persona: user.persona })).toString("base64url") +
+    "." + fnvHex("sig|" + user.id + "|" + S.sessions.length);
+  const refresh = "rt_" + fnvHex("refresh|" + user.id + "|" + S.sessions.length) + fnvHex("r2|" + S.sessions.length);
+  S.tokens.set(tok, { userId: user.id });
+  S.refreshTokens.set(refresh, user.id);
+  S.sessions.forEach((s) => { if (s.userId === user.id) s.current = false; });
+  const rand = seed.rng(seed.hash("session|" + user.id + "|" + S.sessions.length));
+  S.sessions.push({
+    id: "sess-" + (S.sessions.length + 1),
+    userId: user.id,
+    token: tok,
+    device: device || ["Chrome on macOS", "Safari on iOS", "Firefox on Windows", "Edge on Windows"][Math.floor(rand() * 4)],
+    ip: "203.0.113." + (10 + Math.floor(rand() * 240)),
+    created: "2026-08-22",
+    current: true,
+  });
+  S.profile = user;
+  return { token: tok, refresh_token: refresh, user: sanitizeUser(user) };
+}
 on("POST /auth/register", (p, q, b) => {
-  const user = { id: "u-" + (S.users.length + 1), email: (b && b.email) || "new@sample.gefi" };
+  const email = b && b.email;
+  const password = (b && b.password) || "";
+  if (!email || password.length < 8) {
+    return { __status: 422, code: "validation_failed", message: "Email and an 8+ character password are required.", details: [{ field: "password", issue: "min length 8" }] };
+  }
+  if (findUser(email)) {
+    return { __status: 409, code: "conflict", message: "An account with that email already exists." };
+  }
+  const user = {
+    id: "u-" + (S.users.length + 1),
+    name: (b && b.name) || email.split("@")[0],
+    email: email,
+    persona: (b && b.persona) || "investor",
+    language: "en",
+    theme: "dark",
+    avatar: null,
+    _password: password,
+  };
   S.users.push(user);
-  return { __status: 201, user };
+  return { __status: 201, ...issueSession(user, "New account") };
 });
-on("POST /auth/session", (p, q, b) => ({ token: "sample-" + fnvHex("token|" + ((b && b.email) || "anon")), user: S.profile }));
-on("DELETE /auth/session", () => ({ ok: true }));
-on("GET /me", () => S.profile);
+on("POST /auth/session", (p, q, b) => {
+  const email = b && b.email;
+  const password = (b && b.password) || "";
+  if (!email) return { __status: 422, code: "validation_failed", message: "Email is required." };
+  var user = findUser(email);
+  if (user) {
+    if (user._password !== password) {
+      return { __status: 401, code: "invalid_credentials", message: "Wrong password for " + email + "." };
+    }
+  } else {
+    /* Unknown email never dead-ends the mock: it becomes a fresh guest,
+     * so any email/password combo "just works" on first use. */
+    user = { id: "u-" + (S.users.length + 1), name: email.split("@")[0], email: email, persona: "investor", language: "en", theme: "dark", avatar: null, _password: password };
+    S.users.push(user);
+  }
+  return issueSession(user);
+});
+on("DELETE /auth/session", () => {
+  const cur = S.sessions.find((s) => s.current);
+  if (cur) {
+    S.tokens.delete(cur.token);
+    cur.current = false;
+  }
+  S.profile = null;
+  return { ok: true };
+});
+on("POST /auth/session/refresh", (p, q, b) => {
+  const rt = b && b.refresh_token;
+  const userId = S.refreshTokens.get(rt);
+  if (!userId) return { __status: 401, code: "invalid_credentials", message: "Refresh token is invalid or expired." };
+  const user = S.users.find((u) => u.id === userId);
+  if (!user) return { __status: 401, code: "invalid_credentials", message: "Account no longer exists." };
+  S.refreshTokens.delete(rt);
+  return issueSession(user, "Refreshed session");
+});
+on("GET /auth/sessions", (p, q) => {
+  const mine = S.profile ? S.sessions.filter((s) => s.userId === S.profile.id) : [];
+  return page(mine.map((s) => ({ id: s.id, device: s.device, ip: s.ip, created: s.created, current: s.current })), q);
+});
+on("DELETE /auth/sessions/{id}", (p) => {
+  const sess = S.sessions.find((s) => s.id === p.id);
+  if (!sess) return { __status: 404, code: "not_found", message: "No such session." };
+  S.tokens.delete(sess.token);
+  S.sessions = S.sessions.filter((s) => s.id !== p.id);
+  if (sess.current && S.profile && S.profile.id === sess.userId) S.profile = null;
+  return { ok: true };
+});
+on("GET /me", () => {
+  if (!S.profile) return { __status: 401, code: "invalid_credentials", message: "Not signed in." };
+  return sanitizeUser(S.profile);
+});
 on("PATCH /me", (p, q, b) => {
+  if (!S.profile) return { __status: 401, code: "invalid_credentials", message: "Not signed in." };
   Object.assign(S.profile, b || {});
-  return S.profile;
+  const stored = S.users.find((u) => u.id === S.profile.id);
+  if (stored) Object.assign(stored, b || {});
+  return sanitizeUser(S.profile);
 });
 on("GET /me/personas", () => ({
   items: ["investor", "portfolio", "trader", "developer", "marketplace", "funding", "regulator", "reports", "learning", "data-provider"].map((k) => ({ persona: k, granted: true })),
@@ -197,37 +319,91 @@ on("GET /me/personas", () => ({
 on("GET /orgs", (p, q) => page([{ id: "org-1", name: "Meridian Bank", role: "member" }, { id: "org-2", name: "GeFi Labs", role: "owner" }], q));
 on("GET /orgs/{org_id}/members", (p, q) => page(D.devConsole.team.map((t, i) => ({ id: "m-" + i, ...t })), q));
 
-/* ---- portfolio ---- */
+/* ---- portfolio (task 304) ---- */
 on("GET /portfolio", () => D.portfolio);
 on("GET /portfolio/holdings", (p, q) => page(D.holdings, q));
 on("GET /portfolio/transactions", (p, q) => page(D.transactions, q));
-on("GET /portfolio/performance", () => ({ series: series("perf|portfolio", 12, 100, 8), benchmark: series("perf|bench", 12, 100, 6), period: "12m" }));
+on("GET /portfolio/performance", (p, q) => {
+  /* Slice the canonical seeded series so live mode charts exactly what
+   * the sample dataset charts — no second, disagreeing generator. */
+  const WINDOWS = { "1m": 21, "3m": 63, "6m": 126, "1y": 180, ytd: 180, all: 180 };
+  const n = WINDOWS[q.period] || WINDOWS["1y"];
+  const full = D.portfolio.valueSeries;
+  const fullBench = D.portfolio.benchSeries;
+  const s = full.slice(Math.max(0, full.length - n));
+  const bench = fullBench.slice(Math.max(0, fullBench.length - n));
+  const pct = (arr) => (arr.length > 1 ? +(((arr[arr.length - 1] - arr[0]) / arr[0]) * 100).toFixed(2) : 0);
+  return { period: q.period || "1y", series: s, benchmark: bench, returnPct: pct(s), benchReturnPct: pct(bench) };
+});
 on("GET /portfolio/risk", () => D.risk);
 on("GET /portfolio/allocation", () => ({ items: D.allocation, next_cursor: null }));
 on("GET /watchlist", (p, q) => page(S.watchlist, q));
 on("POST /watchlist", (p, q, b) => {
-  const row = { symbol: (b && b.symbol) || "NEW", name: (b && b.name) || "Added symbol" };
+  /* Rows are keyed by `ticker` — the same field DEMO.watchlist uses, so
+   * added rows and seeded rows are interchangeable everywhere. */
+  const ticker = ((b && (b.ticker || b.symbol)) || "").toUpperCase();
+  if (!ticker) return { __status: 422, code: "validation_failed", message: "ticker is required.", details: [{ field: "ticker", issue: "missing" }] };
+  if (S.watchlist.some((w) => w.ticker === ticker)) {
+    return { __status: 409, code: "conflict", message: ticker + " is already on the watchlist." };
+  }
+  const rand = seed.rng(seed.hash("wl|" + ticker));
+  const price = +(40 + rand() * 460).toFixed(2);
+  const spark = [];
+  for (let i = 0; i < 24; i++) spark.push(+(price * (0.98 + rand() * 0.04)).toFixed(2));
+  const row = { ticker: ticker, name: (b && b.name) || ticker, price: price, dayPct: +((rand() - 0.45) * 3).toFixed(2), spark: spark };
   S.watchlist.push(row);
   return { __status: 201, ...row };
 });
 on("DELETE /watchlist/{symbol}", (p) => {
+  const ticker = String(p.symbol || "").toUpperCase();
   const before = S.watchlist.length;
-  S.watchlist = S.watchlist.filter((w) => w.symbol !== p.symbol);
+  S.watchlist = S.watchlist.filter((w) => w.ticker !== ticker);
   return before === S.watchlist.length ? notFound : { ok: true };
 });
 
-/* ---- rebalance ---- */
-const drift = () =>
-  D.allocation.map((a, i) => ({ name: a.name, current_pct: a.pct, target_pct: a.pct + [1.5, -1.5, 0.5, -0.5, 0][i % 5], drift_pct: -[1.5, -1.5, 0.5, -0.5, 0][i % 5] }));
-on("GET /rebalance/drift", () => ({ items: drift(), next_cursor: null }));
-on("POST /rebalance/proposals", () => {
-  const pr = { id: "prop-" + (S.proposals.length + 1), created: "2026-08-22", trades: drift().filter((d) => d.drift_pct !== 0).map((d) => ({ asset: d.name, side: d.drift_pct > 0 ? "sell" : "buy", pct: Math.abs(d.drift_pct) })) };
+/* ---- rebalance (task 305) — all math via the SHARED module ---- */
+on("GET /rebalance/drift", () => ({
+  items: RB.driftRows(S.rebalanceTargets, S.rebalanceCurrent),
+  next_cursor: null,
+  targets: S.rebalanceTargets,
+  current: S.rebalanceCurrent,
+  max_drift_pct: +RB.maxDrift(S.rebalanceTargets, S.rebalanceCurrent).toFixed(1),
+  settings: S.rebalanceSettings,
+  last_rebalance: S.lastRebalance,
+}));
+on("PUT /rebalance/targets", (p, q, b) => {
+  if (!b || typeof b !== "object") return { __status: 422, code: "validation_failed", message: "Body must be a weights object." };
+  const bad = Object.keys(b).filter((k) => typeof b[k] !== "number" || b[k] < 0);
+  if (bad.length) return { __status: 422, code: "validation_failed", message: "Weights must be non-negative numbers.", details: bad.map((f) => ({ field: f, issue: "invalid" })) };
+  S.rebalanceTargets = Object.assign({}, b);
+  return S.rebalanceTargets;
+});
+on("POST /rebalance/proposals", (p, q, b) => {
+  const targets = (b && b.targets) || S.rebalanceTargets;
+  const pr = RB.proposal(targets, S.rebalanceCurrent, D.portfolio.value);
+  pr.id = "prop-" + (S.proposals.length + 1);
+  pr.created = "2026-08-22";
   S.proposals.push(pr);
   return { __status: 201, ...pr };
 });
 on("GET /rebalance/proposals", (p, q) => page(S.proposals, q));
 on("POST /rebalance/executions", (p, q, b) => {
-  const ex = { id: "exec-" + (S.executions.length + 1), proposal_id: b && b.proposal_id, status: "executed" };
+  const targets = (b && b.targets) || S.rebalanceTargets;
+  const total = RB.totalTarget(targets);
+  if (Math.round(total) !== 100) {
+    return { __status: 422, code: "validation_failed", message: "Targets must sum to 100% (got " + total + "%).", details: [{ field: "targets", issue: "sum != 100" }] };
+  }
+  const proposed = RB.proposal(targets, S.rebalanceCurrent, D.portfolio.value);
+  S.rebalanceTargets = Object.assign({}, targets);
+  S.rebalanceCurrent = RB.applied(targets);
+  S.lastRebalance = "just now";
+  const ex = {
+    id: "exec-" + (S.executions.length + 1),
+    executed_at: "2026-08-22",
+    trades: proposed.trades,
+    total_value: proposed.total_value,
+    resulting_weights: S.rebalanceCurrent,
+  };
   S.executions.push(ex);
   return { __status: 201, ...ex };
 });
@@ -298,8 +474,23 @@ on("GET /market-data/quotes", (p, q) => {
   return { items: syms.map((s) => { const r = seed.rng(seed.hash("q|" + s)); return { symbol: s, price: +(40 + r() * 460).toFixed(2), ts: "2026-08-22T05:30:00Z" }; }), next_cursor: null };
 });
 on("POST /orders", (p, q, b) => {
+  /* Full shape — same fields as the seeded DEMO.orders rows, so a
+   * server-side fill renders identically to a sample one. */
   const r = seed.rng(seed.hash("fill|" + (S.orders.length + 1)));
-  const o = { id: "ORD-" + (9000 + S.orders.length), symbol: (b && b.symbol) || "AAPL", side: (b && b.side) || "buy", qty: (b && b.qty) || 1, status: "filled", fill: +(40 + r() * 460).toFixed(2), date: "2026-08-22" };
+  const px = +(40 + r() * 460).toFixed(2);
+  const o = {
+    id: "ORD-" + (9000 + S.orders.length),
+    strategy: (b && b.strategy) || "Manual",
+    symbol: (b && b.symbol) || "AAPL",
+    side: ((b && b.side) || "buy").toUpperCase(),
+    type: (b && b.type) || "market",
+    qty: (b && b.qty) || 1,
+    price: px,
+    fill: +(px * (1 + (r() - 0.5) * 0.002)).toFixed(2),
+    status: "filled",
+    pnl: +((r() - 0.42) * 220).toFixed(2),
+    date: "2026-08-22",
+  };
   S.orders.unshift(o);
   return { __status: 201, ...o };
 });

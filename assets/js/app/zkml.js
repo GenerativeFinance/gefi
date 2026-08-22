@@ -14,7 +14,7 @@
     return ("00000000" + h.toString(16)).slice(-8);
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
+  window.GeFi.api.page(function () {
     var GeFi = window.GeFi;
     if (!GeFi || !GeFi.DEMO || !GeFi.MODELS) return;
     var form = document.querySelector("[data-zk-form]");

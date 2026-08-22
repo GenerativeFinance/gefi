@@ -2,7 +2,7 @@
 (function (window, document) {
   "use strict";
 
-  document.addEventListener("DOMContentLoaded", function () {
+  window.GeFi.api.page(function () {
     var GeFi = window.GeFi;
     if (!GeFi || !GeFi.DEMO) return;
     var D = GeFi.DEMO;
@@ -145,10 +145,17 @@
 
     function stopStream() {
       streaming = false;
-      if (streamTimer) clearInterval(streamTimer);
+      if (streamTimer) streamTimer.close();
+      streamTimer = null;
       streamChip.hidden = true;
       streamBtn.textContent = "Start Stream";
       streamBtn.className = "app-btn app-btn--primary";
+    }
+
+    function pushRow(r) {
+      var body = document.querySelector("[data-md-rows]");
+      body.insertBefore(rowEl(r), body.firstChild);
+      while (body.childNodes.length > 20) body.removeChild(body.lastChild);
     }
 
     streamBtn.addEventListener("click", function () {
@@ -161,15 +168,31 @@
       streamChip.hidden = false;
       streamBtn.textContent = "Stop Stream";
       streamBtn.className = "app-btn app-btn--ghost";
-      status.textContent = "Streaming seeded sample ticks for " + selected + " — one row per second.";
-      streamTimer = setInterval(function () {
-        if (document.hidden) return;
-        streamTick += 1;
-        var body = document.querySelector("[data-md-rows]");
-        var r = sampleRows(selected, streamTick)[0];
-        body.insertBefore(rowEl(r), body.firstChild);
-        while (body.childNodes.length > 20) body.removeChild(body.lastChild);
-      }, 1000);
+      var src = D.marketData.sources.filter(function (s) { return s.key === selected; })[0];
+      /* One stream API, two modes: live SSE from the mock server when the
+       * data layer probed live, seeded local simulation otherwise. */
+      streamTimer = GeFi.api.stream(
+        "/market-data/stream?symbols=" + encodeURIComponent(src.symbols.join(",")),
+        function (name, data, meta) {
+          if (document.hidden) return;
+          streamTick += 1;
+          if (meta.live) {
+            pushRow({ t: "t-live", sym: data.symbol, px: data.price.toFixed(2), vol: Math.round(1000 + (data.price * 97) % 90000).toLocaleString("en-US") });
+          } else {
+            pushRow(sampleRows(selected, streamTick)[0]);
+          }
+        },
+        {
+          events: ["quote.tick"],
+          simulate: function (emit) {
+            var t = setInterval(function () { emit("quote.tick", null); }, 1000);
+            return function () { clearInterval(t); };
+          }
+        }
+      );
+      status.textContent = streamTimer.live
+        ? "Streaming live ticks from the mock API for " + selected + "."
+        : "Streaming seeded sample ticks for " + selected + " — one row per second.";
     });
 
     document.querySelector("[data-md-export]").addEventListener("click", function () {

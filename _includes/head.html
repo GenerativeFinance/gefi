@@ -7,7 +7,7 @@
      served as response headers — Cloudflare in front of api.gefi.io will set those for
      the API; for static Pages we'll apply them via the future Cloudflare proxy or repo
      security headers if/when we move off raw Pages. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.gefi.io; base-uri 'self'; form-action 'self' https://api.gefi.io; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.gefi.io{% if site.api.base_url != "" %} {{ site.api.base_url }}{% endif %}{% if jekyll.environment != "production" %} http://localhost:8788{% endif %}; base-uri 'self'; form-action 'self' https://api.gefi.io; object-src 'none'" />
 {% include seo.html %}
 <link rel="icon" href="{{ '/assets/img/favicon.svg' | relative_url }}" type="image/svg+xml" />
 <link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="{{ '/feed.xml' | relative_url }}" />

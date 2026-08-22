@@ -2,7 +2,7 @@
 (function (window, document) {
   "use strict";
 
-  document.addEventListener("DOMContentLoaded", function () {
+  window.GeFi.api.page(function () {
     var grid = document.querySelector("[data-cat-grid]");
     if (!grid) return;
     var app = window.GeFi && window.GeFi.app;

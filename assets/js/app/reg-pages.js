@@ -10,7 +10,7 @@
     return Math.round((new Date(iso + "T00:00:00Z") - new Date(TODAY + "T00:00:00Z")) / 86400000);
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
+  window.GeFi.api.page(function () {
     var GeFi = window.GeFi;
     if (!GeFi || !GeFi.DEMO || !GeFi.DEMO.regulator) return;
     var R = GeFi.DEMO.regulator;

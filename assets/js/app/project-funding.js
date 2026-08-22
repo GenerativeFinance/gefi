@@ -5,7 +5,7 @@
 (function (window, document) {
   "use strict";
 
-  document.addEventListener("DOMContentLoaded", function () {
+  window.GeFi.api.page(function () {
     var GeFi = window.GeFi;
     if (!GeFi || !GeFi.DEMO) return;
     var root = document.querySelector("[data-pf-root]");

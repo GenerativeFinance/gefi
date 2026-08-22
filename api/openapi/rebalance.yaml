@@ -1,12 +1,14 @@
 openapi: 3.0.3
 info:
   title: GeFi Rebalancing engine
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Drift computation, trade-proposal generation, execution and history, strategy settings.
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Drift computation, trade-proposal generation, execution and history,
+    strategy settings. Filled in by ledger task 305. The drift and trade
+    math is the shared pure module assets/js/app/rebalance-math.js, used
+    by both the client page and the mock server, so identical targets
+    always yield identical proposals. Envelope conventions come from
+    _envelope.yaml.
 servers:
   - url: /v1
     description: >
@@ -18,6 +20,49 @@ security:
 tags:
   - name: rebalance
     description: "Rebalancing engine"
+components:
+  schemas:
+    Weights:
+      type: object
+      description: "Asset-class name -> percent. Targets must sum to 100 before execution."
+      additionalProperties: { type: number }
+      example: { Stocks: 45, Bonds: 25, "Real Estate": 15, Commodities: 10, Cash: 5 }
+    DriftRow:
+      type: object
+      properties:
+        name: { type: string, example: Stocks }
+        target_pct: { type: number, example: 45 }
+        current_pct: { type: number, example: 48 }
+        drift_pct: { type: number, description: "target - current; negative means overweight.", example: -3 }
+    Trade:
+      type: object
+      properties:
+        side: { type: string, enum: [Buy, Sell] }
+        asset: { type: string }
+        value: { type: number, description: "Rounded to the nearest $500." }
+    Proposal:
+      type: object
+      properties:
+        trades: { type: array, items: { $ref: '#/components/schemas/Trade' } }
+        trade_count: { type: integer }
+        total_value: { type: number }
+        max_drift_pct: { type: number }
+    Settings:
+      type: object
+      properties:
+        threshold_pct: { type: number, description: "Drift band that triggers a rebalance.", example: 5 }
+        auto: { type: boolean }
+        frequency: { type: string, enum: [Monthly, Quarterly, Annually] }
+        account_costs: { type: boolean }
+        tax_aware: { type: boolean }
+    Execution:
+      type: object
+      properties:
+        id: { type: string }
+        executed_at: { type: string, format: date }
+        trades: { type: array, items: { $ref: '#/components/schemas/Trade' } }
+        total_value: { type: number }
+        resulting_weights: { $ref: '#/components/schemas/Weights' }
 paths:
   /rebalance/drift:
     get:
@@ -26,31 +71,41 @@ paths:
       tags: [rebalance]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
-  /rebalance/proposals:
-    post:
-      operationId: post-rebalance-proposals
-      summary: "Generate a trade proposal from current drift"
+          description: Drift state, plus the settings in force.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/DriftRow' } }
+                  targets: { $ref: '#/components/schemas/Weights' }
+                  current: { $ref: '#/components/schemas/Weights' }
+                  max_drift_pct: { type: number }
+                  settings: { $ref: '#/components/schemas/Settings' }
+                  last_rebalance: { type: string, example: "15 days ago" }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
+  /rebalance/targets:
+    put:
+      operationId: put-rebalance-targets
+      summary: "Replace the target weights"
       tags: [rebalance]
-      parameters:
-        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Weights' }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Updated targets.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Weights' } } }
+        '422':
+          description: Targets rejected (e.g. negative weights).
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
+  /rebalance/proposals:
     get:
       operationId: get-rebalance-proposals
       summary: "Proposal history"
@@ -60,31 +115,38 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
-  /rebalance/executions:
+          description: Past proposals.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/Proposal' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
     post:
-      operationId: post-rebalance-executions
-      summary: "Execute a proposal"
+      operationId: post-rebalance-proposals
+      summary: "Generate a trade proposal from current drift"
       tags: [rebalance]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        description: "Optional override targets; omitted means the stored targets."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                targets: { $ref: '#/components/schemas/Weights' }
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+        '201':
+          description: Computed proposal (same math as the client fallback).
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Proposal' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
+  /rebalance/executions:
     get:
       operationId: get-rebalance-executions
       summary: "Execution history"
@@ -94,14 +156,40 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Past executions.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties: { items: { type: array, items: { $ref: '#/components/schemas/Execution' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
+    post:
+      operationId: post-rebalance-executions
+      summary: "Execute a rebalance; current weights move onto the targets"
+      tags: [rebalance]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                targets: { $ref: '#/components/schemas/Weights' }
+                trades: { type: array, items: { $ref: '#/components/schemas/Trade' } }
+      responses:
+        '201':
+          description: Execution record plus the resulting state.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Execution' } } }
+        '422':
+          description: Targets do not sum to 100.
+          content: { application/json: { schema: { $ref: '_envelope.yaml#/components/schemas/Error' } } }
+        '429': { $ref: '_envelope.yaml#/components/responses/RateLimited' }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
   /rebalance/settings:
     get:
       operationId: get-rebalance-settings
@@ -109,25 +197,21 @@ paths:
       tags: [rebalance]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Settings.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Settings' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
     patch:
       operationId: patch-rebalance-settings
       summary: "Update strategy settings"
       tags: [rebalance]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Settings' }
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
+          description: Updated settings.
+          headers: { X-GeFi-Sample: { $ref: '_envelope.yaml#/components/headers/XGeFiSample' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Settings' } } }
+        default: { $ref: '_envelope.yaml#/components/responses/Error' }
