@@ -2787,3 +2787,33 @@ p  { margin: 0 0 var(--space-4); }
 .app-table td { padding: 10px 12px; border-bottom: 1px solid var(--app-border); vertical-align: middle; }
 .app-table tr:last-child td { border-bottom: 0; }
 .app-table .is-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Task 203 — investor overview */
+.app-hero { display: flex; gap: 24px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px; }
+.app-hero__stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 24px; flex: 1; }
+.app-hero__rail { display: flex; flex-direction: column; gap: 8px; min-width: 140px; }
+.app-ov-charts { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .app-ov-charts { grid-template-columns: 1fr; } }
+.app-ov-donutwrap { display: flex; gap: 20px; align-items: center; }
+.app-ov-donutwrap > div:first-child { flex: 0 0 150px; }
+.app-ov-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.app-ov-legend li { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.app-ov-legend__dot { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+.app-ov-legend__val { margin-left: auto; color: var(--app-muted); }
+.app-activity { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.app-activity__row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--app-border); }
+.app-activity__row:last-child { border-bottom: 0; }
+.app-activity__main { min-width: 0; }
+.app-activity__title { margin: 0; font-size: 14px; font-weight: 600; }
+.app-activity__detail { margin: 2px 0 0; font-size: 12px; color: var(--app-muted); }
+.app-activity__val { margin-left: auto; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.app-activity__val.is-up { color: var(--app-green); }
+.app-activity__val.is-warn { color: var(--app-amber); }
+.app-activity__val.is-info { color: var(--app-blue); }
+
+/* dark chart adjustments inside the app shell */
+.app-shell .gefi-chart__grid { stroke: var(--app-border); }
+.app-shell .gefi-chart__tick { fill: var(--app-muted); }
+.app-shell .gefi-chart__line { stroke: var(--app-brand-2); }
+.app-shell .gefi-chart__area { fill: rgba(109, 91, 255, 0.18); }
+.app-shell .gefi-chart__line--dashed { stroke: var(--app-muted); }

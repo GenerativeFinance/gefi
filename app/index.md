@@ -7,11 +7,69 @@ active_tab: Overview
 permalink: /app/
 sitemap: false
 robots: noindex
-primary_action: { label: "Settings", url: "/app/" }
+app_script: /assets/js/app/overview.js
 ---
 
-<div class="app-placeholder">
-  Content region — the investor overview lands with task 203. This page is
-  the shell smoke test: top bar, persona tabs, trust strip, and footer are
-  the shared frame every app screen mounts into.
+<!-- Hero portfolio band -->
+<section class="app-panel app-hero" aria-label="Portfolio overview">
+  <div class="app-hero__stats">
+    <div class="app-hero__stat">
+      <p class="app-kpi__label">Total Portfolio Value</p>
+      <p class="app-kpi__value" data-hero-value></p>
+      <p class="app-kpi__sub is-up" data-hero-day></p>
+    </div>
+    <div class="app-hero__stat">
+      <p class="app-kpi__label">Monthly Return</p>
+      <p class="app-kpi__value is-up" data-hero-month></p>
+      <p class="app-kpi__sub" data-hero-bench></p>
+    </div>
+    <div class="app-hero__stat">
+      <p class="app-kpi__label">YTD Return</p>
+      <p class="app-kpi__value" style="color: var(--app-blue);" data-hero-ytd></p>
+      <p class="app-kpi__sub">since Jan 1</p>
+    </div>
+    <div class="app-hero__stat">
+      <p class="app-kpi__label">Cash Balance</p>
+      <p class="app-kpi__value" data-hero-cash></p>
+      <p class="app-kpi__sub">available</p>
+    </div>
+  </div>
+  <div class="app-hero__rail">
+    <a class="app-btn app-btn--primary" href="/app/holdings/">View Details</a>
+    <a class="app-btn app-btn--ghost" href="/app/performance/">Performance</a>
+  </div>
+</section>
+
+<!-- KPI row -->
+<div class="app-kpis" data-ov-kpis></div>
+
+<!-- Charts -->
+<div class="app-ov-charts">
+  <section class="app-panel">
+    <h2 class="app-panel__title">Portfolio Performance</h2>
+    <div data-ov-perf><noscript>Chart requires JavaScript; the figures above summarise it.</noscript></div>
+    <p class="app-kpi__sub" style="margin-top:8px;">Solid: portfolio · dashed: benchmark · sample data</p>
+  </section>
+  <section class="app-panel">
+    <h2 class="app-panel__title">Asset Allocation</h2>
+    <div class="app-ov-donutwrap">
+      <div data-ov-donut></div>
+      <ul class="app-ov-legend" data-ov-legend role="list"></ul>
+    </div>
+  </section>
 </div>
+
+<!-- Quick actions -->
+<h2 class="app-panel__title" style="margin-top:24px;">Quick Actions</h2>
+<div class="app-tiles">
+  <a class="app-tile" href="/app/holdings/"><span class="app-tile__title">View Portfolio</span><span class="app-tile__desc">Holdings, transactions, watchlist</span></a>
+  <a class="app-tile" href="/app/marketplace/"><span class="app-tile__title">Browse AI Models</span><span class="app-tile__desc">92 models across 28 families</span></a>
+  <a class="app-tile" href="/app/analytics/"><span class="app-tile__title">Risk Assessment</span><span class="app-tile__desc">Sharpe, drawdown, VaR, concentration</span></a>
+  <a class="app-tile" href="/app/reports/"><span class="app-tile__title">Generate Reports</span><span class="app-tile__desc">Performance, risk, regulatory</span></a>
+</div>
+
+<!-- Recent activity -->
+<h2 class="app-panel__title" style="margin-top:24px;">Recent Activity</h2>
+<section class="app-panel">
+  <ul class="app-activity" data-ov-activity role="list"></ul>
+</section>

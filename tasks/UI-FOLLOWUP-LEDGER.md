@@ -57,7 +57,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 - [x] 202 — App component library: KPI card, segments, cards, chips, states — done (CSS under .app-shell + GeFi.app helpers in assets/js/app/components.js; gallery /app/components/ is the regression reference; segments have aria roles, arrow-key nav, hash deep-links; bad-is-high meters red; empty/skeleton/error states; chips always labelled)
 
 ### Investor wing
-- [ ] 203 — Investor Overview (chart dashboard, quick actions, activity)
+- [x] 203 — Investor Overview (chart dashboard, quick actions, activity) — done (built INTO /app/ since Overview is the persona's index; hero band, 4 KPI deltas, area-vs-dashed-benchmark chart, 5-segment donut + legend summing 100, 4 dark quick-action tiles, 4-row activity feed; dark chart token overrides added)
 - [ ] 204 — Holdings · Transactions · Watchlist tabs
 - [ ] 205 — Analytics · Insights tabs
 - [ ] 206 — Portfolio Performance (Overview/Returns/Allocation/Risk Analysis)
