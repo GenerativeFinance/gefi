@@ -2408,3 +2408,32 @@ p  { margin: 0 0 var(--space-4); }
 }
 .post-cites__head { margin: 0 0 var(--space-2); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-muted); }
 .post-cites__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.9375rem; }
+
+/* Task 107 — about timeline + partner comparison */
+.about-timeline { list-style: none; margin: var(--space-4) 0 var(--space-6); padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--space-3); }
+.about-timeline__item {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-top: 3px solid var(--color-brand); border-radius: var(--radius-md);
+  padding: var(--space-4); display: flex; flex-direction: column; gap: 6px;
+}
+.about-timeline__when { font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 700; color: var(--color-brand-strong); }
+.about-timeline__what { font-size: 0.875rem; line-height: 1.5; }
+.partner-compare td { font-size: 0.875rem; line-height: 1.55; }
+
+/* Task 108 — contact intent fork */
+.contact-fork { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6); }
+@media (max-width: 700px) { .contact-fork { grid-template-columns: 1fr; } }
+.contact-fork__card {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: var(--space-5); border-radius: var(--radius-md);
+  border: 1px solid var(--color-border); background: var(--color-surface);
+  text-decoration: none; color: inherit;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+.contact-fork__card:hover { border-color: var(--color-brand); text-decoration: none; transform: translateY(-2px); }
+.contact-fork__card--demo { border-color: rgba(109, 91, 255, 0.45); background: rgba(109, 91, 255, 0.05); }
+.contact-fork__card.is-suggested { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+.contact-fork__head { margin: 0; font-size: 1.125rem; font-weight: 700; }
+.contact-fork__body { margin: 0; font-size: 0.9375rem; color: var(--color-muted); line-height: 1.55; }
+.contact-fork__meta { margin: 0; font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-brand-strong); }
+.contact-fork__card:not(.contact-fork__card--demo) .contact-fork__meta { color: var(--color-muted); }
