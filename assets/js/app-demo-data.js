@@ -186,10 +186,17 @@
   ];
 
   DEMO.bounties = [
-    { id: "B-201", title: "Real-time Options Flow Analyzer", status: "OPEN", difficulty: "ADVANCED", reward: 2500, deadline: "2026-09-15", category: "Derivatives", submissions: 3, skills: ["Python", "Options", "Streaming"] },
-    { id: "B-202", title: "ESG Scoring Algorithm", status: "CLAIMED", difficulty: "INTERMEDIATE", reward: 1500, deadline: "2026-09-01", category: "ESG", submissions: 1, skills: ["NLP", "ESG data"] },
-    { id: "B-203", title: "Cross-Chain Bridge Risk Monitor", status: "IN PROGRESS", difficulty: "EXPERT", reward: 3250, deadline: "2026-09-28", category: "DeFi", submissions: 2, skills: ["Solidity", "Risk", "Graph"] },
-    { id: "B-204", title: "Earnings Call Tone Tracker", status: "OPEN", difficulty: "INTERMEDIATE", reward: 1000, deadline: "2026-09-10", category: "NLP", submissions: 0, skills: ["ASR", "NLP"] }
+    /* `status` is the developer-side lifecycle (bounties tab, task 218);
+     * `funding` is the crowdfunding side (bounty-funding tab, task 225) —
+     * its goal IS the reward, raised counts toward paying it out. */
+    { id: "B-201", title: "Real-time Options Flow Analyzer", status: "OPEN", difficulty: "ADVANCED", reward: 2500, deadline: "2026-09-15", category: "Derivatives", submissions: 3, skills: ["Python", "Options", "Streaming"],
+      funding: { status: "ACTIVE", raised: 1800, backers: 12, by: "quantessence", duration: "6 weeks" } },
+    { id: "B-202", title: "ESG Scoring Algorithm", status: "CLAIMED", difficulty: "INTERMEDIATE", reward: 1500, deadline: "2026-09-01", category: "ESG", submissions: 1, skills: ["NLP", "ESG data"],
+      funding: { status: "COMPLETED", raised: 1500, backers: 9, by: "atlas-nlp", duration: "4 weeks" } },
+    { id: "B-203", title: "Cross-Chain Bridge Risk Monitor", status: "IN PROGRESS", difficulty: "EXPERT", reward: 3250, deadline: "2026-09-28", category: "DeFi", submissions: 2, skills: ["Solidity", "Risk", "Graph"],
+      funding: { status: "APPROVED", raised: 2100, backers: 15, by: "helios-quant", duration: "8 weeks" } },
+    { id: "B-204", title: "Earnings Call Tone Tracker", status: "OPEN", difficulty: "INTERMEDIATE", reward: 1000, deadline: "2026-09-10", category: "NLP", submissions: 0, skills: ["ASR", "NLP"],
+      funding: { status: "SUBMITTED", raised: 0, backers: 0, by: "gulf-secure", duration: "3 weeks" } }
   ];
 
   DEMO.datasets = (function () {

@@ -2961,6 +2961,19 @@ a.app-chip:hover { border-color: var(--app-brand); color: var(--app-text); }
 /* Task 218 — block button */
 .app-btn--block { width: 100%; margin-top: 10px; }
 
+/* Task 225 — bounty funding: difficulty chips (EXPERT red / ADVANCED
+ * orange / INTERMEDIATE amber via existing class) + colored KPI sub-lines */
+.app-chip--expert { background: rgba(239, 68, 68, 0.14); color: var(--app-red); }
+.app-chip--adv { background: rgba(249, 115, 22, 0.14); color: var(--app-orange); }
+.app-shell .app-kpi__sub.is-blue { color: var(--app-blue); }
+.app-shell .app-kpi__sub.is-purple { color: var(--app-purple); }
+.app-shell .app-kpi__sub.is-amber { color: var(--app-amber); }
+.app-bf-rail { display: flex; flex-direction: column; gap: 8px; align-items: stretch; min-width: 170px; }
+.app-bf-rail .app-gridcard__statlabel { margin: 0; }
+.app-bf-reward { font-size: 18px; font-weight: 700; color: var(--app-green); }
+.app-bf-railbtns { display: flex; gap: 8px; }
+.app-bf-railbtns .app-btn--primary { flex: 1; }
+
 /* Task 223 — funding hub summary cards */
 .app-gridcards--three { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 .app-fh-row {

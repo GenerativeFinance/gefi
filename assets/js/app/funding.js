@@ -20,11 +20,11 @@
     function raised(list) {
       return list.reduce(function (n, p) { return n + p.raised; }, 0);
     }
-    var bountyTotal = bounties.reduce(function (n, b) { return n + b.reward; }, 0);
+    var bountyTotal = bounties.reduce(function (n, b) { return n + b.funding.raised; }, 0);
     var totalFunding = raised(projects) + bountyTotal;
     var activeProjects = projects.filter(function (p) { return p.daysLeft > 0; });
     var backers = projects.reduce(function (n, p) { return n + p.backers; }, 0);
-    var submitters = bounties.reduce(function (n, b) { return n + b.submissions; }, 0);
+    var bountyBackers = bounties.reduce(function (n, b) { return n + b.funding.backers; }, 0);
     var avgProgress = Math.round(
       projects.reduce(function (n, p) { return n + (p.raised / p.goal) * 100; }, 0) / projects.length
     );
@@ -32,10 +32,10 @@
     /* KPI strip — the ONE standard card anatomy */
     var kpiEl = document.querySelector("[data-fh-kpis]");
     [
-      { label: "Total Funding", value: fmt.moneyFull(totalFunding), sub: "campaigns + bounty rewards", tone: "is-up" },
+      { label: "Total Funding", value: fmt.moneyFull(totalFunding), sub: "campaigns + bounty backing", tone: "is-up" },
       { label: "Active Campaigns", value: String(activeProjects.length), sub: models.filter(function (p) { return p.daysLeft > 0; }).length + " models · " + bots.filter(function (p) { return p.daysLeft > 0; }).length + " bots", tone: "" },
       { label: "Avg Goal Progress", value: avgProgress + "%", sub: "across " + projects.length + " campaigns", tone: "" },
-      { label: "Contributors", value: (backers + submitters).toLocaleString("en-US"), sub: "backers + bounty submitters", tone: "" }
+      { label: "Contributors", value: (backers + bountyBackers).toLocaleString("en-US"), sub: "campaign + bounty backers", tone: "" }
     ].forEach(function (k) {
       var card = document.createElement("div");
       card.className = "app-kpi";
@@ -59,7 +59,7 @@
     [
       { title: "Bot Funding", total: raised(bots), active: bots.filter(function (p) { return p.daysLeft > 0; }).length, unit: "campaigns", cta: "View Bot Funding", href: "/app/bot-funding/" },
       { title: "AI Model Funding", total: raised(models), active: models.filter(function (p) { return p.daysLeft > 0; }).length, unit: "campaigns", cta: "View Model Funding", href: "/app/model-funding/" },
-      { title: "Bounty Funding", total: bountyTotal, active: bounties.filter(function (b) { return b.status !== "COMPLETED"; }).length, unit: "bounties", cta: "View Bounty Funding", href: "/app/bounty-funding/" }
+      { title: "Bounty Funding", total: bountyTotal, active: bounties.filter(function (b) { return b.funding.status !== "COMPLETED"; }).length, unit: "bounties", cta: "View Bounty Funding", href: "/app/bounty-funding/" }
     ].forEach(function (c) {
       var card = document.createElement("div");
       card.className = "app-gridcard";
