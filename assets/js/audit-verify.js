@@ -97,4 +97,14 @@
         render([["Result", "Verification failed"], ["Detail", err.message]], "error", "");
       });
   });
+
+  /* Deep link (Task 121): /compliance/?run_id=… prefills the form, runs the
+   * check, and scrolls it into view — leaderboard Verified badges land here. */
+  var params = new URLSearchParams(window.location.search);
+  var linkedId = (params.get("run_id") || "").trim();
+  if (linkedId) {
+    form.elements.run_id.value = linkedId;
+    form.dispatchEvent(new Event("submit", { cancelable: true }));
+    form.scrollIntoView({ block: "center" });
+  }
 })();

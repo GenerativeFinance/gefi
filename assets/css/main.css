@@ -2277,3 +2277,29 @@ p  { margin: 0 0 var(--space-4); }
 .sbx-stat__sub { margin: 4px 0 0; font-family: var(--font-mono); font-size: 0.75rem; }
 .sbx-stat__sub.is-up { color: var(--color-profit); }
 .sbx-stat__sub.is-down { color: var(--color-loss); }
+
+/* Task 121 — public model leaderboard */
+.lb-section { margin-top: var(--space-7); }
+.lb-section__title { font-size: 1.25rem; margin-bottom: var(--space-4); }
+.lb-scroll { overflow-x: auto; }
+.lb-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
+.lb-table th, .lb-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--color-border); vertical-align: middle; white-space: nowrap; }
+.lb-table th { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-muted); background: var(--color-surface-2); }
+.lb-table tr:last-child td { border-bottom: 0; }
+.lb-rank { font-family: var(--font-mono); color: var(--color-muted); width: 40px; }
+.lb-model a { font-weight: 600; }
+.lb-metric__value { font-family: var(--font-mono); font-weight: 700; }
+.lb-metric__label { color: var(--color-muted); font-size: 0.75rem; }
+.lb-score { font-family: var(--font-mono); font-weight: 600; }
+.lb-score.is-up { color: var(--color-profit); }
+.lb-score.is-down { color: var(--color-loss); }
+.lb-asof { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-muted); }
+.lb-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+}
+.lb-badge--verified { background: rgba(22, 163, 74, 0.12); color: var(--color-profit); text-decoration: none; }
+.lb-badge--verified:hover { background: rgba(22, 163, 74, 0.2); color: var(--color-profit); }
+.lb-badge--self { border: 1px dashed var(--color-border); color: var(--color-muted); background: transparent; }
+.lb-method { max-width: 720px; margin-top: var(--space-7); padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.lb-method h2 { font-size: 1.125rem; margin-top: 0; }
