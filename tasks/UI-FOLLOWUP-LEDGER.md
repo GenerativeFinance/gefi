@@ -82,7 +82,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 
 ### Data-provider wing
 - [x] 221 — Data Provider Overview + Datasets — done (provider link-tabs; KPI strip DERIVED from dataset rows so tabs can never disagree (12/$2,243,599/222/9.1); Recent Activity derived from dataset events (never blank, w/ designed empty state fallback); Datasets: 12 row-cards w/ status+quality chips, upload modal -> processing -> published in 2s persisted, Archive typed-confirm rejects wrong name; shared GeFi.appProvider aggregates for task 222)
-- [ ] 222 — Market Insights + Revenue tabs
+- [x] 222 — Market Insights + Revenue tabs — done (/app/data-insights/ + /app/data-revenue/ sharing data-revenue.js; Revenue KPIs derived from GeFi.appProvider.totals() so they equal Overview verbatim ($2,243,599 / 222 subs, Playwright-asserted string equality); revenue-by-dataset allocbars sorted desc, shares sum 100.0%; seeded monthly area chart whose 12 months sum exactly to total revenue, last month = next payout ($224,513); insights: adoption +15.3%, impact 8.7/10, $2,300,000 value, 156 models, 3 trend rows w/ text-labelled impact chips; Generate Report modal stamped SAMPLE quoting the same totals, close round-trip)
 
 ### Funding wing
 - [ ] 223 — Funding Hub dashboard
