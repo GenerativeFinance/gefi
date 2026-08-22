@@ -30,17 +30,26 @@
     }
     var st = load();
 
+    /* Issues resolved this session (task 230's Resolve action) move the
+     * Overview counts too — same source, no disagreement. */
+    var resolvedRows = (R.issues || []).filter(function (i) {
+      return (st.resolvedIssues || []).indexOf(i.id) !== -1;
+    });
+    var effFlagged = R.flagged - resolvedRows.length;
+    var effCritical = R.critical - resolvedRows.filter(function (i) { return i.severity === "critical"; }).length;
+    var effResolved = R.resolved + resolvedRows.length;
+
     /* ---- KPI grid (3x3) ---- */
     [
       { label: "Total Audits", value: String(R.audits30d), sub: "+12% vs prior period", tone: "is-up" },
       { label: "Pending Audits", value: String(R.pending), sub: R.dueThisWeek + " due this week", tone: "is-amber" },
       { label: "Compliance Rate", value: R.complianceRate + "%", sub: "across supervised orgs", tone: "" },
-      { label: "Flagged Issues", value: String(R.flagged), sub: R.critical + " critical", tone: "is-down" },
-      { label: "Resolved Issues", value: String(R.resolved), sub: "lifetime, sample", tone: "is-up" },
+      { label: "Flagged Issues", value: String(effFlagged), sub: effCritical + " critical", tone: "is-down" },
+      { label: "Resolved Issues", value: String(effResolved), sub: "lifetime, sample", tone: "is-up" },
       { label: "Active Standards", value: String(R.standards), sub: "in enforcement", tone: "is-blue" },
       { label: "Completion Rate", value: R.completionRate + "%", sub: "of scheduled audits", tone: "" },
       { label: "Avg Resolution", value: R.avgResolutionDays + " days", sub: "issue open → closed", tone: "" },
-      { label: "Critical Issues", value: String(R.critical), sub: "act now", tone: "is-down" }
+      { label: "Critical Issues", value: String(effCritical), sub: "act now", tone: "is-down" }
     ].forEach(function (k) {
       var card = document.createElement("div");
       card.className = "app-kpi";
@@ -151,18 +160,18 @@
     typesEl.setAttribute("data-rg-audittotal", String(model + dataset + process + security));
 
     var issuesEl = document.querySelector("[data-rg-issues]");
-    var high = Math.round((R.flagged - R.critical) * 0.3);
-    var medium = Math.round((R.flagged - R.critical) * 0.45);
-    var low = R.flagged - R.critical - high - medium;
+    var high = Math.round((effFlagged - effCritical) * 0.3);
+    var medium = Math.round((effFlagged - effCritical) * 0.45);
+    var low = effFlagged - effCritical - high - medium;
     [
-      ["Critical", R.critical, "var(--app-red)"],
+      ["Critical", effCritical, "var(--app-red)"],
       ["High", high, "var(--app-orange)"],
       ["Medium", medium, "var(--app-amber)"],
       ["Low", low, "var(--app-green)"]
     ].forEach(function (t) {
-      bar(issuesEl, t[0], (t[1] / R.flagged) * 100, String(t[1]), t[2]);
+      bar(issuesEl, t[0], (t[1] / effFlagged) * 100, String(t[1]), t[2]);
     });
-    issuesEl.setAttribute("data-rg-issuetotal", String(R.critical + high + medium + low));
+    issuesEl.setAttribute("data-rg-issuetotal", String(effCritical + high + medium + low));
 
     var perfEl = document.querySelector("[data-rg-perf]");
     [
@@ -295,7 +304,7 @@
         generated: "2026-08-22",
         kpis: {
           totalAudits: R.audits30d, pending: R.pending, complianceRatePct: R.complianceRate,
-          flagged: R.flagged, critical: R.critical, resolved: R.resolved,
+          flagged: effFlagged, critical: effCritical, resolved: effResolved,
           standards: R.standards, completionRatePct: R.completionRate, avgResolutionDays: R.avgResolutionDays
         },
         upcoming: R.upcoming.length,

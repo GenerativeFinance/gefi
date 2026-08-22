@@ -2961,6 +2961,42 @@ a.app-chip:hover { border-color: var(--app-brand); color: var(--app-text); }
 /* Task 218 — block button */
 .app-btn--block { width: 100%; margin-top: 10px; }
 
+/* Task 230 — regulator sub-pages: communications split + accordion */
+.app-comm { display: grid; grid-template-columns: 280px 1fr; gap: 16px; align-items: start; }
+@media (max-width: 760px) { .app-comm { grid-template-columns: 1fr; } }
+.app-comm__list { display: flex; flex-direction: column; gap: 8px; }
+.app-comm__item {
+  display: block; width: 100%; text-align: left; font: inherit; cursor: pointer;
+  background: var(--app-surface); border: 1px solid var(--app-border);
+  border-radius: 12px; padding: 12px 14px; color: var(--app-text);
+  transition: border-color .15s;
+}
+.app-comm__item:hover { border-color: var(--app-brand); }
+.app-comm__item--active { border-color: var(--app-brand); }
+.app-comm__org { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+.app-comm__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--app-brand); flex: 0 0 auto; }
+.app-comm__subject { margin: 4px 0 0; font-size: 12px; color: var(--app-muted); }
+.app-comm__view {
+  background: var(--app-surface); border: 1px solid var(--app-border);
+  border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px;
+}
+.app-comm__messages { display: flex; flex-direction: column; gap: 10px; min-height: 180px; }
+.app-comm__bubble {
+  max-width: 78%; padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.55;
+  background: var(--app-surface-2); border: 1px solid var(--app-border);
+}
+.app-comm__bubble--you { align-self: flex-end; background: rgba(109, 91, 255, 0.16); border-color: rgba(109, 91, 255, 0.4); }
+.app-comm__when { display: block; margin-top: 4px; font-size: 11px; color: var(--app-muted); }
+.app-comm__composer { display: flex; gap: 10px; }
+.app-comm__composer input {
+  flex: 1; font: inherit; font-size: 14px; color: var(--app-text);
+  background: var(--app-bg); border: 1px solid var(--app-border); border-radius: 8px; padding: 9px 12px;
+}
+.app-rs-reqs { margin: 0; padding: 0 0 0 18px; font-size: 13px; color: var(--app-muted); line-height: 1.8; }
+.app-ra-finding { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--app-border); font-size: 13px; }
+.app-ra-finding:last-child { border-bottom: 0; }
+.app-ra-finding .mono { color: var(--app-muted); flex: 0 0 auto; }
+
 /* Task 229 — regulator overview: dark insight banners + icon tiles */
 .app-rg-banner {
   display: flex; gap: 14px; align-items: flex-start;

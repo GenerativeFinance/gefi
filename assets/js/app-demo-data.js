@@ -285,6 +285,90 @@
       { tone: "amber", kind: "Needs attention", title: "Three critical issues share one root cause", body: "All three open critical issues trace to stale consent records in dataset #DS-8834 — remediating the source closes them together." },
       { tone: "green", kind: "Best practice", title: "Meridian Bank's audit pack is a template", body: "Their pre-assembled lineage + bias evidence cut the GDPR audit to two days. Recommend it as the standard submission format." },
       { tone: "purple", kind: "Trend", title: "Bias assessments are the fastest-growing audit type", body: "Requests doubled quarter over quarter as credit-scoring models come under the EU AI Act's high-risk regime." }
+    ],
+    /* Task 230 — the five regulator tabs. IDs cross-reference the
+     * Overview feed (#MT-4521, #ML-3456, #DS-8834, #CS-9912). */
+    modelAudits: [
+      { id: "MT-4521", model: "Credit Risk Scorer v3", org: "Meridian Bank", type: "GDPR compliance", severity: "low", status: "Completed", due: "2026-08-20",
+        findings: [
+          { when: "2026-08-14", text: "Scope agreed; evidence pack received up front" },
+          { when: "2026-08-18", text: "Lineage and consent records verified against the audit log" },
+          { when: "2026-08-20", text: "Closed with no findings — pack format recommended as template" }
+        ] },
+      { id: "ML-3456", model: "Fraud Graph Screener", org: "Gulf Invest", type: "Bias assessment", severity: "medium", status: "In Progress", due: "2026-09-02",
+        findings: [
+          { when: "2026-08-19", text: "Baseline fairness metrics collected across 4 cohorts" },
+          { when: "2026-08-21", text: "Demographic parity drift above threshold on cohort B — remediation requested" }
+        ] },
+      { id: "MT-4522", model: "Sentiment Alpha Engine", org: "Atlas NLP", type: "Model governance", severity: "medium", status: "Scheduled", due: "2026-09-05",
+        findings: [
+          { when: "2026-08-19", text: "Kickoff scheduled; scoping questionnaire sent" }
+        ] },
+      { id: "MT-4526", model: "HFT Arbitrage Bot", org: "Meridian Labs", type: "Security review", severity: "high", status: "In Progress", due: "2026-08-29",
+        findings: [
+          { when: "2026-08-16", text: "Key-rotation gap found on the execution gateway" },
+          { when: "2026-08-20", text: "Patched in 1.14.2 rollout; verification pass pending" }
+        ] },
+      { id: "MT-4530", model: "Derivatives Pricer", org: "Nordwind AM", type: "Conformity re-assessment", severity: "high", status: "Scheduled", due: "2026-08-25",
+        findings: [
+          { when: "2026-08-18", text: "High-risk classification confirmed under credit-adjacent use" }
+        ] }
+    ],
+    datasetAudits: [
+      { id: "DS-8834", dataset: "Card Spend Aggregates", org: "Atlas Lending", coverage: 92, pii: 3, license: "Restricted", severity: "high", status: "In Progress", due: "2026-08-27",
+        findings: [
+          { when: "2026-08-17", text: "Retention policy violation — records past the 24-month window" },
+          { when: "2026-08-21", text: "Stale consent records identified as the shared root cause of 3 open issues" }
+        ] },
+      { id: "DS-7310", dataset: "SME Loan Performance", org: "Nordwind AM", coverage: 97, pii: 0, license: "Licensed", severity: "low", status: "Completed", due: "2026-08-15",
+        findings: [
+          { when: "2026-08-15", text: "Closed clean — lineage complete, no PII exposure" }
+        ] },
+      { id: "DS-9102", dataset: "KYB Registry Deltas", org: "Gulf Secure", coverage: 88, pii: 1, license: "Licensed", severity: "medium", status: "Scheduled", due: "2026-09-08",
+        findings: [
+          { when: "2026-08-20", text: "Scheduled after license renewal lands" }
+        ] },
+      { id: "DS-7714", dataset: "Deposit Behavior", org: "Helios Capital", coverage: 85, pii: 2, license: "Under review", severity: "medium", status: "In Progress", due: "2026-09-01",
+        findings: [
+          { when: "2026-08-19", text: "License terms under review; sampling continues meanwhile" }
+        ] }
+    ],
+    /* 3 open criticals here = the Overview's "3 critical" KPI. */
+    issues: [
+      { id: "CI-201", title: "Stale consent records", severity: "critical", entity: "DS-8834", entityKind: "dataset", assignee: "L. Haddad", opened: "2026-08-17", slaDue: "2026-08-23" },
+      { id: "CI-202", title: "Bias metric drift above threshold", severity: "critical", entity: "ML-3456", entityKind: "model", assignee: "J. Weber", opened: "2026-08-15", slaDue: "2026-08-21" },
+      { id: "CI-203", title: "Missing adverse-action templates", severity: "high", entity: "MT-4526", entityKind: "model", assignee: "A. Marques", opened: "2026-08-12", slaDue: "2026-08-30" },
+      { id: "CI-204", title: "Retention schedule not enforced", severity: "critical", entity: "DS-7714", entityKind: "dataset", assignee: "Compliance desk", opened: "2026-08-19", slaDue: "2026-08-24" },
+      { id: "CI-205", title: "Audit log export gap", severity: "medium", entity: "MT-4522", entityKind: "model", assignee: "Platform", opened: "2026-08-10", slaDue: "2026-09-09" }
+    ],
+    resolved30d: 12,
+    threads: [
+      { id: "TH-1", org: "Helios Capital", subject: "Case #CS-9912 — quarterly attestation", unread: true,
+        messages: [
+          { from: "you", text: "Reminder: the quarterly attestation for case #CS-9912 is due Aug 29.", when: "Aug 21, 09:14" },
+          { from: "them", text: "Acknowledged — the evidence pack is in preparation and lands this week.", when: "Aug 21, 15:40" }
+        ] },
+      { id: "TH-2", org: "Atlas Lending", subject: "Dataset #DS-8834 consent records", unread: true,
+        messages: [
+          { from: "you", text: "Audit #DS-8834 flagged consent records past their validity window. Please supply refreshed evidence.", when: "Aug 20, 11:02" },
+          { from: "them", text: "We are re-running the consent sync; expect updated records by Aug 26.", when: "Aug 20, 17:19" },
+          { from: "you", text: "Noted. The linked issues stay open until the refreshed records verify.", when: "Aug 21, 08:45" }
+        ] },
+      { id: "TH-3", org: "Meridian Bank", subject: "GDPR audit #MT-4521 closed", unread: false,
+        messages: [
+          { from: "you", text: "Audit #MT-4521 closed with no findings. Your evidence pack format is being recommended as the standard.", when: "Aug 20, 14:30" },
+          { from: "them", text: "Great to hear — happy for the template to be shared.", when: "Aug 20, 16:02" }
+        ] }
+    ],
+    standardsList: [
+      { name: "EU AI Act — high-risk credit scoring", version: "2025-07", effective: "2026-08-02", status: "Adopted", linkedAudits: 34,
+        requirements: ["Risk management system", "Data governance & lineage", "Technical documentation", "Human oversight", "Accuracy & robustness monitoring"] },
+      { name: "SR 11-7 model risk management", version: "rev 2", effective: "2024-01-15", status: "Adopted", linkedAudits: 41,
+        requirements: ["Model inventory", "Independent validation", "Ongoing monitoring", "Effective challenge documentation"] },
+      { name: "GDPR Art. 22 — automated decisions", version: "2018", effective: "2018-05-25", status: "Adopted", linkedAudits: 28,
+        requirements: ["Lawful basis for automation", "Meaningful human review path", "Explanation on request", "Consent freshness"] },
+      { name: "zkML attestation profile", version: "0.9-draft", effective: "2026-11-01", status: "Draft", linkedAudits: 4,
+        requirements: ["Deterministic inference build", "Proof aggregation format", "Verifier key registry", "Per-participant federation proofs"] }
     ]
   };
 
