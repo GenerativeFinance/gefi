@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -84,10 +84,44 @@ const MODELS = GeFi.MODELS;
 const seed = GeFi.seed;
 const RB = GeFi.rebalanceMath; /* shared with the client page (task 305) */
 const CAT = GeFi.catalog; /* shared with the marketplace pages (task 306) */
-if (!D || !MODELS || !seed || !RB || !CAT) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog");
+const RUNTIME = GeFi.modelRuntime; /* shared with model-demo.js (task 307) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime");
   process.exit(1);
 }
+
+/* Demo configs (task 307): the built model pages already embed each demo's
+ * config as JSON for the harness to read, so the mock reads the SAME blob
+ * rather than keeping a second copy that could drift. Without a build the
+ * map is simply empty and /run falls back to a slug-only config. */
+function loadDemoConfigs() {
+  const out = new Map();
+  const dir = path.join(ROOT, "_site", "models");
+  let slugs = [];
+  try {
+    slugs = fs.readdirSync(dir);
+  } catch (e) {
+    return out;
+  }
+  for (const slug of slugs) {
+    const file = path.join(dir, slug, "index.html");
+    let html;
+    try {
+      html = fs.readFileSync(file, "utf8");
+    } catch (e) {
+      continue;
+    }
+    const m = html.match(/data-demo-config[^>]*>([\s\S]*?)<\/script>/);
+    if (!m) continue;
+    try {
+      out.set(slug, JSON.parse(m[1]));
+    } catch (e) {
+      /* a page without a parseable demo config just has no demo */
+    }
+  }
+  return out;
+}
+const DEMO_CONFIGS = loadDemoConfigs();
 
 function series(key, n, base, spread) {
   const rand = seed.rng(seed.hash(key));
@@ -100,6 +134,7 @@ function fnvHex(str) {
 }
 
 /* --------------------------------------------------- contract route table */
+const IDEMPOTENT_ROUTES = new Set();
 function contractRoutes() {
   const dir = path.join(ROOT, "api", "openapi");
   const routes = new Set();
@@ -107,15 +142,29 @@ function contractRoutes() {
     if (!f.endsWith(".yaml") || f === "_envelope.yaml") continue;
     const lines = fs.readFileSync(path.join(dir, f), "utf8").split("\n");
     let current = null;
+    let currentOp = null;
     for (const line of lines) {
       const p = line.match(/^  (\/[^\s:]*):\s*$/);
       if (p) {
         current = p[1];
+        currentOp = null;
         continue;
       }
       const m = line.match(/^    (get|post|patch|put|delete):\s*$/);
-      if (m && current) routes.add(m[1].toUpperCase() + " " + current);
-      if (/^\S/.test(line) && line.trim() && !line.startsWith("paths:")) current = null;
+      if (m && current) {
+        currentOp = m[1].toUpperCase() + " " + current;
+        routes.add(currentOp);
+      }
+      /* Enforce the Idempotency-Key only where the contract says it is
+       * REQUIRED. A blanket rule would reject the shipped model-demo
+       * harness, which never sends one — the contract is the authority. */
+      if (currentOp && currentOp.startsWith("POST ") && line.includes("parameters/IdempotencyKey")) {
+        IDEMPOTENT_ROUTES.add(currentOp);
+      }
+      if (/^\S/.test(line) && line.trim() && !line.startsWith("paths:")) {
+        current = null;
+        currentOp = null;
+      }
     }
   }
   return [...routes].sort();
@@ -179,6 +228,7 @@ function freshState() {
       { id: "n-2", title: "Model audit passed", detail: "#MT-4521 closed with no findings", unread: true },
       { id: "n-3", title: "Dataset published", detail: "Options Surface passed its quality audit", unread: false },
     ],
+    metricsAsOf: {},
     verifications: [],
     anchors: [],
     apiKeys: [{ id: "key-1", label: "dashboard sample", prefix: "gefi_sk_9f2a", created: "2026-08-01" }],
@@ -516,19 +566,39 @@ on("PUT /preferences", (p, q, b) => {
   return S.preferences;
 });
 
-/* ---- models-runtime ---- */
+/* ---- models-runtime (task 307) — the SHARED scorer ---- */
+const RUN_JOBS = new Map();
+function demoCfg(slug) {
+  /* The page's own demo config when a build is present; otherwise just the
+   * slug, which still seeds deterministically. */
+  return DEMO_CONFIGS.get(slug) || { slug: slug };
+}
+function runFor(slug, body) {
+  /* model-demo.js posts { inputs: {...} } and seeds on that object, so the
+   * mock must seed on exactly the same value to match byte for byte. */
+  const inputs = body && body.inputs !== undefined ? body.inputs : body || {};
+  return RUNTIME.run(demoCfg(slug), inputs);
+}
 on("POST /models/{slug}/run", (p, q, b) => {
-  const m = MODELS.find((x) => x.slug === p.slug);
-  if (!m) return notFound;
-  const rand = seed.rng(seed.hash("run|" + p.slug + "|" + JSON.stringify(b || {})));
-  return { slug: p.slug, unit: m.unit, output: +(m.series[11] * (0.97 + rand() * 0.06)).toFixed(4), sample: true };
+  if (!MODELS.some((m) => m.slug === p.slug)) return notFound;
+  const result = runFor(p.slug, b);
+  if (q.async === "true") {
+    const job = { id: "run-" + (RUN_JOBS.size + 1), slug: p.slug, status: "completed", progress: 100, result: result };
+    RUN_JOBS.set(job.id, job);
+    return { __status: 202, ...job };
+  }
+  return result;
 });
-on("GET /models/{slug}/jobs/{job_id}", (p) => ({ id: p.job_id, slug: p.slug, status: "completed" }));
+on("GET /models/{slug}/jobs/{job_id}", (p) => RUN_JOBS.get(p.job_id) || notFound);
 on("GET /models/{slug}/metrics", (p) => {
   const m = MODELS.find((x) => x.slug === p.slug);
-  return m ? { slug: m.slug, unit: m.unit, series: m.series } : notFound;
+  return m ? { slug: m.slug, unit: m.unit, series: m.series, metrics_as_of: S.metricsAsOf[m.slug] || "2026-08-22" } : notFound;
 });
-on("POST /models/{slug}/metrics/refresh", (p) => ({ __status: 202, job_id: "mr-" + fnvHex("refresh|" + p.slug) }));
+on("POST /models/{slug}/metrics/refresh", (p) => {
+  if (!MODELS.some((m) => m.slug === p.slug)) return notFound;
+  S.metricsAsOf[p.slug] = "2026-08-22";
+  return { __status: 202, job_id: "mr-" + fnvHex("refresh|" + p.slug), metrics_as_of: S.metricsAsOf[p.slug] };
+});
 
 /* ---- trading ---- */
 on("GET /market-data/quotes", (p, q) => {
@@ -938,6 +1008,19 @@ const SSE = {
       if (n >= 8) res.end();
     }, 600);
   },
+  "GET /models/{slug}/jobs/{job_id}/events": (req, res, p) => {
+    let pct = 0;
+    return setInterval(() => {
+      pct = Math.min(100, pct + 25);
+      if (pct < 100) {
+        sseSend(res, "run.progress", pct, { id: p.job_id, slug: p.slug, progress: pct });
+        return;
+      }
+      const job = RUN_JOBS.get(p.job_id);
+      sseSend(res, "run.completed", pct, { id: p.job_id, slug: p.slug, progress: 100, result: job ? job.result : null });
+      res.end();
+    }, 400);
+  },
   "GET /zkml/verifications/{id}/events": (req, res, p) => {
     const v = S.verifications.find((x) => x.id === p.id);
     let shard = -1;
@@ -1067,7 +1150,7 @@ const server = http.createServer((req, res) => {
     }
 
     /* idempotency: required on mutating POSTs, replayed within the process */
-    if (req.method === "POST") {
+    if (req.method === "POST" && IDEMPOTENT_ROUTES.has(matched)) {
       const key = req.headers["idempotency-key"];
       if (!key) {
         res.writeHead(400, { ...base, "Content-Type": "application/json" });
@@ -1097,7 +1180,9 @@ const server = http.createServer((req, res) => {
       delete out.__status;
     }
     const payload = JSON.stringify(status >= 400 ? { ...out, request_id: requestId } : out);
-    if (req.method === "POST") S.idempotency.set(req.headers["idempotency-key"], { status, body: payload });
+    if (req.method === "POST" && req.headers["idempotency-key"]) {
+      S.idempotency.set(req.headers["idempotency-key"], { status, body: payload });
+    }
     res.writeHead(status, { ...base, "Content-Type": "application/json" });
     res.end(payload);
   });

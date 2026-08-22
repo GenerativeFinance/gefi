@@ -39,7 +39,7 @@ check auth            POST /auth/session          "typeof d.token==='string' && 
 check portfolio       GET  /portfolio             "typeof d.value==='number' || typeof d.total==='number' || Object.keys(d).length>0"
 check rebalance       GET  /rebalance/drift       "Array.isArray(d.items) && d.items[0].target_pct!==undefined"
 check marketplace     GET  "/models?limit=5"      "Array.isArray(d.items) && d.items.length===5 && d.next_cursor"
-check models-runtime  POST /models/accretion-dilution/run "d.sample===true && typeof d.output==='number'" '{"input":1}'
+check models-runtime  POST /models/accretion-dilution/run "d.sample===true && typeof d.kind==='string' && (d.series||d.value!==undefined||d.rows||d.bars||d.text)" '{"inputs":{"revenue":100}}'
 check trading         POST /orders                "d.status==='filled' && d.id"                        '{"symbol":"NVDA","side":"buy","qty":2}'
 check backtesting     GET  /backtests/bt-1/results "Array.isArray(d.equity) && d.stats.sharpe"
 check devconsole      GET  /dev/models            "Array.isArray(d.items) && d.items[0].id"
