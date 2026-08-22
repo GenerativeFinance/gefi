@@ -2845,3 +2845,14 @@ p  { margin: 0 0 var(--space-4); }
 }
 .app-star.is-on { color: var(--app-amber); }
 .app-star:hover { background: var(--app-surface-2); }
+
+/* Task 205 — analytics kv lists + insight cards */
+.app-kv { margin: 0; display: flex; flex-direction: column; }
+.app-kv div { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--app-border); }
+.app-kv div:last-child { border-bottom: 0; }
+.app-kv dt { font-size: 13px; color: var(--app-muted); }
+.app-kv dd { margin: 0; font-size: 14px; font-weight: 600; }
+.app-kv dd.is-up { color: var(--app-green); }
+.app-kv dd.is-down { color: var(--app-red); }
+.is-impact-high { color: var(--app-red) !important; font-weight: 700; }
+.is-impact-medium { color: var(--app-orange) !important; font-weight: 700; }
