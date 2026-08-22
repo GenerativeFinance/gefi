@@ -89,6 +89,37 @@
     { ticker: "ETH", name: "Ethereum", weight: 2.1, ret: 22.7, dayPct: 1.2 }
   ];
 
+  DEMO.transactions = (function () {
+    var rand = GeFi.seed.rng(GeFi.seed.hash("demo|transactions"));
+    var assets = ["MSFT", "AAPL", "NVDA", "GOOGL", "AMZN", "BTC", "ETH", "TSLA"];
+    var kinds = ["buy", "sell", "dividend", "deposit"];
+    var rows = [];
+    for (var i = 0; i < 14; i++) {
+      var kind = kinds[Math.floor(rand() * (i < 2 ? 2 : kinds.length))];
+      var qty = Math.round(2 + rand() * 60);
+      var px = 40 + rand() * 460;
+      rows.push({
+        date: "2026-08-" + String(21 - i).padStart(2, "0"),
+        kind: kind,
+        asset: kind === "deposit" ? "USD" : assets[Math.floor(rand() * assets.length)],
+        qty: kind === "deposit" ? null : qty,
+        price: kind === "deposit" ? null : +px.toFixed(2),
+        value: kind === "deposit" ? 10000 : +(qty * px).toFixed(2),
+        status: i === 0 ? "pending" : "settled"
+      });
+    }
+    return rows;
+  })();
+
+  DEMO.watchlist = [
+    { ticker: "SPY", name: "S&P 500 ETF", price: 612.4, dayPct: 0.4, spark: seededSeries("watch-SPY", 24, 600, 0.0006, 0.008) },
+    { ticker: "QQQ", name: "Nasdaq 100 ETF", price: 548.1, dayPct: 0.9, spark: seededSeries("watch-QQQ", 24, 530, 0.001, 0.01) },
+    { ticker: "NVDA", name: "NVIDIA Corporation", price: 187.3, dayPct: 2.3, spark: seededSeries("watch-NVDA", 24, 170, 0.002, 0.02) },
+    { ticker: "TLT", name: "20+ Year Treasury ETF", price: 91.6, dayPct: -0.6, spark: seededSeries("watch-TLT", 24, 93, -0.0006, 0.007) },
+    { ticker: "GLD", name: "Gold ETF", price: 246.8, dayPct: 0.2, spark: seededSeries("watch-GLD", 24, 240, 0.0005, 0.006) },
+    { ticker: "SOL", name: "Solana", price: 231.5, dayPct: -1.4, spark: seededSeries("watch-SOL", 24, 240, -0.001, 0.03) }
+  ];
+
   DEMO.aiModels = {
     active: 3, totalPerformancePct: 19.1, monthlyFees: 327, avgAccuracy: 90.2,
     confidence: 94.2,

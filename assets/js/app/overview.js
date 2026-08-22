@@ -13,13 +13,7 @@
       if (el) el.textContent = value;
     }
 
-    /* hero band */
-    txt("[data-hero-value]", fmt.moneyFull(D.portfolio.value));
-    txt("[data-hero-day]", "+" + fmt.moneyFull(D.portfolio.dayChange) + " (" + fmt.signedPct(D.portfolio.dayChangePct) + ") today");
-    txt("[data-hero-month]", fmt.signedPct(D.portfolio.monthlyPct));
-    txt("[data-hero-bench]", "vs " + fmt.signedPct(D.portfolio.monthlyBenchPct) + " benchmark");
-    txt("[data-hero-ytd]", fmt.signedPct(D.portfolio.ytdPct));
-    txt("[data-hero-cash]", fmt.moneyFull(D.portfolio.cash));
+    /* hero band hydrated by app/hero.js */
 
     /* KPI row */
     var kpis = document.querySelector("[data-ov-kpis]");

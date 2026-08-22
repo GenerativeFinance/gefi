@@ -10,35 +10,7 @@ robots: noindex
 app_script: /assets/js/app/overview.js
 ---
 
-<!-- Hero portfolio band -->
-<section class="app-panel app-hero" aria-label="Portfolio overview">
-  <div class="app-hero__stats">
-    <div class="app-hero__stat">
-      <p class="app-kpi__label">Total Portfolio Value</p>
-      <p class="app-kpi__value" data-hero-value></p>
-      <p class="app-kpi__sub is-up" data-hero-day></p>
-    </div>
-    <div class="app-hero__stat">
-      <p class="app-kpi__label">Monthly Return</p>
-      <p class="app-kpi__value is-up" data-hero-month></p>
-      <p class="app-kpi__sub" data-hero-bench></p>
-    </div>
-    <div class="app-hero__stat">
-      <p class="app-kpi__label">YTD Return</p>
-      <p class="app-kpi__value" style="color: var(--app-blue);" data-hero-ytd></p>
-      <p class="app-kpi__sub">since Jan 1</p>
-    </div>
-    <div class="app-hero__stat">
-      <p class="app-kpi__label">Cash Balance</p>
-      <p class="app-kpi__value" data-hero-cash></p>
-      <p class="app-kpi__sub">available</p>
-    </div>
-  </div>
-  <div class="app-hero__rail">
-    <a class="app-btn app-btn--primary" href="/app/holdings/">View Details</a>
-    <a class="app-btn app-btn--ghost" href="/app/performance/">Performance</a>
-  </div>
-</section>
+{% include app-hero.html %}
 
 <!-- KPI row -->
 <div class="app-kpis" data-ov-kpis></div>

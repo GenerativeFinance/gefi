@@ -1,0 +1,9 @@
+{%- comment -%} Investor in-page tab bar — real links, one segmented style.
+include.active names the current tab. {%- endcomment -%}
+<nav class="app-segments app-segments--links" aria-label="Portfolio views">
+  {%- assign subtabs = "Overview:/app/|Holdings:/app/holdings/|Analytics:/app/analytics/|Transactions:/app/transactions/|Watchlist:/app/watchlist/|AI Models:/app/ai-models/|Insights:/app/insights/" | split: "|" -%}
+  {%- for st in subtabs -%}
+    {%- assign parts = st | split: ":" -%}
+    <a class="app-segment{% if parts[0] == include.active %} app-segment--active{% endif %}" href="{{ parts[1] | relative_url }}"{% if parts[0] == include.active %} aria-current="page"{% endif %}>{{ parts[0] }}</a>
+  {%- endfor -%}
+</nav>

@@ -58,7 +58,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 
 ### Investor wing
 - [x] 203 — Investor Overview (chart dashboard, quick actions, activity) — done (built INTO /app/ since Overview is the persona's index; hero band, 4 KPI deltas, area-vs-dashed-benchmark chart, 5-segment donut + legend summing 100, 4 dark quick-action tiles, 4-row activity feed; dark chart token overrides added)
-- [ ] 204 — Holdings · Transactions · Watchlist tabs
+- [x] 204 — Holdings · Transactions · Watchlist tabs — done (three pages under /app/, shared app-hero include + hero.js hydration + app-subtabs link bar with truthful active state and Portfolio nav tab; holdings row-cards w/ TSLA red arrow+label, transactions filterable table w/ designed empty state, watchlist sparklines + star toggle persisted in sessionStorage; DEMO gains transactions/watchlist)
 - [ ] 205 — Analytics · Insights tabs
 - [ ] 206 — Portfolio Performance (Overview/Returns/Allocation/Risk Analysis)
 - [ ] 207 — AI Portfolio (split panel)
