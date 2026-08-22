@@ -640,6 +640,9 @@
     if (tab === "analytics") renderAnalytics();
     if (tab === "compliance") renderCompliance();
     if (tab === "federation") renderFederation();
+    if (tab === "tenants") renderTenants();
+    if (tab === "approvals") renderApprovals();
+    if (tab === "system") renderSystem();
     if (tab === "api-keys") renderApiKeys();
     if (tab === "alerts") renderAlerts(true);
     if (tab === "dev-models") renderDevModels();
@@ -872,6 +875,256 @@
       row.appendChild(track);
       row.appendChild(val);
       bars.appendChild(row);
+    });
+  }
+
+  /* ------------------- admin tabs: tenants / approvals / system (Task 113) */
+
+  var TENANTS = [
+    { name: "acme-bank", plan: "Enterprise", region: "EU", models: 14, calls: 812000, mrr: 18400 },
+    { name: "helios-capital", plan: "Pro", region: "US", models: 6, calls: 214000, mrr: 3200 },
+    { name: "gulf-invest", plan: "Enterprise", region: "MENA", models: 9, calls: 356000, mrr: 11800 },
+    { name: "nordwind-am", plan: "Pro", region: "EU", models: 4, calls: 98000, mrr: 2100 },
+    { name: "atlas-lending", plan: "Starter", region: "US", models: 2, calls: 31000, mrr: 490 },
+    { name: "meridian-quant", plan: "Pro", region: "US", models: 7, calls: 187000, mrr: 2900 },
+    { name: "sahara-fintech", plan: "Starter", region: "MENA", models: 1, calls: 12000, mrr: 240 },
+    { name: "alpen-credit", plan: "Enterprise", region: "EU", models: 11, calls: 540000, mrr: 15200 }
+  ];
+
+  var tenSort = { key: "mrr", dir: -1 };
+
+  function renderTenants() {
+    var body = root.querySelector("[data-ten-body]");
+    if (!body) return;
+    var plan = (root.querySelector("[data-ten-plan]") || {}).value || "";
+    var region = (root.querySelector("[data-ten-region]") || {}).value || "";
+    var rows = TENANTS.filter(function (t) {
+      return (!plan || t.plan === plan) && (!region || t.region === region);
+    });
+    rows.sort(function (a, b) {
+      var va = a[tenSort.key];
+      var vb = b[tenSort.key];
+      var cmp = typeof va === "string" ? va.localeCompare(vb) : va - vb;
+      return cmp * tenSort.dir;
+    });
+    body.innerHTML = "";
+    rows.forEach(function (t) {
+      var tr = document.createElement("tr");
+      function td(text, mono) {
+        var el = document.createElement("td");
+        if (mono) el.className = "is-mono";
+        el.textContent = text;
+        tr.appendChild(el);
+      }
+      td(t.name, true);
+      td(t.plan);
+      td(t.region, true);
+      td(String(t.models), true);
+      td(GeFi.fmt.compact(t.calls), true);
+      td(GeFi.fmt.money(t.mrr, "USD"), true);
+      body.appendChild(tr);
+    });
+    var empty = root.querySelector("[data-ten-empty]");
+    if (empty) empty.hidden = rows.length > 0;
+    root.querySelectorAll("[data-ten-sort]").forEach(function (btn) {
+      var active = btn.getAttribute("data-ten-sort") === tenSort.key;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-sort", active ? (tenSort.dir === 1 ? "ascending" : "descending") : "none");
+    });
+  }
+
+  root.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-ten-sort]");
+    if (!btn) return;
+    var key = btn.getAttribute("data-ten-sort");
+    if (tenSort.key === key) {
+      tenSort.dir = -tenSort.dir;
+    } else {
+      tenSort.key = key;
+      tenSort.dir = key === "name" || key === "plan" || key === "region" ? 1 : -1;
+    }
+    renderTenants();
+  });
+
+  root.addEventListener("change", function (e) {
+    if (e.target.closest("[data-ten-plan]") || e.target.closest("[data-ten-region]")) renderTenants();
+  });
+
+  /* Approval queue. Actions stay disabled until the rationale drawer has
+   * been opened — an approval you have not read is not an approval. */
+  var APPROVALS = [
+    {
+      id: "AP-311", model: "credit-oracle", version: "2026.08.2", tenant: "acme-bank",
+      riskClass: "High-risk (Annex III, credit scoring)",
+      rationale: "EU AI Act high-risk classification: the version changes the scorecard feature set, so the conformity assessment was re-run. Explainability review passed; SHAP drift within tolerance; adverse-action templates re-validated in DE and FR locales."
+    },
+    {
+      id: "AP-312", model: "market-making-suite", version: "2026.08.1", tenant: "helios-capital",
+      riskClass: "Not high-risk (research tooling)",
+      rationale: "Quoting-parameter research release. No execution path changes; MiFID II RTS 6 self-assessment unaffected. Reviewed for the signals-only boundary: no order routing added."
+    },
+    {
+      id: "AP-313", model: "fraud-graph", version: "2026.07.9", tenant: "gulf-invest",
+      riskClass: "Limited risk (fraud triage)",
+      rationale: "Graph refresh with two new typologies. False-positive rate on the UAE holdout within budget; human-review queue unchanged — the model still only ranks, never blocks."
+    }
+  ];
+
+  function renderApprovals() {
+    var list = root.querySelector("[data-apr-list]");
+    if (!list || list.childNodes.length) return;
+    APPROVALS.forEach(function (a) {
+      var card = document.createElement("div");
+      card.className = "apr-card";
+
+      var head = document.createElement("button");
+      head.type = "button";
+      head.className = "apr-card__head";
+      head.setAttribute("data-apr-toggle", a.id);
+      head.setAttribute("aria-expanded", "false");
+      var title = document.createElement("span");
+      title.className = "apr-card__title";
+      title.textContent = a.model + " " + a.version;
+      var meta = document.createElement("span");
+      meta.className = "apr-card__meta";
+      meta.textContent = a.id + " · " + a.tenant;
+      var risk = document.createElement("span");
+      risk.className = "apr-card__risk" + (a.riskClass.indexOf("High-risk") === 0 ? " apr-card__risk--high" : "");
+      risk.textContent = a.riskClass;
+      head.appendChild(title);
+      head.appendChild(meta);
+      head.appendChild(risk);
+
+      var drawer = document.createElement("div");
+      drawer.className = "apr-card__drawer";
+      drawer.hidden = true;
+      var p = document.createElement("p");
+      p.textContent = a.rationale;
+      drawer.appendChild(p);
+      var actions = document.createElement("div");
+      actions.className = "apr-card__actions";
+      var approve = document.createElement("button");
+      approve.type = "button";
+      approve.className = "btn btn-primary";
+      approve.textContent = "Approve release";
+      approve.disabled = true;
+      approve.setAttribute("data-apr-approve", a.id);
+      var reject = document.createElement("button");
+      reject.type = "button";
+      reject.className = "btn btn-ghost";
+      reject.textContent = "Send back";
+      reject.disabled = true;
+      reject.setAttribute("data-apr-reject", a.id);
+      var note = document.createElement("p");
+      note.className = "muted small";
+      note.textContent = "Actions unlock once the rationale has been opened.";
+      actions.appendChild(approve);
+      actions.appendChild(reject);
+      drawer.appendChild(actions);
+      drawer.appendChild(note);
+
+      var status = document.createElement("p");
+      status.className = "apr-card__status";
+      status.setAttribute("data-apr-status", a.id);
+      status.setAttribute("role", "status");
+
+      card.appendChild(head);
+      card.appendChild(drawer);
+      card.appendChild(status);
+      list.appendChild(card);
+    });
+  }
+
+  root.addEventListener("click", function (e) {
+    var toggle = e.target.closest("[data-apr-toggle]");
+    if (toggle) {
+      var card = toggle.parentNode;
+      var drawer = card.querySelector(".apr-card__drawer");
+      var open = drawer.hidden;
+      drawer.hidden = !open;
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) {
+        /* Reading the rationale unlocks the decision. */
+        card.querySelectorAll("[data-apr-approve], [data-apr-reject]").forEach(function (b) {
+          b.disabled = false;
+        });
+      }
+      return;
+    }
+    var act = e.target.closest("[data-apr-approve], [data-apr-reject]");
+    if (act) {
+      var id = act.getAttribute("data-apr-approve") || act.getAttribute("data-apr-reject");
+      var isApprove = act.hasAttribute("data-apr-approve");
+      var status = root.querySelector('[data-apr-status="' + id + '"]');
+      if (status) {
+        status.textContent = isApprove
+          ? "Approved in this preview — production approvals write to the audit chain."
+          : "Sent back in this preview — the developer is notified with the rationale.";
+        status.className = "apr-card__status " + (isApprove ? "apr-card__status--ok" : "apr-card__status--warn");
+      }
+      act.parentNode.querySelectorAll("button").forEach(function (b) { b.disabled = true; });
+    }
+  });
+
+  /* System status map: three serving regions drawn spatially, so a degraded
+   * region is spotted by position, not by reading a list. */
+  var REGIONS = [
+    { key: "EU", name: "EU — Frankfurt", x: 300, y: 64, status: "ok", latency: "38ms", note: "All serving pools healthy." },
+    { key: "US", name: "US — Virginia", x: 120, y: 84, status: "ok", latency: "41ms", note: "All serving pools healthy." },
+    { key: "MENA", name: "MENA — Dubai", x: 380, y: 118, status: "degraded", latency: "112ms", note: "Cache rebuild in progress; p99 elevated, error rate normal." }
+  ];
+
+  function renderSystem() {
+    var mapEl = root.querySelector("[data-sys-map]");
+    if (!mapEl || mapEl.childNodes.length) return;
+    var w = 520;
+    var h = 180;
+    var svg = GeFi.svg.el("svg", {
+      viewBox: "0 0 " + w + " " + h,
+      width: "100%",
+      role: "img",
+      "aria-label": "Status map of the EU, US and MENA serving regions",
+      class: "sys-map"
+    });
+    /* Links between regions, drawn first so nodes sit on top. */
+    for (var i = 0; i < REGIONS.length; i++) {
+      for (var j = i + 1; j < REGIONS.length; j++) {
+        svg.appendChild(GeFi.svg.el("line", {
+          x1: REGIONS[i].x, y1: REGIONS[i].y, x2: REGIONS[j].x, y2: REGIONS[j].y,
+          class: "sys-map__link"
+        }));
+      }
+    }
+    REGIONS.forEach(function (r) {
+      var g = GeFi.svg.el("g", { class: "sys-map__node sys-map__node--" + r.status });
+      g.appendChild(GeFi.svg.el("circle", { cx: r.x, cy: r.y, r: 16, class: "sys-map__dot" }));
+      var label = GeFi.svg.el("text", { x: r.x, y: r.y + 34, "text-anchor": "middle", class: "sys-map__label" });
+      label.textContent = r.key;
+      g.appendChild(label);
+      var lat = GeFi.svg.el("text", { x: r.x, y: r.y + 4, "text-anchor": "middle", class: "sys-map__lat" });
+      lat.textContent = r.latency;
+      g.appendChild(lat);
+      svg.appendChild(g);
+    });
+    mapEl.appendChild(svg);
+
+    var detail = root.querySelector("[data-sys-detail]");
+    REGIONS.forEach(function (r) {
+      var li = document.createElement("li");
+      li.className = "sys-detail__row";
+      var pill = document.createElement("span");
+      pill.className = "status-pill " + (r.status === "ok" ? "status-pill--ok" : "status-pill--progress");
+      pill.textContent = r.status === "ok" ? "healthy" : "degraded";
+      var name = document.createElement("span");
+      name.className = "sys-detail__name";
+      name.textContent = r.name;
+      var note = document.createElement("span");
+      note.className = "muted small";
+      note.textContent = r.note + " p99 " + r.latency + ".";
+      li.appendChild(pill);
+      li.appendChild(name);
+      li.appendChild(note);
+      detail.appendChild(li);
     });
   }
 

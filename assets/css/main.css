@@ -2171,3 +2171,57 @@ p  { margin: 0 0 var(--space-4); }
 .fed-bar__fill--5 { background: #DB2777; }
 .fed-bar__val { font-family: var(--font-mono); font-size: 0.8125rem; text-align: right; }
 @media (max-width: 640px) { .fed-bar { grid-template-columns: 1fr; gap: 4px; } .fed-bar__val { text-align: left; } }
+
+/* Task 113 — dashboard admin tabs: Tenants / Approvals / System */
+.ten-filters { display: flex; gap: var(--space-2); }
+.ten-filters select {
+  font: inherit; font-size: 0.875rem; padding: 7px 10px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-surface); color: var(--color-text);
+}
+.ten-sort {
+  font: inherit; font-size: inherit; font-weight: inherit; text-transform: inherit; letter-spacing: inherit;
+  color: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+.ten-sort:hover { color: var(--color-text); }
+.ten-sort.is-active { color: var(--color-brand-strong); }
+.ten-sort.is-active::after { content: " ↕"; font-size: 0.75em; }
+
+.apr-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.apr-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
+.apr-card__head {
+  display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
+  width: 100%; text-align: left; padding: 14px 16px;
+  font: inherit; background: none; border: 0; cursor: pointer;
+}
+.apr-card__head:hover { background: var(--color-surface-2); }
+.apr-card__title { font-weight: 600; font-family: var(--font-mono); font-size: 0.9375rem; }
+.apr-card__meta { color: var(--color-muted); font-size: 0.8125rem; }
+.apr-card__risk {
+  margin-left: auto; padding: 3px 10px; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 600;
+  background: var(--color-surface-2); color: var(--color-muted);
+}
+.apr-card__risk--high { background: rgba(220, 38, 38, 0.1); color: var(--color-loss); }
+.apr-card__drawer { padding: 0 16px 14px; border-top: 1px solid var(--color-border); }
+.apr-card__drawer p:first-child { margin-top: var(--space-4); font-size: 0.9375rem; line-height: 1.6; }
+.apr-card__actions { display: flex; gap: var(--space-3); margin-top: var(--space-4); }
+.apr-card__status { margin: 0; padding: 0 16px 12px; font-size: 0.8125rem; min-height: 0; }
+.apr-card__status--ok { color: var(--color-profit); }
+.apr-card__status--warn { color: #92400E; }
+
+.sys-map { max-width: 560px; display: block; }
+.sys-map__link { stroke: var(--color-border); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.sys-map__dot { stroke-width: 2; }
+.sys-map__node--ok .sys-map__dot { fill: rgba(22, 163, 74, 0.15); stroke: var(--color-profit); }
+.sys-map__node--degraded .sys-map__dot { fill: rgba(245, 158, 11, 0.2); stroke: var(--color-warn); }
+.sys-map__node--down .sys-map__dot { fill: rgba(220, 38, 38, 0.18); stroke: var(--color-loss); }
+.sys-map__label { font-size: 12px; font-weight: 700; fill: var(--color-text); font-family: var(--font-sans); }
+.sys-map__lat { font-size: 8.5px; fill: var(--color-muted); font-family: var(--font-mono); }
+.sys-detail { list-style: none; margin: var(--space-4) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.sys-detail__row {
+  display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
+  padding: 10px 12px; background: var(--color-surface);
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+}
+.sys-detail__name { font-weight: 600; font-size: 0.875rem; }

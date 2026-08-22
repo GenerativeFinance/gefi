@@ -120,18 +120,50 @@ sitemap: false
 </section>
 
 <section class="dash-panel" data-dash-panel="tenants" hidden>
-  <h1 class="dash-panel__title">Tenants</h1>
-  <p class="dash-empty">The sortable tenant table lands with the admin-tabs task.</p>
+  <div class="dash-panel__head">
+    <h1 class="dash-panel__title">Tenants</h1>
+    <div class="ten-filters">
+      <select data-ten-plan aria-label="Filter by plan">
+        <option value="">All plans</option>
+        <option value="Enterprise">Enterprise</option>
+        <option value="Pro">Pro</option>
+        <option value="Starter">Starter</option>
+      </select>
+      <select data-ten-region aria-label="Filter by region">
+        <option value="">All regions</option>
+        <option value="EU">EU</option>
+        <option value="US">US</option>
+        <option value="MENA">MENA</option>
+      </select>
+    </div>
+  </div>
+  <table class="dash-table" data-ten-table>
+    <thead>
+      <tr>
+        <th><button type="button" class="ten-sort" data-ten-sort="name">Tenant</button></th>
+        <th><button type="button" class="ten-sort" data-ten-sort="plan">Plan</button></th>
+        <th><button type="button" class="ten-sort" data-ten-sort="region">Region</button></th>
+        <th><button type="button" class="ten-sort" data-ten-sort="models">Models</button></th>
+        <th><button type="button" class="ten-sort" data-ten-sort="calls">Calls (30d)</button></th>
+        <th><button type="button" class="ten-sort" data-ten-sort="mrr">MRR</button></th>
+      </tr>
+    </thead>
+    <tbody data-ten-body></tbody>
+  </table>
+  <p class="dash-empty" data-ten-empty hidden>No tenants match this plan/region filter.</p>
 </section>
 
 <section class="dash-panel" data-dash-panel="approvals" hidden>
   <h1 class="dash-panel__title">Approvals</h1>
-  <p class="dash-empty">The approval queue with risk-class rationale lands with the admin-tabs task.</p>
+  <p class="muted small">Model versions queued for release. Open a row's rationale before the actions unlock — an approval you have not read is not an approval.</p>
+  <div class="apr-list" data-apr-list></div>
 </section>
 
 <section class="dash-panel" data-dash-panel="system" hidden>
   <h1 class="dash-panel__title">System</h1>
-  <p class="dash-empty">The region status map lands with the admin-tabs task.</p>
+  <p class="muted small">Serving regions with live status. A degraded region shows amber, an outage red.</p>
+  <div data-sys-map></div>
+  <ul class="sys-detail" data-sys-detail role="list"></ul>
 </section>
 
 <section class="dash-panel" data-dash-panel="dev-models" hidden>
