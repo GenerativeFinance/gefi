@@ -2961,6 +2961,15 @@ a.app-chip:hover { border-color: var(--app-brand); color: var(--app-text); }
 /* Task 218 — block button */
 .app-btn--block { width: 100%; margin-top: 10px; }
 
+/* Task 228 — custom report builder */
+.app-crb-viz { border: 0; padding: 0; margin: 0; }
+.app-crb-viz legend { padding: 0; margin-bottom: 8px; }
+.app-form textarea {
+  font: inherit; font-size: 14px; color: var(--app-text);
+  background: var(--app-bg); border: 1px solid var(--app-border); border-radius: 8px;
+  padding: 9px 12px; resize: vertical;
+}
+
 /* Task 227 — compliance/risk report cards: severity chip vocabulary
  * (always text-labelled — color never carries the meaning alone) */
 .app-chip--sev-critical { background: rgba(239, 68, 68, 0.16); color: var(--app-red); }
