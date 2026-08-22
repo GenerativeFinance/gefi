@@ -62,7 +62,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 - [x] 205 — Analytics · Insights tabs — done (Performance Analysis 5 rows asserting Sharpe 1.42 + Risk Metrics 4 rows from DEMO.risk; insight row-cards w/ labelled sentiment chips, confidence pills, colored impact; Set Alert persists to sessionStorage gefi-app-alerts)
 - [x] 206 — Portfolio Performance (Overview/Returns/Allocation/Risk Analysis) — done (4 hash-routed segments, one dataset: value line + donut; grouped monthly bars w/ 2 negative months + top performers; 5 color-coded allocation bars; 5 benchmark row-cards w/ 4 Good badges; GeFi.app gains donut/donutLegend/groupedBars, overview.js refactored onto them; segments now follow hashchange)
 - [x] 207 — AI Portfolio (split panel) — done (overview kv card + risk distribution bars + Moderate chip left; strategy rows summing exactly to $142,500 + Rebalance/Manual/Report actions + 94.2% confidence gauge right; sample report modal w/ Escape close; canonical figures replace the reference's contradictory $247,580)
-- [ ] 208 — Portfolio AI Models (Active/Recommended/Settings)
+- [x] 208 — Portfolio AI Models (Active/Recommended/Settings) — done (full-width segments not small pills; row-cards w/ allocation meters zeroed when paused, pause/resume + KPI recompute persisted; Recommended cards migrate into Active on Subscribe; settings toggles + fee-cap slider persisted; fee KPI warns past cap)
 - [ ] 209 — Rebalancing & Actions
 
 ### Trading wing
