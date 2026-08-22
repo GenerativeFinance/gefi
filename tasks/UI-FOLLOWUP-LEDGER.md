@@ -63,7 +63,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 - [x] 206 — Portfolio Performance (Overview/Returns/Allocation/Risk Analysis) — done (4 hash-routed segments, one dataset: value line + donut; grouped monthly bars w/ 2 negative months + top performers; 5 color-coded allocation bars; 5 benchmark row-cards w/ 4 Good badges; GeFi.app gains donut/donutLegend/groupedBars, overview.js refactored onto them; segments now follow hashchange)
 - [x] 207 — AI Portfolio (split panel) — done (overview kv card + risk distribution bars + Moderate chip left; strategy rows summing exactly to $142,500 + Rebalance/Manual/Report actions + 94.2% confidence gauge right; sample report modal w/ Escape close; canonical figures replace the reference's contradictory $247,580)
 - [x] 208 — Portfolio AI Models (Active/Recommended/Settings) — done (full-width segments not small pills; row-cards w/ allocation meters zeroed when paused, pause/resume + KPI recompute persisted; Recommended cards migrate into Active on Subscribe; settings toggles + fee-cap slider persisted; fee KPI warns past cap)
-- [ ] 209 — Rebalancing & Actions
+- [x] 209 — Rebalancing & Actions — done (live target sliders w/ current/drift sublabels; total-allocation guard disables Execute at !=100% w/ amber message; drift/actions/value KPIs recompute live; threshold slider, auto toggle, Monthly/Quarterly/Annually segments, cost toggles all persisted; confirm modal executes: current:=target, drift 0, "just now", survives reload)
 
 ### Trading wing
 - [ ] 210 — Live Trading

@@ -2903,3 +2903,16 @@ p  { margin: 0 0 var(--space-4); }
 .app-setting input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--app-brand); flex: 0 0 auto; }
 .app-setting__rangewrap { display: flex; align-items: center; gap: 10px; }
 .app-setting input[type="range"] { accent-color: var(--app-brand); width: 140px; }
+
+/* Task 209 — rebalance page */
+.app-rb-sliders { display: flex; flex-direction: column; gap: 16px; margin-top: 12px; }
+.app-rb-slider__top { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.app-rb-slider input[type="range"] { width: 100%; accent-color: var(--app-brand); }
+.app-rb-slider .app-kpi__sub { margin-top: 2px; }
+.app-rb-total { font-family: var(--font-mono); font-size: 13px; font-weight: 700; margin: 14px 0 0; }
+.app-rb-total.is-ok { color: var(--app-green); }
+.app-rb-total.is-off { color: var(--app-amber); }
+.app-rb-dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+.app-rb-dot.is-buy { background: var(--app-green); }
+.app-rb-dot.is-sell { background: var(--app-red); }
+.app-btn:disabled { opacity: 0.45; cursor: not-allowed; }
