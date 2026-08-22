@@ -37,5 +37,11 @@ layout: null
 
     {%- include app-trust.html -%}
     {%- include app-footer.html -%}
+
+    <script src="{{ '/assets/js/dashboard.js' | relative_url }}" defer></script>
+    <script src="{{ '/assets/js/app-demo-data.js' | relative_url }}" defer></script>
+    {%- if page.app_script -%}
+    <script src="{{ page.app_script | relative_url }}" defer></script>
+    {%- endif -%}
   </body>
 </html>

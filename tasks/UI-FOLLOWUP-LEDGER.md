@@ -53,7 +53,7 @@ flips from mock to live without redesign. 200-series tasks do not wait on
 
 ### Foundation
 - [x] 200 — App shell: layout, topbar, persona tab nav, trust strip, mega footer — done (commit + canvas https://claude.ai/code/artifact/f97235b6-8185-4404-8ff7-edf6da15a752)
-- [ ] 201 — Canonical demo data module (`GeFi.DEMO`)
+- [x] 201 — Canonical demo data module (`GeFi.DEMO`) — done (assets/js/app-demo-data.js; consistency invariants verified: strategies sum to portfolio value, allocation sums 100, provider aggregates derive from dataset rows; formatters moneyFull/signedPct/date added without shadowing dashboard semantics)
 - [ ] 202 — App component library: KPI card, segments, cards, chips, states
 
 ### Investor wing
