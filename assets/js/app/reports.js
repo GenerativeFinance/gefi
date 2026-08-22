@@ -5,7 +5,7 @@
 (function (window, document) {
   "use strict";
 
-  document.addEventListener("DOMContentLoaded", function () {
+  window.GeFi.api.page(function () {
     var GeFi = window.GeFi;
     if (!GeFi || !GeFi.DEMO) return;
     var catsEl = document.querySelector("[data-rp-cats]");

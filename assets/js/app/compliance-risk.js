@@ -34,7 +34,7 @@
     });
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
+  window.GeFi.api.page(function () {
     var GeFi = window.GeFi;
     if (!GeFi || !GeFi.DEMO) return;
     var D = GeFi.DEMO;

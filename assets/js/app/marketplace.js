@@ -2,7 +2,7 @@
 (function (window, document) {
   "use strict";
 
-  document.addEventListener("DOMContentLoaded", function () {
+  window.GeFi.api.page(function () {
     var GeFi = window.GeFi;
     if (!GeFi || !GeFi.MODELS || !GeFi.app) return;
     var app = GeFi.app;

@@ -298,8 +298,23 @@ on("GET /market-data/quotes", (p, q) => {
   return { items: syms.map((s) => { const r = seed.rng(seed.hash("q|" + s)); return { symbol: s, price: +(40 + r() * 460).toFixed(2), ts: "2026-08-22T05:30:00Z" }; }), next_cursor: null };
 });
 on("POST /orders", (p, q, b) => {
+  /* Full shape — same fields as the seeded DEMO.orders rows, so a
+   * server-side fill renders identically to a sample one. */
   const r = seed.rng(seed.hash("fill|" + (S.orders.length + 1)));
-  const o = { id: "ORD-" + (9000 + S.orders.length), symbol: (b && b.symbol) || "AAPL", side: (b && b.side) || "buy", qty: (b && b.qty) || 1, status: "filled", fill: +(40 + r() * 460).toFixed(2), date: "2026-08-22" };
+  const px = +(40 + r() * 460).toFixed(2);
+  const o = {
+    id: "ORD-" + (9000 + S.orders.length),
+    strategy: (b && b.strategy) || "Manual",
+    symbol: (b && b.symbol) || "AAPL",
+    side: ((b && b.side) || "buy").toUpperCase(),
+    type: (b && b.type) || "market",
+    qty: (b && b.qty) || 1,
+    price: px,
+    fill: +(px * (1 + (r() - 0.5) * 0.002)).toFixed(2),
+    status: "filled",
+    pnl: +((r() - 0.42) * 220).toFixed(2),
+    date: "2026-08-22",
+  };
   S.orders.unshift(o);
   return { __status: 201, ...o };
 });
