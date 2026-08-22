@@ -1,12 +1,26 @@
 openapi: 3.0.3
 info:
   title: GeFi Learning
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Content catalog, enrollment, progress, certificates.
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Learning catalog, paths, enrolments, progress and the certificates that
+    completing an item issues.
+
+
+    CERTIFICATES ARE RECORDS. Reaching 100% on an item issues a certificate
+    record with a deterministic id and an issue date, and the certificate
+    count is the number of those records — not a completion count with
+    something added to it. Hours learned are summed from the durations of
+    the items actually completed.
+
+
+    SAMPLE CREDENTIALS. A certificate here attests to nothing. It is not
+    accredited, not verifiable by anyone, and not a qualification. It exists
+    so the completion flow has an artefact.
+
+
+    PROGRESS IS PER-ACCOUNT and held in memory by the mock, so it resets
+    when the server restarts.
 servers:
   - url: /v1
     description: >
@@ -22,42 +36,167 @@ paths:
   /learning/catalog:
     get:
       operationId: get-learning-catalog
-      summary: "Courses, tutorials, webinars, paths"
+      summary: "Content catalog"
+      description: >
+        Items and paths, each carrying this account's progress. Filters
+        compose; `segment` narrows by the reader's own state.
+      tags: [learning]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: q
+          in: query
+          description: Matches title or author.
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [GET-STARTED, TUTORIAL, WEBINAR, BLOG, FAQ]
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [BEGINNER, INTERMEDIATE, ADVANCED]
+        - name: segment
+          in: query
+          description: >
+            `progress` for started but unfinished, `completed` for finished,
+            `recommended` for unstarted and well rated.
+          schema:
+            type: string
+            enum: [progress, completed, recommended]
+      responses:
+        '200':
+          description: A page of catalog items.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      stats:
+                        $ref: '#/components/schemas/LearningStats'
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CatalogItem'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /learning/paths:
+    get:
+      operationId: get-learning-paths
+      summary: "Learning paths"
       tags: [learning]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of paths.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/LearningPath'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
   /learning/enrollments:
-    post:
-      operationId: post-learning-enrollments
-      summary: "Enroll in an item or path"
+    get:
+      operationId: get-learning-enrollments
+      summary: "This account's enrolments"
       tags: [learning]
       parameters:
-        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of enrolments.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Enrollment'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+    post:
+      operationId: post-learning-enrollments
+      summary: "Start an item"
+      description: >
+        Enrolling twice returns the existing enrolment rather than resetting
+        progress — starting something you are already part-way through must
+        not lose your place.
+      tags: [learning]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [item]
+              properties:
+                item:
+                  type: string
+                  description: The item's title.
+      responses:
+        '201':
+          description: The enrolment.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+        '404':
+          description: No such catalog item.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
   /learning/progress/{enrollment_id}:
     patch:
-      operationId: patch-learning-progress-enrollment_id
-      summary: "Update progress percent"
+      operationId: patch-learning-progress
+      summary: "Record progress"
+      description: >
+        Sets progress to a value between 0 and 100. Reaching 100 issues the
+        item's certificate in the same response; the certificate is returned
+        so the client does not have to guess whether one was created.
       tags: [learning]
       parameters:
         - name: enrollment_id
@@ -65,12 +204,50 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [progress]
+              properties:
+                progress:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The enrolment, and the certificate if one was issued.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enrollment:
+                    $ref: '#/components/schemas/Enrollment'
+                  certificate:
+                    allOf:
+                      - $ref: '#/components/schemas/Certificate'
+                    nullable: true
+                    description: Present only when this call completed the item.
+                  stats:
+                    $ref: '#/components/schemas/LearningStats'
+        '404':
+          description: No such enrolment.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: Progress outside 0–100, or not a number.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -78,18 +255,124 @@ paths:
   /learning/certificates:
     get:
       operationId: get-learning-certificates
-      summary: "Earned certificates"
+      summary: "Certificates issued to this account"
+      description: >
+        One record per completed item. The learning KPI's certificate count
+        is the size of this list. See SAMPLE CREDENTIALS above — these
+        attest to nothing.
       tags: [learning]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of certificates.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Certificate'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
+components:
+  schemas:
+    CatalogItem:
+      type: object
+      properties:
+        title:
+          type: string
+        type:
+          type: string
+          enum: [GET-STARTED, TUTORIAL, WEBINAR, BLOG, FAQ]
+        level:
+          type: string
+          enum: [BEGINNER, INTERMEDIATE, ADVANCED]
+        duration:
+          type: string
+          example: 1h 10min
+        minutes:
+          type: integer
+          description: The duration parsed, so clients do not each parse it themselves.
+        enrolled:
+          type: integer
+        rating:
+          type: number
+        author:
+          type: string
+        progress:
+          type: integer
+          description: This account's progress, 0–100.
+        enrollment:
+          type: string
+          nullable: true
+          description: The enrolment id, once started.
+    LearningPath:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        courses:
+          type: integer
+        hours:
+          type: number
+        started:
+          type: boolean
+    Enrollment:
+      type: object
+      properties:
+        id:
+          type: string
+        item:
+          type: string
+        progress:
+          type: integer
+        started:
+          type: string
+          format: date
+    Certificate:
+      type: object
+      description: >
+        Attests to nothing. Not accredited, not verifiable, not a
+        qualification.
+      properties:
+        id:
+          type: string
+          example: cert-getting-started-with-gefi
+        item:
+          type: string
+        level:
+          type: string
+        minutes:
+          type: integer
+        issued:
+          type: string
+          format: date
+    LearningStats:
+      type: object
+      description: Counted from enrolments and certificate records.
+      properties:
+        completed:
+          type: integer
+        inProgress:
+          type: integer
+        certificates:
+          type: integer
+          description: The number of certificate records, nothing added.
+        minutes:
+          type: integer
+        hours:
+          type: number
+          description: Summed from the durations of completed items.

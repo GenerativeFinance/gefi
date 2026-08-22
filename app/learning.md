@@ -8,8 +8,12 @@ active_tab: Learning
 permalink: /app/learning/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/learning.js
+app_scripts:
+  - /assets/js/app/learning-math.js
+  - /assets/js/app/learning.js
 ---
+
+<div data-ln-root>
 
 <div class="app-kpis" data-ln-kpis></div>
 
@@ -39,3 +43,5 @@ app_script: /assets/js/app/learning.js
 
 <h2 class="app-panel__title" style="margin-top:28px;">Featured Learning Paths</h2>
 <div class="app-gridcards" data-ln-paths></div>
+
+</div>

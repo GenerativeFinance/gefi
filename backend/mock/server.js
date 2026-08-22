@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -91,8 +91,9 @@ const DO = GeFi.devOps; /* shared with the dev console pages (task 310) */
 const CO = GeFi.collab; /* shared with the collaboration pages (task 311) */
 const DP = GeFi.dataPlatform; /* shared with the provider pages (task 312) */
 const FU = GeFi.funding; /* shared with the funding pages (task 313) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding");
+const LE = GeFi.learning; /* shared with the learning page (task 314) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning");
   process.exit(1);
 }
 
@@ -280,7 +281,16 @@ function freshState() {
     nextFundingId: 1,
     contributions: [],
     nextContributionId: 1,
-    enrollments: [],
+    /* Learning (task 314): the catalog's own starting points become real
+     * enrolments, and each completed item gets its certificate record, so
+     * the KPI counts records rather than adding one for good measure. */
+    enrollments: D.learning.items
+      .filter((i) => i.progress > 0)
+      .map((i, n) => ({ id: "en-" + (n + 1), item: i.title, progress: i.progress, started: "2026-08-01" })),
+    nextEnrollmentId: D.learning.items.filter((i) => i.progress > 0).length + 1,
+    certificates: D.learning.items
+      .filter((i) => i.progress >= 100)
+      .map((i) => GeFi.learning.certificateFor(i, "2026-07-15")),
     reports: [],
     customDefs: [],
     issuesResolved: [],
@@ -1538,20 +1548,89 @@ on("GET /funding/roi", (p, q) =>
   )
 );
 
-/* ---- learning ---- */
-on("GET /learning/catalog", (p, q) => page(D.learning.items.concat(D.learning.paths.map((x) => ({ type: "PATH", ...x }))), q));
+/* ---- learning (task 314) ----
+ * Progress, certificate issuance and the KPIs all come from the shared
+ * engine. A certificate is a RECORD, and the certificate count is the
+ * number of records — not a completion count with something added. */
+
+/* Progress this account has, keyed by item title. Seeded from the catalog's
+ * own starting points so a fresh server is not a blank slate. */
+function learnProgress() {
+  const out = {};
+  S.enrollments.forEach((e) => {
+    out[e.item] = e.progress;
+  });
+  return out;
+}
+function catalogItem(it) {
+  const prog = learnProgress();
+  const e = S.enrollments.find((x) => x.item === it.title);
+  return {
+    title: it.title,
+    type: it.type,
+    level: it.level,
+    duration: it.duration,
+    minutes: LE.durationMinutes(it.duration),
+    enrolled: it.enrolled,
+    rating: it.rating,
+    author: it.author,
+    progress: LE.progressOf(it, prog),
+    enrollment: e ? e.id : null,
+  };
+}
+function learnStats() {
+  return LE.stats(D.learning.items, learnProgress(), S.certificates);
+}
+
+on("GET /learning/catalog", (p, q) => {
+  const rows = D.learning.items.map(catalogItem);
+  const filtered = LE.filter(rows, { q: q.q, type: q.type, level: q.level, seg: q.segment }, {});
+  const out = page(filtered, q);
+  /* Stats describe the WHOLE catalog, so they do not move as the reader
+   * narrows the list. */
+  out.stats = learnStats();
+  return out;
+});
+on("GET /learning/paths", (p, q) =>
+  page(D.learning.paths.map((x, i) => ({ id: "path-" + (i + 1), ...x })), q)
+);
+on("GET /learning/enrollments", (p, q) => page(S.enrollments, q));
 on("POST /learning/enrollments", (p, q, b) => {
-  const e = { id: "en-" + (S.enrollments.length + 1), item: (b && b.item) || D.learning.items[0].title, progress: 0 };
+  const title = (b && b.item) || "";
+  const item = D.learning.items.find((i) => i.title === title);
+  if (!item) return notFound;
+  /* Enrolling twice must not lose the reader's place. */
+  const existing = S.enrollments.find((e) => e.item === title);
+  if (existing) return { __status: 201, ...existing };
+  const e = { id: "en-" + S.nextEnrollmentId++, item: title, progress: item.progress || 0, started: "2026-08-22" };
   S.enrollments.push(e);
+  if (e.progress >= 100) issueCertificate(item);
   return { __status: 201, ...e };
 });
 on("PATCH /learning/progress/{enrollment_id}", (p, q, b) => {
   const e = S.enrollments.find((x) => x.id === p.enrollment_id);
   if (!e) return notFound;
-  e.progress = Math.min(100, (b && b.progress) || 0);
-  return e;
+  const why = LE.validateProgress(b && b.progress);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const was = e.progress;
+  e.progress = typeof b.progress === "number" ? b.progress : parseInt(b.progress, 10);
+  let cert = null;
+  if (e.progress >= 100 && was < 100) {
+    const item = D.learning.items.find((i) => i.title === e.item);
+    cert = issueCertificate(item);
+  }
+  return { enrollment: e, certificate: cert, stats: learnStats() };
 });
-on("GET /learning/certificates", (p, q) => page(D.learning.items.filter((i) => i.progress >= 100).map((i) => ({ item: i.title, issued: "2026-07-15" })), q));
+on("GET /learning/certificates", (p, q) => page(S.certificates, q));
+
+/* Issued once per item; re-completing does not mint a duplicate. */
+function issueCertificate(item) {
+  if (!item) return null;
+  const cert = LE.certificateFor(item);
+  if (S.certificates.some((c) => c.id === cert.id)) return null;
+  S.certificates.push(cert);
+  return cert;
+}
 
 /* ---- reports ---- */
 on("GET /reports", (p, q) => page(D.reports.categories.flatMap((c) => c.rows.map((r) => ({ category: c.key, ...r }))).concat(S.reports), q));

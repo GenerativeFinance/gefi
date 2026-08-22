@@ -423,6 +423,13 @@
     api.register("/learning/catalog", function () {
       return D.learning.items;
     });
+    api.register("/learning/certificates", function () {
+      var le = GeFi.learning;
+      if (!le) return [];
+      return D.learning.items
+        .filter(function (i) { return i.progress >= 100; })
+        .map(function (i) { return le.certificateFor(i, "2026-07-15"); });
+    });
     api.register("/models", function () {
       return (GeFi.MODELS || []).map(function (m) {
         return { slug: m.slug, name: m.name, wing: m.wing, risk: m.risk, federated: m.federated, unit: m.unit };
