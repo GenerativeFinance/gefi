@@ -2235,3 +2235,45 @@ p  { margin: 0 0 var(--space-4); }
   width: 100%; height: 560px; border: 1px solid var(--color-border);
   border-radius: var(--radius-md); background: #FAFBFF;
 }
+
+/* Task 120 — paper-trading sandbox tab (dashed treatment, never mistakable for live) */
+.dash-panel--sandbox .sbx-banner {
+  border: 2px dashed var(--color-warn);
+  border-radius: var(--radius-md);
+  background: rgba(245, 158, 11, 0.07);
+  padding: var(--space-4);
+  font-size: 0.9375rem; line-height: 1.6;
+  margin-bottom: var(--space-5);
+}
+.sbx-actions { display: flex; gap: var(--space-2); }
+.sbx-picker { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
+.sbx-pick {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; font-size: 0.875rem; cursor: pointer;
+  border: 1px dashed var(--color-border); border-radius: 999px;
+  background: var(--color-surface);
+}
+.sbx-pick:has(input:checked) { border-color: var(--color-brand); background: rgba(109, 91, 255, 0.06); }
+.sbx-chart {
+  position: relative;
+  border: 2px dashed var(--color-border); border-radius: var(--radius-md);
+  padding: var(--space-4); background: var(--color-surface);
+  margin-bottom: var(--space-4);
+}
+.sbx-watermark {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: clamp(2rem, 7vw, 4rem); font-weight: 800;
+  letter-spacing: 0.2em; color: rgba(11, 14, 26, 0.07);
+  transform: rotate(-14deg); pointer-events: none; user-select: none;
+}
+.sbx-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--space-3); }
+.sbx-stat {
+  border: 1px dashed var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-surface); padding: var(--space-4);
+}
+.sbx-stat__name { margin: 0 0 6px; display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: var(--color-muted); }
+.sbx-stat__fig { margin: 0; font-family: var(--font-mono); font-size: 1.375rem; font-weight: 700; }
+.sbx-stat__sub { margin: 4px 0 0; font-family: var(--font-mono); font-size: 0.75rem; }
+.sbx-stat__sub.is-up { color: var(--color-profit); }
+.sbx-stat__sub.is-down { color: var(--color-loss); }

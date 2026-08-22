@@ -561,8 +561,8 @@
 
   /* -------------------------------------------------------------- tabs */
 
-  var TABS = ["overview", "analytics", "compliance", "federation", "api-keys", "alerts", "tenants", "approvals", "system", "dev-models", "dev-versions", "dev-earnings"];
-  var OPERATOR_TABS = ["overview", "analytics", "compliance", "federation", "api-keys", "alerts", "tenants", "approvals", "system"];
+  var TABS = ["overview", "analytics", "compliance", "federation", "api-keys", "alerts", "sandbox", "tenants", "approvals", "system", "dev-models", "dev-versions", "dev-earnings"];
+  var OPERATOR_TABS = ["overview", "analytics", "compliance", "federation", "api-keys", "alerts", "sandbox", "tenants", "approvals", "system"];
   var DEVELOPER_TABS = ["dev-models", "dev-versions", "dev-earnings"];
 
   var PERSONA_KEY = "gefi-dash-persona";
@@ -640,6 +640,7 @@
     if (tab === "analytics") renderAnalytics();
     if (tab === "compliance") renderCompliance();
     if (tab === "federation") renderFederation();
+    if (tab === "sandbox") renderSandbox();
     if (tab === "tenants") renderTenants();
     if (tab === "approvals") renderApprovals();
     if (tab === "system") renderSystem();
@@ -1127,6 +1128,169 @@
       detail.appendChild(li);
     });
   }
+
+  /* ------------------------------------ paper-trading sandbox (Task 120) */
+
+  /* Simulated equity curves from trading-model signals. Everything on this
+   * tab is stamped SIMULATED — chart, stats, and the CSV export alike —
+   * and the layout uses the dashed sandbox treatment so it can never be
+   * mistaken for live results. */
+  var SANDBOX_KEY = "gefi-dash-sandbox";
+
+  var SANDBOX_MODELS = [
+    { slug: "breakout-signal-engine", name: "Breakout Signal Engine" },
+    { slug: "carry-trade-optimizer", name: "Carry Trade Optimizer" },
+    { slug: "cross-sectional-mean-reversion", name: "Cross-Sectional Mean Reversion" },
+    { slug: "stat-arb-pairs-engine", name: "Stat-Arb Pairs Engine" }
+  ];
+
+  function loadSandbox() {
+    try {
+      var raw = sessionStorage.getItem(SANDBOX_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return { selected: [SANDBOX_MODELS[0].slug], run: 1 };
+  }
+
+  function saveSandbox(st) {
+    try {
+      sessionStorage.setItem(SANDBOX_KEY, JSON.stringify(st));
+    } catch (e) {}
+  }
+
+  function equityCurve(slug, run) {
+    var rand = GeFi.seed.rng(GeFi.seed.hash("sandbox|" + slug + "|" + run));
+    var vals = [];
+    var v = 100000;
+    for (var i = 0; i < 60; i++) {
+      v = Math.max(20000, v * (1 + (rand() - 0.485) * 0.02));
+      vals.push(v);
+    }
+    return vals;
+  }
+
+  function maxDrawdown(vals) {
+    var peak = vals[0];
+    var dd = 0;
+    vals.forEach(function (v) {
+      if (v > peak) peak = v;
+      dd = Math.min(dd, (v - peak) / peak);
+    });
+    return dd * 100;
+  }
+
+  function renderSandbox() {
+    var picker = root.querySelector("[data-sbx-picker]");
+    if (!picker) return;
+    var st = loadSandbox();
+
+    if (!picker.childNodes.length) {
+      SANDBOX_MODELS.forEach(function (m) {
+        var label = document.createElement("label");
+        label.className = "sbx-pick";
+        var cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.value = m.slug;
+        cb.setAttribute("data-sbx-model", m.slug);
+        label.appendChild(cb);
+        label.appendChild(document.createTextNode(m.name));
+        picker.appendChild(label);
+      });
+    }
+    picker.querySelectorAll("[data-sbx-model]").forEach(function (cb) {
+      cb.checked = st.selected.indexOf(cb.value) !== -1;
+    });
+
+    var chartEl = root.querySelector("[data-sbx-chart]");
+    chartEl.innerHTML = "";
+    var statsEl = root.querySelector("[data-sbx-stats]");
+    statsEl.innerHTML = "";
+    var emptyEl = root.querySelector("[data-sbx-empty]");
+
+    var chosen = SANDBOX_MODELS.filter(function (m) { return st.selected.indexOf(m.slug) !== -1; });
+    emptyEl.hidden = chosen.length > 0;
+    if (!chosen.length) return;
+
+    chartEl.appendChild(GeFi.svg.line(
+      chosen.map(function (m) { return { name: m.name, values: equityCurve(m.slug, st.run) }; }),
+      { label: "Simulated equity curves, sixty trading days, starting at one hundred thousand dollars", xLabels: ["day 1", "day 60"] }
+    ));
+    var mark = document.createElement("span");
+    mark.className = "sbx-watermark";
+    mark.setAttribute("aria-hidden", "true");
+    mark.textContent = "SIMULATED";
+    chartEl.appendChild(mark);
+
+    chosen.forEach(function (m, i) {
+      var vals = equityCurve(m.slug, st.run);
+      var last = vals[vals.length - 1];
+      var ret = ((last / vals[0]) - 1) * 100;
+      var card = document.createElement("div");
+      card.className = "sbx-stat";
+      var name = document.createElement("p");
+      name.className = "sbx-stat__name";
+      var dot = document.createElement("span");
+      dot.className = "ana-dot ana-dot--" + (i + 1);
+      dot.setAttribute("aria-hidden", "true");
+      name.appendChild(dot);
+      name.appendChild(document.createTextNode(m.name));
+      var fig = document.createElement("p");
+      fig.className = "sbx-stat__fig";
+      fig.textContent = GeFi.fmt.money(last, "USD");
+      var sub = document.createElement("p");
+      sub.className = "sbx-stat__sub " + (ret >= 0 ? "is-up" : "is-down");
+      sub.textContent = GeFi.fmt.delta(ret, 1) + "% · max DD " + maxDrawdown(vals).toFixed(1) + "% · SIMULATED";
+      card.appendChild(name);
+      card.appendChild(fig);
+      card.appendChild(sub);
+      statsEl.appendChild(card);
+    });
+  }
+
+  root.addEventListener("change", function (e) {
+    var cb = e.target.closest("[data-sbx-model]");
+    if (!cb) return;
+    var st = loadSandbox();
+    if (cb.checked) {
+      if (st.selected.indexOf(cb.value) === -1) st.selected.push(cb.value);
+    } else {
+      st.selected = st.selected.filter(function (s) { return s !== cb.value; });
+    }
+    saveSandbox(st);
+    renderSandbox();
+  });
+
+  root.addEventListener("click", function (e) {
+    if (e.target.closest("[data-sbx-reset]")) {
+      var st = loadSandbox();
+      st.run += 1;
+      st.selected = [SANDBOX_MODELS[0].slug];
+      saveSandbox(st);
+      renderSandbox();
+      var status = root.querySelector("[data-sbx-status]");
+      if (status) status.textContent = "Sandbox reset — fresh simulated run #" + st.run + ".";
+      return;
+    }
+    if (e.target.closest("[data-sbx-export]")) {
+      var st2 = loadSandbox();
+      var chosen = SANDBOX_MODELS.filter(function (m) { return st2.selected.indexOf(m.slug) !== -1; });
+      var lines = ["# SIMULATED — GeFi paper-trading sandbox export. Not live results.", "day," + chosen.map(function (m) { return m.slug; }).join(",")];
+      var curves = chosen.map(function (m) { return equityCurve(m.slug, st2.run); });
+      for (var d = 0; d < 60; d++) {
+        lines.push((d + 1) + "," + curves.map(function (c) { return c[d].toFixed(2); }).join(","));
+      }
+      var text = lines.join("\n");
+      var status2 = root.querySelector("[data-sbx-status]");
+      function done(ok) {
+        if (status2) status2.textContent = ok ? "CSV copied — stamped SIMULATED in its header." : "Copy failed — clipboard unavailable in this browser.";
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      } else {
+        done(false);
+      }
+    }
+  });
 
   /* ------------------------------------------- api keys (Task 116) */
 

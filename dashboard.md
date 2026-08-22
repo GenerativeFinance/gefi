@@ -119,6 +119,27 @@ sitemap: false
   <p class="muted small">Delivery preferences are stored locally in this preview; in production they configure the notification service per tenant.</p>
 </section>
 
+<section class="dash-panel dash-panel--sandbox" data-dash-panel="sandbox" hidden>
+  <div class="dash-panel__head">
+    <h1 class="dash-panel__title">Paper-trading sandbox</h1>
+    <div class="sbx-actions">
+      <button type="button" class="btn btn-ghost" data-sbx-export>Copy CSV</button>
+      <button type="button" class="btn btn-ghost" data-sbx-reset>Reset sandbox</button>
+    </div>
+  </div>
+  <div class="sbx-banner" role="note">
+    <strong>SIMULATED.</strong> This sandbox replays model signals against
+    sample market data. No orders are placed, no live results are shown, and
+    every export is stamped simulated.
+  </div>
+  <h2 class="dash-panel__subtitle">Models in this run</h2>
+  <div class="sbx-picker" data-sbx-picker></div>
+  <p class="dash-empty" data-sbx-empty hidden>Pick at least one trading model to simulate.</p>
+  <div class="sbx-chart" data-sbx-chart></div>
+  <div class="sbx-stats" data-sbx-stats></div>
+  <p class="muted small" data-sbx-status role="status" aria-live="polite"></p>
+</section>
+
 <section class="dash-panel" data-dash-panel="tenants" hidden>
   <div class="dash-panel__head">
     <h1 class="dash-panel__title">Tenants</h1>
