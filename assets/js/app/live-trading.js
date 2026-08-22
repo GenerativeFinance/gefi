@@ -10,8 +10,12 @@
     var app = GeFi.app;
 
     var KEY = "gefi-app-orders-live";
-    var BASE = { AAPL: 232.4, MSFT: 512.8, NVDA: 187.3, TSLA: 341.6, BTC: 118400 };
-    var START_POS = [{ symbol: "AAPL", qty: 50, avg: 226.1 }];
+    /* Prices, fill rules and positions come from GeFi.market — the same
+     * module the mock server runs, so a quote at tick N and a fill at
+     * tick N are the same numbers whether or not the API is answering. */
+    var MKT = GeFi.market;
+    var BASE = MKT.BASE;
+    var START_POS = MKT.START_POSITIONS;
 
     function loadOrders() {
       try {
@@ -29,20 +33,20 @@
 
     /* seeded deterministic walk per symbol; tick index advances live */
     var tickIndex = 0;
-    var rngs = {};
     var prices = {};
-    Object.keys(BASE).forEach(function (s) {
-      rngs[s] = GeFi.seed.rng(GeFi.seed.hash("lt|" + s));
-      prices[s] = { last: BASE[s], series: [BASE[s]] };
-    });
-    function tick() {
+    function syncPrices() {
       Object.keys(BASE).forEach(function (s) {
-        var p = prices[s];
-        p.last = Math.max(1, p.last * (1 + (rngs[s]() - 0.5) * 0.004));
-        p.series.push(p.last);
-        if (p.series.length > 40) p.series.shift();
+        prices[s] = { last: MKT.priceAt(s, tickIndex), series: MKT.seriesAt(s, tickIndex, 40) };
       });
+    }
+    syncPrices();
+    function tick() {
       tickIndex += 1;
+      syncPrices();
+      /* Publish where in the walk this page is. Orders already carry it,
+       * and the server needs it to fill at the price the trader saw. */
+      var root = document.querySelector("[data-lt-root]");
+      if (root) root.setAttribute("data-lt-tick", String(tickIndex));
       renderPrice();
       renderPositions();
     }
@@ -103,16 +107,34 @@
       saveOrders(orders);
       renderOrders();
       status.textContent = "Order accepted — filling against the sample book…";
-      setTimeout(function () {
-        order.fill = +prices[order.symbol].last.toFixed(2);
-        order.status = "filled";
-        saveOrders(orders);
-        renderOrders();
-        renderPositions();
-        renderHistory();
-        status.textContent = order.side + " " + order.qty + " " + order.symbol + " filled at $" + order.fill.toFixed(2) + " (simulated).";
-      }, 400);
+      /* Fill through the contract; offline the resolver answers with the
+       * same shared fill rules, so the outcome is identical either way. */
+      GeFi.api.post("/orders", { symbol: order.symbol, side: order.side, type: order.type, qty: order.qty, tick: tickIndex }).then(
+        function (r) {
+          order.fill = r && r.fill != null ? r.fill : MKT.fillPrice(order, prices[order.symbol].last);
+          order.status = r && r.status ? r.status : "filled";
+          if (r && r.id) order.id = r.id;
+          finishOrder(order, r && !r.sample);
+        },
+        function () {
+          order.fill = MKT.fillPrice(order, prices[order.symbol].last);
+          order.status = "filled";
+          finishOrder(order, false);
+        }
+      );
     });
+
+    function finishOrder(order, live) {
+      saveOrders(orders);
+      renderOrders();
+      renderPositions();
+      renderHistory();
+      var root = document.querySelector("[data-lt-root]");
+      if (root) root.setAttribute("data-lt-last-fill", order.fill == null ? "pending" : String(order.fill));
+      status.textContent = order.fill == null
+        ? order.side + " " + order.qty + " " + order.symbol + " is working — it fills when the price crosses your limit."
+        : order.side + " " + order.qty + " " + order.symbol + " filled at $" + order.fill.toFixed(2) + (live ? " (paper account)." : " (simulated).");
+    }
 
     function renderOrders() {
       var body = document.querySelector("[data-lt-orders]");

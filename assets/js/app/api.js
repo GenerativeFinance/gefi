@@ -363,6 +363,18 @@
     api.register("/developers", function () {
       return D.developers;
     });
+    /* Trading (task 308): offline the page fills with the SAME shared
+     * market module the server uses, so it just needs an acknowledgement
+     * that carries no server-side fill. */
+    api.register("/orders/{id}", function () {
+      return { ok: true };
+    });
+    api.register("/positions", function () {
+      return [];
+    });
+    api.register("/market-data/sources", function () {
+      return D.marketData.sources;
+    });
     api.register("/datasets", function () {
       return D.datasets;
     });

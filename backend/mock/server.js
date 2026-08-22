@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -85,8 +85,9 @@ const seed = GeFi.seed;
 const RB = GeFi.rebalanceMath; /* shared with the client page (task 305) */
 const CAT = GeFi.catalog; /* shared with the marketplace pages (task 306) */
 const RUNTIME = GeFi.modelRuntime; /* shared with model-demo.js (task 307) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime");
+const MKT = GeFi.market; /* shared with the trading page (task 308) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market");
   process.exit(1);
 }
 
@@ -229,6 +230,8 @@ function freshState() {
       { id: "n-3", title: "Dataset published", detail: "Options Surface passed its quality audit", unread: false },
     ],
     metricsAsOf: {},
+    paperOrders: [],
+    tick: 0,
     verifications: [],
     anchors: [],
     apiKeys: [{ id: "key-1", label: "dashboard sample", prefix: "gefi_sk_9f2a", created: "2026-08-01" }],
@@ -600,44 +603,96 @@ on("POST /models/{slug}/metrics/refresh", (p) => {
   return { __status: 202, job_id: "mr-" + fnvHex("refresh|" + p.slug), metrics_as_of: S.metricsAsOf[p.slug] };
 });
 
-/* ---- trading ---- */
+/* ---- trading (task 308) — seeded walk + fills via the SHARED module ---- */
+function paperOrders() {
+  return S.paperOrders;
+}
+/* A limit/stop order fills as soon as the walk crosses its trigger. */
+function settlePending(tick) {
+  S.paperOrders.forEach((o) => {
+    if (o.status !== "pending") return;
+    const px = MKT.priceAt(o.symbol, tick);
+    if (px == null) return;
+    const fill = MKT.fillPrice(o, px);
+    if (fill != null) {
+      o.fill = fill;
+      o.status = "filled";
+      o.tick = tick;
+    }
+  });
+}
 on("GET /market-data/quotes", (p, q) => {
-  const syms = (q.symbols || "AAPL,MSFT,NVDA").split(",");
-  return { items: syms.map((s) => { const r = seed.rng(seed.hash("q|" + s)); return { symbol: s, price: +(40 + r() * 460).toFixed(2), ts: "2026-08-22T05:30:00Z" }; }), next_cursor: null };
+  const tick = q.tick != null && q.tick !== "" ? parseInt(q.tick, 10) : S.tick;
+  const syms = (q.symbols ? String(q.symbols).split(",") : MKT.symbols()).map((x) => x.trim().toUpperCase());
+  return {
+    items: syms
+      .filter((sym) => MKT.priceAt(sym, 0) != null)
+      .map((sym) => ({ symbol: sym, price: +MKT.priceAt(sym, tick).toFixed(2), tick: tick, series: MKT.seriesAt(sym, tick, 40).map((v) => +v.toFixed(2)) })),
+    next_cursor: null,
+    tick: tick,
+  };
 });
 on("POST /orders", (p, q, b) => {
-  /* Full shape — same fields as the seeded DEMO.orders rows, so a
-   * server-side fill renders identically to a sample one. */
-  const r = seed.rng(seed.hash("fill|" + (S.orders.length + 1)));
-  const px = +(40 + r() * 460).toFixed(2);
-  const o = {
-    id: "ORD-" + (9000 + S.orders.length),
-    strategy: (b && b.strategy) || "Manual",
-    symbol: (b && b.symbol) || "AAPL",
-    side: ((b && b.side) || "buy").toUpperCase(),
-    type: (b && b.type) || "market",
-    qty: (b && b.qty) || 1,
-    price: px,
-    fill: +(px * (1 + (r() - 0.5) * 0.002)).toFixed(2),
-    status: "filled",
-    pnl: +((r() - 0.42) * 220).toFixed(2),
+  const symbol = String((b && b.symbol) || "").toUpperCase();
+  if (MKT.priceAt(symbol, 0) == null) return { __status: 404, code: "not_found", message: "Unknown symbol " + (symbol || "(none)") + "." };
+  const qty = b && Number(b.qty);
+  if (!qty || qty < 1) return { __status: 422, code: "validation_failed", message: "qty must be at least 1.", details: [{ field: "qty", issue: "invalid" }] };
+  const type = ((b && b.type) || "market").toLowerCase();
+  const trigger = b && b.limit != null ? Number(b.limit) : null;
+  if ((type === "limit" || type === "stop") && trigger == null) {
+    return { __status: 422, code: "validation_failed", message: type + " orders need a limit price.", details: [{ field: "limit", issue: "missing" }] };
+  }
+  /* Fill at the tick the client was showing, so the price the user saw is
+   * the price they get; fall back to the server's tick when not sent. */
+  const atTick = b && b.tick != null ? Math.max(0, parseInt(b.tick, 10) || 0) : S.tick;
+  const px = MKT.priceAt(symbol, atTick);
+  const order = {
+    id: "ORD-" + (9000 + S.paperOrders.length + 1),
+    symbol: symbol,
+    side: ((b && b.side) || "buy").toLowerCase(),
+    type: type,
+    qty: qty,
+    limit: trigger,
+    price: +px.toFixed(2),
+    fill: null,
+    status: "pending",
+    tick: atTick,
     date: "2026-08-22",
   };
-  S.orders.unshift(o);
-  return { __status: 201, ...o };
+  const fill = MKT.fillPrice(order, px);
+  if (fill != null) {
+    order.fill = fill;
+    order.status = "filled";
+  }
+  S.paperOrders.unshift(order);
+  return { __status: 201, ...order };
 });
-on("GET /orders", (p, q) => page(S.orders, q));
-on("GET /orders/{id}", (p) => S.orders.find((o) => String(o.id) === p.id) || notFound);
+on("GET /orders", (p, q) => {
+  settlePending(S.tick);
+  let rows = paperOrders().concat(S.orders);
+  if (q.symbol) rows = rows.filter((o) => o.symbol === String(q.symbol).toUpperCase());
+  if (q.status) rows = rows.filter((o) => o.status === q.status);
+  if (q.side) rows = rows.filter((o) => String(o.side).toLowerCase() === String(q.side).toLowerCase());
+  const out = page(rows, q);
+  out.total = rows.length;
+  return out;
+});
+on("GET /orders/{id}", (p) => paperOrders().concat(S.orders).find((o) => String(o.id) === p.id) || notFound);
 on("DELETE /orders/{id}", (p) => {
-  const o = S.orders.find((x) => String(x.id) === p.id);
+  const o = paperOrders().concat(S.orders).find((x) => String(x.id) === p.id);
   if (!o) return notFound;
+  if (o.status !== "pending") return { __status: 409, code: "conflict", message: "Order is already " + o.status + "." };
   o.status = "cancelled";
   return o;
 });
-on("GET /positions", (p, q) => page(D.holdings.map((h) => ({ symbol: h.ticker, qty: h.shares, value: h.value })), q));
+on("GET /positions", (p, q) => {
+  settlePending(S.tick);
+  return page(MKT.positions(paperOrders(), S.tick), q);
+});
 on("POST /paper/reset", () => {
-  S.orders = D.orders.map((o) => ({ ...o }));
-  return { ok: true, orders: S.orders.length };
+  S.paperOrders = [];
+  S.tick = 0;
+  return { ok: true, orders: 0 };
 });
 const BOTS = [
   { id: "bot-1", name: "AI-Powered Grid Trading Bot", status: "running" },
@@ -766,6 +821,29 @@ on("GET /revenue/summary", () => {
 });
 on("GET /revenue/payouts", (p, q) => page([{ period: "2026-07", amount: 186966, status: "settled" }, { period: "2026-08", amount: 224513, status: "scheduled" }], q));
 on("GET /market-data/sources", (p, q) => page(D.marketData.sources, q));
+/* Preview rows use the same seed key the market-data page uses offline,
+ * so the live table and the offline table show identical rows. */
+function previewRows(key, extra, n) {
+  const src = D.marketData.sources.find((s) => s.key === key);
+  if (!src) return null;
+  const rand = seed.rng(seed.hash("mdrows|" + key + "|" + extra));
+  const rows = [];
+  for (let i = 0; i < (n || 8); i++) {
+    const sym = src.symbols[Math.floor(rand() * src.symbols.length)];
+    rows.push({
+      t: "t-" + (extra > 0 ? "live" : (8 - i) + "m"),
+      sym: sym,
+      px: (40 + rand() * 460).toFixed(2),
+      vol: Math.round(1000 + rand() * 90000).toLocaleString("en-US"),
+    });
+  }
+  return rows;
+}
+on("GET /market-data/sources/{key}/preview", (p, q) => {
+  const rows = previewRows(p.key, 0, q.limit ? parseInt(q.limit, 10) : 8);
+  if (!rows) return notFound;
+  return page(rows, {});
+});
 
 /* ---- funding ---- */
 const fundingAll = () => S.fundingProjects.concat(S.fundingRequests);
@@ -983,13 +1061,17 @@ on("GET /gdpr/retention-jobs", (p, q) => page([{ job: "session-purge", last_run:
 /* ---- SSE endpoints ---- */
 const SSE = {
   "GET /market-data/stream": (req, res, p, q) => {
-    const syms = (q.symbols || "AAPL,MSFT,NVDA").split(",");
-    let tick = 0;
+    /* Advances the shared session walk, so a fill printed by the order
+     * endpoint and a quote printed here come from the same series. */
+    const syms = (q.symbols ? String(q.symbols).split(",") : MKT.symbols()).map((x) => x.trim().toUpperCase());
     return setInterval(() => {
-      tick += 1;
-      const s = syms[tick % syms.length];
-      const r = seed.rng(seed.hash("sse|" + s + "|" + tick));
-      sseSend(res, "quote.tick", tick, { symbol: s, price: +(40 + r() * 460).toFixed(2) });
+      S.tick += 1;
+      settlePending(S.tick);
+      syms.forEach((sym) => {
+        const px = MKT.priceAt(sym, S.tick);
+        if (px == null) return;
+        sseSend(res, "quote.tick", S.tick, { symbol: sym, price: +px.toFixed(2), tick: S.tick });
+      });
     }, 1000);
   },
   "GET /backtests/{id}/events": (req, res, p) => {
@@ -1007,6 +1089,18 @@ const SSE = {
       sseSend(res, "training.log", n, { id: p.id, line: "epoch " + n + " loss " + (0.2 / n).toFixed(4) });
       if (n >= 8) res.end();
     }, 600);
+  },
+  "GET /market-data/sources/{key}/stream": (req, res, p) => {
+    let n = 0;
+    return setInterval(() => {
+      n += 1;
+      const rows = previewRows(p.key, n, 1);
+      if (!rows) {
+        res.end();
+        return;
+      }
+      sseSend(res, "preview.row", n, rows[0]);
+    }, 1000);
   },
   "GET /models/{slug}/jobs/{job_id}/events": (req, res, p) => {
     let pct = 0;
