@@ -54,46 +54,11 @@
       { label: "Portfolio value versus benchmark over six months", xLabels: ["6 months ago", "today"] }
     ));
 
-    /* allocation donut (SVG built here — no new dashboard primitive) */
-    var colors = ["#6D5BFF", "#22C55E", "#F59E0B", "#F97316", "#22D3EE"];
+    /* allocation donut via the shared helper */
     var donutEl = document.querySelector("[data-ov-donut]");
-    var svg = GeFi.svg.el("svg", { viewBox: "0 0 120 120", width: "100%", role: "img", "aria-label": "Asset allocation donut chart", class: "app-donut" });
-    var cx = 60, cy = 60, r = 44, width = 18;
-    var start = -Math.PI / 2;
-    D.allocation.forEach(function (a, i) {
-      var frac = a.pct / 100;
-      var end = start + frac * Math.PI * 2;
-      var large = frac > 0.5 ? 1 : 0;
-      var x1 = cx + r * Math.cos(start), y1 = cy + r * Math.sin(start);
-      var x2 = cx + r * Math.cos(end), y2 = cy + r * Math.sin(end);
-      var path = GeFi.svg.el("path", {
-        d: "M" + x1.toFixed(2) + " " + y1.toFixed(2) + " A" + r + " " + r + " 0 " + large + " 1 " + x2.toFixed(2) + " " + y2.toFixed(2),
-        stroke: colors[i % colors.length],
-        "stroke-width": width,
-        fill: "none"
-      });
-      svg.appendChild(path);
-      start = end + 0.02; /* hairline gap between segments */
-    });
-    donutEl.appendChild(svg);
+    donutEl.appendChild(GeFi.app.donut(D.allocation, "Asset allocation donut chart"));
 
-    var legend = document.querySelector("[data-ov-legend]");
-    D.allocation.forEach(function (a, i) {
-      var li = document.createElement("li");
-      var dot = document.createElement("span");
-      dot.className = "app-ov-legend__dot";
-      dot.style.background = colors[i % colors.length];
-      dot.setAttribute("aria-hidden", "true");
-      var name = document.createElement("span");
-      name.textContent = a.name;
-      var val = document.createElement("span");
-      val.className = "mono app-ov-legend__val";
-      val.textContent = a.pct + "%";
-      li.appendChild(dot);
-      li.appendChild(name);
-      li.appendChild(val);
-      legend.appendChild(li);
-    });
+    GeFi.app.donutLegend(document.querySelector("[data-ov-legend]"), D.allocation);
 
     /* activity feed */
     var feed = document.querySelector("[data-ov-activity]");

@@ -2856,3 +2856,11 @@ p  { margin: 0 0 var(--space-4); }
 .app-kv dd.is-down { color: var(--app-red); }
 .is-impact-high { color: var(--app-red) !important; font-weight: 700; }
 .is-impact-medium { color: var(--app-orange) !important; font-weight: 700; }
+
+/* Task 206 — performance page */
+.app-gbar--1 { fill: var(--app-brand); }
+.app-gbar--2 { fill: var(--app-green); }
+.app-allocbars { display: flex; flex-direction: column; gap: 14px; }
+.app-allocbar { display: grid; grid-template-columns: 130px 1fr 48px; align-items: center; gap: 12px; }
+.app-allocbar__name { font-size: 13px; }
+@media (max-width: 560px) { .app-allocbar { grid-template-columns: 1fr; gap: 4px; } }

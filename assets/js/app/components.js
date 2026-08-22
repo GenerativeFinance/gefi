@@ -51,11 +51,15 @@
       e.preventDefault();
     });
 
-    var initial = (window.location.hash || "").replace("#", "");
-    var valid = Array.prototype.some.call(buttons, function (b) {
-      return b.getAttribute("data-segment") === initial;
-    });
-    activate(valid ? initial : buttons[0].getAttribute("data-segment"), false);
+    function followHash() {
+      var h = (window.location.hash || "").replace("#", "");
+      var valid = Array.prototype.some.call(buttons, function (b) {
+        return b.getAttribute("data-segment") === h;
+      });
+      activate(valid ? h : buttons[0].getAttribute("data-segment"), false);
+    }
+    window.addEventListener("hashchange", followHash);
+    followHash();
   };
 
   app.chip = function (vocab, label) {
@@ -102,6 +106,87 @@
 
   app.empty = function (opts) { return stateEl("empty", opts); };
   app.error = function (opts) { return stateEl("error", opts); };
+
+  /* Donut chart from [{name, pct}] slices. Returns an SVG element. */
+  app.donutColors = ["#6D5BFF", "#22C55E", "#F59E0B", "#F97316", "#22D3EE"];
+  app.donut = function (slices, label) {
+    var svg = GeFi.svg.el("svg", { viewBox: "0 0 120 120", width: "100%", role: "img", "aria-label": label || "Donut chart", class: "app-donut" });
+    var cx = 60, cy = 60, r = 44, width = 18;
+    var start = -Math.PI / 2;
+    slices.forEach(function (a, i) {
+      var frac = a.pct / 100;
+      var end = start + frac * Math.PI * 2;
+      var large = frac > 0.5 ? 1 : 0;
+      var x1 = cx + r * Math.cos(start), y1 = cy + r * Math.sin(start);
+      var x2 = cx + r * Math.cos(end), y2 = cy + r * Math.sin(end);
+      svg.appendChild(GeFi.svg.el("path", {
+        d: "M" + x1.toFixed(2) + " " + y1.toFixed(2) + " A" + r + " " + r + " 0 " + large + " 1 " + x2.toFixed(2) + " " + y2.toFixed(2),
+        stroke: app.donutColors[i % app.donutColors.length],
+        "stroke-width": width,
+        fill: "none"
+      }));
+      start = end + 0.02;
+    });
+    return svg;
+  };
+
+  /* Dot-swatch legend list items for donut slices, into a UL. */
+  app.donutLegend = function (ul, slices) {
+    slices.forEach(function (a, i) {
+      var li = document.createElement("li");
+      var dot = document.createElement("span");
+      dot.className = "app-ov-legend__dot";
+      dot.style.background = app.donutColors[i % app.donutColors.length];
+      dot.setAttribute("aria-hidden", "true");
+      var name = document.createElement("span");
+      name.textContent = a.name;
+      var val = document.createElement("span");
+      val.className = "mono app-ov-legend__val";
+      val.textContent = a.pct + "%";
+      li.appendChild(dot);
+      li.appendChild(name);
+      li.appendChild(val);
+      ul.appendChild(li);
+    });
+  };
+
+  /* Grouped bars (two series, e.g. portfolio vs benchmark) with negative
+   * support — SVG built here so dashboard.js stays untouched. */
+  app.groupedBars = function (labels, s1, s2, opts) {
+    var o = opts || {};
+    var w = 560, h = 220;
+    var box = { x: 44, y: 14, w: w - 60, h: h - 52 };
+    var svg = GeFi.svg.el("svg", { viewBox: "0 0 " + w + " " + h, width: "100%", role: "img", "aria-label": o.label || "Grouped bar chart", preserveAspectRatio: "xMidYMid meet", class: "gefi-chart" });
+    var all = s1.concat(s2);
+    var hi = Math.max.apply(null, all.map(function (v) { return Math.abs(v); }));
+    var zero = box.y + box.h * (hi / (hi * 2));
+    /* zero line + grid */
+    [-1, 0, 1].forEach(function (g) {
+      var gy = zero - g * (box.h / 2);
+      svg.appendChild(GeFi.svg.el("line", { x1: box.x, y1: gy.toFixed(1), x2: box.x + box.w, y2: gy.toFixed(1), class: "gefi-chart__grid" }));
+      var t = GeFi.svg.el("text", { x: box.x - 8, y: (gy + 4).toFixed(1), class: "gefi-chart__tick", "text-anchor": "end" });
+      t.textContent = (g * hi).toFixed(0);
+      svg.appendChild(t);
+    });
+    var slot = box.w / labels.length;
+    labels.forEach(function (lab, i) {
+      [s1[i], s2[i]].forEach(function (v, k) {
+        var bh = (Math.abs(v) / hi) * (box.h / 2);
+        svg.appendChild(GeFi.svg.el("rect", {
+          x: (box.x + i * slot + slot * (k === 0 ? 0.16 : 0.54)).toFixed(1),
+          y: (v >= 0 ? zero - bh : zero).toFixed(1),
+          width: (slot * 0.3).toFixed(1),
+          height: bh.toFixed(1),
+          rx: 2,
+          class: "app-gbar app-gbar--" + (k + 1)
+        }));
+      });
+      var t = GeFi.svg.el("text", { x: (box.x + i * slot + slot / 2).toFixed(1), y: h - 14, class: "gefi-chart__tick", "text-anchor": "middle" });
+      t.textContent = lab;
+      svg.appendChild(t);
+    });
+    return svg;
+  };
 
   /* Auto-wire any segment bars present on the page. */
   document.addEventListener("DOMContentLoaded", function () {
