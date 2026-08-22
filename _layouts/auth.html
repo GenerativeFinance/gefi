@@ -10,7 +10,10 @@
   </a>
 
   <main class="auth-shell">
-    <div class="auth-card" role="region" aria-labelledby="auth-title">
+    <div class="auth-card{% if page.mode == 'admin' %} auth-card--admin{% endif %}" role="region" aria-labelledby="auth-title">
+      {%- if page.mode == 'admin' -%}
+        <span class="auth-ribbon" aria-hidden="true">Internal preview</span>
+      {%- endif -%}
       <h1 id="auth-title" class="auth-title">{{ page.heading | default: page.title }}</h1>
       {%- if page.subheading -%}
         <p class="auth-sub">{{ page.subheading }}</p>
@@ -18,7 +21,27 @@
 
       {%- assign auth_ready = site.app.auth_ready -%}
 
-      {%- if auth_ready -%}
+      {%- if page.mode == 'admin' -%}
+      <form class="auth-adminform" data-admin-gate>
+        <label class="auth-adminform__field">
+          <span>Operator passphrase</span>
+          <input type="password" name="passphrase" data-admin-pass autocomplete="off" required
+                 placeholder="Any passphrase works in this preview">
+        </label>
+        <button type="submit" class="auth-btn auth-btn--admin">
+          <svg class="auth-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v14H4zM7 9l3 3-3 3M12 15h5"/>
+          </svg>
+          <span>Enter operator preview</span>
+        </button>
+        <p class="auth-status" data-admin-status role="status" aria-live="polite"></p>
+      </form>
+      <p class="auth-adminnote">
+        This is the <strong>preview</strong> operator sign-in: any passphrase
+        opens the seeded dashboard preview, and nothing here touches a real
+        tenant.
+      </p>
+      {%- elsif auth_ready -%}
       <div class="auth-providers" data-auth-mode="{{ page.mode }}">
         <button type="button" class="auth-btn auth-btn--primary" data-provider="passkey">
           <svg class="auth-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -59,9 +82,39 @@
           </svg>
           <span>{{ site.app.early_access_cta }}</span>
         </a>
+
+        {%- comment -%}
+          Task 109: muted preview of the product behind the waiting list —
+          three tiny KPI tiles + a chart silhouette in the dashboard's
+          visual language. Decorative; screen readers get the caption only.
+        {%- endcomment -%}
+        <div class="auth-preview">
+          <div class="auth-preview__strip" aria-hidden="true">
+            <div class="auth-preview__tiles">
+              <div class="auth-preview__tile">
+                <span class="auth-preview__label">Inference calls (24h)</span>
+                <span class="auth-preview__num">41.2K</span>
+              </div>
+              <div class="auth-preview__tile">
+                <span class="auth-preview__label">p99 latency</span>
+                <span class="auth-preview__num">128 ms</span>
+              </div>
+              <div class="auth-preview__tile">
+                <span class="auth-preview__label">MRR</span>
+                <span class="auth-preview__num">$48.2K</span>
+              </div>
+            </div>
+            <svg class="auth-preview__chart" viewBox="0 0 280 60" preserveAspectRatio="none">
+              <path d="M0 48 L20 44 L40 46 L60 38 L80 40 L100 32 L120 34 L140 26 L160 30 L180 22 L200 24 L220 16 L240 20 L260 12 L280 14 L280 60 L0 60 Z" class="auth-preview__area"/>
+              <path d="M0 48 L20 44 L40 46 L60 38 L80 40 L100 32 L120 34 L140 26 L160 30 L180 22 L200 24 L220 16 L240 20 L260 12 L280 14" class="auth-preview__line" fill="none"/>
+            </svg>
+          </div>
+          <p class="auth-preview__caption">What opens up when sign-in goes live</p>
+        </div>
       </div>
       {%- endif -%}
 
+      {%- if page.mode != 'admin' -%}
       <p class="auth-switch">
         {%- if page.mode == 'register' -%}
           Already have an account? <a href="{{ '/login/' | relative_url }}">Sign in</a>
@@ -75,8 +128,20 @@
         <a href="{{ '/legal/terms/' | relative_url }}">Terms</a> and
         <a href="{{ '/legal/privacy/' | relative_url }}">Privacy Policy</a>.
       </p>
+      {%- endif -%}
     </div>
   </main>
+
+  {%- if page.mode == 'admin' -%}
+  <footer class="auth-footstrip" role="contentinfo">
+    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 2l7 3v6c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V5z"/>
+    </svg>
+    <span>Production operator sign-in runs behind Cloudflare Access — this
+    preview never issues real credentials and never reaches a live tenant.</span>
+  </footer>
+  <script src="{{ '/assets/js/admin-gate.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
+  {%- endif -%}
 
   {%- if auth_ready -%}
   <script>
