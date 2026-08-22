@@ -107,6 +107,49 @@
   app.empty = function (opts) { return stateEl("empty", opts); };
   app.error = function (opts) { return stateEl("error", opts); };
 
+  /* Transient message (task 311). Used for outcomes that have no home on
+   * the page — a refused claim, a sent invite — where a permanent element
+   * would be clutter and a silent failure would be a lie.
+   *
+   *   app.toast("you already have an active claim", { kind: "error" })
+   *
+   * Errors announce assertively and stay twice as long, because they are
+   * the ones a reader must not miss. */
+  app.toast = function (message, opts) {
+    var o = opts || {};
+    var kind = o.kind === "error" ? "error" : "info";
+    var region = document.querySelector("[data-app-toasts]");
+    if (!region) {
+      region = document.createElement("div");
+      region.className = "app-toasts";
+      region.setAttribute("data-app-toasts", "");
+      document.body.appendChild(region);
+    }
+    var el = document.createElement("div");
+    el.className = "app-toast app-toast--" + kind;
+    el.setAttribute("data-app-toast", kind);
+    el.setAttribute("role", kind === "error" ? "alert" : "status");
+    el.setAttribute("aria-live", kind === "error" ? "assertive" : "polite");
+    var text = document.createElement("p");
+    text.className = "app-toast__text";
+    text.textContent = message;
+    var close = document.createElement("button");
+    close.type = "button";
+    close.className = "app-toast__close";
+    close.setAttribute("aria-label", "Dismiss");
+    close.textContent = "×";
+    function dismiss() {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }
+    close.addEventListener("click", dismiss);
+    el.appendChild(text);
+    el.appendChild(close);
+    region.appendChild(el);
+    var ms = o.ms || (kind === "error" ? 8000 : 4000);
+    setTimeout(dismiss, ms);
+    return el;
+  };
+
   /* Donut chart from [{name, pct}] slices. Returns an SVG element. */
   app.donutColors = ["#6D5BFF", "#22C55E", "#F59E0B", "#F97316", "#22D3EE"];
   app.donut = function (slices, label) {

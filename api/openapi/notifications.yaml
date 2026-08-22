@@ -1,12 +1,29 @@
 openapi: 3.0.3
 info:
   title: GeFi Notifications & alerts
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Bell/unread state, alert center, user alert rules, email/push delivery.
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    In-app notifications, the unread count, alert rules and delivery
+    preferences.
+
+
+    ONLY IN-APP DELIVERS. `in_app` is the one channel that actually reaches
+    anyone. `email` and `push` are RECORDED PREFERENCES with no provider
+    behind them: nothing is sent, no address or device token is verified,
+    and no delivery is attempted or retried. A real implementation would
+    need a mail provider and a push service, along with the consent and
+    unsubscribe handling those require. GET /delivery/channels reports which
+    channels actually deliver, so a client can label the rest honestly
+    rather than implying mail is going out.
+
+
+    ALERT RULES DO NOT FIRE ON THEIR OWN. A rule records what someone wants
+    to be told about. This service raises notifications from mutations it
+    performs — an order filling, a training job finishing, an issue being
+    resolved — not from evaluating rules against a live feed. A rule that
+    names a metric this service does not track would never fire, so it is
+    refused at creation rather than accepted and silently ignored.
+
 servers:
   - url: /v1
     description: >
@@ -22,17 +39,41 @@ paths:
   /notifications:
     get:
       operationId: get-notifications
-      summary: "Notification feed with unread state"
+      summary: "Notifications"
+      description: Newest first, with the unread count alongside.
       tags: [notifications]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: unread
+          in: query
+          schema:
+            type: boolean
+        - name: kind
+          in: query
+          schema:
+            type: string
+            enum: [order, training, compliance, funding, dataset, alert, system]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of notifications.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      unread:
+                        type: integer
+                        description: Unread across all notifications, not just this page.
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Notification'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -41,15 +82,64 @@ paths:
     post:
       operationId: post-notifications-read
       summary: "Mark notifications read"
+      description: >
+        Marks the named notifications read, or all of them when `ids` is
+        omitted. Returns the new unread count so the badge does not have to
+        be recomputed by guesswork.
       tags: [notifications]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The new unread count.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unread:
+                    type: integer
+                  marked:
+                    type: integer
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /notifications/stream:
+    get:
+      operationId: get-notifications-stream
+      summary: "New notifications"
+      description: >
+        Emits `notification.created` when this service raises one. A client
+        that keeps the stream open sees an order filling in another tab
+        light its bell without a reload.
+      tags: [notifications]
+      responses:
+        '200':
+          description: >
+            Event stream per the _envelope.yaml SSE convention
+            (named events, monotonic ids, ping heartbeats).
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            text/event-stream:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/SseEvent'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -57,17 +147,28 @@ paths:
   /alerts:
     get:
       operationId: get-alerts
-      summary: "Alert center entries"
+      summary: "Alerts raised by rules"
       tags: [notifications]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of alerts.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Notification'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -75,17 +176,32 @@ paths:
   /alert-rules:
     get:
       operationId: get-alert-rules
-      summary: "User alert rules (\"Set Alert\")"
+      summary: "Alert rules"
       tags: [notifications]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: entity
+          in: query
+          schema:
+            type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of rules.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AlertRule'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -93,23 +209,110 @@ paths:
     post:
       operationId: post-alert-rules
       summary: "Create an alert rule"
+      description: >
+        The metric must be one this service tracks — see ALERT RULES above.
       tags: [notifications]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entity, metric, comparator, threshold]
+              properties:
+                entity:
+                  type: string
+                metric:
+                  type: string
+                  enum: [price, drawdown, accuracy, confidence, error_rate, funding_pct]
+                comparator:
+                  type: string
+                  enum: [above, below]
+                threshold:
+                  type: number
+                channel:
+                  type: string
+                  enum: [in_app, email, push]
+                  default: in_app
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: The created rule.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertRule'
+        '409':
+          description: An identical rule already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: >
+            Missing entity, an untracked metric, a bad comparator, a
+            non-numeric threshold, or an unknown channel.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
   /alert-rules/{id}:
+    patch:
+      operationId: patch-alert-rules-id
+      summary: "Edit a rule"
+      tags: [notifications]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                threshold:
+                  type: number
+                comparator:
+                  type: string
+                channel:
+                  type: string
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: The updated rule.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertRule'
+        '404':
+          description: No such rule.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
     delete:
       operationId: delete-alert-rules-id
-      summary: "Delete an alert rule"
+      summary: "Remove a rule"
       tags: [notifications]
       parameters:
         - name: id
@@ -119,10 +322,23 @@ paths:
             type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: Deleted.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '404':
+          description: No such rule.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -130,15 +346,84 @@ paths:
   /delivery/channels:
     get:
       operationId: get-delivery-channels
-      summary: "Email/push delivery channels + verification state"
+      summary: "Delivery channels and preferences"
+      description: >
+        Reports which channels actually deliver. Only `in_app` does — see
+        ONLY IN-APP DELIVERS above. A client should label the others as
+        recorded-but-not-sent rather than implying mail is going out.
       tags: [notifications]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The channels and this account's preferences.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Channel'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
+components:
+  schemas:
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          enum: [order, training, compliance, funding, dataset, alert, system]
+        title:
+          type: string
+        detail:
+          type: string
+        unread:
+          type: boolean
+        when:
+          type: string
+    AlertRule:
+      type: object
+      properties:
+        id:
+          type: string
+        entity:
+          type: string
+        metric:
+          type: string
+        comparator:
+          type: string
+          enum: [above, below]
+        threshold:
+          type: number
+        channel:
+          type: string
+          enum: [in_app, email, push]
+        enabled:
+          type: boolean
+        description:
+          type: string
+          description: The rule in words, written by the service.
+    Channel:
+      type: object
+      properties:
+        channel:
+          type: string
+          enum: [in_app, email, push]
+        enabled:
+          type: boolean
+          description: Whether the account wants it.
+        delivers:
+          type: boolean
+          description: >
+            Whether anything is actually sent. False for email and push —
+            the preference is recorded and nothing more.
+        note:
+          type: string

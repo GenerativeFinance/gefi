@@ -9,7 +9,10 @@ permalink: /app/model-funding/
 sitemap: false
 robots: noindex
 primary_action: { label: "+ Request Funding", url: "/app/model-funding/#request" }
-app_script: /assets/js/app/project-funding.js
+app_scripts:
+  - /assets/js/app/funding-math.js
+  - /assets/js/app/collab-math.js
+  - /assets/js/app/project-funding.js
 ---
 
 {% include app-funding-body.html kind="model" noun="model" %}

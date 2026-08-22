@@ -58,7 +58,7 @@
     }
 
     var STATUS_VOCAB = { SUBMITTED: "submitted", APPROVED: "approved", ACTIVE: "outline", COMPLETED: "completed" };
-    var DIFF_VOCAB = { EXPERT: "expert", ADVANCED: "adv", INTERMEDIATE: "intermediate" };
+    var DIFF_VOCAB = { EXPERT: "expert", ADVANCED: "adv", INTERMEDIATE: "intermediate", BEGINNER: "beginner" };
 
     function renderKpis() {
       kpiEl.innerHTML = "";

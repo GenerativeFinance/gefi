@@ -25,6 +25,33 @@
       } catch (e) {}
     }
     var st = load();
+
+    /* Definitions the service holds join the local list, so a report saved
+     * in an earlier session is still here. */
+    GeFi.api.get("/reports/custom-definitions?limit=100").then(function (resp) {
+      if (!resp || !resp.items || !resp.items.length || resp.sample) return;
+      var known = {};
+      st.reports.forEach(function (x) { if (x.serverId) known[x.serverId] = true; });
+      resp.items.forEach(function (d) {
+        if (known[d.id]) return;
+        if (st.reports.some(function (x) { return x.name === d.name; })) return;
+        st.reports.push({
+          id: "CR-S-" + d.id,
+          serverId: d.id,
+          name: d.name,
+          type: d.template || "Performance",
+          desc: "",
+          range: "Last 30 days",
+          schedule: d.schedule || "None",
+          viz: d.fields || [],
+          public: false,
+          created: d.created || "2026-08-22",
+          lastRun: null
+        });
+      });
+      save();
+      if (document.querySelector("[data-crb-list]")) renderList();
+    }, function () {});
     var editingId = null;
     var resetArmed = false;
     var status = document.querySelector("[data-crb-status]");
@@ -126,18 +153,53 @@
         created: "2026-08-22",
         lastRun: null
       };
-      if (editingId) {
-        st.reports = st.reports.map(function (x) { return x.id === editingId ? r : x; });
+      /* The registry's own duplicate-name rule, so a name it would refuse
+       * is refused here in the same words. */
+      var RP = GeFi.reports;
+      var others = st.reports.filter(function (x) { return x.id !== editingId; });
+      var why = RP.validateDefinition({ name: name, fields: viz }, others);
+      if (why) {
+        setErr("name", why);
+        status.textContent = why;
+        form.elements.name.focus();
+        return;
+      }
+
+      var wasEditing = editingId;
+      if (wasEditing) {
+        st.reports = st.reports.map(function (x) { return x.id === wasEditing ? r : x; });
       } else {
         st.reports.push(r);
       }
       save();
-      var verb = editingId ? "saved" : "created";
+      var verb = wasEditing ? "saved" : "created";
       clearForm();
       renderList();
       goSegment("my");
-      listStatus.textContent = "“" + r.name + "” " + verb + ".";
+      listStatus.textContent = "\u201c" + r.name + "\u201d " + verb + ".";
+      stamp(wasEditing ? "updated" : "created", r.name);
+
+      /* Persist the definition so it survives a reload. Offline the local
+       * copy is all there is, and the page says nothing about a server. */
+      var body = { name: name, fields: viz, template: type, schedule: r.schedule };
+      var call = wasEditing && r.serverId
+        ? GeFi.api.patch("/reports/custom-definitions/" + encodeURIComponent(r.serverId), body)
+        : GeFi.api.post("/reports/custom-definitions", body);
+      call.then(
+        function (resp) {
+          if (resp && resp.id && !resp.sample) {
+            r.serverId = resp.id;
+            save();
+          }
+        },
+        function () {}
+      );
     });
+
+    function stamp(kind, name) {
+      var root = document.querySelector("[data-crb-root]");
+      if (root) root.setAttribute("data-crb-" + kind, name);
+    }
 
     /* ---- reset with confirm-if-dirty ---- */
     document.querySelector("[data-crb-reset]").addEventListener("click", function (e) {

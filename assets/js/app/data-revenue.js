@@ -77,11 +77,12 @@
       var t = GeFi.appProvider.totals();
       var paying = GeFi.appProvider.allDatasets().filter(function (d) { return d.revenue > 0; });
 
+      kpiEl.innerHTML = "";
       [
         /* Identical label+value to the Overview KPI — derived from the same rows */
-        { label: "Total Revenue", value: fmt.moneyFull(t.revenue), sub: "lifetime, sample", tone: "is-up" },
-        { label: "Monthly Revenue", value: fmt.moneyFull(Math.round(t.revenue / 12)), sub: "trailing 12-month average", tone: "" },
-        { label: "Active Subscriptions", value: String(t.subscribers), sub: "models + tenants", tone: "" },
+        { key: "revenue", label: "Total Revenue", value: fmt.moneyFull(t.revenue), sub: "lifetime, sample", tone: "is-up" },
+        { key: "monthly", label: "Monthly Revenue", value: fmt.moneyFull(t.monthly), sub: "trailing 12-month average", tone: "" },
+        { key: "subscribers", label: "Active Subscriptions", value: String(t.subscribers), sub: "models + tenants", tone: "" },
         { label: "Avg Revenue / Dataset", value: paying.length ? fmt.moneyFull(Math.round(t.revenue / paying.length)) : "—", sub: "across " + paying.length + " earning datasets", tone: "" }
       ].forEach(function (k) {
         var card = document.createElement("div");
@@ -91,6 +92,7 @@
         l.textContent = k.label;
         var v = document.createElement("p");
         v.className = "app-kpi__value";
+        if (k.key) v.setAttribute("data-dr-kpi", k.key);
         v.textContent = k.value;
         var s = document.createElement("p");
         s.className = "app-kpi__sub " + k.tone;
@@ -125,23 +127,11 @@
         bars.appendChild(row);
       });
 
-      /* Seeded monthly series that sums exactly to total revenue, so the
-       * chart, the KPI and the bars all describe the same dollars. */
-      var rand = GeFi.seed.rng(GeFi.seed.hash("provider|monthly-revenue"));
-      var weights = [];
-      var wsum = 0;
-      for (var i = 0; i < 12; i++) {
-        var w = 0.6 + (i / 11) * 0.8 + rand() * 0.3;
-        weights.push(w);
-        wsum += w;
-      }
-      var months = [];
-      var used = 0;
-      weights.forEach(function (w, idx) {
-        var v = idx === 11 ? t.revenue - used : Math.round((w / wsum) * t.revenue);
-        used += v;
-        months.push(v);
-      });
+      /* The monthly series comes from the shared module, which is also what
+       * /revenue/summary returns, so the chart here and the payout schedule
+       * the server publishes are the same twelve numbers. It sums exactly to
+       * the total, so the chart and the KPI above it describe one figure. */
+      var months = GeFi.dataPlatform.monthlySeries(t.revenue);
       document.querySelector("[data-dr-chart]").appendChild(GeFi.svg.line(
         [{ name: "Revenue", values: months, kind: "area" }],
         { label: "Monthly revenue, Sep 2025 – Aug 2026" }

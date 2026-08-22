@@ -1,12 +1,35 @@
 openapi: 3.0.3
 info:
   title: GeFi Reports & compliance engine
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Report generation (on-demand + scheduled), custom report definitions, compliance rule evaluation, risk aggregation (portfolio VaR).
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Report catalog, asynchronous generation, custom report definitions,
+    schedules, and the compliance and risk report registers.
+
+
+    HEADLINES ARE COUNTED. Every compliance and risk KPI is derived from the
+    rows in the corresponding register, so a reader can check any figure
+    against the table. GET /compliance/evaluations and GET /risk/aggregate
+    each return their totals alongside the rows the totals were taken over.
+
+
+    GENERATION IS ASYNCHRONOUS. POST /reports/generate returns the report in
+    `pending`. It is not ready until the service says so — follow
+    /reports/{id}/events, or poll /reports/{id}. A client must not present a
+    pending report as available.
+
+
+    SAMPLE DOCUMENTS. Report content is generated narrative over the
+    demonstration dataset. It contains no real client, position or
+    transaction data, and is not suitable for regulatory filing or client
+    distribution. The compliance register likewise records sample
+    evaluations against named regimes; it is not evidence of compliance with
+    any of them.
+
+
+    DATES ARE ISO. Every date field in this contract is YYYY-MM-DD. Clients
+    format for display; the wire format does not vary.
+
 servers:
   - url: /v1
     description: >
@@ -22,17 +45,43 @@ paths:
   /reports:
     get:
       operationId: get-reports
-      summary: "Generated reports by category"
+      summary: "Report catalog"
+      description: Grouped by category; each row carries its generation state.
       tags: [reports]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [performance, risk, regulatory, client]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, generated, failed]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of reports.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      categories:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Category'
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Report'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -40,16 +89,158 @@ paths:
   /reports/generate:
     post:
       operationId: post-reports-generate
-      summary: "Queue an on-demand report (pending \u2192 generated)"
+      summary: "Queue a report"
+      description: >
+        Returns the report in `pending`. It is NOT ready yet — follow
+        /reports/{id}/events or poll /reports/{id}.
       tags: [reports]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [category]
+              properties:
+                category:
+                  type: string
+                  enum: [performance, risk, regulatory, client]
+                period:
+                  type: string
+                  enum: [Daily, Weekly, Monthly, Quarterly, Annual]
+                  default: Monthly
+                format:
+                  type: string
+                  enum: [PDF, CSV, XLSX]
+                  default: PDF
       responses:
         '202':
-          description: Stubbed — schema lands with the owning service task.
+          description: Queued.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '422':
+          description: Unknown category, period or format.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /reports/{id}:
+    get:
+      operationId: get-reports-id
+      summary: "One report"
+      tags: [reports]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The report and its current state.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '404':
+          description: No such report.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /reports/{id}/events:
+    get:
+      operationId: get-reports-id-events
+      summary: "Generation events"
+      description: >
+        Emits `report.generated` once the report is ready, then closes.
+      tags: [reports]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >
+            Event stream per the _envelope.yaml SSE convention
+            (named events, monotonic ids, ping heartbeats).
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            text/event-stream:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/SseEvent'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /reports/{id}/content:
+    get:
+      operationId: get-reports-id-content
+      summary: "Report content"
+      description: >
+        Sample narrative. See SAMPLE DOCUMENTS above — this is not filing or
+        distribution material.
+      tags: [reports]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The narrative.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  text:
+                    type: string
+                  sample:
+                    type: boolean
+                    description: Always true.
+        '404':
+          description: No such report.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '409':
+          description: The report has not generated yet.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -57,17 +248,54 @@ paths:
   /reports/schedules:
     get:
       operationId: get-reports-schedules
-      summary: "Scheduled report definitions"
+      summary: "Scheduled reports"
       tags: [reports]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of schedules.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Schedule'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /reports/templates:
+    get:
+      operationId: get-reports-templates
+      summary: "Custom report templates"
+      tags: [reports]
+      responses:
+        '200':
+          description: The templates a custom definition can start from.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Template'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -82,26 +310,71 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of definitions.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Definition'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
     post:
       operationId: post-reports-custom-definitions
-      summary: "Create a custom definition"
+      summary: "Save a custom report definition"
       tags: [reports]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, fields]
+              properties:
+                name:
+                  type: string
+                fields:
+                  type: array
+                  items:
+                    type: string
+                template:
+                  type: string
+                schedule:
+                  type: string
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: The saved definition.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Definition'
+        '409':
+          description: A definition with that name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: Missing name, or no fields selected.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -109,7 +382,7 @@ paths:
   /reports/custom-definitions/{id}:
     patch:
       operationId: patch-reports-custom-definitions-id
-      summary: "Update a definition"
+      summary: "Edit a definition"
       tags: [reports]
       parameters:
         - name: id
@@ -117,19 +390,44 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                fields:
+                  type: array
+                  items:
+                    type: string
+                schedule:
+                  type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The updated definition.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Definition'
+        '404':
+          description: No such definition.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
     delete:
       operationId: delete-reports-custom-definitions-id
-      summary: "Delete a definition"
+      summary: "Remove a definition"
       tags: [reports]
       parameters:
         - name: id
@@ -139,10 +437,23 @@ paths:
             type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: Deleted.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '404':
+          description: No such definition.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -150,17 +461,39 @@ paths:
   /compliance/evaluations:
     get:
       operationId: get-compliance-evaluations
-      summary: "Compliance rule evaluations (status, findings, coverage)"
+      summary: "Compliance register"
+      description: >
+        The rows AND the totals counted from them, so the KPI strip and the
+        table cannot disagree. Sample evaluations against named regimes —
+        NOT evidence of compliance with any of them.
       tags: [reports]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [Compliant, Warning, Violation]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The register and its totals.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      totals:
+                        $ref: '#/components/schemas/ComplianceTotals'
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ComplianceReport'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -168,15 +501,199 @@ paths:
   /risk/aggregate:
     get:
       operationId: get-risk-aggregate
-      summary: "Risk aggregation incl. summed portfolio VaR"
+      summary: "Risk register"
+      description: The rows AND the totals counted from them.
       tags: [reports]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [Critical, High, Medium, Low]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The register and its totals.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      totals:
+                        $ref: '#/components/schemas/RiskTotals'
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RiskReport'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
+components:
+  schemas:
+    Category:
+      type: object
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        accent:
+          type: string
+        count:
+          type: integer
+    Report:
+      type: object
+      properties:
+        id:
+          type: string
+          example: rp-1
+        cat:
+          type: string
+        name:
+          type: string
+        desc:
+          type: string
+        status:
+          type: string
+          enum: [pending, generated, failed]
+        period:
+          type: string
+        format:
+          type: string
+        date:
+          type: string
+          format: date
+    Schedule:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        cadence:
+          type: string
+        next:
+          type: string
+          format: date
+        format:
+          type: string
+    Template:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        fields:
+          type: array
+          items:
+            type: string
+    Definition:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        fields:
+          type: array
+          items:
+            type: string
+        template:
+          type: string
+        schedule:
+          type: string
+        created:
+          type: string
+          format: date
+    ComplianceReport:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+        status:
+          type: string
+          enum: [Compliant, Warning, Violation]
+        risk:
+          type: string
+        regs:
+          type: array
+          items:
+            type: string
+        coverage:
+          type: number
+        findings:
+          type: integer
+        next:
+          type: string
+          format: date
+    ComplianceTotals:
+      type: object
+      description: Counted from the register rows.
+      properties:
+        total:
+          type: integer
+        compliant:
+          type: integer
+        warnings:
+          type: integer
+        violations:
+          type: integer
+        ratePct:
+          type: integer
+        dueSoon:
+          type: integer
+          description: Reviews due within seven days.
+        findings:
+          type: integer
+    RiskReport:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+        severity:
+          type: string
+          enum: [Critical, High, Medium, Low]
+        score:
+          type: number
+        trendPct:
+          type: number
+        confidence:
+          type: number
+        exposure:
+          type: number
+        var95:
+          type: number
+    RiskTotals:
+      type: object
+      description: Counted from the register rows.
+      properties:
+        total:
+          type: integer
+        critical:
+          type: integer
+        high:
+          type: integer
+        medium:
+          type: integer
+        low:
+          type: integer
+        var95:
+          type: number
+        exposure:
+          type: number

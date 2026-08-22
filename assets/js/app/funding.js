@@ -12,30 +12,23 @@
     var fmt = GeFi.fmt;
     var app = GeFi.app;
 
+    var FU = GeFi.funding;
     var projects = D.fundingProjects;
     var bounties = D.bounties;
-    var bots = projects.filter(function (p) { return p.kind === "bot"; });
-    var models = projects.filter(function (p) { return p.kind === "model"; });
-
-    function raised(list) {
-      return list.reduce(function (n, p) { return n + p.raised; }, 0);
-    }
-    var bountyTotal = bounties.reduce(function (n, b) { return n + b.funding.raised; }, 0);
-    var totalFunding = raised(projects) + bountyTotal;
-    var activeProjects = projects.filter(function (p) { return p.daysLeft > 0; });
-    var backers = projects.reduce(function (n, p) { return n + p.backers; }, 0);
-    var bountyBackers = bounties.reduce(function (n, b) { return n + b.funding.backers; }, 0);
-    var avgProgress = Math.round(
-      projects.reduce(function (n, p) { return n + (p.raised / p.goal) * 100; }, 0) / projects.length
-    );
+    /* Every figure comes from the shared engine over the SAME rows the tabs
+     * render, so the hub cannot report a total the tabs do not add up to.
+     * Before this the hub read the raw stored `raised` and ignored the
+     * session's own contributions, so backing a campaign made the two
+     * disagree immediately. */
+    var hub = FU.hubTotals(projects, bounties);
 
     /* KPI strip — the ONE standard card anatomy */
     var kpiEl = document.querySelector("[data-fh-kpis]");
     [
-      { label: "Total Funding", value: fmt.moneyFull(totalFunding), sub: "campaigns + bounty backing", tone: "is-up" },
-      { label: "Active Campaigns", value: String(activeProjects.length), sub: models.filter(function (p) { return p.daysLeft > 0; }).length + " models · " + bots.filter(function (p) { return p.daysLeft > 0; }).length + " bots", tone: "" },
-      { label: "Avg Goal Progress", value: avgProgress + "%", sub: "across " + projects.length + " campaigns", tone: "" },
-      { label: "Contributors", value: (backers + bountyBackers).toLocaleString("en-US"), sub: "campaign + bounty backers", tone: "" }
+      { key: "total", label: "Total Funding", value: fmt.moneyFull(hub.total), sub: "campaigns + bounty backing", tone: "is-up" },
+      { key: "active", label: "Active Campaigns", value: String(hub.activeProjects), sub: hub.activeModels + " models · " + hub.activeBots + " bots", tone: "" },
+      { key: "progress", label: "Avg Goal Progress", value: hub.avgProgress + "%", sub: "across " + hub.campaigns + " campaigns", tone: "" },
+      { key: "backers", label: "Contributors", value: hub.backers.toLocaleString("en-US"), sub: "campaign + bounty backers", tone: "" }
     ].forEach(function (k) {
       var card = document.createElement("div");
       card.className = "app-kpi";
@@ -44,6 +37,7 @@
       l.textContent = k.label;
       var v = document.createElement("p");
       v.className = "app-kpi__value";
+      v.setAttribute("data-fh-kpi", k.key);
       v.textContent = k.value;
       var s = document.createElement("p");
       s.className = "app-kpi__sub " + k.tone;
@@ -57,9 +51,9 @@
     /* Summary cards — one per sibling tab, same aggregates */
     var cardsEl = document.querySelector("[data-fh-cards]");
     [
-      { title: "Bot Funding", total: raised(bots), active: bots.filter(function (p) { return p.daysLeft > 0; }).length, unit: "campaigns", cta: "View Bot Funding", href: "/app/bot-funding/" },
-      { title: "AI Model Funding", total: raised(models), active: models.filter(function (p) { return p.daysLeft > 0; }).length, unit: "campaigns", cta: "View Model Funding", href: "/app/model-funding/" },
-      { title: "Bounty Funding", total: bountyTotal, active: bounties.filter(function (b) { return b.funding.status !== "COMPLETED"; }).length, unit: "bounties", cta: "View Bounty Funding", href: "/app/bounty-funding/" }
+      { title: "Bot Funding", total: hub.botRaised, active: hub.activeBots, unit: "campaigns", cta: "View Bot Funding", href: "/app/bot-funding/" },
+      { title: "AI Model Funding", total: hub.modelRaised, active: hub.activeModels, unit: "campaigns", cta: "View Model Funding", href: "/app/model-funding/" },
+      { title: "Bounty Funding", total: hub.bountyRaised, active: hub.activeBounties, unit: "bounties", cta: "View Bounty Funding", href: "/app/bounty-funding/" }
     ].forEach(function (c) {
       var card = document.createElement("div");
       card.className = "app-gridcard";
@@ -92,7 +86,7 @@
     /* Recently Funded — only campaigns that actually hit 100% (the
      * reference padded this to three; the canonical dataset has what
      * it has, and the note says so). */
-    var funded = projects.filter(function (p) { return p.raised >= p.goal; });
+    var funded = projects.filter(function (p) { return FU.statusOf(p) === "funded"; });
     var feedEl = document.querySelector("[data-fh-funded]");
     funded.forEach(function (p) {
       var card = document.createElement("div");

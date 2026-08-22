@@ -33,6 +33,11 @@
     var st = load();
     st.extraActivity = st.extraActivity || [];
     st.resolvedIssues = st.resolvedIssues || [];
+
+    function stamp(kind, value) {
+      var root = document.querySelector("[data-rg-root]");
+      if (root) root.setAttribute("data-rg-" + kind, value);
+    }
     st.threadExtra = st.threadExtra || {};
     st.readThreads = st.readThreads || [];
 
@@ -253,11 +258,18 @@
           btn.type = "button";
           btn.className = "app-btn app-btn--primary";
           btn.textContent = "Resolve";
+          btn.setAttribute("data-ri-resolve", i.id);
           btn.addEventListener("click", function () {
             st.resolvedIssues.push(i.id);
             save();
             renderIssues();
             toast.textContent = i.id + " resolved — the Overview's flagged and critical counts moved with it.";
+            stamp("resolved", i.id);
+            /* Close it on the service too, so the Overview reads the same
+             * after a reload rather than only in this tab. */
+            GeFi.api.post("/regulator/issues/" + encodeURIComponent(i.id) + "/resolve", {}).then(
+              function () {}, function () {}
+            );
           });
           rail.appendChild(btn);
           card.appendChild(rail);
@@ -359,16 +371,28 @@
       rcRoot.querySelector("[data-rc-composer]").addEventListener("submit", function (e) {
         e.preventDefault();
         var text = e.target.elements.message.value.trim();
-        if (!text || !current) {
-          status.textContent = current ? "Write a message first." : "Pick a thread first.";
+        if (!current) {
+          status.textContent = "Pick a thread first.";
           return;
         }
-        st.threadExtra[current] = st.threadExtra[current] || [];
-        st.threadExtra[current].push({ from: "you", text: text, when: "just now" });
+        var why = GeFi.regulator.validateMessage(text);
+        if (why) {
+          status.textContent = why;
+          return;
+        }
+        var thread = current;
+        st.threadExtra[thread] = st.threadExtra[thread] || [];
+        st.threadExtra[thread].push({ from: "you", text: text, when: "just now" });
         save();
         e.target.reset();
-        openThread(current);
+        openThread(thread);
         status.textContent = "Sent — logged to the supervisory record.";
+        stamp("posted", thread);
+        /* Persist to the supervisory record so the message is still there
+         * after a reload; offline the local copy is all there is. */
+        GeFi.api.post("/regulator/threads/" + encodeURIComponent(thread) + "/messages", { text: text }).then(
+          function () {}, function () {}
+        );
       });
 
       renderThreads();

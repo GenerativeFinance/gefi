@@ -261,8 +261,8 @@
       ["/bounties?limit=100", function (r) {
         D.bounties = r.items;
       }],
-      ["/insights?limit=100", function (r) {
-        D.insights = r.items;
+      ["/insights?surface=portfolio&limit=100", function (r) {
+        if (r.items && r.items.length) D.insights = r.items;
       }],
       ["/developers?limit=100", function (r) {
         if (r.items && r.items.length) D.developers = r.items;
@@ -385,22 +385,128 @@
       return D.marketData.sources;
     });
     api.register("/datasets", function () {
-      return D.datasets;
+      var dp = GeFi.dataPlatform;
+      /* Offline the registry still reports its derived quality and revenue,
+       * so the provider pages read the same numbers either way. */
+      return dp ? D.datasets.map(dp.view) : D.datasets;
+    });
+    api.register("/datasets/{id}", function (params) {
+      var dp = GeFi.dataPlatform;
+      var hit = D.datasets.filter(function (d) { return d.id === params.id; })[0];
+      if (!hit) return undefined;
+      return dp ? dp.view(hit) : hit;
+    });
+    api.register("/datasets/{id}/archive", function (params) {
+      return { id: params.id, status: "archived" };
+    });
+    api.register("/provider/activity", function () {
+      return [];
     });
     api.register("/funding/projects", function () {
       return D.fundingProjects;
+    });
+    /* Offline the contribution resolves so the flow completes; the amount
+     * has already been checked against the same rules the service applies,
+     * and the page does the arithmetic itself when no server row comes back. */
+    api.register("/funding/projects/{id}/contributions", function () {
+      return {};
     });
     api.register("/bounties", function () {
       return D.bounties;
     });
     api.register("/insights", function () {
-      return D.insights;
+      var im = GeFi.insightsMath;
+      /* Offline the same module assembles the same canonical sets. */
+      return im ? im.all(D) : D.insights;
+    });
+    api.register("/insights/generate", function () {
+      var im = GeFi.insightsMath;
+      return { surface: "portfolio", source: "seeded", items: im ? im.surfaces(D).portfolio : D.insights };
     });
     api.register("/sentiment", function () {
       return D.reports.market;
     });
+    api.register("/compliance/evaluations", function () {
+      var rp = GeFi.reports;
+      var out = { items: D.complianceReports, next_cursor: null };
+      if (rp) out.totals = rp.complianceTotals(D.complianceReports);
+      return out;
+    });
+    api.register("/risk/aggregate", function () {
+      var rp = GeFi.reports;
+      var out = { items: D.riskReports, next_cursor: null };
+      if (rp) out.totals = rp.riskTotals(D.riskReports);
+      return out;
+    });
+    api.register("/reports/custom-definitions", function () {
+      return [];
+    });
+    api.register("/regulator/overview", function () {
+      var rg = GeFi.regulator;
+      if (!rg) return {};
+      var R = D.regulator;
+      return rg.overview(rg.register(R.modelAudits, R.datasetAudits), R.issues, R.standardsList, []);
+    });
+    api.register("/regulator/issues", function () {
+      var rg = GeFi.regulator;
+      var rows = D.regulator.issues;
+      if (!rg) return rows;
+      return { items: rows.map(function (i) {
+        var sla = rg.slaState(i);
+        return Object.assign({}, i, { due: sla.due, daysOpen: sla.daysOpen, dueInDays: sla.dueInDays, sla: sla.state });
+      }), next_cursor: null, epoch: rg.EPOCH };
+    });
+    api.register("/regulator/threads", function () {
+      return D.regulator.threads.map(function (t) {
+        return { id: t.id, org: t.org, subject: t.subject, unread: t.unread, messages: t.messages.length };
+      });
+    });
+    api.register("/regulator/standards", function () {
+      return D.regulator.standardsList;
+    });
+    api.register("/regulator/activity", function () {
+      return D.regulator.activity;
+    });
+    /* The bell's seeded state, mirroring the mock's opening notifications
+     * so the badge reads the same offline. */
+    api.register("/notifications", function () {
+      return {
+        items: [
+          { id: "n-1", kind: "system", title: "Rebalance executed", detail: "Portfolio Optimiser moved 3.2% into bonds", unread: true, when: "2h ago" },
+          { id: "n-2", kind: "compliance", title: "Model audit passed", detail: "#MT-4521 closed with no findings", unread: true, when: "5h ago" },
+          { id: "n-3", kind: "dataset", title: "Dataset published", detail: "Options Surface passed its quality audit", unread: false, when: "yesterday" }
+        ],
+        next_cursor: null,
+        unread: 2
+      };
+    });
+    api.register("/notifications/read", function () {
+      return { marked: 0, unread: 0 };
+    });
+    api.register("/alert-rules", function () {
+      return {};
+    });
+    api.register("/search", function () {
+      /* The path arrives without its query here; the shell falls back to
+       * calling the engine directly, so this exists only to keep /search
+       * out of the unresolvable set. */
+      var pl = GeFi.platform;
+      return pl ? pl.search("") : {};
+    });
+    api.register("/zkml/verifications", function () {
+      /* Offline nothing stores runs; the page keeps its last run in
+       * sessionStorage and the history panel says so. */
+      return [];
+    });
     api.register("/learning/catalog", function () {
       return D.learning.items;
+    });
+    api.register("/learning/certificates", function () {
+      var le = GeFi.learning;
+      if (!le) return [];
+      return D.learning.items
+        .filter(function (i) { return i.progress >= 100; })
+        .map(function (i) { return le.certificateFor(i, "2026-07-15"); });
     });
     api.register("/models", function () {
       return (GeFi.MODELS || []).map(function (m) {
@@ -409,6 +515,33 @@
     });
     api.register("/backtests", function () {
       return D.backtests;
+    });
+    api.register("/teams", function () {
+      return [{ id: "team-1", name: "Optimizer squad", members: D.devConsole.team.length }];
+    });
+    /* Offline the board's mutations resolve locally so the flows still
+     * complete. The one-active-claim rule is applied by the page from the
+     * shared module before it ever gets here, so a claim that would be
+     * refused live is refused offline for the same reason. */
+    api.register("/bounties/{id}/claim", function (params) {
+      return { id: params.id, status: "CLAIMED", claimedBy: "you" };
+    });
+    api.register("/bounties/{id}/release", function (params) {
+      return { id: params.id, status: "OPEN", claimedBy: null };
+    });
+    api.register("/teams/{id}/invites", function () {
+      return { kind: "Invited" };
+    });
+    api.register("/teams/{id}/members", function () {
+      return D.devConsole.team;
+    });
+    api.register("/threads", function () {
+      return D.devConsole.messages.map(function (m, i) {
+        return { id: "th-" + (i + 1), title: m.who + " — " + m.text.slice(0, 40), messages: 1 };
+      });
+    });
+    api.register("/threads/{id}/messages", function () {
+      return D.devConsole.messages;
     });
     api.register("/dev/models", function () {
       return D.devConsole.models;

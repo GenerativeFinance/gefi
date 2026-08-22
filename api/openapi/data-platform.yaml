@@ -1,12 +1,31 @@
 openapi: 3.0.3
 info:
   title: GeFi Data platform
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Dataset registry, upload/ingest pipeline with quality scoring, dataset subscriptions, revenue accounting and payouts, market-data source catalog.
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Dataset registry, upload lifecycle, quality scoring, subscriptions,
+    revenue accounting and the market-data source catalog.
+
+
+    THE ACCOUNTING RULE. A dataset's revenue is DERIVED from its line items —
+    downloads at its download price, plus subscriptions at its monthly rate
+    over a stated 12-month window — and every aggregate is the sum of those.
+    Nothing stores a revenue figure independently of the activity that
+    produced it, so the provider Overview KPI, the Revenue tab and the
+    per-dataset bars are the same dollars counted the same way. GET
+    /revenue/summary returns the line items alongside the totals so a client
+    can check the arithmetic rather than trust it.
+
+
+    UPLOAD LIFECYCLE. processing → published. A dataset that is still
+    processing has not been audited, so it has no quality score and earns
+    nothing; both appear only once it publishes. The mock advances the state
+    after a couple of seconds to stand in for ingestion.
+
+
+    SIMULATED MONEY. No revenue is collected and no payout is made. The
+    payout schedule describes what would be owed, not what was sent.
+
 servers:
   - url: /v1
     description: >
@@ -23,16 +42,39 @@ paths:
     get:
       operationId: get-datasets
       summary: "Dataset registry"
+      description: >
+        Every row carries its DERIVED quality score and revenue; nothing is
+        stored independently of the activity that produced it.
       tags: [data-platform]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [processing, published, archived, draft]
+        - name: category
+          in: query
+          schema:
+            type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of datasets.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Dataset'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -40,15 +82,50 @@ paths:
     post:
       operationId: post-datasets
       summary: "Register a dataset (starts ingest)"
+      description: >
+        Returns the dataset in `processing`. It has no quality score and
+        earns nothing until ingestion and the audit finish, at which point it
+        becomes `published` — the mock advances it after a couple of seconds.
       tags: [data-platform]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                category:
+                  type: string
+                rows:
+                  type: string
+                  description: Human-readable row count, e.g. "1M".
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '202':
+          description: Accepted; ingestion has started.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+        '409':
+          description: A dataset with that name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: Missing name, or an unknown category.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -66,10 +143,64 @@ paths:
             type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The dataset, with its derived score and revenue.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+        '404':
+          description: No such dataset.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+    patch:
+      operationId: patch-datasets-id
+      summary: "Edit a dataset's listing"
+      description: >
+        Name and category only. Quality and revenue are derived and cannot
+        be set — that is what makes the aggregates trustworthy.
+      tags: [data-platform]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                category:
+                  type: string
+      responses:
+        '200':
+          description: The updated dataset.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+        '404':
+          description: No such dataset.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -78,6 +209,11 @@ paths:
     post:
       operationId: post-datasets-id-archive
       summary: "Archive (subscribers keep read access)"
+      description: >
+        Removes the dataset from the registry listing. Because this is
+        destructive to the listing it is typed-confirmed: `confirm` must
+        equal the dataset's name exactly. Existing subscribers keep read
+        access; archiving is not deletion of their data.
       tags: [data-platform]
       parameters:
         - name: id
@@ -86,12 +222,39 @@ paths:
           schema:
             type: string
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirm]
+              properties:
+                confirm:
+                  type: string
+                  description: Must equal the dataset's name exactly.
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The archived dataset.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+        '404':
+          description: No such dataset.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: The typed confirmation did not match. Nothing was archived.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -99,7 +262,7 @@ paths:
   /datasets/{id}/quality:
     get:
       operationId: get-datasets-id-quality
-      summary: "Quality-audit breakdown"
+      summary: "Quality score breakdown"
       tags: [data-platform]
       parameters:
         - name: id
@@ -109,10 +272,33 @@ paths:
             type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: >
+            The audited score, or null while the dataset is still
+            processing — an unaudited dataset has no score rather than a
+            flattering default.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+                  quality:
+                    type: number
+                    nullable: true
+                  audited:
+                    type: boolean
+        '404':
+          description: No such dataset.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -120,17 +306,28 @@ paths:
   /dataset-subscriptions:
     get:
       operationId: get-dataset-subscriptions
-      summary: "Subscriptions to caller's datasets"
+      summary: "Subscriptions to datasets"
       tags: [data-platform]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of subscriptions.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DatasetSubscription'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -138,14 +335,22 @@ paths:
   /revenue/summary:
     get:
       operationId: get-revenue-summary
-      summary: "Revenue aggregates (derives from dataset rows)"
+      summary: "Revenue accounting"
+      description: >
+        Totals AND the line items they are the sum of, so a client can check
+        the arithmetic rather than trust it. `monthly_series` sums exactly to
+        `total_revenue`.
       tags: [data-platform]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The accounting, with its own workings.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevenueSummary'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -153,17 +358,71 @@ paths:
   /revenue/payouts:
     get:
       operationId: get-revenue-payouts
-      summary: "Payout statements"
+      summary: "Payout schedule"
+      description: >
+        What would be owed, not what was sent. NO MONEY MOVES — every entry
+        carries `settled: false`.
       tags: [data-platform]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of scheduled payouts.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Payout'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /provider/activity:
+    get:
+      operationId: get-provider-activity
+      summary: "Provider activity feed"
+      description: >
+        Derived from what the registry actually holds plus anything this
+        session did, so the feed cannot describe events the data does not
+        support.
+      tags: [data-platform]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of activity entries.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            title:
+                              type: string
+                            detail:
+                              type: string
+                            when:
+                              type: string
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -267,3 +526,116 @@ paths:
               schema: { $ref: '_envelope.yaml#/components/schemas/SseEvent' }
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
+components:
+  schemas:
+    Dataset:
+      type: object
+      description: >
+        `quality` and `revenue` are DERIVED — from the audit and from the
+        line items respectively — and cannot be set through this API.
+      properties:
+        id:
+          type: string
+          example: DS-7301
+        name:
+          type: string
+        category:
+          type: string
+        status:
+          type: string
+          enum: [processing, published, archived, draft]
+        rows:
+          type: string
+          description: Human-readable row count, e.g. "66M".
+        downloads:
+          type: integer
+        subscribers:
+          type: integer
+        quality:
+          type: number
+          description: Audited score out of 10. Zero while still processing.
+        revenue:
+          type: number
+          description: Sum of this dataset's line items.
+        terms:
+          type: object
+          description: The commercial terms the line items are priced at.
+          properties:
+            downloadPrice:
+              type: number
+            monthlyRate:
+              type: number
+    LineItem:
+      type: object
+      properties:
+        dataset:
+          type: string
+        kind:
+          type: string
+          enum: [downloads, subscriptions]
+        label:
+          type: string
+          description: Human-readable working, e.g. "854 downloads at $80".
+        units:
+          type: integer
+        unitPrice:
+          type: number
+        amount:
+          type: number
+    RevenueSummary:
+      type: object
+      properties:
+        total_revenue:
+          type: number
+          description: Equals the sum of every line item's amount.
+        monthly_revenue:
+          type: number
+        datasets:
+          type: integer
+        published:
+          type: integer
+        downloads:
+          type: integer
+        subscribers:
+          type: integer
+        avg_quality:
+          type: number
+        months:
+          type: integer
+          description: The window the lifetime figures cover.
+        monthly_series:
+          type: array
+          description: Sums exactly to total_revenue.
+          items:
+            type: number
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItem'
+    DatasetSubscription:
+      type: object
+      properties:
+        id:
+          type: string
+        dataset:
+          type: string
+        subscriber:
+          type: string
+        monthly_fee:
+          type: number
+        since:
+          type: string
+          format: date
+    Payout:
+      type: object
+      description: What would be owed. Nothing is sent; `settled` is always false.
+      properties:
+        period:
+          type: string
+          example: 2026-08
+        amount:
+          type: number
+        datasets:
+          type: integer
+        settled:
+          type: boolean

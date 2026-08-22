@@ -176,12 +176,18 @@
     return rows;
   })();
 
+  /* Funding campaigns (task 313). `status` is one of submitted / active /
+   * funded / closed — the same four the contract defines. One row used to
+   * say "approved", which behaved identically to "active" everywhere and so
+   * was a label without a meaning; a campaign is `funded` the moment raised
+   * reaches goal, which assets/js/app/funding-math.js derives rather than
+   * trusting a flag. */
   DEMO.fundingProjects = [
     { kind: "bot", name: "AI-Powered Grid Trading Bot", category: "Grid Trading", risk: "Medium", status: "active", goal: 50000, raised: 32500, backers: 41, roiPct: 14.2, daysLeft: 18, min: 100, features: ["Grid rebalancing", "Volatility bands", "Backtested 2y"], by: "quantessence" },
     { kind: "bot", name: "High-Frequency Arbitrage Bot", category: "Arbitrage", risk: "High", status: "active", goal: 75000, raised: 68250, backers: 55, roiPct: 22.6, daysLeft: 6, min: 250, features: ["Cross-venue", "Latency-aware", "Research only"], by: "meridian-labs" },
     { kind: "bot", name: "DeFi Yield Farming Optimizer", category: "DeFi", risk: "High", status: "funded", goal: 40000, raised: 40000, backers: 63, roiPct: 18.1, daysLeft: 0, min: 100, features: ["Protocol scoring", "Gas-aware"], by: "helios-quant" },
     { kind: "model", name: "Derivatives Pricing Model", category: "Pricing", risk: "Medium", status: "submitted", goal: 40000, raised: 2500, backers: 4, roiPct: 12.0, daysLeft: 41, min: 100, features: ["Vol surface", "American exercise"], by: "nordwind-am" },
-    { kind: "model", name: "Market Sentiment Analysis Engine", category: "NLP", risk: "Medium", status: "approved", goal: 30000, raised: 11200, backers: 19, roiPct: 15.5, daysLeft: 29, min: 100, features: ["Multi-lingual", "Streaming"], by: "atlas-nlp" },
+    { kind: "model", name: "Market Sentiment Analysis Engine", category: "NLP", risk: "Medium", status: "active", goal: 30000, raised: 11200, backers: 19, roiPct: 15.5, daysLeft: 29, min: 100, features: ["Multi-lingual", "Streaming"], by: "atlas-nlp" },
     { kind: "model", name: "Real-time Fraud Detection System", category: "Fraud", risk: "Low", status: "active", goal: 60000, raised: 44700, backers: 72, roiPct: 11.3, daysLeft: 12, min: 50, features: ["Graph features", "Sub-100ms"], by: "gulf-secure" }
   ];
 
@@ -191,28 +197,39 @@
      * its goal IS the reward, raised counts toward paying it out. */
     { id: "B-201", title: "Real-time Options Flow Analyzer", status: "OPEN", difficulty: "ADVANCED", reward: 2500, deadline: "2026-09-15", category: "Derivatives", submissions: 3, skills: ["Python", "Options", "Streaming"],
       funding: { status: "ACTIVE", raised: 1800, backers: 12, by: "quantessence", duration: "6 weeks" } },
-    { id: "B-202", title: "ESG Scoring Algorithm", status: "CLAIMED", difficulty: "INTERMEDIATE", reward: 1500, deadline: "2026-09-01", category: "ESG", submissions: 1, skills: ["NLP", "ESG data"],
+    { id: "B-202", title: "ESG Scoring Algorithm", status: "CLAIMED", difficulty: "INTERMEDIATE", reward: 1500, deadline: "2026-09-01", category: "ESG", submissions: 1, skills: ["NLP", "ESG data"], claimedBy: "atlas-nlp",
       funding: { status: "COMPLETED", raised: 1500, backers: 9, by: "atlas-nlp", duration: "4 weeks" } },
-    { id: "B-203", title: "Cross-Chain Bridge Risk Monitor", status: "IN PROGRESS", difficulty: "EXPERT", reward: 3250, deadline: "2026-09-28", category: "DeFi", submissions: 2, skills: ["Solidity", "Risk", "Graph"],
+    { id: "B-203", title: "Cross-Chain Bridge Risk Monitor", status: "IN PROGRESS", difficulty: "EXPERT", reward: 3250, deadline: "2026-09-28", category: "DeFi", submissions: 2, skills: ["Solidity", "Risk", "Graph"], claimedBy: "helios-quant",
       funding: { status: "APPROVED", raised: 2100, backers: 15, by: "helios-quant", duration: "8 weeks" } },
     { id: "B-204", title: "Earnings Call Tone Tracker", status: "OPEN", difficulty: "INTERMEDIATE", reward: 1000, deadline: "2026-09-10", category: "NLP", submissions: 0, skills: ["ASR", "NLP"],
-      funding: { status: "SUBMITTED", raised: 0, backers: 0, by: "gulf-secure", duration: "3 weeks" } }
+      funding: { status: "SUBMITTED", raised: 0, backers: 0, by: "gulf-secure", duration: "3 weeks" } },
+    /* Finished work stays on the board (task 311). The board's KPIs are
+     * counted from these rows rather than stated as round numbers, so
+     * "Completed" and "Active Developers" mean something checkable. */
+    { id: "B-198", title: "Municipal Bond Spread Scanner", status: "COMPLETED", difficulty: "INTERMEDIATE", reward: 1750, deadline: "2026-07-30", category: "Fixed Income", submissions: 4, skills: ["Python", "Fixed Income"], claimedBy: "atlas-nlp",
+      funding: { status: "COMPLETED", raised: 1750, backers: 11, by: "atlas-nlp", duration: "5 weeks" } },
+    { id: "B-199", title: "Liquidity Fragmentation Map", status: "COMPLETED", difficulty: "ADVANCED", reward: 2250, deadline: "2026-08-05", category: "Microstructure", submissions: 6, skills: ["C++", "Microstructure"], claimedBy: "helios-quant",
+      funding: { status: "COMPLETED", raised: 2250, backers: 18, by: "helios-quant", duration: "7 weeks" } },
+    { id: "B-200", title: "Sanctions Screening Recall Test", status: "COMPLETED", difficulty: "BEGINNER", reward: 600, deadline: "2026-08-12", category: "Compliance", submissions: 2, skills: ["NLP", "Compliance"], claimedBy: "gulf-secure",
+      funding: { status: "COMPLETED", raised: 600, backers: 5, by: "gulf-secure", duration: "2 weeks" } }
   ];
 
+  /* Datasets (task 312): only the ACTIVITY is stored — downloads and
+   * subscriber counts. Revenue and the quality score are derived from that
+   * activity by assets/js/app/dataplatform-math.js, so an aggregate anywhere
+   * in the app is the sum of line items a reader could add up themselves. */
   DEMO.datasets = (function () {
     var cats = ["Market Data", "Alternative", "Credit", "ESG", "Macro", "On-Chain"];
     var rand = GeFi.seed.rng(GeFi.seed.hash("demo|datasets"));
     var rows = [];
     for (var i = 0; i < 12; i++) {
-      var revenue = Math.round(30000 + rand() * 420000);
+      rand(); /* keep the seeded stream aligned with the original row order */
       rows.push({
         id: "DS-" + (7301 + i),
         name: ["Equities EOD Bundle", "Card Spend Aggregates", "SME Loan Performance", "ESG Controversies", "Freight Rates", "Stablecoin Flows", "Filings Corpus", "KYB Registry Deltas", "Options Surface", "Deposit Behavior", "Sanctions Deltas", "Macro Releases"][i],
         category: cats[i % cats.length],
-        quality: +(8.4 + rand() * 1.5).toFixed(1),
         rows: Math.round(2 + rand() * 96) + "M",
         status: i === 10 ? "processing" : i === 11 ? "draft" : "published",
-        revenue: i > 9 ? 0 : revenue,
         downloads: i > 9 ? 0 : Math.round(100 + rand() * 1800),
         subscribers: i > 9 ? 0 : Math.round(4 + rand() * 40)
       });

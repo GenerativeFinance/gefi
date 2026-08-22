@@ -77,6 +77,13 @@
         head.appendChild(sentiment);
         head.appendChild(conf);
         head.appendChild(impact);
+        if (ins.generated) {
+          /* The reader must be able to tell an authored insight from a
+           * generated one — the contract makes this label mandatory. */
+          var gen = app.chip("info", "AI-generated");
+          gen.setAttribute("data-in-generated", ins.title);
+          head.appendChild(gen);
+        }
         var body = document.createElement("p");
         body.className = "app-gridcard__desc";
         body.textContent = ins.body;
@@ -91,7 +98,26 @@
         setBtn.className = "app-btn " + (isSet ? "app-btn--ghost" : "app-btn--primary");
         setBtn.textContent = isSet ? "Alert set ✓" : "Set Alert";
         setBtn.disabled = isSet;
+        setBtn.setAttribute("data-in-alert", ins.title);
         setBtn.addEventListener("click", function () {
+          /* An alert is a RULE the service holds, not a flag in this tab.
+           * The rule names what it watches and on what threshold, so it is
+           * something the reader can later find, edit and delete. */
+          /* Watch the one number this insight actually carries: tell me
+           * if its conviction weakens below where it stands today. A rule
+           * naming a metric the service does not track would never fire. */
+          var rule = {
+            entity: ins.title,
+            metric: "confidence",
+            comparator: "below",
+            threshold: ins.confidence,
+            channel: "in_app"
+          };
+          var why = GeFi.notify.validateRule(rule);
+          if (why) {
+            if (app.toast) app.toast(why, { kind: "error" });
+            return;
+          }
           saved.push(ins.title);
           try {
             sessionStorage.setItem(KEY, JSON.stringify(saved));
@@ -99,6 +125,22 @@
           setBtn.textContent = "Alert set ✓";
           setBtn.className = "app-btn app-btn--ghost";
           setBtn.disabled = true;
+          var root = document.querySelector("[data-in-root]");
+          if (root) root.setAttribute("data-in-alertset", ins.title);
+          GeFi.api.post("/alert-rules", rule).then(
+            function (r) {
+              if (app.toast) {
+                app.toast(
+                  "Alert set: " + ((r && r.description) || GeFi.notify.describeRule(rule)) +
+                    ". In-app only — nothing is emailed."
+                );
+              }
+            },
+            function (err) {
+              var msg = err && err.body && err.body.message;
+              if (msg && app.toast) app.toast(msg, { kind: "error" });
+            }
+          );
         });
         var learn = document.createElement("a");
         learn.className = "app-btn app-btn--ghost";

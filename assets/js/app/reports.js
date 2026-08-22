@@ -13,6 +13,7 @@
     var D = GeFi.DEMO;
     var fmt = GeFi.fmt;
     var app = GeFi.app;
+    var RP = GeFi.reports;
 
     var KEY = "gefi-app-reports";
     function load() {
@@ -215,20 +216,74 @@
         status: "pending",
         date: "2026-08-22"
       };
+      /* The service decides when a report is ready; the page must not
+       * declare it generated on a timer of its own. */
+      var why = RP.validateGenerate({ category: catKey, period: period }, D.reports.categories);
+      if (why) {
+        status.textContent = why;
+        return;
+      }
       st.extra.push(r);
       save();
       modal.hidden = true;
       renderCats();
       renderInvestor();
-      status.textContent = "“" + r.name + "” queued as Pending.";
-      setTimeout(function () {
-        r.status = "generated";
-        save();
-        renderCats();
-        renderInvestor();
-        status.textContent = "“" + r.name + "” is generated and ready to download.";
-      }, 1500);
+      status.textContent = "\u201c" + r.name + "\u201d queued as Pending.";
+      stamp("pending", r.name);
+
+      GeFi.api.post("/reports/generate", { category: catKey, period: period }).then(
+        function (resp) { follow(resp && resp.id ? resp.id : null); },
+        function () { follow(null); }
+      );
+
+      function follow(id) {
+        if (id) r.id = id;
+        var done = false;
+        function finish(row) {
+          if (done) return;
+          done = true;
+          r.status = (row && row.status) || "generated";
+          save();
+          renderCats();
+          renderInvestor();
+          status.textContent = "\u201c" + r.name + "\u201d is generated and ready to download.";
+          stamp("generated", r.name);
+        }
+        if (!id) {
+          /* No service answering: the same wait, applied locally. */
+          setTimeout(function () { finish(null); }, 1500);
+          return;
+        }
+        var stream = GeFi.api.stream(
+          "/reports/" + encodeURIComponent(id) + "/events",
+          function (name, data) {
+            if (name === "report.generated") {
+              finish(data);
+              if (stream && stream.close) stream.close();
+            }
+          },
+          {
+            events: ["report.generated"],
+            simulate: function (emit) {
+              var t = setTimeout(function () { emit("report.generated", null); }, 1500);
+              return function () { clearTimeout(t); };
+            }
+          }
+        );
+        /* Belt and braces: if the stream never lands, poll once. */
+        setTimeout(function () {
+          if (done) return;
+          GeFi.api.get("/reports/" + encodeURIComponent(id)).then(function (row) {
+            if (row && row.status === "generated") finish(row);
+          }, function () {});
+        }, 4000);
+      }
     });
+
+    function stamp(kind, name) {
+      var root = document.querySelector("[data-rp-root]");
+      if (root) root.setAttribute("data-rp-" + kind, name);
+    }
 
     /* ---- Quick actions ---- */
     var quick = document.querySelector("[data-rp-quick]");

@@ -1,12 +1,35 @@
 openapi: 3.0.3
 info:
   title: GeFi Platform cross-cutting
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    API key management, rate limits, audit hash chain (trust-center verifier), global search, i18n strings, GDPR retention jobs.
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Cross-cutting platform services: API keys, rate limits, the audit
+    hash-chain, global search, i18n bundles and GDPR requests.
+
+
+    KEYS ARE SHOWN ONCE. Creating an API key returns `secret_once` — the
+    only time the secret ever appears. Listings return the prefix alone;
+    the secret is not retrievable, which is the property that makes it a
+    secret. Revoking is typed-confirmed with the key's label.
+
+
+    RATE-LIMIT HEADERS ON EVERY RESPONSE. X-RateLimit-Limit, -Remaining and
+    -Reset accompany every response. The window is a fixture — nothing is
+    actually limited here — but the headers give clients something real to
+    parse and display.
+
+
+    THE CHAIN IS A SAMPLE. The audit chain's hashes are FNV-1a labels,
+    deterministic per run_id, with each link committing to its
+    predecessor. They demonstrate the chain's SHAPE; they are not a
+    cryptographic commitment and verify nothing.
+
+
+    GDPR REQUESTS ARE RECORDED STUBS. An export assembles nothing and a
+    deletion deletes nothing; each records a request with a status a real
+    implementation would drive to completion within the statutory window.
+    The responses say so.
+
 servers:
   - url: /v1
     description: >
@@ -22,33 +45,80 @@ paths:
   /api-keys:
     get:
       operationId: get-api-keys
-      summary: "API keys"
+      summary: "API keys (masked)"
       tags: [platform]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of keys; prefixes only, never secrets.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ApiKey'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
     post:
       operationId: post-api-keys
-      summary: "Issue a key"
+      summary: "Create a key (one-time reveal)"
+      description: >
+        Returns `secret_once` — the ONLY time the secret appears. Store it
+        now; it is not retrievable later.
       tags: [platform]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [label]
+              properties:
+                label:
+                  type: string
+                  maxLength: 60
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: The key, with its secret shown this once.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiKey'
+                  - type: object
+                    properties:
+                      secret_once:
+                        type: string
+                        description: Shown exactly once, at creation.
+        '409':
+          description: A key with that label already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: Missing or over-long label.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -56,7 +126,10 @@ paths:
   /api-keys/{id}:
     delete:
       operationId: delete-api-keys-id
-      summary: "Revoke a key"
+      summary: "Revoke a key (typed-confirm)"
+      description: >
+        `confirm` must equal the key's label exactly — revocation is
+        destructive and immediate.
       tags: [platform]
       parameters:
         - name: id
@@ -64,12 +137,47 @@ paths:
           required: true
           schema:
             type: string
+        - name: confirm
+          in: query
+          description: The key's label, typed exactly.
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirm:
+                  type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: Revoked.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  revoked:
+                    type: string
+        '404':
+          description: No such key.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: The typed confirmation did not match. Nothing was revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -77,22 +185,36 @@ paths:
   /rate-limits:
     get:
       operationId: get-rate-limits
-      summary: "Published limits + current usage"
+      summary: "Current rate-limit window"
       tags: [platform]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The window the X-RateLimit-* headers describe.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  per_minute:
+                    type: integer
+                  remaining:
+                    type: integer
+                  reset_secs:
+                    type: integer
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
   /audit-chain/{run_id}:
     get:
-      operationId: get-audit-chain-run_id
-      summary: "Audit hash-chain segment for the trust-center verifier"
+      operationId: get-audit-chain-run
+      summary: "Run record with its hash chain"
+      description: >
+        What the trust-center verifier consumes: the chain, its root, and a
+        `verified` flag. See THE CHAIN IS A SAMPLE above.
       tags: [platform]
       parameters:
         - name: run_id
@@ -100,12 +222,68 @@ paths:
           required: true
           schema:
             type: string
+          example: run-42
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The run record.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunRecord'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /audit-chain/{run_id}/segment:
+    get:
+      operationId: get-audit-chain-segment
+      summary: "A segment of the chain"
+      tags: [platform]
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: to
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The links in [from, to).
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  run_id:
+                    type: string
+                  from:
+                    type: integer
+                  to:
+                    type: integer
+                  links:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChainLink'
+        '422':
+          description: from is not before to.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -113,17 +291,52 @@ paths:
   /search:
     get:
       operationId: get-search
-      summary: "Global search across models, datasets, docs"
+      summary: "Global search, grouped"
+      description: >
+        Groups — models, datasets, docs, orders — are always present, empty
+        or not, so the search panel's shape is stable. At most five hits
+        per group.
       tags: [platform]
       parameters:
-        - $ref: '_envelope.yaml#/components/parameters/Limit'
-        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: Grouped results.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  q:
+                    type: string
+                  total:
+                    type: integer
+                  groups:
+                    type: object
+                    properties:
+                      models:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SearchHit'
+                      datasets:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SearchHit'
+                      docs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SearchHit'
+                      orders:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SearchHit'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -131,7 +344,11 @@ paths:
   /i18n/{locale}:
     get:
       operationId: get-i18n-locale
-      summary: "UI strings for a locale"
+      summary: "String bundle"
+      description: >
+        `en` is complete; other locales are stubs carrying the strings they
+        have and naming their fallback. An unknown locale is 404, not an
+        empty bundle.
       tags: [platform]
       parameters:
         - name: locale
@@ -139,12 +356,129 @@ paths:
           required: true
           schema:
             type: string
+          example: es
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The bundle.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  locale:
+                    type: string
+                  complete:
+                    type: boolean
+                  fallback:
+                    type: string
+                    nullable: true
+                  strings:
+                    type: object
+                    additionalProperties:
+                      type: string
+        '404':
+          description: No such locale.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /gdpr/exports:
+    post:
+      operationId: post-gdpr-exports
+      summary: "Request a data export (recorded stub)"
+      description: >
+        Records the request. NOTHING IS ASSEMBLED OR SENT — see GDPR
+        REQUESTS above.
+      tags: [platform]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      responses:
+        '202':
+          description: The recorded request.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GdprRequest'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /gdpr/deletions:
+    post:
+      operationId: post-gdpr-deletions
+      summary: "Request account deletion (recorded stub)"
+      description: >
+        `confirm` must be the literal string DELETE. Records the request;
+        NOTHING IS DELETED HERE — see GDPR REQUESTS above.
+      tags: [platform]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirm]
+              properties:
+                confirm:
+                  type: string
+                  description: Must be the literal string DELETE.
+      responses:
+        '202':
+          description: The recorded request.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GdprRequest'
+        '422':
+          description: The confirmation was not typed. Nothing was recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /gdpr/requests:
+    get:
+      operationId: get-gdpr-requests
+      summary: "This account's GDPR requests"
+      tags: [platform]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of recorded requests.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/GdprRequest'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -152,18 +486,104 @@ paths:
   /gdpr/retention-jobs:
     get:
       operationId: get-gdpr-retention-jobs
-      summary: "Retention job runs backing the footer's claims"
+      summary: "Retention job history"
       tags: [platform]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of retention jobs.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            job:
+                              type: string
+                            last_run:
+                              type: string
+                            status:
+                              type: string
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
+components:
+  schemas:
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        prefix:
+          type: string
+          description: The only identifying fragment listings ever show.
+        created:
+          type: string
+          format: date
+    ChainLink:
+      type: object
+      properties:
+        index:
+          type: integer
+        prev:
+          type: string
+        hash:
+          type: string
+    RunRecord:
+      type: object
+      description: FNV-1a labels demonstrating the chain's shape. Not cryptography.
+      properties:
+        run_id:
+          type: string
+        chain:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChainLink'
+        root:
+          type: string
+        links:
+          type: integer
+        verified:
+          type: boolean
+        note:
+          type: string
+    SearchHit:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [model, dataset, doc, order]
+        ref:
+          type: string
+          description: Where choosing the hit goes.
+        name:
+          type: string
+        meta:
+          type: string
+    GdprRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          enum: [export, deletion]
+        status:
+          type: string
+        note:
+          type: string
+          description: States plainly that this is a recorded stub.

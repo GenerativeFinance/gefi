@@ -8,10 +8,16 @@ active_tab: Standards
 permalink: /app/reg-standards/
 sitemap: false
 robots: noindex
-app_script: /assets/js/app/reg-pages.js
+app_scripts:
+  - /assets/js/app/regulator-math.js
+  - /assets/js/app/reg-pages.js
 ---
+
+<div data-rg-root>
 
 <div data-rs-root>
   <p class="app-kpi__sub" data-rs-note></p>
   <div class="app-gridcards app-gridcards--two" data-rs-grid></div>
+</div>
+
 </div>

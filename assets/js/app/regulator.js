@@ -30,26 +30,30 @@
     }
     var st = load();
 
-    /* Issues resolved this session (task 230's Resolve action) move the
-     * Overview counts too — same source, no disagreement. */
-    var resolvedRows = (R.issues || []).filter(function (i) {
-      return (st.resolvedIssues || []).indexOf(i.id) !== -1;
-    });
-    var effFlagged = R.flagged - resolvedRows.length;
-    var effCritical = R.critical - resolvedRows.filter(function (i) { return i.severity === "critical"; }).length;
-    var effResolved = R.resolved + resolvedRows.length;
+    /* Every figure is COUNTED from the audit register and the issue list by
+     * the shared engine — the same function the service runs. Before this
+     * they were stored constants (142 audits, 87.3% compliance, 15
+     * standards) with no relationship to the rows the registers held, and
+     * the audit-type breakdown was a fixed 41/29/19 share of that made-up
+     * total. */
+    var RG = GeFi.regulator;
+    var auditRegister = RG.register(R.modelAudits, R.datasetAudits);
+    var ov = RG.overview(auditRegister, R.issues, R.standardsList, st.resolvedIssues || []);
+    var effFlagged = ov.flagged;
+    var effCritical = ov.critical;
+    var effResolved = ov.resolved;
 
     /* ---- KPI grid (3x3) ---- */
     [
-      { label: "Total Audits", value: String(R.audits30d), sub: "+12% vs prior period", tone: "is-up" },
-      { label: "Pending Audits", value: String(R.pending), sub: R.dueThisWeek + " due this week", tone: "is-amber" },
-      { label: "Compliance Rate", value: R.complianceRate + "%", sub: "across supervised orgs", tone: "" },
-      { label: "Flagged Issues", value: String(effFlagged), sub: effCritical + " critical", tone: "is-down" },
-      { label: "Resolved Issues", value: String(effResolved), sub: "lifetime, sample", tone: "is-up" },
-      { label: "Active Standards", value: String(R.standards), sub: "in enforcement", tone: "is-blue" },
-      { label: "Completion Rate", value: R.completionRate + "%", sub: "of scheduled audits", tone: "" },
-      { label: "Avg Resolution", value: R.avgResolutionDays + " days", sub: "issue open → closed", tone: "" },
-      { label: "Critical Issues", value: String(effCritical), sub: "act now", tone: "is-down" }
+      { key: "total", label: "Total Audits", value: String(ov.total), sub: "in the register", tone: "is-up" },
+      { key: "pending", label: "Pending Audits", value: String(ov.pending), sub: ov.dueThisWeek + " due this week", tone: "is-amber" },
+      { key: "compliance", label: "Compliance Rate", value: ov.compliancePct + "%", sub: "unflagged, across the register", tone: "" },
+      { key: "flagged", label: "Flagged Issues", value: String(effFlagged), sub: effCritical + " critical", tone: "is-down" },
+      { key: "resolved", label: "Resolved Issues", value: String(effResolved), sub: "closed this session", tone: "is-up" },
+      { key: "standards", label: "Active Standards", value: String(ov.standards), sub: "in enforcement", tone: "is-blue" },
+      { key: "completion", label: "Completion Rate", value: ov.completionPct + "%", sub: ov.completed + " of " + ov.total + " completed", tone: "" },
+      { key: "resolution", label: "Avg Resolution", value: ov.avgResolutionDays == null ? "—" : ov.avgResolutionDays + " days", sub: ov.avgResolutionDays == null ? "nothing closed yet" : "issue open \u2192 closed", tone: "" },
+      { key: "critical", label: "Critical Issues", value: String(effCritical), sub: "act now", tone: "is-down" }
     ].forEach(function (k) {
       var card = document.createElement("div");
       card.className = "app-kpi";
@@ -58,6 +62,7 @@
       l.textContent = k.label;
       var v = document.createElement("p");
       v.className = "app-kpi__value";
+      if (k.key) v.setAttribute("data-rg-kpi", k.key);
       v.textContent = k.value;
       var s = document.createElement("p");
       s.className = "app-kpi__sub " + k.tone;
@@ -145,40 +150,47 @@
 
     var trendEl = document.querySelector("[data-rg-trend]");
     [-5.2, -3.1, -1.4, 0].forEach(function (delta, i) {
-      var v = +(R.complianceRate + delta).toFixed(1);
+      var v = +(ov.compliancePct + delta).toFixed(1);
       bar(trendEl, ["Q4 '25", "Q1 '26", "Q2 '26", "Q3 '26"][i], v, v + "%", i === 3 ? "var(--app-brand)" : "");
     });
 
     var typesEl = document.querySelector("[data-rg-audittypes]");
-    var model = Math.round(R.audits30d * 0.41);
-    var dataset = Math.round(R.audits30d * 0.29);
-    var process = Math.round(R.audits30d * 0.19);
-    var security = R.audits30d - model - dataset - process;
-    [["Model", model], ["Dataset", dataset], ["Process", process], ["Security", security]].forEach(function (t) {
-      bar(typesEl, t[0], (t[1] / R.audits30d) * 100, String(t[1]), "");
+    /* Real counts per type, straight off the register — every row lands in
+     * a bar, so the bars add up to the register's size. */
+    var typeRows = Object.keys(ov.byType)
+      .map(function (name) { return [name, ov.byType[name]]; })
+      .sort(function (a, b) { return b[1] - a[1]; });
+    typeRows.forEach(function (t) {
+      bar(typesEl, t[0], (t[1] / ov.total) * 100, String(t[1]), "");
     });
-    typesEl.setAttribute("data-rg-audittotal", String(model + dataset + process + security));
+    typesEl.setAttribute(
+      "data-rg-audittotal",
+      String(typeRows.reduce(function (n, t) { return n + t[1]; }, 0))
+    );
 
     var issuesEl = document.querySelector("[data-rg-issues]");
-    var high = Math.round((effFlagged - effCritical) * 0.3);
-    var medium = Math.round((effFlagged - effCritical) * 0.45);
-    var low = effFlagged - effCritical - high - medium;
-    [
-      ["Critical", effCritical, "var(--app-red)"],
-      ["High", high, "var(--app-orange)"],
-      ["Medium", medium, "var(--app-amber)"],
-      ["Low", low, "var(--app-green)"]
-    ].forEach(function (t) {
-      bar(issuesEl, t[0], (t[1] / effFlagged) * 100, String(t[1]), t[2]);
+    /* Real counts per severity. These used to be a fixed 30/45% share of
+     * the flagged total, so the bars described no actual issue. */
+    var sevRows = [
+      ["Critical", ov.bySeverity.critical, "var(--app-red)"],
+      ["High", ov.bySeverity.high, "var(--app-orange)"],
+      ["Medium", ov.bySeverity.medium, "var(--app-amber)"],
+      ["Low", ov.bySeverity.low, "var(--app-green)"]
+    ];
+    sevRows.forEach(function (t) {
+      bar(issuesEl, t[0], effFlagged ? (t[1] / effFlagged) * 100 : 0, String(t[1]), t[2]);
     });
-    issuesEl.setAttribute("data-rg-issuetotal", String(effCritical + high + medium + low));
+    issuesEl.setAttribute(
+      "data-rg-issuetotal",
+      String(sevRows.reduce(function (n, t) { return n + t[1]; }, 0))
+    );
 
     var perfEl = document.querySelector("[data-rg-perf]");
     [
-      ["Completion rate", R.completionRate + "%"],
-      ["Avg resolution", R.avgResolutionDays + " days"],
-      ["Resolved issues", String(R.resolved)],
-      ["Active standards", String(R.standards)]
+      ["Completion rate", ov.completionPct + "%"],
+      ["Avg resolution", ov.avgResolutionDays == null ? "\u2014" : ov.avgResolutionDays + " days"],
+      ["Resolved issues", String(ov.resolved)],
+      ["Active standards", String(ov.standards)]
     ].forEach(function (kv) {
       var dt = document.createElement("dt");
       dt.textContent = kv[0];
@@ -303,9 +315,9 @@
         sample: true,
         generated: "2026-08-22",
         kpis: {
-          totalAudits: R.audits30d, pending: R.pending, complianceRatePct: R.complianceRate,
+          totalAudits: ov.total, pending: ov.pending, complianceRatePct: ov.compliancePct,
           flagged: effFlagged, critical: effCritical, resolved: effResolved,
-          standards: R.standards, completionRatePct: R.completionRate, avgResolutionDays: R.avgResolutionDays
+          standards: ov.standards, completionRatePct: ov.completionPct, avgResolutionDays: ov.avgResolutionDays
         },
         upcoming: R.upcoming.length,
         activityEntries: st.extraActivity.length + R.activity.length

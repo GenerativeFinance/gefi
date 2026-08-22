@@ -10,8 +10,12 @@ sitemap: false
 robots: noindex
 secondary_action: { label: "View All Reports", url: "/app/reports/#categories" }
 primary_action: { label: "Generate Report", url: "/app/reports/#generate" }
-app_script: /assets/js/app/reports.js
+app_scripts:
+  - /assets/js/app/reports-math.js
+  - /assets/js/app/reports.js
 ---
+
+<div data-rp-root>
 
 <div class="app-ov-charts">
   <section class="app-panel">
@@ -74,4 +78,6 @@ app_script: /assets/js/app/reports.js
       <button type="button" class="app-btn app-btn--ghost" data-rp-view-close>Close</button>
     </div>
   </div>
+</div>
+
 </div>

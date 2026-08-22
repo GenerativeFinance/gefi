@@ -2494,6 +2494,7 @@ p  { margin: 0 0 var(--space-4); }
 .app-topbar__word { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: var(--app-text); }
 .app-topbar__spacer { flex: 1; }
 .app-iconbtn {
+  position: relative;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   background: transparent; border: 1px solid var(--app-border); border-radius: 8px;
   width: 36px; height: 36px; color: var(--app-muted); cursor: pointer;
@@ -2503,9 +2504,43 @@ p  { margin: 0 0 var(--space-4); }
 .app-iconbtn:hover { border-color: var(--app-brand); color: var(--app-text); background: var(--app-surface-2); }
 .app-iconbtn--lang { width: auto; padding: 0 12px; }
 .app-iconbtn--bell { position: relative; }
+/* Task 317 — the dot carries the unread count, and is hidden when there is
+   nothing unread. It used to be permanently lit, which told nobody anything. */
 .app-iconbtn__dot {
-  position: absolute; top: 4px; right: 5px; width: 8px; height: 8px;
-  border-radius: 50%; background: var(--app-red); border: 1.5px solid var(--app-bg);
+  position: absolute; top: 1px; right: 0; min-width: 15px; height: 15px;
+  padding: 0 3px; box-sizing: border-box;
+  border-radius: 8px; background: var(--app-red); border: 1.5px solid var(--app-bg);
+  font-size: 9px; font-weight: 700; line-height: 12px; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.app-iconbtn__dot[hidden] { display: none; }
+.app-iconbtn--bell { position: relative; }
+
+.app-notifpanel {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 50;
+  width: min(340px, calc(100vw - 24px));
+  background: var(--app-surface); border: 1px solid var(--app-border);
+  border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.28);
+  overflow: hidden;
+}
+.app-notifpanel__head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px; border-bottom: 1px solid var(--app-border);
+}
+.app-notifpanel__title { margin: 0; font-size: 13px; font-weight: 700; flex: 1; }
+.app-notifpanel__head .app-btn { padding: 4px 8px; font-size: 11px; }
+.app-notifpanel__list { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; }
+.app-notifpanel__item {
+  padding: 10px 14px; border-bottom: 1px solid var(--app-border);
+  border-left: 3px solid transparent;
+}
+.app-notifpanel__item.is-unread { border-left-color: var(--app-brand); background: var(--app-surface-2); }
+.app-notifpanel__itemtitle { margin: 0; font-size: 13px; font-weight: 600; }
+.app-notifpanel__itemdetail { margin: 2px 0 0; font-size: 12px; color: var(--app-muted); line-height: 1.5; }
+.app-notifpanel__empty { padding: 18px 14px; font-size: 13px; color: var(--app-muted); }
+.app-notifpanel__note {
+  margin: 0; padding: 10px 14px; font-size: 11px; line-height: 1.5;
+  color: var(--app-muted); background: var(--app-surface-2);
 }
 .app-avatar {
   width: 34px; height: 34px; border-radius: 50%;
@@ -2978,6 +3013,61 @@ a.app-chip:hover { border-color: var(--app-brand); color: var(--app-text); }
 .app-zk-lane__name { flex: 0 0 84px; font-size: 12px; color: var(--app-muted); }
 .app-zk-log { height: 260px; overflow-y: auto; }
 .app-form input[type="range"] { accent-color: var(--app-brand); padding: 0; border: 0; background: transparent; }
+
+/* Task 311 — transient messages for outcomes with no home on the page */
+.app-toasts {
+  position: fixed; right: 16px; bottom: 16px; z-index: 60;
+  display: flex; flex-direction: column; gap: 8px;
+  max-width: min(380px, calc(100vw - 32px));
+}
+.app-toast {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--app-border); border-left-width: 3px;
+  background: var(--app-surface); color: var(--app-text);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  font-size: 13px; line-height: 1.5;
+}
+.app-toast--error { border-left-color: var(--app-red); }
+.app-toast--info { border-left-color: var(--app-brand); }
+.app-toast__text { margin: 0; flex: 1; }
+.app-toast__close {
+  font: inherit; font-size: 18px; line-height: 1;
+  background: none; border: 0; cursor: pointer; padding: 0;
+  color: var(--app-muted);
+}
+.app-toast__close:hover { color: var(--app-text); }
+@media (prefers-reduced-motion: no-preference) {
+  .app-toast { animation: app-toast-in .18s ease-out; }
+  @keyframes app-toast-in { from { opacity: 0; transform: translateY(6px); } }
+}
+
+/* Task 320 — the top-bar search panel */
+.app-searchpanel {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 50;
+  width: min(380px, calc(100vw - 24px));
+  background: var(--app-surface); border: 1px solid var(--app-border);
+  border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.28);
+  padding: 10px; box-sizing: border-box;
+}
+.app-searchpanel__input {
+  width: 100%; box-sizing: border-box; font: inherit; font-size: 14px;
+  color: var(--app-text); background: var(--app-bg);
+  border: 1px solid var(--app-border); border-radius: 8px; padding: 9px 12px;
+}
+.app-searchpanel__list { max-height: 340px; overflow-y: auto; margin-top: 8px; }
+.app-searchpanel__group {
+  margin: 10px 4px 4px; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em; color: var(--app-muted);
+}
+.app-searchpanel__hit {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  padding: 7px 8px; border-radius: 8px; text-decoration: none;
+  color: var(--app-text); font-size: 13px;
+}
+.app-searchpanel__hit:hover, .app-searchpanel__hit:focus { background: var(--app-surface-2); }
+.app-searchpanel__meta { font-size: 11px; color: var(--app-muted); white-space: nowrap; }
+.app-searchpanel__hint { margin: 10px 4px; font-size: 12px; color: var(--app-muted); }
 
 /* Task 309 — a controls row that sits above the thing it filters */
 .app-form--inline { flex-direction: row; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 16px; }

@@ -1,12 +1,34 @@
 openapi: 3.0.3
 info:
   title: GeFi Regulator portal
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    Audit workflows (model/dataset), issue tracking with SLA clocks, communications threads, standards registry, cross-entity ids (#MT/#DS/#ML/#CS).
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Supervisory portal: the audit register, compliance issues with their SLA
+    clocks, communications with supervised organisations, the standards
+    registry, and the overview aggregates.
+
+
+    AGGREGATES ARE COUNTED FROM THE REGISTER. Every overview figure — total
+    audits, pending, due this week, completion and compliance rates, and the
+    breakdown by audit type — is derived from the audit register itself. The
+    register genuinely holds every audit the headline counts; the listing
+    pages through them. A reader who pages to the end can reconcile the
+    number. The type breakdown accounts for every row, including audits
+    whose type sits outside the four canonical categories.
+
+
+    SLA CLOCKS RUN FROM A FIXED EPOCH. An issue carries no deadline of its
+    own: the due date follows from when it was raised and how severe it is
+    (critical 5 days, high 10, medium 20, low 30). State is computed against
+    a fixed portal epoch rather than the wall clock, so the same issue reads
+    the same today and next month.
+
+
+    SAMPLE SUPERVISION. Every audit, finding, issue and attestation here is
+    demonstration data. Nothing in this service constitutes a regulatory
+    determination, a supervisory action, or evidence of compliance with any
+    named regime, and no real organisation is being supervised through it.
+
 servers:
   - url: /v1
     description: >
@@ -19,20 +41,144 @@ tags:
   - name: regulator
     description: "Regulator portal"
 paths:
+  /regulator/overview:
+    get:
+      operationId: get-regulator-overview
+      summary: "Overview aggregates"
+      description: >
+        Every headline figure, counted from the audit register and the issue
+        list — see AGGREGATES ARE COUNTED above. `byType` accounts for every
+        row in the register.
+      tags: [regulator]
+      responses:
+        '200':
+          description: The portal's figures.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Overview'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /regulator/audits:
+    get:
+      operationId: get-regulator-audits
+      summary: "The audit register"
+      description: >
+        Every audit the overview counts, paged. `total` on the page envelope
+        is the register's real size.
+      tags: [regulator]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: kind
+          in: query
+          schema:
+            type: string
+            enum: [model, dataset]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [Scheduled, "In Progress", Completed, Flagged]
+        - name: org
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A page of the register.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      total:
+                        type: integer
+                        description: The register's full size, not the page size.
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AuditRow'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+    post:
+      operationId: post-regulator-audits
+      summary: "Schedule an audit"
+      tags: [regulator]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entity]
+              properties:
+                entity:
+                  type: string
+                type:
+                  type: string
+                due:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: The scheduled audit.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditRow'
+        '422':
+          description: Missing entity.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
   /regulator/audits/model:
     get:
       operationId: get-regulator-audits-model
-      summary: "Model audits"
+      summary: "Model audits, with findings"
       tags: [regulator]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of model audits.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ModelAudit'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -47,10 +193,21 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of dataset audits.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DatasetAudit'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -58,7 +215,7 @@ paths:
   /regulator/audits/{id}:
     get:
       operationId: get-regulator-audits-id
-      summary: "Audit detail with findings timeline"
+      summary: "One audit"
       tags: [regulator]
       parameters:
         - name: id
@@ -68,27 +225,20 @@ paths:
             type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The audit.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
-        '429':
-          $ref: '_envelope.yaml#/components/responses/RateLimited'
-        default:
-          $ref: '_envelope.yaml#/components/responses/Error'
-  /regulator/audits:
-    post:
-      operationId: post-regulator-audits
-      summary: "Schedule an audit"
-      tags: [regulator]
-      parameters:
-        - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
-      responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
-          headers:
-            X-GeFi-Sample:
-              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditRow'
+        '404':
+          description: No such audit.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -96,33 +246,86 @@ paths:
   /regulator/issues:
     get:
       operationId: get-regulator-issues
-      summary: "Issues with SLA clocks"
+      summary: "Compliance issues, with SLA state"
+      description: >
+        Each issue carries its computed SLA clock — see SLA CLOCKS above.
       tags: [regulator]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: sla
+          in: query
+          description: Filter by SLA state.
+          schema:
+            type: string
+            enum: [ok, due-soon, overdue]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of open issues.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      epoch:
+                        type: string
+                        format: date
+                        description: The clock the SLA states were computed against.
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Issue'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
     post:
       operationId: post-regulator-issues
-      summary: "File an issue"
+      summary: "Raise an issue"
       tags: [regulator]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                severity:
+                  type: string
+                  enum: [low, medium, high, critical]
+                entity:
+                  type: string
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: The raised issue, with its SLA clock already running.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+        '422':
+          description: Missing title, or an unknown severity.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -130,7 +333,10 @@ paths:
   /regulator/issues/{id}/resolve:
     post:
       operationId: post-regulator-issues-id-resolve
-      summary: "Resolve an issue (moves overview counts)"
+      summary: "Resolve an issue"
+      description: >
+        Closes the issue and returns the recomputed overview, so the caller
+        does not have to guess how the headline moved.
       tags: [regulator]
       parameters:
         - name: id
@@ -141,10 +347,33 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The resolved issue and the updated overview.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+                  overview:
+                    $ref: '#/components/schemas/Overview'
+        '404':
+          description: No such issue.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '409':
+          description: The issue is already resolved.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -152,25 +381,74 @@ paths:
   /regulator/threads:
     get:
       operationId: get-regulator-threads
-      summary: "Communication threads"
+      summary: "Communications with supervised organisations"
       tags: [regulator]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of threads.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RegThread'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
   /regulator/threads/{id}/messages:
+    get:
+      operationId: get-regulator-threads-id-messages
+      summary: "Messages in a thread"
+      tags: [regulator]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+      responses:
+        '200':
+          description: A page of messages.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RegMessage'
+        '404':
+          description: No such thread.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
     post:
       operationId: post-regulator-threads-id-messages
-      summary: "Send a supervisory message"
+      summary: "Post to a thread"
       tags: [regulator]
       parameters:
         - name: id
@@ -179,12 +457,39 @@ paths:
           schema:
             type: string
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  maxLength: 4000
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: The posted message.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegMessage'
+        '404':
+          description: No such thread.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: Empty message, or one over the length limit.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -192,17 +497,58 @@ paths:
   /regulator/standards:
     get:
       operationId: get-regulator-standards
-      summary: "Standards registry with requirements"
+      summary: "Standards registry"
+      description: Each standard carries the requirements it imposes.
       tags: [regulator]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of standards.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Standard'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /regulator/activity:
+    get:
+      operationId: get-regulator-activity
+      summary: "Supervisory activity feed"
+      tags: [regulator]
+      parameters:
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of activity entries.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Activity'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -210,7 +556,13 @@ paths:
   /regulator/entities/{ref}:
     get:
       operationId: get-regulator-entities-ref
-      summary: "Resolve a cross-entity id (#MT/#DS/#ML/#CS) to its record"
+      summary: "Resolve a cross-reference"
+      description: >
+        Resolves an id such as MT-4521, DS-8834 or CS-9912 to the record it
+        names, so a link written in a finding or a message goes somewhere.
+        An id whose prefix is not a known register, or that names nothing,
+        returns 404 — the portal renders its designed not-found state rather
+        than a blank page.
       tags: [regulator]
       parameters:
         - name: ref
@@ -218,13 +570,226 @@ paths:
           required: true
           schema:
             type: string
+          example: MT-4521
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The referenced record.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ref:
+                    type: string
+                  kind:
+                    type: string
+                    enum: [model_audit, dataset_audit, model, case]
+                  record:
+                    type: object
+        '404':
+          description: Unknown prefix, or nothing with that id.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
+components:
+  schemas:
+    Overview:
+      type: object
+      description: Counted from the audit register and the issue list.
+      properties:
+        total:
+          type: integer
+          description: The register's real size.
+        completed:
+          type: integer
+        pending:
+          type: integer
+        dueThisWeek:
+          type: integer
+        flagged:
+          type: integer
+          description: Open issues.
+        critical:
+          type: integer
+        overdue:
+          type: integer
+          description: Open issues past their SLA.
+        resolved:
+          type: integer
+        standards:
+          type: integer
+        completionPct:
+          type: number
+        compliancePct:
+          type: number
+        avgResolutionDays:
+          type: number
+          nullable: true
+          description: Null until something has been resolved.
+        byType:
+          type: object
+          description: Accounts for every row in the register.
+          additionalProperties:
+            type: integer
+    AuditRow:
+      type: object
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          enum: [model, dataset]
+        subject:
+          type: string
+        org:
+          type: string
+        type:
+          type: string
+        severity:
+          type: string
+        status:
+          type: string
+        due:
+          type: string
+          format: date
+        findings:
+          type: integer
+    ModelAudit:
+      type: object
+      properties:
+        id:
+          type: string
+        model:
+          type: string
+        org:
+          type: string
+        type:
+          type: string
+        severity:
+          type: string
+        status:
+          type: string
+        due:
+          type: string
+          format: date
+        findings:
+          type: array
+          items:
+            type: object
+    DatasetAudit:
+      type: object
+      properties:
+        id:
+          type: string
+        dataset:
+          type: string
+        org:
+          type: string
+        coverage:
+          type: number
+        pii:
+          type: integer
+        license:
+          type: string
+        severity:
+          type: string
+        status:
+          type: string
+    Issue:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        severity:
+          type: string
+        entity:
+          type: string
+        entityKind:
+          type: string
+        assignee:
+          type: string
+        opened:
+          type: string
+          format: date
+        due:
+          type: string
+          format: date
+          description: Derived from severity and the date raised.
+        daysOpen:
+          type: integer
+        dueInDays:
+          type: integer
+        sla:
+          type: string
+          enum: [ok, due-soon, overdue, no-sla]
+        status:
+          type: string
+    RegThread:
+      type: object
+      properties:
+        id:
+          type: string
+        org:
+          type: string
+        subject:
+          type: string
+        unread:
+          type: boolean
+        messages:
+          type: integer
+    RegMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        from:
+          type: string
+        text:
+          type: string
+        when:
+          type: string
+    Standard:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        effective:
+          type: string
+          format: date
+        status:
+          type: string
+        linkedAudits:
+          type: integer
+        requirements:
+          type: array
+          items:
+            type: string
+    Activity:
+      type: object
+      properties:
+        icon:
+          type: string
+        title:
+          type: string
+        detail:
+          type: string
+        when:
+          type: string
+        org:
+          type: string
+        severity:
+          type: string

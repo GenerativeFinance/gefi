@@ -10,7 +10,9 @@ sitemap: false
 robots: noindex
 secondary_action: { label: "Refresh", url: "/app/risk-reports/" }
 primary_action: { label: "Export All", url: "/app/risk-reports/#export" }
-app_script: /assets/js/app/compliance-risk.js
+app_scripts:
+  - /assets/js/app/reports-math.js
+  - /assets/js/app/compliance-risk.js
 ---
 
 <div class="app-kpis" data-rr-kpis></div>

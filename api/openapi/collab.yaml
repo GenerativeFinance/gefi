@@ -1,12 +1,30 @@
 openapi: 3.0.3
 info:
-  title: GeFi Collaboration & bounties
-  version: 0.1.0
+  title: GeFi Collaboration & Bounties
+  version: 0.2.0
   description: >
-    Teams, invites, discussion threads; bounty lifecycle (claim, submission, review, reward).
-    Skeleton contract (ledger task 300) — paths stubbed, request/response
-    schemas land with the owning 300-series task. Envelope conventions
-    (auth, pagination, errors, idempotency, SSE) come from _envelope.yaml.
+    Teams, invitations, discussion threads, and the bounty board — its
+    listings, claims, submissions and completion records.
+
+
+    THE CLAIM RULE. A developer holds at most one ACTIVE claim at a time,
+    where active means CLAIMED or IN PROGRESS. Completed work does not count
+    against that, or a developer could only ever finish one bounty. A second
+    claim is refused with a 409 naming the bounty already held, and the same
+    rule is applied client-side from the same module, so the page and the
+    server refuse it for the same reason in the same words.
+
+
+    SIMULATED PAYOUTS. Completing a bounty records the reward against it. No
+    money moves, no payout is scheduled, and there is no payment provider
+    behind any of this. The board's "paid out" figure is the sum of the
+    rewards on completed rows, not a record of transfers.
+
+
+    BOARD FIGURES ARE COUNTED. Active bounties, open count, total rewards,
+    distinct developers and completed count are all derived from the rows
+    the board actually holds, so a reader can check any of them against the
+    listing.
 servers:
   - url: /v1
     description: >
@@ -17,7 +35,7 @@ security:
   - apiKeyAuth: []
 tags:
   - name: collab
-    description: "Collaboration & bounties"
+    description: "Collaboration"
 paths:
   /teams:
     get:
@@ -29,10 +47,64 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of teams.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Team'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /teams/{id}/members:
+    get:
+      operationId: get-teams-id-members
+      summary: "Team members"
+      description: >
+        Includes people who have been invited but have not accepted; their
+        `kind` is Invited until they do.
+      tags: [collab]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of members.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Member'
+        '404':
+          description: No such team.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -40,7 +112,10 @@ paths:
   /teams/{id}/invites:
     post:
       operationId: post-teams-id-invites
-      summary: "Invite a member"
+      summary: "Invite someone to a team"
+      description: >
+        The invitee appears in the member list immediately, marked Invited.
+        No email is sent — there is no mail provider behind this.
       tags: [collab]
       parameters:
         - name: id
@@ -49,12 +124,96 @@ paths:
           schema:
             type: string
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                role:
+                  type: string
+                email:
+                  type: string
+                  description: Optional. Validated in shape only; nothing is sent.
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: The invited member.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '404':
+          description: No such team.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '409':
+          description: That person is already on the team.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: Missing name, or a malformed email address.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /teams/{id}/invites/{inviteId}/accept:
+    post:
+      operationId: post-teams-id-invites-accept
+      summary: "Accept an invitation"
+      description: >
+        Stub. Flips the member from Invited to Collaborator. A real service
+        would verify a signed token from an email link; this one takes the
+        id, so it is a demonstration of the state change, not of the
+        authorisation around it.
+      tags: [collab]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: inviteId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The member, now a Collaborator.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '404':
+          description: No such team or invitation.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '409':
+          description: The invitation was already accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -69,15 +228,66 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of threads.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Thread'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
   /threads/{id}/messages:
+    get:
+      operationId: get-threads-id-messages
+      summary: "Messages in a thread"
+      description: Newest first.
+      tags: [collab]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of messages.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Message'
+        '404':
+          description: No such thread.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
     post:
       operationId: post-threads-id-messages
       summary: "Post a message"
@@ -89,12 +299,39 @@ paths:
           schema:
             type: string
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  maxLength: 2000
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: The posted message.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '404':
+          description: No such thread.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: Empty message, or one over the length limit.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -102,17 +339,80 @@ paths:
   /bounties:
     get:
       operationId: get-bounties
-      summary: "Bounty board"
+      summary: "The bounty board"
+      description: >
+        Filters compose. `stats` accompanies every page and is counted from
+        the WHOLE board, not from the filtered slice, so the headline figures
+        do not move as the reader types in the search box.
       tags: [collab]
       parameters:
         - $ref: '_envelope.yaml#/components/parameters/Limit'
         - $ref: '_envelope.yaml#/components/parameters/Cursor'
+        - name: q
+          in: query
+          description: Matches title, category or a listed skill.
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [OPEN, CLAIMED, "IN PROGRESS", COMPLETED]
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+            enum: [BEGINNER, INTERMEDIATE, ADVANCED, EXPERT]
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: A page of bounties, plus the board's counted figures.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      stats:
+                        $ref: '#/components/schemas/BoardStats'
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Bounty'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /bounties/{id}:
+    get:
+      operationId: get-bounties-id
+      summary: "One bounty"
+      tags: [collab]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The bounty.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bounty'
+        '404':
+          description: No such bounty.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -121,6 +421,10 @@ paths:
     post:
       operationId: post-bounties-id-claim
       summary: "Claim a bounty"
+      description: >
+        Moves OPEN to CLAIMED and records the claimant. Refused if the
+        bounty is not open, or if the caller already holds an active claim —
+        see THE CLAIM RULE above.
       tags: [collab]
       parameters:
         - name: id
@@ -131,18 +435,119 @@ paths:
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The claimed bounty.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bounty'
+        '404':
+          description: No such bounty.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '409':
+          description: >
+            Already claimed by someone else, or the caller already holds an
+            active claim. The message names the bounty in the way.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
+  /bounties/{id}/release:
+    post:
+      operationId: post-bounties-id-release
+      summary: "Give a claim back"
+      description: >
+        Returns the bounty to OPEN so someone else can take it, and frees
+        the caller's single active claim. Without this a developer who
+        claimed the wrong bounty would be stuck forever.
+      tags: [collab]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The bounty, back to OPEN.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bounty'
+        '404':
+          description: No such bounty.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '409':
+          description: The caller does not hold this claim.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
   /bounties/{id}/submissions:
+    get:
+      operationId: get-bounties-id-submissions
+      summary: "Submissions against a bounty"
+      tags: [collab]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '_envelope.yaml#/components/parameters/Limit'
+        - $ref: '_envelope.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of submissions.
+          headers:
+            X-GeFi-Sample:
+              $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '_envelope.yaml#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Submission'
+        '404':
+          description: No such bounty.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '429':
+          $ref: '_envelope.yaml#/components/responses/RateLimited'
+        default:
+          $ref: '_envelope.yaml#/components/responses/Error'
     post:
       operationId: post-bounties-id-submissions
       summary: "Submit work"
+      description: >
+        Only the developer holding the claim may submit. The bounty moves to
+        IN PROGRESS on the first submission.
       tags: [collab]
       parameters:
         - name: id
@@ -151,12 +556,46 @@ paths:
           schema:
             type: string
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [summary]
+              properties:
+                summary:
+                  type: string
+                url:
+                  type: string
       responses:
-        '200':
-          description: Stubbed — schema lands with the owning service task.
+        '201':
+          description: The recorded submission.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+        '404':
+          description: No such bounty.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '409':
+          description: The caller does not hold the claim, or it is completed.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: Missing summary.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
@@ -164,7 +603,10 @@ paths:
   /bounties/{id}/review:
     post:
       operationId: post-bounties-id-review
-      summary: "Review a submission (accept \u2192 reward payout)"
+      summary: "Review a submission"
+      description: >
+        Accepting completes the bounty and writes the reward record.
+        NO MONEY MOVES — see SIMULATED PAYOUTS above.
       tags: [collab]
       parameters:
         - name: id
@@ -173,13 +615,195 @@ paths:
           schema:
             type: string
         - $ref: '_envelope.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [submission, verdict]
+              properties:
+                submission:
+                  type: string
+                verdict:
+                  type: string
+                  enum: [accepted, rejected]
+                note:
+                  type: string
       responses:
         '200':
-          description: Stubbed — schema lands with the owning service task.
+          description: The bounty and the reviewed submission.
           headers:
             X-GeFi-Sample:
               $ref: '_envelope.yaml#/components/headers/XGeFiSample'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bounty:
+                    $ref: '#/components/schemas/Bounty'
+                  submission:
+                    $ref: '#/components/schemas/Submission'
+                  reward:
+                    $ref: '#/components/schemas/Reward'
+        '404':
+          description: No such bounty or submission.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
+        '422':
+          description: Unknown verdict.
+          content:
+            application/json:
+              schema:
+                $ref: '_envelope.yaml#/components/schemas/Error'
         '429':
           $ref: '_envelope.yaml#/components/responses/RateLimited'
         default:
           $ref: '_envelope.yaml#/components/responses/Error'
+components:
+  schemas:
+    Team:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        members:
+          type: integer
+    Member:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+        kind:
+          type: string
+          enum: [Owner, Collaborator, Invited]
+        email:
+          type: string
+    Thread:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        messages:
+          type: integer
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        who:
+          type: string
+        when:
+          type: string
+          description: Relative label, e.g. "just now" or "2h ago".
+        text:
+          type: string
+    Bounty:
+      type: object
+      properties:
+        id:
+          type: string
+          example: B-201
+        title:
+          type: string
+        status:
+          type: string
+          enum: [OPEN, CLAIMED, "IN PROGRESS", COMPLETED]
+        difficulty:
+          type: string
+          enum: [BEGINNER, INTERMEDIATE, ADVANCED, EXPERT]
+        reward:
+          type: number
+        deadline:
+          type: string
+          format: date
+        category:
+          type: string
+        submissions:
+          type: integer
+        skills:
+          type: array
+          items:
+            type: string
+        claimedBy:
+          type: string
+          nullable: true
+          description: The developer holding the claim, or null.
+        funding:
+          type: object
+          description: The crowdfunding side of the same bounty.
+          properties:
+            status:
+              type: string
+            raised:
+              type: number
+            backers:
+              type: integer
+            by:
+              type: string
+            duration:
+              type: string
+    BoardStats:
+      type: object
+      description: Counted from the whole board, never from the filtered slice.
+      properties:
+        active:
+          type: integer
+          description: Bounties not yet completed.
+        open:
+          type: integer
+        rewards:
+          type: number
+          description: Sum of rewards on bounties still in flight.
+        paidOut:
+          type: number
+          description: Sum of rewards on completed bounties. No money moved.
+        developers:
+          type: integer
+          description: Distinct people with work in flight or delivered.
+        completed:
+          type: integer
+    Submission:
+      type: object
+      properties:
+        id:
+          type: string
+        bounty:
+          type: string
+        by:
+          type: string
+        summary:
+          type: string
+        url:
+          type: string
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+        note:
+          type: string
+    Reward:
+      type: object
+      description: >
+        A record that the bounty was completed and for how much. Not a
+        payment instruction and not a receipt.
+      properties:
+        bounty:
+          type: string
+        to:
+          type: string
+        amount:
+          type: number
+        settled:
+          type: boolean
+          description: Always false — nothing is settled by this service.

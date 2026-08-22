@@ -72,7 +72,7 @@ function loadGeFi() {
     clearInterval() {},
     console,
   });
-  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js"]) {
+  for (const f of ["assets/js/dashboard.js", "assets/js/app-demo-data.js", "assets/js/app/rebalance-math.js", "assets/js/app/catalog.js", "assets/js/model-runtime.js", "assets/js/app/market.js", "assets/js/app/backtest-math.js", "assets/js/app/devops-math.js", "assets/js/app/collab-math.js", "assets/js/app/dataplatform-math.js", "assets/js/app/funding-math.js", "assets/js/app/learning-math.js", "assets/js/app/reports-math.js", "assets/js/app/regulator-math.js", "assets/js/app/notify-math.js", "assets/js/app/insights-math.js", "assets/js/app/zkml-math.js", "assets/js/app/platform-math.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
   }
   return win.GeFi;
@@ -88,8 +88,18 @@ const RUNTIME = GeFi.modelRuntime; /* shared with model-demo.js (task 307) */
 const MKT = GeFi.market; /* shared with the trading page (task 308) */
 const BT = GeFi.backtest; /* shared with the backtesting page (task 309) */
 const DO = GeFi.devOps; /* shared with the dev console pages (task 310) */
-if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO) {
-  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps");
+const CO = GeFi.collab; /* shared with the collaboration pages (task 311) */
+const DP = GeFi.dataPlatform; /* shared with the provider pages (task 312) */
+const FU = GeFi.funding; /* shared with the funding pages (task 313) */
+const LE = GeFi.learning; /* shared with the learning page (task 314) */
+const RP = GeFi.reports; /* shared with the report pages (task 315) */
+const RG = GeFi.regulator; /* shared with the regulator pages (task 316) */
+const NT = GeFi.notify; /* shared with the app shell (task 317) */
+const IM = GeFi.insightsMath; /* shared with the insight panels (task 318) */
+const ZK = GeFi.zkml; /* shared with the zKML page (task 319) */
+const PL = GeFi.platform; /* shared with the app shell (task 320) */
+if (!D || !MODELS || !seed || !RB || !CAT || !RUNTIME || !MKT || !BT || !DO || !CO || !DP || !FU || !LE || !RP || !RG || !NT || !IM || !ZK || !PL) {
+  console.error("FATAL: GeFi shim did not load DEMO/MODELS/seed/rebalanceMath/catalog/modelRuntime/market/backtest/devOps/collab/dataPlatform/funding/learning/reports/regulator/notify/insightsMath/zkml/platform");
   process.exit(1);
 }
 
@@ -232,24 +242,79 @@ function freshState() {
     nextAlertRuleId: 1,
     alertRules: [],
     devAlertRules: [],
-    threads: D.devConsole.messages.map((m, i) => ({ id: "th-" + (i + 1), title: m.who + " — " + m.text.slice(0, 40), messages: [m] })),
-    bounties: D.bounties.map((b) => ({ ...b, claims: [], submissions: [] })),
+    threads: D.devConsole.messages.map((m, i) => ({
+      id: "th-" + (i + 1),
+      title: m.who + " — " + m.text.slice(0, 40),
+      messages: [{ id: "msg-" + (i + 1), who: m.who, when: m.when, text: m.text }],
+    })),
+    /* Collab & bounties (task 311). Submissions are rows, not a count —
+     * the count is derived, so a submitted piece of work and the number on
+     * the card cannot drift apart. */
+    teams: [{
+      id: "team-1",
+      name: "Optimizer squad",
+      members: D.devConsole.team.map((m, i) => ({ id: "mem-" + (i + 1), name: m.name, role: m.role, kind: m.kind, email: null })),
+    }],
+    nextMemberId: D.devConsole.team.length + 1,
+    nextMessageId: D.devConsole.messages.length + 1,
+    nextSubmissionId: 1,
+    rewards: [],
+    bounties: D.bounties.map((b) => ({
+      ...b,
+      claimedBy: b.claimedBy || null,
+      submissionList: Array.from({ length: b.submissions || 0 }, (_, i) => ({
+        id: b.id + "-s" + (i + 1),
+        bounty: b.id,
+        by: b.claimedBy || "a developer",
+        summary: "sample submission " + (i + 1),
+        url: null,
+        status: b.status === "COMPLETED" && i === 0 ? "accepted" : "pending",
+        note: null,
+      })),
+    })),
     datasets: D.datasets.map((d) => ({ ...d })),
     datasetExtra: [],
-    fundingProjects: D.fundingProjects.map((p) => ({ ...p })),
+    nextDatasetId: 1,
+    /* Provider feed (task 312): derived from what the registry holds, so it
+     * cannot narrate events the data does not support. */
+    providerActivity: D.datasets.slice(0, 5).map((d, i) => ({
+      title: d.status === "processing" ? d.name + " is processing" : d.name + " " + (i % 2 ? "gained a subscriber" : "passed its quality audit"),
+      detail: d.category + " · " + d.subscribers + " subscribers",
+      when: ["2h ago", "6h ago", "yesterday", "2 days ago", "3 days ago"][i],
+    })),
+    fundingProjects: D.fundingProjects.map((p, i) => ({ id: "fp-" + (i + 1), ...p })),
     fundingRequests: [],
+    nextFundingId: 1,
     contributions: [],
-    enrollments: [],
+    nextContributionId: 1,
+    /* Learning (task 314): the catalog's own starting points become real
+     * enrolments, and each completed item gets its certificate record, so
+     * the KPI counts records rather than adding one for good measure. */
+    enrollments: D.learning.items
+      .filter((i) => i.progress > 0)
+      .map((i, n) => ({ id: "en-" + (n + 1), item: i.title, progress: i.progress, started: "2026-08-01" })),
+    nextEnrollmentId: D.learning.items.filter((i) => i.progress > 0).length + 1,
+    certificates: D.learning.items
+      .filter((i) => i.progress >= 100)
+      .map((i) => GeFi.learning.certificateFor(i, "2026-07-15")),
     reports: [],
+    nextReportId: 1,
     customDefs: [],
+    nextDefinitionId: 1,
     issuesResolved: [],
     regThreadExtra: {},
     regAudits: [],
+    regIssuesExtra: [],
+    regActivity: D.regulator.activity.map((a) => ({ ...a })),
     notifications: [
-      { id: "n-1", title: "Rebalance executed", detail: "Portfolio Optimiser moved 3.2% into bonds", unread: true },
-      { id: "n-2", title: "Model audit passed", detail: "#MT-4521 closed with no findings", unread: true },
-      { id: "n-3", title: "Dataset published", detail: "Options Surface passed its quality audit", unread: false },
+      { id: "n-1", kind: "system", title: "Rebalance executed", detail: "Portfolio Optimiser moved 3.2% into bonds", unread: true, when: "2h ago" },
+      { id: "n-2", kind: "compliance", title: "Model audit passed", detail: "#MT-4521 closed with no findings", unread: true, when: "5h ago" },
+      { id: "n-3", kind: "dataset", title: "Dataset published", detail: "Options Surface passed its quality audit", unread: false, when: "yesterday" },
     ],
+    nextNotificationId: 4,
+    nextAlertRuleId2: 1,
+    deliveryPrefs: { in_app: true, email: false, push: false },
+    notifyWatchers: [],
     /* Backtesting (task 309). The seeded runs are the history; new runs
      * append and every metric is derived by the shared engine. */
     backtests: (D.backtests || []).map((r) => ({
@@ -267,8 +332,11 @@ function freshState() {
     paperOrders: [],
     tick: 0,
     verifications: [],
+    nextVerificationId: 1,
     anchors: [],
     apiKeys: [{ id: "key-1", label: "dashboard sample", prefix: "gefi_sk_9f2a", created: "2026-08-01" }],
+    gdprJobs: [],
+    rateRemaining: 600,
     idempotency: new Map(),
   };
 }
@@ -699,6 +767,9 @@ on("POST /orders", (p, q, b) => {
     order.status = "filled";
   }
   S.paperOrders.unshift(order);
+  if (order.status === "filled") {
+    notify("order", { side: order.side, qty: order.qty, symbol: order.symbol, fill: order.fill });
+  }
   return { __status: 201, ...order };
 });
 on("GET /orders", (p, q) => {
@@ -1058,66 +1129,291 @@ on("DELETE /dev/alert-rules/{id}", (p) => {
   return { ok: true };
 });
 
-/* ---- collab ---- */
-on("GET /teams", (p, q) => page([{ id: "team-1", name: "Optimizer squad", members: D.devConsole.team.length }], q));
-on("POST /teams/{id}/invites", (p, q, b) => ({ __status: 201, team: p.id, email: (b && b.email) || "invitee@sample.gefi", status: "sent" }));
+/* ---- collab & bounties (task 311) ----
+ * Claim rules, board figures and filtering all come from the shared engine,
+ * so the page refuses a claim for the same reason and in the same words the
+ * server would. */
+
+/* Who the mock treats as the caller. A real service reads this from the
+ * session; here it is a single sample identity, which is enough to make the
+ * one-active-claim rule mean something. */
+const ME = "you";
+
+function bountyRow(b) {
+  return {
+    id: b.id,
+    title: b.title,
+    status: b.status,
+    difficulty: b.difficulty,
+    reward: b.reward,
+    deadline: b.deadline,
+    category: b.category,
+    submissions: b.submissionList.length,
+    skills: b.skills,
+    claimedBy: b.claimedBy || null,
+    funding: b.funding,
+  };
+}
+
+on("GET /teams", (p, q) => page(S.teams.map((t) => ({ id: t.id, name: t.name, members: t.members.length })), q));
+on("GET /teams/{id}/members", (p, q) => {
+  const t = S.teams.find((x) => x.id === p.id);
+  if (!t) return notFound;
+  return page(t.members, q);
+});
+on("POST /teams/{id}/invites", (p, q, b) => {
+  const t = S.teams.find((x) => x.id === p.id);
+  if (!t) return notFound;
+  const why = CO.validateInvite(b || {}, t.members);
+  if (why) {
+    return why.endsWith("already on the team")
+      ? { __status: 409, code: "conflict", message: why }
+      : { __status: 422, code: "validation_failed", message: why };
+  }
+  const m = {
+    id: "mem-" + S.nextMemberId++,
+    name: String(b.name).trim(),
+    role: (b && b.role) || "Collaborator",
+    kind: "Invited",
+    email: (b && b.email) || null,
+  };
+  t.members.push(m);
+  return { __status: 201, ...m };
+});
+on("POST /teams/{id}/invites/{inviteId}/accept", (p) => {
+  const t = S.teams.find((x) => x.id === p.id);
+  if (!t) return notFound;
+  const m = t.members.find((x) => x.id === p.inviteId);
+  if (!m) return notFound;
+  if (m.kind !== "Invited") return { __status: 409, code: "conflict", message: m.name + " has already accepted" };
+  m.kind = "Collaborator";
+  return m;
+});
+
 on("GET /threads", (p, q) => page(S.threads.map((t) => ({ id: t.id, title: t.title, messages: t.messages.length })), q));
+on("GET /threads/{id}/messages", (p, q) => {
+  const t = S.threads.find((x) => x.id === p.id);
+  if (!t) return notFound;
+  return page(t.messages, q);
+});
 on("POST /threads/{id}/messages", (p, q, b) => {
   const t = S.threads.find((x) => x.id === p.id);
   if (!t) return notFound;
-  const m = { who: "you", when: "just now", text: (b && b.text) || "" };
-  t.messages.push(m);
+  const why = CO.validateMessage(b && b.text);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const m = { id: "msg-" + S.nextMessageId++, who: "You", when: "just now", text: String(b.text).trim() };
+  t.messages.unshift(m);
   return { __status: 201, ...m };
 });
-on("GET /bounties", (p, q) => page(S.bounties, q));
+
+on("GET /bounties", (p, q) => {
+  const rows = S.bounties.map(bountyRow);
+  /* Stats come from the WHOLE board, never the filtered slice, so the
+   * headline figures do not move as the reader types in the search box. */
+  const stats = CO.boardStats(rows);
+  const out = page(CO.filter(rows, { q: q.q, status: q.status, difficulty: q.difficulty }), q);
+  out.stats = stats;
+  return out;
+});
+on("GET /bounties/{id}", (p) => {
+  const b = S.bounties.find((x) => x.id === p.id);
+  return b ? bountyRow(b) : notFound;
+});
 on("POST /bounties/{id}/claim", (p) => {
   const b = S.bounties.find((x) => x.id === p.id);
   if (!b) return notFound;
-  b.claims.push({ who: "you", when: "2026-08-22" });
-  b.status = "CLAIMED";
-  return b;
+  const why = CO.canClaim(bountyRow(b), S.bounties.map(bountyRow), ME);
+  if (why) return { __status: 409, code: "conflict", message: why };
+  b.status = CO.CLAIMED;
+  b.claimedBy = ME;
+  return bountyRow(b);
+});
+on("POST /bounties/{id}/release", (p) => {
+  const b = S.bounties.find((x) => x.id === p.id);
+  if (!b) return notFound;
+  if (b.claimedBy !== ME) return { __status: 409, code: "conflict", message: "you do not hold the claim on " + b.title };
+  b.status = CO.OPEN;
+  b.claimedBy = null;
+  return bountyRow(b);
+});
+on("GET /bounties/{id}/submissions", (p, q) => {
+  const b = S.bounties.find((x) => x.id === p.id);
+  if (!b) return notFound;
+  return page(b.submissionList, q);
 });
 on("POST /bounties/{id}/submissions", (p, q, body) => {
   const b = S.bounties.find((x) => x.id === p.id);
   if (!b) return notFound;
-  b.submissions.push({ who: "you", url: (body && body.url) || "", when: "2026-08-22" });
-  return { __status: 201, submissions: b.submissions.length };
+  const why = CO.canSubmit(bountyRow(b), ME);
+  if (why) return { __status: 409, code: "conflict", message: why };
+  if (!body || !String(body.summary || "").trim()) {
+    return { __status: 422, code: "validation_failed", message: "summary is required" };
+  }
+  const sub = {
+    id: "sub-" + S.nextSubmissionId++,
+    bounty: b.id,
+    by: ME,
+    summary: String(body.summary).trim(),
+    url: (body && body.url) || null,
+    status: "pending",
+    note: null,
+  };
+  b.submissionList.push(sub);
+  if (b.status === CO.CLAIMED) b.status = CO.IN_PROGRESS;
+  return { __status: 201, ...sub };
 });
 on("POST /bounties/{id}/review", (p, q, body) => {
   const b = S.bounties.find((x) => x.id === p.id);
   if (!b) return notFound;
-  const accept = !body || body.accept !== false;
-  if (accept) b.status = "COMPLETED";
-  return { id: b.id, status: b.status, reward_paid: accept ? b.reward : 0 };
+  const verdict = body && body.verdict;
+  if (verdict !== "accepted" && verdict !== "rejected") {
+    return { __status: 422, code: "validation_failed", message: "verdict must be accepted or rejected" };
+  }
+  const sub = b.submissionList.find((x) => x.id === (body && body.submission));
+  if (!sub) return notFound;
+  sub.status = verdict;
+  sub.note = (body && body.note) || null;
+  let reward = null;
+  if (verdict === "accepted") {
+    b.status = CO.COMPLETED;
+    /* A record that it was completed and for how much. Nothing is paid —
+     * `settled` is false because no money moved and none will. */
+    reward = { bounty: b.id, to: b.claimedBy || ME, amount: b.reward, settled: false };
+    S.rewards.push(reward);
+  }
+  return { bounty: bountyRow(b), submission: sub, reward };
 });
 
-/* ---- data-platform ---- */
+function providerActivity(title, detail) {
+  S.providerActivity.unshift({ title, detail, when: "just now" });
+}
+
+/* ---- data-platform (task 312) ----
+ * Quality scoring, pricing and revenue accounting come from the shared
+ * engine. Revenue is never stored: it is the sum of a dataset's line items,
+ * so every aggregate here is the sum of numbers a client can re-add. */
 const allDatasets = () => S.datasets.concat(S.datasetExtra);
-on("GET /datasets", (p, q) => page(allDatasets(), q));
-on("POST /datasets", (p, q, b) => {
-  const d = { id: "DS-NEW-" + (S.datasetExtra.length + 1), name: (b && b.name) || "New dataset", category: (b && b.category) || "Alternative", quality: 0, rows: "—", status: "processing", revenue: 0, downloads: 0, subscribers: 0 };
-  S.datasetExtra.push(d);
-  return { __status: 202, ...d };
+const liveDatasets = () => allDatasets().filter((d) => d.status !== "archived");
+
+on("GET /datasets", (p, q) => {
+  let rows = liveDatasets().map(DP.view);
+  if (q.status) rows = rows.filter((d) => d.status === q.status);
+  if (q.category) rows = rows.filter((d) => d.category === q.category);
+  return page(rows, q);
 });
-on("GET /datasets/{id}", (p) => allDatasets().find((d) => d.id === p.id) || notFound);
-on("POST /datasets/{id}/archive", (p) => {
+on("POST /datasets", (p, q, b) => {
+  const why = DP.validateUpload(b || {}, allDatasets());
+  if (why) {
+    return why.indexOf("already exists") > -1
+      ? { __status: 409, code: "conflict", message: why }
+      : { __status: 422, code: "validation_failed", message: why };
+  }
+  const d = {
+    id: "DS-NEW-" + S.nextDatasetId++,
+    name: String(b.name).trim(),
+    category: (b && b.category) || "Alternative",
+    rows: (b && b.rows) || "1M",
+    status: "processing",
+    downloads: 0,
+    subscribers: 0,
+  };
+  S.datasetExtra.push(d);
+  providerActivity(d.name + " is processing", d.category + " · ingestion started");
+  /* Stand-in for ingestion + the quality audit. Until this fires the
+   * dataset has no score and earns nothing, which is the honest state. */
+  setTimeout(() => {
+    if (d.status !== "processing") return;
+    d.status = "published";
+    providerActivity(d.name + " published", d.category + " · quality " + DP.quality(d.id, "published"));
+    notify("dataset", { name: d.name });
+  }, 2000);
+  return { __status: 202, ...DP.view(d) };
+});
+on("GET /datasets/{id}", (p) => {
+  const d = allDatasets().find((x) => x.id === p.id);
+  return d ? DP.view(d) : notFound;
+});
+on("PATCH /datasets/{id}", (p, q, b) => {
   const d = allDatasets().find((x) => x.id === p.id);
   if (!d) return notFound;
+  if (b && b.name !== undefined) d.name = String(b.name).trim() || d.name;
+  if (b && b.category !== undefined) d.category = b.category;
+  return DP.view(d);
+});
+on("POST /datasets/{id}/archive", (p, q, b) => {
+  const d = allDatasets().find((x) => x.id === p.id);
+  if (!d) return notFound;
+  /* Typed confirmation, checked with the same rule the page applies. */
+  const why = DP.validateArchive(d, b && b.confirm);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
   d.status = "archived";
-  return d;
+  providerActivity(d.name + " archived", "existing subscribers keep read access");
+  return DP.view(d);
 });
 on("GET /datasets/{id}/quality", (p) => {
   const d = allDatasets().find((x) => x.id === p.id);
   if (!d) return notFound;
-  const r = seed.rng(seed.hash("dq|" + p.id));
-  return { id: d.id, quality: d.quality, completeness: +(90 + r() * 9).toFixed(1), freshness: +(85 + r() * 14).toFixed(1), lineage: "complete" };
+  const audited = d.status === "published";
+  return { id: d.id, status: d.status, quality: audited ? DP.quality(d.id, d.status) : null, audited };
 });
-on("GET /dataset-subscriptions", (p, q) => page(allDatasets().filter((d) => d.subscribers > 0).map((d) => ({ dataset: d.id, subscribers: d.subscribers })), q));
+on("GET /dataset-subscriptions", (p, q) =>
+  page(
+    liveDatasets()
+      .filter((d) => d.subscribers > 0)
+      .map((d) => ({
+        id: "dsub-" + d.id,
+        dataset: d.id,
+        subscriber: d.subscribers + " tenants",
+        monthly_fee: DP.terms(d.id).monthlyRate,
+        since: "2025-09-01",
+      })),
+    q
+  )
+);
 on("GET /revenue/summary", () => {
-  const t = allDatasets().reduce((n, d) => n + (d.revenue || 0), 0);
-  return { total_revenue: t, monthly_avg: Math.round(t / 12), datasets: allDatasets().length };
+  const rows = liveDatasets();
+  const t = DP.totals(rows);
+  /* The line items the totals are the sum of, so a client can check the
+   * arithmetic rather than take the headline on trust. */
+  const lineItems = [];
+  rows.forEach((d) => {
+    DP.lineItems(d).forEach((li) => lineItems.push({ dataset: d.id, ...li }));
+  });
+  return {
+    total_revenue: t.revenue,
+    monthly_revenue: t.monthly,
+    datasets: t.datasets,
+    published: t.published,
+    downloads: t.downloads,
+    subscribers: t.subscribers,
+    avg_quality: t.avgQuality,
+    months: DP.MONTHS,
+    monthly_series: DP.monthlySeries(t.revenue),
+    line_items: lineItems,
+  };
 });
-on("GET /revenue/payouts", (p, q) => page([{ period: "2026-07", amount: 186966, status: "settled" }, { period: "2026-08", amount: 224513, status: "scheduled" }], q));
+on("GET /revenue/payouts", (p, q) => {
+  const t = DP.totals(liveDatasets());
+  const series = DP.monthlySeries(t.revenue);
+  /* Each period's amount comes off the same series the summary returns, so
+   * the schedule and the chart cannot disagree. Nothing is settled. */
+  return page(
+    series.map((amount, i) => ({
+      period: "2025-" + String(9 + i).padStart(2, "0"),
+      amount,
+      datasets: t.published,
+      settled: false,
+    })).map((row, i) => {
+      const month = 9 + i;
+      const year = month > 12 ? 2026 : 2025;
+      const m = month > 12 ? month - 12 : month;
+      return { ...row, period: year + "-" + String(m).padStart(2, "0") };
+    }),
+    q
+  );
+});
+on("GET /provider/activity", (p, q) => page(S.providerActivity, q));
+
 on("GET /market-data/sources", (p, q) => page(D.marketData.sources, q));
 /* Preview rows use the same seed key the market-data page uses offline,
  * so the live table and the offline table show identical rows. */
@@ -1143,66 +1439,322 @@ on("GET /market-data/sources/{key}/preview", (p, q) => {
   return page(rows, {});
 });
 
-/* ---- funding ---- */
+/* ---- funding (task 313) ----
+ * Contribution rules and every hub aggregate come from the shared engine,
+ * so the hub's headline is the sum of what the tabs render, and a
+ * contribution the page refuses is refused here in the same words. */
 const fundingAll = () => S.fundingProjects.concat(S.fundingRequests);
+
+function projectRow(p) {
+  return {
+    id: p.id,
+    name: p.name,
+    kind: p.kind,
+    category: p.category,
+    risk: p.risk,
+    status: FU.statusOf(p),
+    goal: p.goal,
+    raised: p.raised,
+    remaining: FU.remaining(p),
+    progressPct: FU.progressPct(p),
+    backers: p.backers,
+    min: p.min,
+    roiPct: p.roiPct == null ? null : p.roiPct,
+    daysLeft: p.daysLeft,
+    by: p.by,
+    features: p.features || [],
+  };
+}
+function findProject(id) {
+  return fundingAll().find((x) => x.id === id || x.name === id);
+}
+
 on("GET /funding/projects", (p, q) => {
-  let rows = fundingAll();
+  let rows = fundingAll().map(projectRow);
   if (q.kind) rows = rows.filter((x) => x.kind === q.kind);
+  if (q.status) rows = rows.filter((x) => x.status === q.status);
+  if (q.risk) rows = rows.filter((x) => x.risk === q.risk);
   return page(rows, q);
 });
+on("GET /funding/projects/{id}", (p) => {
+  const proj = findProject(p.id);
+  return proj ? projectRow(proj) : notFound;
+});
 on("POST /funding/projects", (p, q, b) => {
-  const r = { kind: (b && b.kind) || "model", name: (b && b.name) || "New request", category: (b && b.category) || "Misc", risk: (b && b.risk) || "Medium", status: "submitted", goal: (b && b.goal) || 25000, raised: 0, backers: 0, daysLeft: 45, min: 100, features: [], by: "you" };
+  const spec = b || {};
+  const why = FU.validateRequest(spec, fundingAll());
+  if (why) {
+    return why.indexOf("already exists") > -1
+      ? { __status: 409, code: "conflict", message: why }
+      : { __status: 422, code: "validation_failed", message: why };
+  }
+  const r = {
+    id: "fp-new-" + S.nextFundingId++,
+    kind: spec.kind,
+    name: String(spec.name).trim(),
+    category: spec.category || "Misc",
+    risk: spec.risk || "Medium",
+    status: "submitted",
+    goal: +spec.goal,
+    raised: 0,
+    backers: 0,
+    roiPct: null,
+    daysLeft: 45,
+    min: spec.min || 100,
+    features: [],
+    by: "you",
+  };
   S.fundingRequests.push(r);
-  return { __status: 201, ...r };
+  return { __status: 201, ...projectRow(r) };
 });
 on("POST /funding/projects/{id}/approve", (p) => {
-  const r = S.fundingRequests[parseInt(p.id, 10)] || S.fundingRequests.find((x) => x.name === p.id);
-  if (!r) return notFound;
-  r.status = "approved";
-  return r;
+  const proj = findProject(p.id);
+  if (!proj) return notFound;
+  if (FU.statusOf(proj) !== "submitted") {
+    return { __status: 409, code: "conflict", message: proj.name + " is not awaiting approval" };
+  }
+  proj.status = "active";
+  return projectRow(proj);
 });
 on("POST /funding/projects/{id}/contributions", (p, q, b) => {
-  const proj = fundingAll().find((x) => x.name === p.id) || fundingAll()[parseInt(p.id, 10)];
+  const proj = findProject(p.id);
   if (!proj) return notFound;
-  const amount = (b && b.amount) || proj.min;
-  if (amount < proj.min) return { __status: 422, code: "validation_failed", message: "Below minimum contribution", details: [{ field: "amount", issue: "min " + proj.min }] };
-  proj.raised += amount;
-  proj.backers += 1;
-  if (proj.raised >= proj.goal) proj.status = "funded";
-  S.contributions.push({ project: proj.name, amount, escrow: proj.raised < proj.goal });
-  return { __status: 201, project: proj.name, amount, escrow: proj.raised < proj.goal, status: proj.status };
+  const amount = b && b.amount != null ? +b.amount : NaN;
+  const why = FU.validateContribution(projectRow(proj), amount);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  /* Apply through the shared engine so `funded` follows from the numbers
+   * rather than being set here and somewhere else too. */
+  const next = FU.applyContribution(proj, amount);
+  proj.raised = next.raised;
+  proj.backers = next.backers;
+  proj.status = next.status;
+  proj.daysLeft = next.daysLeft;
+  if (FU.statusOf(proj) === "funded") notify("funding", { name: proj.name });
+  const c = {
+    id: "fc-" + S.nextContributionId++,
+    project: proj.id,
+    projectName: proj.name,
+    kind: proj.kind,
+    amount,
+    date: "2026-08-22",
+    settled: false, /* no money moved */
+  };
+  S.contributions.push(c);
+  return { __status: 201, contribution: c, project: projectRow(proj) };
 });
-on("GET /funding/projects/{id}/contributions", (p, q) => page(S.contributions.filter((c) => c.project === p.id), q));
-on("GET /funding/payouts", (p, q) => page(fundingAll().filter((x) => x.status === "funded").map((x) => ({ project: x.name, amount: x.raised, status: "released" })), q));
-on("GET /funding/roi", () => ({ items: fundingAll().filter((x) => x.roiPct != null).map((x) => ({ project: x.name, roi_pct: x.roiPct })), next_cursor: null }));
+on("GET /funding/projects/{id}/contributions", (p, q) => {
+  const proj = findProject(p.id);
+  if (!proj) return notFound;
+  return page(S.contributions.filter((c) => c.project === proj.id), q);
+});
+on("GET /funding/contributions", (p, q) => {
+  let rows = S.contributions;
+  if (q.kind) rows = rows.filter((c) => c.kind === q.kind);
+  return page(rows, q);
+});
+on("GET /funding/summary", () => FU.hubTotals(fundingAll().map(projectRow), S.bounties.map(bountyRow)));
+on("GET /funding/payouts", (p, q) =>
+  page(
+    fundingAll()
+      .filter((x) => FU.statusOf(x) === "funded")
+      .map((x) => ({ project: x.id, projectName: x.name, amount: x.raised, backers: x.backers, settled: false })),
+    q
+  )
+);
+on("GET /funding/roi", (p, q) =>
+  page(
+    fundingAll()
+      .filter((x) => x.roiPct != null)
+      .map((x) => ({ project: x.id, projectName: x.name, roiPct: x.roiPct, raised: x.raised, simulated: true })),
+    q
+  )
+);
 
-/* ---- learning ---- */
-on("GET /learning/catalog", (p, q) => page(D.learning.items.concat(D.learning.paths.map((x) => ({ type: "PATH", ...x }))), q));
+/* ---- learning (task 314) ----
+ * Progress, certificate issuance and the KPIs all come from the shared
+ * engine. A certificate is a RECORD, and the certificate count is the
+ * number of records — not a completion count with something added. */
+
+/* Progress this account has, keyed by item title. Seeded from the catalog's
+ * own starting points so a fresh server is not a blank slate. */
+function learnProgress() {
+  const out = {};
+  S.enrollments.forEach((e) => {
+    out[e.item] = e.progress;
+  });
+  return out;
+}
+function catalogItem(it) {
+  const prog = learnProgress();
+  const e = S.enrollments.find((x) => x.item === it.title);
+  return {
+    title: it.title,
+    type: it.type,
+    level: it.level,
+    duration: it.duration,
+    minutes: LE.durationMinutes(it.duration),
+    enrolled: it.enrolled,
+    rating: it.rating,
+    author: it.author,
+    progress: LE.progressOf(it, prog),
+    enrollment: e ? e.id : null,
+  };
+}
+function learnStats() {
+  return LE.stats(D.learning.items, learnProgress(), S.certificates);
+}
+
+on("GET /learning/catalog", (p, q) => {
+  const rows = D.learning.items.map(catalogItem);
+  const filtered = LE.filter(rows, { q: q.q, type: q.type, level: q.level, seg: q.segment }, {});
+  const out = page(filtered, q);
+  /* Stats describe the WHOLE catalog, so they do not move as the reader
+   * narrows the list. */
+  out.stats = learnStats();
+  return out;
+});
+on("GET /learning/paths", (p, q) =>
+  page(D.learning.paths.map((x, i) => ({ id: "path-" + (i + 1), ...x })), q)
+);
+on("GET /learning/enrollments", (p, q) => page(S.enrollments, q));
 on("POST /learning/enrollments", (p, q, b) => {
-  const e = { id: "en-" + (S.enrollments.length + 1), item: (b && b.item) || D.learning.items[0].title, progress: 0 };
+  const title = (b && b.item) || "";
+  const item = D.learning.items.find((i) => i.title === title);
+  if (!item) return notFound;
+  /* Enrolling twice must not lose the reader's place. */
+  const existing = S.enrollments.find((e) => e.item === title);
+  if (existing) return { __status: 201, ...existing };
+  const e = { id: "en-" + S.nextEnrollmentId++, item: title, progress: item.progress || 0, started: "2026-08-22" };
   S.enrollments.push(e);
+  if (e.progress >= 100) issueCertificate(item);
   return { __status: 201, ...e };
 });
 on("PATCH /learning/progress/{enrollment_id}", (p, q, b) => {
   const e = S.enrollments.find((x) => x.id === p.enrollment_id);
   if (!e) return notFound;
-  e.progress = Math.min(100, (b && b.progress) || 0);
-  return e;
+  const why = LE.validateProgress(b && b.progress);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const was = e.progress;
+  e.progress = typeof b.progress === "number" ? b.progress : parseInt(b.progress, 10);
+  let cert = null;
+  if (e.progress >= 100 && was < 100) {
+    const item = D.learning.items.find((i) => i.title === e.item);
+    cert = issueCertificate(item);
+  }
+  return { enrollment: e, certificate: cert, stats: learnStats() };
 });
-on("GET /learning/certificates", (p, q) => page(D.learning.items.filter((i) => i.progress >= 100).map((i) => ({ item: i.title, issued: "2026-07-15" })), q));
+on("GET /learning/certificates", (p, q) => page(S.certificates, q));
 
-/* ---- reports ---- */
-on("GET /reports", (p, q) => page(D.reports.categories.flatMap((c) => c.rows.map((r) => ({ category: c.key, ...r }))).concat(S.reports), q));
+/* Issued once per item; re-completing does not mint a duplicate. */
+function issueCertificate(item) {
+  if (!item) return null;
+  const cert = LE.certificateFor(item);
+  if (S.certificates.some((c) => c.id === cert.id)) return null;
+  S.certificates.push(cert);
+  return cert;
+}
+
+/* ---- reports & compliance (task 315) ----
+ * Naming, validation and the compliance/risk roll-ups all come from the
+ * shared engine. Each register returns its totals ALONGSIDE the rows they
+ * were counted from, so a client can check the headline against the table. */
+
+const CATEGORY_NAME = (key) => {
+  const c = D.reports.categories.find((x) => x.key === key);
+  return c ? c.name : key;
+};
+
+/* Seeded catalog rows get stable ids so they can be fetched and opened. */
+function catalogReports() {
+  const out = [];
+  D.reports.categories.forEach((c) => {
+    c.rows.forEach((r, i) => {
+      out.push({ id: "rp-" + c.key + "-" + (i + 1), cat: c.key, ...r, period: "Monthly", format: "PDF" });
+    });
+  });
+  return out;
+}
+const allReports = () => catalogReports().concat(S.reports);
+
+on("GET /reports", (p, q) => {
+  let rows = allReports();
+  if (q.category) rows = rows.filter((r) => r.cat === q.category);
+  if (q.status) rows = rows.filter((r) => r.status === q.status);
+  const out = page(rows, q);
+  out.categories = D.reports.categories.map((c) => ({
+    key: c.key,
+    name: c.name,
+    accent: c.accent,
+    count: allReports().filter((r) => r.cat === c.key).length,
+  }));
+  return out;
+});
 on("POST /reports/generate", (p, q, b) => {
-  const r = { id: "rep-" + (S.reports.length + 1), category: (b && b.category) || "performance", status: "pending", date: "2026-08-22" };
+  const spec = b || {};
+  const why = RP.validateGenerate(spec, D.reports.categories);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const period = spec.period || "Monthly";
+  const r = {
+    id: "rp-new-" + S.nextReportId++,
+    cat: spec.category,
+    name: RP.reportName(CATEGORY_NAME(spec.category), period),
+    desc: "Queued from the report builder — " + period.toLowerCase() + " period",
+    status: "pending",
+    period,
+    format: spec.format || "PDF",
+    date: "2026-08-22",
+  };
   S.reports.push(r);
-  setTimeout(() => (r.status = "generated"), 1500);
+  /* Generation takes a moment; until it finishes the report is `pending`
+   * and no client may present it as available. */
+  setTimeout(() => {
+    if (r.status === "pending") r.status = "generated";
+  }, 1500);
   return { __status: 202, ...r };
 });
-on("GET /reports/schedules", (p, q) => page(D.reports.categories.flatMap((c) => c.rows.filter((r) => r.status === "pending").map((r) => ({ category: c.key, name: r.name, next: r.date }))), q));
+on("GET /reports/{id}", (p) => allReports().find((r) => r.id === p.id) || notFound);
+on("GET /reports/{id}/content", (p) => {
+  const r = allReports().find((x) => x.id === p.id);
+  if (!r) return notFound;
+  if (r.status !== "generated") {
+    return { __status: 409, code: "conflict", message: r.name + " has not generated yet" };
+  }
+  return { id: r.id, name: r.name, text: RP.narrative(r), sample: true };
+});
+on("GET /reports/schedules", (p, q) =>
+  page(
+    allReports()
+      .filter((r) => r.status === "pending")
+      .map((r) => ({ id: "sch-" + r.id, name: r.name, cadence: r.period || "Monthly", next: r.date, format: r.format || "PDF" })),
+    q
+  )
+);
+on("GET /reports/templates", (p, q) =>
+  page(
+    [
+      { id: "tpl-performance", name: "Performance summary", fields: ["Returns", "Attribution", "Fees"] },
+      { id: "tpl-risk", name: "Risk pack", fields: ["VaR", "Drawdown", "Exposure"] },
+      { id: "tpl-regulatory", name: "Regulatory filing", fields: ["Holdings", "Transactions", "Counterparties"] },
+    ],
+    q
+  )
+);
 on("GET /reports/custom-definitions", (p, q) => page(S.customDefs, q));
 on("POST /reports/custom-definitions", (p, q, b) => {
-  const d = { id: "cd-" + (S.customDefs.length + 1), ...(b || {}) };
+  const why = RP.validateDefinition(b || {}, S.customDefs);
+  if (why) {
+    return why.indexOf("already exists") > -1
+      ? { __status: 409, code: "conflict", message: why }
+      : { __status: 422, code: "validation_failed", message: why };
+  }
+  const d = {
+    id: "cd-" + S.nextDefinitionId++,
+    name: String(b.name).trim(),
+    fields: b.fields,
+    template: b.template || null,
+    schedule: b.schedule || null,
+    created: "2026-08-22",
+  };
   S.customDefs.push(d);
   return { __status: 201, ...d };
 });
@@ -1217,143 +1769,532 @@ on("DELETE /reports/custom-definitions/{id}", (p) => {
   S.customDefs = S.customDefs.filter((x) => x.id !== p.id);
   return before === S.customDefs.length ? notFound : { ok: true };
 });
-on("GET /compliance/evaluations", (p, q) => page(D.complianceReports, q));
-on("GET /risk/aggregate", () => ({ var95_total: D.riskReports.reduce((n, r) => n + r.var95, 0), reports: D.riskReports.length, by_severity: { Critical: 1, High: 2, Medium: 2, Low: 1 } }));
 
-/* ---- regulator ---- */
+on("GET /compliance/evaluations", (p, q) => {
+  let rows = D.complianceReports;
+  const totals = RP.complianceTotals(rows);
+  if (q.status) rows = rows.filter((r) => r.status === q.status);
+  const out = page(rows, q);
+  /* Totals describe the WHOLE register, not the filtered slice. */
+  out.totals = totals;
+  return out;
+});
+on("GET /risk/aggregate", (p, q) => {
+  let rows = D.riskReports;
+  const totals = RP.riskTotals(rows);
+  if (q.severity) rows = rows.filter((r) => r.severity === q.severity);
+  const out = page(rows, q);
+  out.totals = totals;
+  return out;
+});
+
+/* ---- regulator (task 316) ----
+ * The register genuinely holds every audit the overview counts, and every
+ * headline figure is derived from it by the shared engine. SLA state runs
+ * from a fixed epoch so a screenshot today and one next month agree. */
 const R = D.regulator;
+
+function regRegister() {
+  return RG.register(R.modelAudits, R.datasetAudits).concat(S.regAudits);
+}
+function issueRow(i) {
+  const sla = RG.slaState(i);
+  return {
+    ...i,
+    due: sla.due,
+    daysOpen: sla.daysOpen,
+    dueInDays: sla.dueInDays,
+    sla: sla.state,
+    status: S.issuesResolved.includes(i.id) ? "resolved" : "open",
+  };
+}
+function allIssues() {
+  return R.issues.concat(S.regIssuesExtra);
+}
+function regOverview() {
+  return RG.overview(regRegister(), allIssues(), R.standardsList, S.issuesResolved);
+}
+
+on("GET /regulator/overview", () => regOverview());
+on("GET /regulator/audits", (p, q) => {
+  let rows = regRegister();
+  const total = rows.length;
+  if (q.kind) rows = rows.filter((a) => a.kind === q.kind);
+  if (q.status) rows = rows.filter((a) => a.status === q.status);
+  if (q.org) rows = rows.filter((a) => a.org === q.org);
+  const out = page(rows, q);
+  /* The register's real size, so a client can tell a page from the whole. */
+  out.total = total;
+  return out;
+});
 on("GET /regulator/audits/model", (p, q) => page(R.modelAudits, q));
 on("GET /regulator/audits/dataset", (p, q) => page(R.datasetAudits, q));
-on("GET /regulator/audits/{id}", (p) => R.modelAudits.concat(R.datasetAudits).find((a) => a.id === p.id) || S.regAudits.find((a) => a.id === p.id) || notFound);
+on("GET /regulator/audits/{id}", (p) => {
+  const hit = regRegister().find((a) => a.id === p.id);
+  if (hit) return hit;
+  const full = R.modelAudits.concat(R.datasetAudits).find((a) => a.id === p.id);
+  return full || notFound;
+});
 on("POST /regulator/audits", (p, q, b) => {
-  const a = { id: "MT-NEW-" + (S.regAudits.length + 1), model: (b && b.entity) || "unnamed", org: "You", type: (b && b.type) || "Model governance", severity: "medium", status: "Scheduled", due: "2026-09-15", findings: [] };
+  const entity = ((b && b.entity) || "").trim();
+  if (!entity) return { __status: 422, code: "validation_failed", message: "entity is required" };
+  const a = {
+    id: "MT-NEW-" + (S.regAudits.length + 1),
+    kind: "model",
+    subject: entity,
+    org: "You",
+    type: (b && b.type) || "Model governance",
+    severity: "medium",
+    status: "Scheduled",
+    due: (b && b.due) || "2026-09-15",
+    findings: 0,
+  };
   S.regAudits.push(a);
   return { __status: 201, ...a };
 });
-on("GET /regulator/issues", (p, q) => page(R.issues.filter((i) => !S.issuesResolved.includes(i.id)), q));
-on("POST /regulator/issues", (p, q, b) => ({ __status: 201, id: "CI-NEW-1", title: (b && b.title) || "New issue", severity: (b && b.severity) || "medium", status: "open" }));
-on("POST /regulator/issues/{id}/resolve", (p) => {
-  const i = R.issues.find((x) => x.id === p.id);
-  if (!i) return notFound;
-  if (!S.issuesResolved.includes(p.id)) S.issuesResolved.push(p.id);
-  return { id: p.id, status: "resolved" };
+
+on("GET /regulator/issues", (p, q) => {
+  let rows = allIssues().filter((i) => !S.issuesResolved.includes(i.id)).map(issueRow);
+  if (q.severity) rows = rows.filter((i) => i.severity === q.severity);
+  if (q.sla) rows = rows.filter((i) => i.sla === q.sla);
+  const out = page(rows, q);
+  out.epoch = RG.EPOCH;
+  return out;
 });
-on("GET /regulator/threads", (p, q) => page(R.threads.map((t) => ({ id: t.id, org: t.org, subject: t.subject, unread: t.unread, messages: t.messages.length + (S.regThreadExtra[t.id] || []).length })), q));
+on("POST /regulator/issues", (p, q, b) => {
+  const title = ((b && b.title) || "").trim();
+  if (!title) return { __status: 422, code: "validation_failed", message: "title is required" };
+  const severity = (b && b.severity) || "medium";
+  if (RG.SEVERITIES.indexOf(severity) === -1) {
+    return { __status: 422, code: "validation_failed", message: "severity must be one of " + RG.SEVERITIES.join(", ") };
+  }
+  const i = {
+    id: "CI-NEW-" + (S.regIssuesExtra.length + 1),
+    title,
+    severity,
+    entity: (b && b.entity) || null,
+    entityKind: b && b.entity ? RG.entityKind(b.entity) : null,
+    assignee: "You",
+    opened: RG.EPOCH,
+  };
+  S.regIssuesExtra.push(i);
+  return { __status: 201, ...issueRow(i) };
+});
+on("POST /regulator/issues/{id}/resolve", (p) => {
+  const i = allIssues().find((x) => x.id === p.id);
+  if (!i) return notFound;
+  if (S.issuesResolved.includes(p.id)) {
+    return { __status: 409, code: "conflict", message: i.title + " is already resolved" };
+  }
+  S.issuesResolved.push(p.id);
+  notify("compliance", { id: i.id, title: i.title });
+  /* Return the recomputed overview so the caller does not have to guess how
+   * the headline moved. */
+  return { id: p.id, status: "resolved", overview: regOverview() };
+});
+
+on("GET /regulator/threads", (p, q) =>
+  page(
+    R.threads.map((t) => ({
+      id: t.id,
+      org: t.org,
+      subject: t.subject,
+      unread: t.unread,
+      messages: t.messages.length + (S.regThreadExtra[t.id] || []).length,
+    })),
+    q
+  )
+);
+on("GET /regulator/threads/{id}/messages", (p, q) => {
+  const t = R.threads.find((x) => x.id === p.id);
+  if (!t) return notFound;
+  const extra = S.regThreadExtra[p.id] || [];
+  return page(t.messages.concat(extra).map((m, n) => ({ id: p.id + "-m" + (n + 1), ...m })), q);
+});
 on("POST /regulator/threads/{id}/messages", (p, q, b) => {
   const t = R.threads.find((x) => x.id === p.id);
   if (!t) return notFound;
-  S.regThreadExtra[t.id] = S.regThreadExtra[t.id] || [];
-  const m = { from: "you", text: (b && b.text) || "", when: "just now" };
-  S.regThreadExtra[t.id].push(m);
-  return { __status: 201, ...m };
+  const why = RG.validateMessage(b && b.text);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const m = { from: "you", text: String(b.text).trim(), when: "just now" };
+  if (!S.regThreadExtra[p.id]) S.regThreadExtra[p.id] = [];
+  S.regThreadExtra[p.id].push(m);
+  return { __status: 201, id: p.id + "-m" + (t.messages.length + S.regThreadExtra[p.id].length), ...m };
 });
-on("GET /regulator/standards", (p, q) => page(R.standardsList, q));
+
+on("GET /regulator/standards", (p, q) =>
+  page(R.standardsList.map((x, i) => ({ id: "STD-" + (i + 1), ...x })), q)
+);
+on("GET /regulator/activity", (p, q) => page(S.regActivity, q));
+
 on("GET /regulator/entities/{ref}", (p) => {
-  const ref = p.ref.replace(/^#/, "");
-  const audit = R.modelAudits.concat(R.datasetAudits).find((a) => a.id === ref);
-  if (audit) return { ref, kind: R.modelAudits.includes(audit) ? "model_audit" : "dataset_audit", record: audit };
-  const issue = R.issues.find((i) => i.id === ref || i.entity === ref);
-  if (issue) return { ref, kind: "issue", record: issue };
-  const thread = R.threads.find((t) => t.subject.includes(ref));
-  if (thread) return { ref, kind: "thread", record: { id: thread.id, org: thread.org, subject: thread.subject } };
+  const ref = p.ref;
+  const kind = RG.entityKind(ref);
+  if (!kind) return notFound;
+  if (kind === "model_audit" || kind === "dataset_audit") {
+    const full = R.modelAudits.concat(R.datasetAudits).find((a) => a.id === ref);
+    if (full) return { ref, kind, record: full };
+    const row = regRegister().find((a) => a.id === ref);
+    if (row) return { ref, kind, record: row };
+    return notFound;
+  }
+  if (kind === "case") {
+    const t = R.threads.find((x) => (x.subject || "").indexOf(ref) > -1);
+    if (t) return { ref, kind, record: { id: t.id, org: t.org, subject: t.subject } };
+    return notFound;
+  }
+  if (kind === "model") {
+    const m = MODELS.find((x) => x.slug === ref.toLowerCase());
+    if (m) return { ref, kind, record: { slug: m.slug, name: m.name, wing: m.wing } };
+    return notFound;
+  }
   return notFound;
 });
 
-/* ---- notifications ---- */
-on("GET /notifications", (p, q) => page(S.notifications, q));
+/* Raise a notification from a mutation. Anything watching the stream is
+ * told immediately, so a bell in another tab lights without a reload. */
+function notify(kind, detail) {
+  const n = NT.fromEvent(kind, detail);
+  n.id = "n-" + S.nextNotificationId++;
+  n.when = "just now";
+  S.notifications.unshift(n);
+  S.notifyWatchers.forEach((fn) => {
+    try {
+      fn(n);
+    } catch (e) {}
+  });
+  return n;
+}
+
+/* ---- notifications & alerts (task 317) ----
+ * Notifications are RAISED BY MUTATIONS this service performs, not invented
+ * on a timer: an order filling, a training job finishing, an issue being
+ * resolved. The shape comes from the shared engine, so a notification the
+ * service raises and one raised locally read identically. */
+
+on("GET /notifications", (p, q) => {
+  let rows = S.notifications;
+  const unread = NT.unreadCount(rows);
+  if (q.unread === "true") rows = rows.filter((n) => n.unread);
+  if (q.kind) rows = rows.filter((n) => n.kind === q.kind);
+  const out = page(rows, q);
+  /* Unread across everything, not just this page. */
+  out.unread = unread;
+  return out;
+});
 on("POST /notifications/read", (p, q, b) => {
   const ids = (b && b.ids) || S.notifications.map((n) => n.id);
+  let marked = 0;
   S.notifications.forEach((n) => {
-    if (ids.includes(n.id)) n.unread = false;
+    if (ids.includes(n.id) && n.unread) {
+      n.unread = false;
+      marked += 1;
+    }
   });
-  return { ok: true, unread: S.notifications.filter((n) => n.unread).length };
+  return { marked, unread: NT.unreadCount(S.notifications) };
 });
-on("GET /alerts", (p, q) => page(D.activity.map((a, i) => ({ id: "al-" + i, title: a.title, detail: a.detail, when: a.when })), q));
-on("GET /alert-rules", (p, q) => page(S.alertRules, q));
+on("GET /alerts", (p, q) => page(S.notifications.filter((n) => n.kind === "alert"), q));
+
+on("GET /alert-rules", (p, q) => {
+  let rows = S.alertRules;
+  if (q.entity) rows = rows.filter((r) => r.entity === q.entity);
+  return page(rows, q);
+});
 on("POST /alert-rules", (p, q, b) => {
-  const r = { id: "ar-" + (S.alertRules.length + 1), symbol: (b && b.symbol) || "AAPL", condition: (b && b.condition) || "above", value: (b && b.value) || 200 };
-  S.alertRules.push(r);
-  return { __status: 201, ...r };
+  const spec = b || {};
+  const why = NT.validateRule(spec);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const rule = {
+    id: "ar-" + S.nextAlertRuleId2++,
+    entity: String(spec.entity).trim(),
+    metric: spec.metric,
+    comparator: spec.comparator,
+    threshold: +spec.threshold,
+    channel: spec.channel || "in_app",
+    enabled: true,
+  };
+  rule.description = NT.describeRule(rule);
+  const clash = S.alertRules.some(
+    (r) => r.entity === rule.entity && r.metric === rule.metric &&
+      r.comparator === rule.comparator && r.threshold === rule.threshold
+  );
+  if (clash) {
+    return { __status: 409, code: "conflict", message: "a rule for " + rule.description + " already exists" };
+  }
+  S.alertRules.push(rule);
+  return { __status: 201, ...rule };
+});
+on("PATCH /alert-rules/{id}", (p, q, b) => {
+  const r = S.alertRules.find((x) => x.id === p.id);
+  if (!r) return notFound;
+  Object.assign(r, b || {});
+  r.description = NT.describeRule(r);
+  return r;
 });
 on("DELETE /alert-rules/{id}", (p) => {
   const before = S.alertRules.length;
-  S.alertRules = S.alertRules.filter((r) => r.id !== p.id);
+  S.alertRules = S.alertRules.filter((x) => x.id !== p.id);
   return before === S.alertRules.length ? notFound : { ok: true };
 });
-on("GET /delivery/channels", () => ({ email: { address: "alex@sample.gefi", verified: true }, push: { enabled: false } }));
 
-/* ---- insights ---- */
-on("GET /insights", (p, q) => page(D.insights, q));
-on("POST /insights/generate", () => ({ __status: 202, job_id: "ins-1", note: "deterministic sample generator (Claude API behind a flag)" }));
+on("GET /delivery/channels", () => ({
+  items: NT.CHANNELS.map((c) => ({
+    channel: c,
+    enabled: S.deliveryPrefs[c] !== false,
+    /* Only in-app actually reaches anyone. Saying so here means a client
+     * can label the rest honestly instead of implying mail is going out. */
+    delivers: NT.DELIVERING.indexOf(c) > -1,
+    note: NT.DELIVERING.indexOf(c) > -1
+      ? "Delivered in the app."
+      : "Preference recorded only — nothing is sent and no address or device is verified.",
+  })),
+}));
+
+/* ---- insights (task 318) ----
+ * The seeded sets come from the shared engine and are the product. A live
+ * Claude generator is an OPTIONAL add-on behind GEFI_INSIGHTS_CLAUDE=1 +
+ * ANTHROPIC_API_KEY: temperature 0, strict JSON validated below, output
+ * labelled generated:true, and ANY failure falls back to the seeded set.
+ * No key ships in this repository. */
+
+const INSIGHTS_LIVE = process.env.GEFI_INSIGHTS_CLAUDE === "1" && !!process.env.ANTHROPIC_API_KEY;
+
+function insightsFor(surface) {
+  const by = IM.surfaces(D);
+  return surface ? by[surface] || [] : IM.all(D);
+}
+
+/* Validate one generated insight against the contract's schema. Anything
+ * that fails is grounds to discard the whole batch and fall back. */
+function validInsight(x) {
+  return (
+    x && typeof x.title === "string" && x.title.length > 0 && x.title.length <= 80 &&
+    typeof x.body === "string" && x.body.length > 0 && x.body.length <= 280 &&
+    ["Bullish", "Neutral", "Bearish"].includes(x.sentiment) &&
+    Number.isFinite(x.confidence) && x.confidence >= 0 && x.confidence <= 100 &&
+    ["High", "Medium", "Low"].includes(x.impact)
+  );
+}
+
+function claudeInsights(surface) {
+  return new Promise((resolve, reject) => {
+    let template;
+    try {
+      template = fs.readFileSync(path.join(__dirname, "prompts", "insights.txt"), "utf8");
+    } catch (e) {
+      reject(new Error("prompt template missing"));
+      return;
+    }
+    const seeded = insightsFor(surface);
+    const prompt = template
+      .replace(/{{surface}}/g, surface)
+      .replace(/{{count}}/g, String(seeded.length || 3))
+      .replace(/{{context}}/g, JSON.stringify(seeded.map((i) => ({ title: i.title, body: i.body })), null, 1));
+    const body = JSON.stringify({
+      model: "claude-sonnet-5",
+      max_tokens: 1024,
+      temperature: 0,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const req = require("https").request(
+      {
+        hostname: "api.anthropic.com",
+        path: "/v1/messages",
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "content-length": Buffer.byteLength(body),
+        },
+        timeout: 15000,
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (c) => (data += c));
+        res.on("end", () => {
+          try {
+            const parsed = JSON.parse(data);
+            const text = parsed.content && parsed.content[0] && parsed.content[0].text;
+            const arr = JSON.parse(String(text).replace(/^[^\[]*/, "").replace(/[^\]]*$/, ""));
+            if (!Array.isArray(arr) || !arr.length || !arr.every(validInsight)) {
+              reject(new Error("schema validation failed"));
+              return;
+            }
+            resolve(
+              arr.map((x, i) => ({
+                id: "ins-" + surface + "-gen-" + (i + 1),
+                surface,
+                title: x.title,
+                body: x.body,
+                sentiment: x.sentiment,
+                confidence: Math.round(x.confidence),
+                impact: x.impact,
+                /* The label a client must render: this text came from a
+                 * model, not from an author. */
+                generated: true,
+              }))
+            );
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }
+    );
+    req.on("error", reject);
+    req.on("timeout", () => req.destroy(new Error("timeout")));
+    req.write(body);
+    req.end();
+  });
+}
+
+on("GET /insights", (p, q) => {
+  if (q.surface && IM.SURFACES.indexOf(q.surface) === -1) {
+    return { __status: 422, code: "validation_failed", message: "surface must be one of " + IM.SURFACES.join(", ") };
+  }
+  return page(insightsFor(q.surface), q);
+});
+on("GET /insights/{id}", (p) => IM.all(D).find((i) => i.id === p.id) || notFound);
+on("POST /insights/generate", async (p, q, b) => {
+  const surface = (b && b.surface) || "portfolio";
+  const why = IM.validateGenerate({ surface });
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  if (INSIGHTS_LIVE) {
+    try {
+      const items = await claudeInsights(surface);
+      return { surface, source: "claude", items };
+    } catch (e) {
+      /* Fall through: a generator failure must never surface as an error —
+       * the seeded set is always there. */
+    }
+  }
+  return { surface, source: "seeded", items: insightsFor(surface) };
+});
 on("GET /sentiment", () => D.reports.market);
 on("GET /predictions", () => ({ items: [{ subject: "Fed decision", prediction: D.reports.market.fed.prediction, probability_pct: D.reports.market.fed.probability }], next_cursor: null }));
 on("POST /narratives", (p, q, b) => ({ __status: 201, report_id: b && b.report_id, narrative: "Sample narrative: portfolio $142,500, YTD +8.6%, Sharpe 1.34. Deterministic mock output." }));
 
-/* ---- zkml ---- */
-function zkPlan(model, shards) {
-  const rand = seed.rng(seed.hash("zkml|" + model + "|" + shards));
-  const lanes = [];
-  for (let i = 0; i < shards; i++) lanes.push(3 + Math.round(rand() * 4));
-  const compile = 2 + Math.round(rand() * 2);
-  const wall = (compile + 1 + Math.max(...lanes) + 2 + 1) * 15;
-  return { model, shards, lanes: lanes.map((t) => t * 15), wall_secs: wall, hash: "0x" + fnvHex(model + "|" + shards) };
+/* ---- zkml (task 319) ----
+ * The plan, the hash and the event timeline all come from the shared
+ * engine — the page and this server previously seeded the same key but
+ * drew in a DIFFERENT ORDER, so the "same" verification produced different
+ * shard timings on each side. One function now, one answer. */
+
+function zkRow(v) {
+  return {
+    id: v.id,
+    model: v.model,
+    shards: v.shards,
+    status: v.status,
+    verdict: v.status === "completed" ? "verified" : null,
+    record: ZK.record(v.plan),
+    created: v.created,
+  };
 }
+
 on("POST /zkml/verifications", (p, q, b) => {
-  const model = (b && b.model) || MODELS[0].slug;
-  const shards = (b && b.shards) || 4;
-  const v = { id: "zk-" + (S.verifications.length + 1), status: "completed", verdict: "verified", ...zkPlan(model, shards) };
-  S.verifications.push(v);
-  return { __status: 201, ...v };
+  const spec = { model: b && b.model, shards: b && b.shards != null ? b.shards : 4 };
+  const why = ZK.validate(spec, MODELS);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  const v = {
+    id: "zk-" + S.nextVerificationId++,
+    model: spec.model,
+    shards: +spec.shards,
+    status: "completed",
+    plan: ZK.plan(spec.model, +spec.shards),
+    created: "2026-08-22",
+  };
+  S.verifications.unshift(v);
+  return { __status: 201, ...zkRow(v) };
 });
-on("GET /zkml/verifications", (p, q) => page(S.verifications, q));
-on("GET /zkml/verifications/{id}", (p) => S.verifications.find((v) => v.id === p.id) || notFound);
+on("GET /zkml/verifications", (p, q) => {
+  let rows = S.verifications;
+  if (q.model) rows = rows.filter((v) => v.model === q.model);
+  return page(rows.map(zkRow), q);
+});
+on("GET /zkml/verifications/{id}", (p) => {
+  const v = S.verifications.find((x) => x.id === p.id);
+  return v ? zkRow(v) : notFound;
+});
 on("GET /zkml/proofs/{hash}", (p) => {
-  const v = S.verifications.find((x) => x.hash === (p.hash.startsWith("0x") ? p.hash : "0x" + p.hash));
-  return v ? { hash: v.hash, verification: v.id, verdict: v.verdict } : notFound;
+  const want = p.hash.startsWith("0x") ? p.hash : "0x" + p.hash;
+  const v = S.verifications.find((x) => "0x" + x.plan.hash === want);
+  return v ? { hash: want, verification: v.id, record: ZK.record(v.plan) } : notFound;
 });
 on("POST /zkml/anchors", (p, q, b) => {
-  const a = { id: "anchor-" + (S.anchors.length + 1), hash: b && b.hash, chain: "sample-l2", tx: "0x" + fnvHex("tx|" + ((b && b.hash) || "")) + fnvHex("tx2|" + ((b && b.hash) || "")) };
+  const a = {
+    id: "anchor-" + (S.anchors.length + 1),
+    hash: b && b.hash,
+    chain: "sample-l2",
+    /* A sample label, not a transaction — nothing touches any chain. */
+    tx: "0x" + ZK.fnv1a("tx|" + ((b && b.hash) || "")) + ZK.fnv1a("tx2|" + ((b && b.hash) || "")),
+  };
   S.anchors.push(a);
   return { __status: 201, ...a };
 });
 on("GET /federation/rounds", (p, q) => page([1, 2, 3].map((n) => ({ round: n, participants: 3, status: n < 3 ? "aggregated" : "running" })), q));
 
 /* ---- platform ---- */
-on("GET /api-keys", (p, q) => page(S.apiKeys, q));
+on("GET /api-keys", (p, q) => page(S.apiKeys.map(PL.maskKey), q));
 on("POST /api-keys", (p, q, b) => {
-  const k = { id: "key-" + (S.apiKeys.length + 1), label: (b && b.label) || "new key", prefix: "gefi_sk_" + fnvHex("key|" + S.apiKeys.length).slice(0, 4), created: "2026-08-22" };
-  S.apiKeys.push(k);
-  return { __status: 201, ...k, secret_once: k.prefix + "_" + fnvHex("secret|" + k.id) };
-});
-on("DELETE /api-keys/{id}", (p) => {
-  const before = S.apiKeys.length;
-  S.apiKeys = S.apiKeys.filter((k) => k.id !== p.id);
-  return before === S.apiKeys.length ? notFound : { ok: true };
-});
-on("GET /rate-limits", () => ({ per_minute: 600, remaining: 597, reset_secs: 42 }));
-on("GET /audit-chain/{run_id}", (p) => {
-  const rand = seed.rng(seed.hash("chain|" + p.run_id));
-  let prev = fnvHex("genesis|" + p.run_id);
-  const chain = [];
-  for (let i = 0; i < 4; i++) {
-    const h = fnvHex(prev + "|" + i + "|" + Math.floor(rand() * 1e6));
-    chain.push({ index: i, prev, hash: h });
-    prev = h;
+  const why = PL.validateKeyLabel(b && b.label, S.apiKeys);
+  if (why) {
+    return why.indexOf("already exists") > -1
+      ? { __status: 409, code: "conflict", message: why }
+      : { __status: 422, code: "validation_failed", message: why };
   }
-  return { run_id: p.run_id, chain };
+  const k = {
+    id: "key-" + (S.apiKeys.length + 1),
+    label: String(b.label).trim(),
+    prefix: "gefi_sk_" + PL.fnv1a("key|" + S.apiKeys.length).slice(0, 4),
+    created: "2026-08-22",
+  };
+  S.apiKeys.push(k);
+  /* The one and only time the secret appears. Every later listing masks
+   * it, which is the property that makes it a secret. */
+  return { __status: 201, ...PL.maskKey(k), secret_once: k.prefix + "_" + PL.fnv1a("secret|" + k.id) + PL.fnv1a("secret2|" + k.id) };
+});
+on("DELETE /api-keys/{id}", (p, q, b) => {
+  const k = S.apiKeys.find((x) => x.id === p.id);
+  if (!k) return notFound;
+  const why = PL.validateRevoke(k, (b && b.confirm) || q.confirm);
+  if (why) return { __status: 422, code: "validation_failed", message: why };
+  S.apiKeys = S.apiKeys.filter((x) => x.id !== p.id);
+  return { ok: true, revoked: k.id };
+});
+on("GET /rate-limits", () => ({ per_minute: 600, remaining: S.rateRemaining == null ? 600 : S.rateRemaining, reset_secs: 60 }));
+on("GET /audit-chain/{run_id}", (p) => PL.runRecord(p.run_id));
+on("GET /audit-chain/{run_id}/segment", (p, q) => {
+  const c = PL.chain(p.run_id);
+  const from = Math.max(0, parseInt(q.from, 10) || 0);
+  const to = Math.min(c.length, parseInt(q.to, 10) || c.length);
+  if (from >= to) return { __status: 422, code: "validation_failed", message: "from must be before to" };
+  return { run_id: p.run_id, from, to, links: c.slice(from, to) };
 });
 on("GET /search", (p, q) => {
-  const needle = (q.q || "").toLowerCase();
-  const hits = [];
-  MODELS.forEach((m) => {
-    if (m.name.toLowerCase().includes(needle)) hits.push({ kind: "model", ref: m.slug, name: m.name });
-  });
-  allDatasets().forEach((d) => {
-    if (d.name.toLowerCase().includes(needle)) hits.push({ kind: "dataset", ref: d.id, name: d.name });
-  });
-  return page(hits, q);
+  /* Grouped results from the shared engine — the same function the shell
+   * runs offline, so the two cannot group or rank differently. */
+  return PL.search(q.q, { models: MODELS, datasets: liveDatasets(), orders: paperOrders().concat(S.orders) });
 });
-on("GET /i18n/{locale}", (p) => ({ locale: p.locale, strings: { "app.title": "GeFi", "app.sample": "Sample data" } }));
+on("GET /i18n/{locale}", (p) => {
+  const b = PL.bundle(p.locale);
+  return b || notFound;
+});
+on("POST /gdpr/exports", (p, q, b) => {
+  const job = { id: "gdpr-exp-" + (S.gdprJobs.length + 1), kind: "export", status: "recorded", note: "Recorded stub — no export is assembled and nothing is emailed. A real implementation gathers the account's data within the statutory window." };
+  S.gdprJobs.push(job);
+  return { __status: 202, ...job };
+});
+on("POST /gdpr/deletions", (p, q, b) => {
+  const typed = b && b.confirm;
+  if (typed !== "DELETE") {
+    return { __status: 422, code: "validation_failed", message: 'type DELETE to confirm — nothing was deleted' };
+  }
+  const job = { id: "gdpr-del-" + (S.gdprJobs.length + 1), kind: "deletion", status: "recorded", note: "Recorded stub — no data is deleted here. A real implementation erases within the statutory window and confirms." };
+  S.gdprJobs.push(job);
+  return { __status: 202, ...job };
+});
+on("GET /gdpr/requests", (p, q) => page(S.gdprJobs, q));
 on("GET /gdpr/retention-jobs", (p, q) => page([{ job: "session-purge", last_run: "2026-08-21", status: "succeeded" }, { job: "audit-archive", last_run: "2026-08-20", status: "succeeded" }], q));
 
 /* ---- SSE endpoints ---- */
@@ -1371,6 +2312,43 @@ const SSE = {
         sseSend(res, "quote.tick", S.tick, { symbol: sym, price: +px.toFixed(2), tick: S.tick });
       });
     }, 1000);
+  },
+  "GET /notifications/stream": (req, res) => {
+    /* Pushes each notification as it is raised. The watcher is registered
+     * for the life of the connection and removed when it closes. */
+    let n = 0;
+    const watcher = (item) => {
+      n += 1;
+      sseSend(res, "notification.created", n, item);
+    };
+    S.notifyWatchers.push(watcher);
+    const drop = () => {
+      S.notifyWatchers = S.notifyWatchers.filter((w) => w !== watcher);
+    };
+    req.on("close", drop);
+    /* Heartbeat keeps the connection from being reaped mid-idle. */
+    return setInterval(() => {
+      sseSend(res, "ping", n, { t: n });
+    }, 15000);
+  },
+  "GET /reports/{id}/events": (req, res, p) => {
+    /* Emits once the report has actually generated, so a client that
+     * follows the stream cannot show it as ready early. */
+    let waited = 0;
+    return setInterval(() => {
+      waited += 1;
+      const r = allReports().find((x) => x.id === p.id);
+      if (!r) {
+        res.end();
+        return;
+      }
+      if (r.status === "generated") {
+        sseSend(res, "report.generated", waited, r);
+        res.end();
+        return;
+      }
+      if (waited > 30) res.end();
+    }, 400);
   },
   "GET /backtests/{id}/events": (req, res, p) => {
     /* Steps come from the shared engine keyed on the run id, so a client
@@ -1433,6 +2411,7 @@ const SSE = {
       if (pct >= 100) {
         job.status = "completed";
         devActivity(job.name + " finished at " + m.accuracy + "% accuracy", "Training · just now", "test");
+        notify("training", { name: job.name, accuracy: m.accuracy });
         sseSend(res, "training.completed", pct, { id: p.id, progress: 100, accuracy: m.accuracy, loss: m.loss });
         res.end();
         return;
@@ -1466,17 +2445,26 @@ const SSE = {
     }, 400);
   },
   "GET /zkml/verifications/{id}/events": (req, res, p) => {
+    /* Walks the shared timeline tick by tick, so the stepper and the log
+     * panel a client drives from this stream match what the same client
+     * would replay locally. */
     const v = S.verifications.find((x) => x.id === p.id);
-    let shard = -1;
+    if (!v) {
+      sseSend(res, "zkml.error", 0, { id: p.id, message: "no such verification" });
+      res.end();
+      return null;
+    }
+    const events = ZK.timeline(v.plan);
+    let tick = -1;
+    let sent = 0;
     return setInterval(() => {
-      shard += 1;
-      if (!v || shard >= v.shards) {
-        sseSend(res, "zkml.verified", shard, { id: p.id, verdict: "verified" });
-        res.end();
-        return;
-      }
-      sseSend(res, "zkml.shard_proved", shard, { id: p.id, shard, task_secs: v.lanes[shard] });
-    }, 500);
+      tick += 1;
+      events.filter((e) => e.tick === tick).forEach((e) => {
+        sent += 1;
+        sseSend(res, e.event, sent, { id: p.id, ...e.data });
+      });
+      if (tick >= events[events.length - 1].tick) res.end();
+    }, 220);
   },
 };
 function sseSend(res, event, id, data) {
@@ -1493,7 +2481,7 @@ function corsHeaders(req) {
     "Access-Control-Allow-Origin": ok ? origin : "http://localhost:8099",
     "Access-Control-Allow-Methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS",
     "Access-Control-Allow-Headers": "Authorization,Content-Type,Idempotency-Key,X-GeFi-Api-Key,Last-Event-ID",
-    "Access-Control-Expose-Headers": "X-GeFi-Sample,X-Request-Id,Retry-After",
+    "Access-Control-Expose-Headers": "X-GeFi-Sample,X-Request-Id,Retry-After,X-RateLimit-Limit,X-RateLimit-Remaining,X-RateLimit-Reset",
   };
 }
 
@@ -1526,7 +2514,18 @@ const server = http.createServer((req, res) => {
   const requestId = "req_" + crypto.randomBytes(6).toString("hex");
   const url = new URL(req.url, "http://localhost");
   const q = Object.fromEntries(url.searchParams);
-  const base = { "X-GeFi-Sample": "true", "X-Request-Id": requestId, ...corsHeaders(req) };
+  /* Rate-limit headers on every response (task 320). The window is a
+   * fixture — nothing is actually limited — but the headers give clients
+   * something real to parse. */
+  S.rateRemaining = Math.max(0, (S.rateRemaining == null ? 600 : S.rateRemaining) - 1) || 600;
+  const base = {
+    "X-GeFi-Sample": "true",
+    "X-Request-Id": requestId,
+    "X-RateLimit-Limit": "600",
+    "X-RateLimit-Remaining": String(S.rateRemaining),
+    "X-RateLimit-Reset": "60",
+    ...corsHeaders(req),
+  };
 
   if (req.method === "OPTIONS") {
     res.writeHead(204, base);
@@ -1617,18 +2616,29 @@ const server = http.createServer((req, res) => {
       res.end(JSON.stringify({ code: "internal", message: String(e && e.message), request_id: requestId }));
       return;
     }
-    let status = 200;
-    if (out && out.__status) {
-      status = out.__status;
-      out = { ...out };
-      delete out.__status;
-    }
-    const payload = JSON.stringify(status >= 400 ? { ...out, request_id: requestId } : out);
-    if (req.method === "POST" && req.headers["idempotency-key"]) {
-      S.idempotency.set(req.headers["idempotency-key"], { status, body: payload });
-    }
-    res.writeHead(status, { ...base, "Content-Type": "application/json" });
-    res.end(payload);
+    /* A handler may be async (e.g. the optional live insight generator);
+     * settle it before serialising, and treat a rejection like a throw. */
+    Promise.resolve(out).then(
+      (settled) => {
+        let result = settled;
+        let status = 200;
+        if (result && result.__status) {
+          status = result.__status;
+          result = { ...result };
+          delete result.__status;
+        }
+        const payload = JSON.stringify(status >= 400 ? { ...result, request_id: requestId } : result);
+        if (req.method === "POST" && req.headers["idempotency-key"]) {
+          S.idempotency.set(req.headers["idempotency-key"], { status, body: payload });
+        }
+        res.writeHead(status, { ...base, "Content-Type": "application/json" });
+        res.end(payload);
+      },
+      (e) => {
+        res.writeHead(500, { ...base, "Content-Type": "application/json" });
+        res.end(JSON.stringify({ code: "internal", message: String(e && e.message), request_id: requestId }));
+      }
+    );
   });
 });
 
