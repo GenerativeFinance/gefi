@@ -1,0 +1,69 @@
+openapi: 3.1.0
+info:
+  title: GeFi Platform API
+  version: 0.1.0
+  description: >
+    Typed command/query layer for model graphs, AI tools, and FL governance.
+    Never accepts raw gradients or training datasets.
+paths:
+  /health:
+    get:
+      summary: Health + privacy claim
+      responses:
+        "200":
+          description: OK
+  /v1/models/{modelId}/calculations:
+    post:
+      summary: Run a versioned calculation
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Calculation created
+  /v1/federation/rounds:
+    post:
+      summary: Open a training round
+      responses:
+        "201":
+          description: Round created
+        "403":
+          description: Privacy budget exhausted
+  /v1/federation/rounds/{roundId}/updates:
+    post:
+      summary: Submit a masked client update
+      responses:
+        "201":
+          description: Accepted
+        "400":
+          description: Raw update forbidden
+  /v1/federation/rounds/{roundId}/aggregate:
+    post:
+      summary: Aggregate masked updates if cohort threshold met
+      responses:
+        "200":
+          description: Aggregate + proof
+        "409":
+          description: Cohort too small
+  /v1/ai/tools/{tool}:
+    post:
+      summary: Invoke a typed financial tool
+      responses:
+        "200":
+          description: Tool result
+components:
+  schemas:
+    PrivacyParams:
+      type: object
+      required: [clipNorm, noiseMultiplier, samplingRate, delta, epsilonSpent, epsilonTotal, accountantVersion]
+      properties:
+        clipNorm: { type: number }
+        noiseMultiplier: { type: number }
+        samplingRate: { type: number }
+        roundNumber: { type: integer }
+        delta: { type: number }
+        epsilonSpent: { type: number }
+        epsilonTotal: { type: number }
+        accountantVersion: { type: string }

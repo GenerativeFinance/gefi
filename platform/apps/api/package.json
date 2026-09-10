@@ -1,0 +1,28 @@
+{
+  "name": "@gefi/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/serve.ts",
+    "start": "tsx src/serve.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gefi/ai-tools": "workspace:*",
+    "@gefi/calc": "workspace:*",
+    "@gefi/db": "workspace:*",
+    "@gefi/schemas": "workspace:*",
+    "hono": "^4.7.2",
+    "@hono/node-server": "^1.13.8",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}

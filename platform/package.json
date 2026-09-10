@@ -1,0 +1,20 @@
+{
+  "name": "gefi-platform",
+  "private": true,
+  "packageManager": "pnpm@10.33.3",
+  "scripts": {
+    "dev:web": "pnpm --filter @gefi/web dev",
+    "dev:api": "pnpm --filter @gefi/api dev",
+    "build": "pnpm -r run build",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "db:generate": "pnpm --filter @gefi/db generate",
+    "db:migrate": "pnpm --filter @gefi/db migrate"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  }
+}
