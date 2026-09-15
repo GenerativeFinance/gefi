@@ -292,6 +292,7 @@ exclude:
   - legacy/
   - infrastructure/
   - playground/
+  - platform/
   - node_modules/
   - vendor/
   - Gemfile

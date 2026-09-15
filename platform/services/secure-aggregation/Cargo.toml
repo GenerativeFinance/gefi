@@ -1,0 +1,18 @@
+[package]
+name = "gefi-secure-aggregation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sha2 = "0.10"
+hkdf = "0.12"
+hex = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+axum = "0.7"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tower-http = { version = "0.5", features = ["cors"] }
+
+[[bin]]
+name = "gefi-secagg"
+path = "src/main.rs"

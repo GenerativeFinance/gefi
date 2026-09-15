@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: gefi
+      POSTGRES_PASSWORD: gefi
+      POSTGRES_DB: gefi
+    ports:
+      - "5432:5432"
+    volumes:
+      - gefi_pg:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.api
+    environment:
+      PORT: "8787"
+      DATABASE_URL: postgres://gefi:gefi@postgres:5432/gefi
+    ports:
+      - "8787:8787"
+    depends_on:
+      - postgres
+
+  quant:
+    build:
+      context: ../services/quant-engine
+      dockerfile: ../../infra/docker/Dockerfile.quant
+    ports:
+      - "8090:8090"
+
+volumes:
+  gefi_pg:
