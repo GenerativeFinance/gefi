@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "bundle exec jekyll build",
-    "deploy": "bundle exec jekyll build && wrangler pages deploy _site --project-name=gefi --branch=main",
-    "preview": "bundle exec jekyll build && wrangler pages dev _site"
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
   },
   "devDependencies": {
     "wrangler": "^3.114.17"
