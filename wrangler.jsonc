@@ -1,18 +1,30 @@
-// Cloudflare Pages configuration for the GeFi marketing site (gefi.io).
+// Cloudflare Workers configuration for the GeFi marketing site (gefi.io).
 //
-// The site is a Jekyll build whose output lives in `_site/`. We deploy via
-// Cloudflare Pages — `pages_build_output_dir` tells wrangler where the
-// already-built static assets are, so it does NOT try to run its own build
-// step. (Earlier versions of this file used Workers Static Assets which
-// triggered wrangler's auto-config and called `npx bundle exec jekyll build`,
-// failing because `bundle` is a Ruby gem, not an npm package.)
+// The site is a Jekyll build whose output lives in `_site/`, served as
+// Workers Static Assets. There is no `main` entrypoint: this is an
+// assets-only Worker, so Cloudflare serves `_site/` directly from the edge.
+//
+// `gefi` is a **Worker** in the Cloudflare account (not a Pages project), and
+// the repo's Git integration runs Workers Builds against it. This file must
+// therefore be Workers-shaped. It previously declared `pages_build_output_dir`
+// — a Pages-only key — which made every Workers Build fail immediately.
+//
+// `build.command` is set explicitly so wrangler does NOT fall back to its own
+// auto-detection, which used to guess `npx bundle exec jekyll build` and fail
+// because `bundle` is a Ruby gem, not an npm package. Naming the real command
+// here keeps the Ruby toolchain in charge of the Jekyll build.
 //
 // The Cloudflare *backend* (Workers, D1, R2, KV, etc.) lives in a separate
 // pnpm workspace under `infrastructure/cloudflare/` with its own per-worker
-// wrangler.toml files; this file is intentionally minimal and Pages-only.
+// wrangler.toml files; this file is intentionally minimal and site-only.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "gefi",
   "compatibility_date": "2026-05-03",
-  "pages_build_output_dir": "./_site"
+  "assets": {
+    "directory": "./_site"
+  },
+  "build": {
+    "command": "bundle install && bundle exec jekyll build"
+  }
 }
